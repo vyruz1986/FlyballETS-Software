@@ -1,20 +1,9 @@
 #include "RaceHandler.h"
 #include "LightsController.h"
 #include "BatterySensor.h"
-#include <StopWatch.h>
+#include "printf.h"
+#include "global.h"
 #include <LiquidCrystal.h>
-
-
-
-/* StopWatch
- * Paul Badger 2008
- * Demonstrates using millis(), pullup resistors, 
- * making two things happen at once, printing fractions
- *
- * Physical setup: momentary switch connected to pin 4, other side connected to ground
- * LED with series resistor between pin 13 and ground
- */
-
 
 #define ledPin  5                  // LED connected to digital pin 13
 
@@ -36,31 +25,27 @@ String strLCDLine1;
 LiquidCrystal lcd(12, 11, 7, 6, 5, 4);  //declare two LCD's
 LiquidCrystal lcd2(12, 10, 7, 6, 5, 4); // Ths is the second
 
-StopWatch SWRace(StopWatch::MICROS);
-StopWatch SWDog1(StopWatch::MICROS);
-StopWatch SWDog2(StopWatch::MICROS);
-StopWatch SWDog3(StopWatch::MICROS);
-StopWatch SWDog4(StopWatch::MICROS);
 
-
-float fBatteryVoltage = 0;
+uint16_t fBatteryVoltage = 0;
 
 //Initialise Lights stuff
 long lLastSerialOutput = 0;
 
 //int senspin = 3;
 
+//Pin connected to the Start/Stop button
 int iPushButtonPin = A1;
 
 void setup()
 {
   Serial.begin(115200);
+  printf_begin();
   //pinMode(senspin, INPUT);
   pinMode(ledPin, OUTPUT);         // sets the digital pin as output
   lcd.begin(40,2);
   lcd.clear();
-  attachInterrupt(1,RaceHandler.TriggerSensor2, RISING);
-  //attachInterrupt(0, fToggleStopWatch, LOW);
+  attachInterrupt(1, Sensor2Wrapper, RISING);
+  attachInterrupt(0, Sensor1Wrapper, RISING);
   BatterySensor.init(A0);
 
   LightsController.init(13,12,11);
@@ -79,35 +64,34 @@ void loop()
    //Handle battery sensor main processing
    BatterySensor.CheckBatteryVoltage();
    
-   if (millis() - lLastSerialOutput > 500)
+   
+   if (RaceHandler.RaceState != RaceHandler.PreviousRaceState)
    {
-      fBatteryVoltage = BatterySensor.GetBatteryVoltage();
-      //Serial.print(millis()); Serial.print(": Voltage: "); Serial.println(fBatteryVoltage);
-      lLastSerialOutput = millis();
-      //Lights.ToggleLightState(Lights.BLUE);
+      printf("%lu: Race State Changed: %i\r\n", millis(), RaceHandler.RaceState);
    }
 
-   if (digitalRead(iPushButtonPin) == LOW)
+   if (RaceHandler.iCurrentDog != RaceHandler.iPreviousDog)
    {
+      printf("%lu: Dog %i time: %lu\r\n", millis(), RaceHandler.iPreviousDog, RaceHandler.lDogTimes[RaceHandler.iPreviousDog]);
+      printf("%lu: Dog number changed to: %i\r\n", millis(), RaceHandler.iCurrentDog);
+   }
+
+   if ((millis() - lLastSerialOutput) > 5000)
+   {
+      fBatteryVoltage = BatterySensor.GetBatteryVoltage();
+      //printf("%lu: ping! voltage is: %.2u\r\n", millis(), fBatteryVoltage);
+      
+      lLastSerialOutput = millis();
+   }
+
+   if (digitalRead(iPushButtonPin) == LOW
+      || millis() > 5000 && LightsController.byOverallState == LightsController.STOPPED)  //TODO:start after 5 seconds since we don't have a pushbutton yet :-(
+   {
+      bDEBUG ? printf("%lu: Starting light sequence!\r\n", millis()) : NULL;
       LightsController.InitiateStartSequence();
       RaceHandler.StartRace();
    }
    
-   switch (RaceHandler.RaceState)
-   {
-      case RaceHandler.STOPPED:
-         strLCDLine1 = "Stopped";
-         break;
-
-      case RaceHandler.STARTING:
-         strLCDLine1 = "Starting";
-         break;
-
-      case RaceHandler.GOINGIN:
-      case RaceHandler.COMINGBACK:
-         strLCDLine1 = "Running";
-         break;
-   }
 
    //Update LCD if longer than lLCDInterval ago
    if(millis() - lPreviousLCDUpdate > lLCDInterval)
@@ -116,6 +100,12 @@ void loop()
       fUpdateLCD(1,FormattedTime);
       lPreviousLCDUpdate = millis();
    }
+
+   //Cleanup
+   //These variables are used to determine whether a value changed
+   //They should be reset at the end of the loop since otherwise they stay always true
+   RaceHandler.PreviousRaceState = RaceHandler.RaceState;
+   RaceHandler.iPreviousDog = RaceHandler.iCurrentDog;
 }
 
 void fUpdateLCD(int iLine, String strMessage)
@@ -148,28 +138,6 @@ void fUpdateLCD(int iLine, String strMessage)
   lcd.print(strMessage);
 }
 
-void fToggleStopWatch()
-{
-  if((millis() - lLastTriggeredMillis) > 200)
-  {
-    lLastTriggeredMillis = millis();
-    //first get stopwatch state
-    if(sw_millis.isRunning())
-    {
-      //stopwatch is running, so we must stop it
-      sw_millis.stop();
-    }
-    else
-    {
-      //stopwatch is stopped, so we must start it
-      //First reset it
-      sw_millis.reset();
-      //then start
-      sw_millis.start();
-    }
-  }
-}
-
 String fGetFormattedTime(long lMilliTime)
 {
   elapsedTime =   lMilliTime;
@@ -195,4 +163,13 @@ String fGetFormattedTime(long lMilliTime)
   
   return FormattedTime;
 }
-      
+
+void Sensor2Wrapper()
+{
+   RaceHandler.TriggerSensor2();
+}
+
+void Sensor1Wrapper()
+{
+   RaceHandler.TriggerSensor1();
+}

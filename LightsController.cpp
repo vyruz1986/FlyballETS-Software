@@ -4,6 +4,7 @@
 
 #include "LightsController.h"
 #include "RaceHandler.h"
+#include "global.h"
 
 void LightsControllerClass::init(int iLatchPin, int iClockPin, int iDataPin)
 {
@@ -21,11 +22,11 @@ void LightsControllerClass::HandleLightStates()
    HandleStartSequence();
    if (_byCurrentLightsState != _byNewLightsState)
    {
+      bDEBUG ? printf("%lu: New light states: %i\r\n", millis(), _byNewLightsState) : NULL;
       _byCurrentLightsState = _byNewLightsState;
       digitalWrite(_iLatchPin, LOW);
       shiftOut(_iDataPin, _iClockPin, MSBFIRST, _byCurrentLightsState);
       digitalWrite(_iLatchPin, HIGH);
-      Serial.print(millis()); Serial.print(": Shifting out: "); Serial.println(_byCurrentLightsState);
    }
 }
 
@@ -67,14 +68,12 @@ void LightsControllerClass::HandleStartSequence()
          {
             ToggleLightState(_byLightsArray[i], ON);
             _lLightsOnSchedule[i] = 0; //Delete schedule
-            Serial.print(millis()); Serial.print(": turning on: "); Serial.println(_byLightsArray[i]);
          }
          if (millis() > _lLightsOutSchedule[i]
             && _lLightsOutSchedule[i] != 0)
          {
             ToggleLightState(_byLightsArray[i], OFF);
             _lLightsOutSchedule[i] = 0; //Delete schedule
-            Serial.print(millis()); Serial.print(": turning off: "); Serial.println(_byLightsArray[i]);
          }
          if (_lLightsOnSchedule[i] > 0
             || _lLightsOutSchedule[i] > 0)
@@ -83,8 +82,10 @@ void LightsControllerClass::HandleStartSequence()
          }
       }
       //Check if we should start the timer (GREEN light on)
-      if (CheckLightState(GREEN) == ON)
+      if (CheckLightState(GREEN) == ON
+         && RaceHandler.RaceState == RaceHandler.STARTING)
       {
+         bDEBUG ? printf("%lu: GREEN light is ON!\r\n", millis()) : NULL;
          RaceHandler.StartTimers();
       }
       if (!bStartSequenceBusy)
@@ -131,6 +132,8 @@ void LightsControllerClass::ToggleLightState(Lights byLight, LightStates byLight
 
 LightsControllerClass::LightStates LightsControllerClass::CheckLightState(Lights byLight)
 {
+   //TODO: this function keeps returning true when it should not...
+   bDEBUG ? printf("%lu: CheckLightState: %c\r\n", millis(), byLight && _byNewLightsState) : NULL;
    if (byLight && _byNewLightsState)
    {
       return ON;

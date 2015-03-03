@@ -1,0 +1,1 @@
+extern bool  bDEBUG;                //Set to true to get debug messages on serial port

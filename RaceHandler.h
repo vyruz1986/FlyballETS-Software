@@ -23,8 +23,10 @@ class RaceHandlerClass
       GOINGIN
    };
    RaceStates RaceState = STOPPED;
+   RaceStates PreviousRaceState = STOPPED;
 
-   int CurrentDog = 1;
+   uint8_t iCurrentDog = 1;
+   uint8_t iPreviousDog = 1;
    long lDogTimes[4];
    long lCrossingTimes[4];
    long StartTime = 0;
@@ -43,10 +45,14 @@ private:
    long _lSensor1LastTriggerTime;
    long _lSensor2LastTriggerTime;
    long _lNewS1Time;
+   long _lPrevS1Time;
    long _lNewS2Time;
+   long _lPrevS2Time;
    bool _bFault = false;
    long _lDogEnterTimes[4];
    long _lDogExitTimes[4];
+   void _ChangeState(RaceStates _byNewState);
+   void _ChangeDogNumber(int _iNewDogNumber);
 
 };
 

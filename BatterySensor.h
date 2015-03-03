@@ -16,7 +16,7 @@ protected:
 public:
    void init(int iBatterySensorPin);
    void CheckBatteryVoltage();
-   float GetBatteryVoltage();
+   uint16_t GetBatteryVoltage();
    
 private:
    int _iBatterySensorPin;

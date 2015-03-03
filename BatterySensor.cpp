@@ -27,12 +27,12 @@ void BatterySensorClass::CheckBatteryVoltage()
       }
       int iAverageBatteryReading = iBatteryReadingsTotal / _iNumberOfBatteryReadings;
       float fMeasuredVoltage = iAverageBatteryReading * 0.0048828125;
-      _fBatteryVoltage = fMeasuredVoltage * 2.5;
+      _fBatteryVoltage = fMeasuredVoltage * 2.5 * 100;
       _iNumberOfBatteryReadings = 0;
    }
 }
 
-float BatterySensorClass::GetBatteryVoltage()
+uint16_t BatterySensorClass::GetBatteryVoltage()
 {
    return _fBatteryVoltage;
 }

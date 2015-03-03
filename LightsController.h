@@ -35,8 +35,8 @@ public:
    };
 
    enum LightStates {
-      ON,
       OFF,
+      ON,
       TOGGLE
    };
    LightStates CheckLightState(Lights byLight);
