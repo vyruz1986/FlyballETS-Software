@@ -90,16 +90,16 @@ void RaceHandlerClass::Main()
 void RaceHandlerClass::StartTimers()
 {
    _ChangeState(GOINGIN);
-   StartTime = micros();
-   _lPerfectCrossingTime = StartTime;
+   lStartTime = micros();
+   _lPerfectCrossingTime = lStartTime;
    _lRaceStartTime = _lPerfectCrossingTime;
 }
 
 void RaceHandlerClass::StartRace()
 {
    _ChangeState(STARTING);
-   StartTime = micros();
-   _lPerfectCrossingTime = StartTime + 4000000;
+   lStartTime = micros();
+   _lPerfectCrossingTime = lStartTime + 3000000;
    _lRaceStartTime = _lPerfectCrossingTime;
 }
 
@@ -127,7 +127,7 @@ void RaceHandlerClass::TriggerSensor2()
 
 float RaceHandlerClass::GetElapsedTime()
 {
-   long ElapsedTimeMicros = micros() - StartTime;
+   long ElapsedTimeMicros = micros() - lStartTime;
    float ElapsedTimeSeconds = ElapsedTimeMicros / 1000000;
    return ElapsedTimeSeconds;
 }

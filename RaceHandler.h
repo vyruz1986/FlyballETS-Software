@@ -29,7 +29,7 @@ class RaceHandlerClass
    uint8_t iPreviousDog = 1;
    long lDogTimes[4];
    long lCrossingTimes[4];
-   long StartTime = 0;
+   long lStartTime = 0;
    void Main();
    void StartTimers();
    void StartRace();
