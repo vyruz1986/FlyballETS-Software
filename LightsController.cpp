@@ -132,9 +132,7 @@ void LightsControllerClass::ToggleLightState(Lights byLight, LightStates byLight
 
 LightsControllerClass::LightStates LightsControllerClass::CheckLightState(Lights byLight)
 {
-   //TODO: this function keeps returning true when it should not...
-   bDEBUG ? printf("%lu: CheckLightState: %c\r\n", millis(), byLight && _byNewLightsState) : NULL;
-   if (byLight && _byNewLightsState)
+   if ((byLight & _byNewLightsState) == byLight)
    {
       return ON;
    }
