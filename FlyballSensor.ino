@@ -1,3 +1,4 @@
+#include "LCDController.h"
 #include "RaceHandler.h"
 #include "LightsController.h"
 #include "BatterySensor.h"
@@ -21,9 +22,9 @@ int DecimalTime;
 String FormattedTime;
 long lLastTriggeredMillis = 0;
 String strLCDLine1;
-//LiquidCrystal lcd(RS,RW,Enable1,Enable2, data3,data2,data1,data0);
-LiquidCrystal lcd(12, 11, 7, 6, 5, 4);  //declare two LCD's
-LiquidCrystal lcd2(12, 10, 7, 6, 5, 4); // Ths is the second
+int iS1Pin = 2;
+int iS2Pin = 3;
+
 
 
 uint16_t fBatteryVoltage = 0;
@@ -36,21 +37,28 @@ long lLastSerialOutput = 0;
 //Pin connected to the Start/Stop button
 int iPushButtonPin = A1;
 
+//LiquidCrystal lcd(RS,RW,Enable1,Enable2, data3,data2,data1,data0);
+LiquidCrystal lcd(12, 11, 7, 6, 5, 4);  //declare two LCD's
+LiquidCrystal lcd2(12, 10, 7, 6, 5, 4); // Ths is the second
+
 void setup()
 {
   Serial.begin(115200);
   printf_begin();
   //pinMode(senspin, INPUT);
   pinMode(ledPin, OUTPUT);         // sets the digital pin as output
-  lcd.begin(40,2);
-  lcd.clear();
-  attachInterrupt(1, Sensor2Wrapper, RISING);
-  attachInterrupt(0, Sensor1Wrapper, RISING);
+
+  pinMode(iS1Pin, INPUT);
+  pinMode(iS2Pin, INPUT);
+  attachInterrupt(1, Sensor2Wrapper, CHANGE);
+  attachInterrupt(0, Sensor1Wrapper, CHANGE);
   BatterySensor.init(A0);
 
   LightsController.init(13,12,11);
-  RaceHandler.init();
+  RaceHandler.init(iS1Pin, iS2Pin);
   pinMode(iPushButtonPin, INPUT_PULLUP);
+
+  LCDController.init(&lcd, &lcd2);
 }
 
 void loop()
@@ -63,6 +71,9 @@ void loop()
 
    //Handle battery sensor main processing
    BatterySensor.CheckBatteryVoltage();
+
+   //Handle LCD processing
+   //LCDController.Main();
    
    
    if (RaceHandler.RaceState != RaceHandler.PreviousRaceState)
@@ -91,16 +102,6 @@ void loop()
       LightsController.InitiateStartSequence();
       RaceHandler.StartRace();
    }
-   
-
-   //Update LCD if longer than lLCDInterval ago
-   if(millis() - lPreviousLCDUpdate > lLCDInterval)
-   {
-      fUpdateLCD(0,strLCDLine1);
-      fUpdateLCD(1,FormattedTime);
-      lPreviousLCDUpdate = millis();
-   }
-
    //Cleanup
    //These variables are used to determine whether a value changed
    //They should be reset at the end of the loop since otherwise they stay always true
@@ -108,35 +109,6 @@ void loop()
    RaceHandler.iPreviousDog = RaceHandler.iCurrentDog;
 }
 
-void fUpdateLCD(int iLine, String strMessage)
-{
-  //Check how long strMessage is:
-  int iMessageLength = strMessage.length();
-  if(iMessageLength > 16)
-  {
-    //Message is too long, make it scroll!
-    int iExtraChars = iMessageLength - 15;
-    for (int i=0; i < iExtraChars; i++)
-    {
-      String strMessageSubString = strMessage.substring(i,i+16);
-      lcd.setCursor(INT0,iLine);
-      lcd.print(strMessageSubString);
-    }
-    return;
-  }
-  else if(iMessageLength < 16)
-  {
-    //Message is too short, we need to pad it
-    //First find missing characters
-    int iMissingChars = 16 - iMessageLength;
-    for (int i = 0; i < iMissingChars; i++)
-    {
-      strMessage = String(strMessage + " ");
-    }
-  }
-  lcd.setCursor(0,iLine);
-  lcd.print(strMessage);
-}
 
 String fGetFormattedTime(long lMilliTime)
 {

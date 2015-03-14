@@ -12,7 +12,7 @@
 #define _VSARDUINO_H_
 #define __AVR_ATmega328p__
 #define __AVR_ATmega328P__
-#define ARDUINO 160
+#define ARDUINO 161
 #define ARDUINO_MAIN
 #define __AVR__
 #define __avr__
@@ -82,6 +82,8 @@ extern "C" void __cxa_pure_virtual() {;}
 #include <FlyballSensor.ino>
 #include <BatterySensor.cpp>
 #include <BatterySensor.h>
+#include <LCDController.cpp>
+#include <LCDController.h>
 #include <LightsController.cpp>
 #include <LightsController.h>
 #include <RaceHandler.cpp>
