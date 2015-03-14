@@ -5,10 +5,13 @@
 #include "RaceHandler.h"
 #include "global.h"
 
-void RaceHandlerClass::init()
+void RaceHandlerClass::init(int iS1Pin, int iS2Pin)
 {
    //Start in stopped state
    _ChangeState(STOPPED);
+   _iS1Pin = iS1Pin;
+   _iS2Pin = iS2Pin;
+
 }
 
 void RaceHandlerClass::_ChangeState(RaceStates _byNewState)
@@ -34,9 +37,9 @@ void RaceHandlerClass::_ChangeDogNumber(int _iNewDogNumber)
 
 void RaceHandlerClass::Main()
 {
-   if (_lNewS1Time > 0)
+   if (_lNewS1Time > 0 && _bS1TriggerState == HIGH)
    {
-      bDEBUG ? printf("%lu: Sensor1 triggered: %lu\r\n", millis(), _lNewS1Time) : NULL;
+      bDEBUG ? printf("%lu: S1 %d\r\n", millis(), _lNewS1Time, _bS1TriggerState) : NULL;
       //Check what current state of race is
       if (RaceState != STOPPED
          && (_lNewS1Time - _lPrevS2Time) > 100000) //100 ms debounce to avoid dog coming back immediately triggering the next dog
@@ -49,7 +52,7 @@ void RaceHandlerClass::Main()
          {
             //Negative crossing means fault
             //TODO: Trigger fault light
-            bDEBUG ? printf("%lu: Fault by dog %i!", millis(), iCurrentDog) : NULL;
+            bDEBUG ? printf("%lu: Fault by dog %i!\r\n", millis(), iCurrentDog) : NULL;
          }
          else
          {
@@ -62,9 +65,9 @@ void RaceHandlerClass::Main()
       _lNewS1Time = 0;
    }
 
-   if (_lNewS2Time > 0)
+   if (_lNewS2Time > 0 && _bS2TriggerState == HIGH)
    {
-      bDEBUG ? printf("%lu: Sensor2 triggered: %lu\r\n", millis(), _lNewS2Time) : NULL;
+      bDEBUG ? printf("%lu: S2 %d\r\n", millis(), _lNewS2Time, _bS2TriggerState) : NULL;
       //Only check 2nd sensor if we're expecting a dog to come back
       if (RaceState == COMINGBACK)
       {
@@ -105,24 +108,26 @@ void RaceHandlerClass::StartRace()
 
 void RaceHandlerClass::TriggerSensor1()
 {
+   /*Disable debounce for now
    //Debounce code
-   if ((micros() - _lSensor1LastTriggerTime) < 100000) //100ms debounce
+   if ((micros() - _lPrevS1Time) < 100000) //100ms debounce
    {
       return;
-   }
+   }*/
    _lNewS1Time = micros();
-   _lSensor1LastTriggerTime = micros();
+   _bS1TriggerState = digitalRead(_iS1Pin);
 }
 
 void RaceHandlerClass::TriggerSensor2()
 {
+   /*Disable debounce for now
    //Debounce code
-   if ((micros() - _lSensor2LastTriggerTime) < 100000) //100ms debounce
+   if ((micros() - _lPrevS2Time) < 100000) //100ms debounce
    {
       return;
-   }
+   }*/
    _lNewS2Time = micros();
-   _lSensor2LastTriggerTime = micros();
+   _bS2TriggerState = digitalRead(_iS2Pin);
 }
 
 float RaceHandlerClass::GetElapsedTime()

@@ -15,7 +15,7 @@ class RaceHandlerClass
 
 
  public:
-	void init();
+	void init(int iS1Pin, int iS2Pin);
    enum RaceStates {
       STOPPED,
       STARTING,
@@ -42,12 +42,17 @@ class RaceHandlerClass
 private:
    long _lRaceStartTime;
    long _lPerfectCrossingTime;
-   long _lSensor1LastTriggerTime;
-   long _lSensor2LastTriggerTime;
+
    long _lNewS1Time;
    long _lPrevS1Time;
+   bool _bS1TriggerState;
+   int  _iS1Pin;
+
    long _lNewS2Time;
    long _lPrevS2Time;
+   bool _bS2TriggerState;
+   int  _iS2Pin;
+
    bool _bFault = false;
    long _lDogEnterTimes[4];
    long _lDogExitTimes[4];
