@@ -19,16 +19,15 @@ class RaceHandlerClass
    enum RaceStates {
       STOPPED,
       STARTING,
-      COMINGBACK,
-      GOINGIN
+      RUNNING
    };
    RaceStates RaceState = STOPPED;
    RaceStates PreviousRaceState = STOPPED;
 
    uint8_t iCurrentDog = 1;
    uint8_t iPreviousDog = 1;
-   long lDogTimes[4];
-   long lCrossingTimes[4];
+   long lDogTimes[4] = { 0, 0, 0, 0 };
+   long lCrossingTimes[4] = { 0, 0, 0, 0 };
    long lStartTime = 0;
    void Main();
    void StartTimers();
@@ -36,8 +35,8 @@ class RaceHandlerClass
    void TriggerSensor1();
    void TriggerSensor2();
 
-   float GetElapsedTime();
-
+   double GetElapsedTime();
+   double GetDogTime(int iDogNumber);
 
 private:
    long _lRaceStartTime;
@@ -56,8 +55,17 @@ private:
    bool _bFault = false;
    long _lDogEnterTimes[4];
    long _lDogExitTimes[4];
-   void _ChangeState(RaceStates _byNewState);
+   enum _byDogStates {
+      GOINGIN,
+      COMINGBACK
+   };
+
+   _byDogStates _byDogState = GOINGIN;
+   void _ChangeRaceState(RaceStates _byNewRaceState);
+   void _ChangeDogState(_byDogStates _byNewDogState);
    void _ChangeDogNumber(int _iNewDogNumber);
+
+   
 
 };
 

@@ -18,21 +18,22 @@ void LCDControllerClass::init(LiquidCrystal* Clcd1, LiquidCrystal* Clcd2)
    //Put initial text on screen
    _UpdateLCD(1, 0, String("D1: 000,000s CR: 00,000s|STOP   B:    0%"), 40);
    _UpdateLCD(2, 0, String("D2: 000,000s CR: 00,000s| Team: 000,000s"), 40);
-   _UpdateLCD(3, 0, String("D3: 000,000s CR: 00,000s|   CR: 000,000s"), 40);
-   _UpdateLCD(4, 0, String("D4: 000,000s CR: 00,000s|"), 40);
+   //_UpdateLCD(3, 0, String("D3: 000,000s CR: 00,000s|   CR: 000,000s"), 40);
+   //_UpdateLCD(4, 0, String("D4: 000,000s CR: 00,000s|"), 40);
 
-   _lcdfieldFields[D1Time] = { 1, 7, 4, String("000,000") };
-   _lcdfieldFields[D2Time] = { 2, 7, 4, String("000,000") };
-   _lcdfieldFields[D3Time] = { 3, 7, 4, String("000,000") };
-   _lcdfieldFields[D4Time] = { 4, 7, 4, String("000,000") };
-   _lcdfieldFields[D1CrossTime] = { 1, 6, 17, String("00,000") };
-   _lcdfieldFields[D2CrossTime] = { 2, 6, 17, String("00,000") };
-   _lcdfieldFields[D3CrossTime] = { 3, 6, 17, String("00,000") };
-   _lcdfieldFields[D4CrossTime] = { 4, 6, 17, String("00,000") };
-   _lcdfieldFields[BattLevel] = { 1, 3, 36, String("0") };
-   _lcdfieldFields[RaceState] = { 1, 5, 25, String("STOP") };
-   _lcdfieldFields[TeamTime] = { 2, 7, 32, String("000,000") };
-   _lcdfieldFields[TotalCrossTime] = { 3, 7, 32, String("000,000") };
+   _lcdfieldFields[D1Time] = { 1, 4, 7, String("000,000") };
+   _lcdfieldFields[D2Time] = { 2, 4, 7, String("000,000") };
+   //_lcdfieldFields[D3Time] = { 3, 4, 7, String("000,000") };
+   //_lcdfieldFields[D4Time] = { 4, 4, 7, String("000,000") };
+   _lcdfieldFields[D1CrossTime] = { 1, 17, 6, String("00,000") };
+   _lcdfieldFields[D2CrossTime] = { 2, 17, 6, String("00,000") };
+   //_lcdfieldFields[D3CrossTime] = { 3, 17, 6, String("00,000") };
+   //_lcdfieldFields[D4CrossTime] = { 4, 17, 6, String("00,000") };
+   _lcdfieldFields[BattLevel] = { 1, 36, 3, String("0") };
+   _lcdfieldFields[RaceState] = { 1, 25, 5, String("STOP") };
+   _lcdfieldFields[TeamTime] = { 2, 32, 7, String("000,000") };
+   
+   //_lcdfieldFields[TotalCrossTime] = { 3, 32, 7, String("000,000") };
 }
 
 void LCDControllerClass::Main()
@@ -40,7 +41,12 @@ void LCDControllerClass::Main()
    //This is the main loop which handles LCD updates
    if ((millis() - _lLastLCDUpdate) > _iLCDUpdateInterval)
    {  
-      
+      //_UpdateLCD(_lcdfieldFields[RaceState].iLine, _lcdfieldFields[RaceState].iStartingPosition, _lcdfieldFields[RaceState].strText, _lcdfieldFields[RaceState].iFieldLength);
+ 
+      //Remark: The for statement below is a range-for loop, this is new in C++11,
+      //which is not (yet) enabled by default in Arduino (as of Arduino IDE 1.6.1).
+      //See this link on how to enable C++11: http://stackoverflow.com/questions/16224746/how-to-use-c11-to-program-the-arduino
+      //If you do not enable C++11 than the statement below will fail to compile.
       for (const SLCDField& lcdField : _lcdfieldFields)
       {
          _UpdateLCD(lcdField.iLine, lcdField.iStartingPosition, lcdField.strText, lcdField.iFieldLength);
@@ -48,12 +54,16 @@ void LCDControllerClass::Main()
       
       _lLastLCDUpdate = millis();
    }
+}
 
-
+void LCDControllerClass::UpdateField(LCDFields lcdfieldField, String strNewValue)
+{
+   _lcdfieldFields[lcdfieldField].strText = strNewValue;
 }
 
 void LCDControllerClass::_UpdateLCD(int _iLine, int _iPosition, String _strText, int _iFieldLength)
 {
+   //TODO: dynamic switching of LCD objects doesn't work yet, so we always use _Clcd1 for now.
    //LiquidCrystal* CActiveLCD;
    LiquidCrystal *CActiveLCD = _Clcd1;
    if (_iLine > 2)
@@ -76,10 +86,10 @@ void LCDControllerClass::_UpdateLCD(int _iLine, int _iPosition, String _strText,
    if (iMessageLength > _iFieldLength)
    {
       //Message is too long, make it scroll!
-      int iExtraChars = iMessageLength - 15;
+      int iExtraChars = iMessageLength - (_iFieldLength -1);
       for (int i = 0; i < iExtraChars; i++)
       {
-         String strMessageSubString = _strText.substring(i, i + 16);
+         String strMessageSubString = _strText.substring(i, i + _iFieldLength);
          CActiveLCD->setCursor(_iPosition, _iLine);
          CActiveLCD->print(strMessageSubString);
       }
@@ -89,7 +99,7 @@ void LCDControllerClass::_UpdateLCD(int _iLine, int _iPosition, String _strText,
    {
       //Message is too short, we need to pad it
       //First find missing characters
-      int iMissingChars = 16 - iMessageLength;
+      int iMissingChars = _iFieldLength - iMessageLength;
       for (int i = 0; i < iMissingChars; i++)
       {
          _strText = String(_strText + " ");

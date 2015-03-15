@@ -32,6 +32,8 @@ class LCDControllerClass
       TotalCrossTime
    };
 
+   void UpdateField(LCDFields lcdfieldField, String strNewValue);
+
 private:
    void _UpdateLCD(int _iLine, int _iPosition, String _strText, int _iFieldLength);
    LiquidCrystal* _Clcd1;

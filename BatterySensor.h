@@ -17,6 +17,7 @@ public:
    void init(int iBatterySensorPin);
    void CheckBatteryVoltage();
    uint16_t GetBatteryVoltage();
+   uint16_t GetBatteryPercentage();
    
 private:
    int _iBatterySensorPin;

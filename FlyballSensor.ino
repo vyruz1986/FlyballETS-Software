@@ -73,8 +73,47 @@ void loop()
    BatterySensor.CheckBatteryVoltage();
 
    //Handle LCD processing
-   //LCDController.Main();
+   LCDController.Main();
    
+   //Update time to display
+   double dElapsedRaceTime = RaceHandler.GetElapsedTime();
+   char cElapsedRaceTime[8];
+   dtostrf(dElapsedRaceTime, 7, 3, cElapsedRaceTime);
+
+   if (RaceHandler.RaceState == RaceHandler.RUNNING)
+   {
+     
+      if (RaceHandler.GetDogTime(1) > 0)
+      {
+         char cDogTime[8];
+         dtostrf(RaceHandler.GetDogTime(1), 7, 3, cDogTime);
+         LCDController.UpdateField(LCDController.D1Time, cDogTime);
+      }
+
+      if (RaceHandler.GetDogTime(2) > 0)
+      {
+         char cDogTime[8];
+         dtostrf(RaceHandler.GetDogTime(2), 7, 3, cDogTime);
+         LCDController.UpdateField(LCDController.D2Time, cDogTime);
+      }
+
+      if (RaceHandler.GetDogTime(3) > 0)
+      {
+         char cDogTime[8];
+         dtostrf(RaceHandler.GetDogTime(3), 7, 3, cDogTime);
+         LCDController.UpdateField(LCDController.D3Time, cDogTime);
+      }
+
+      if (RaceHandler.GetDogTime(4) > 0)
+      {
+         char cDogTime[8];
+         dtostrf(RaceHandler.GetDogTime(4), 7, 3, cDogTime);
+         LCDController.UpdateField(LCDController.D4Time, cDogTime);
+      }
+      
+   }
+   
+   LCDController.UpdateField(LCDController.TeamTime, String(cElapsedRaceTime));
    
    if (RaceHandler.RaceState != RaceHandler.PreviousRaceState)
    {
@@ -90,15 +129,20 @@ void loop()
    if ((millis() - lLastSerialOutput) > 5000)
    {
       fBatteryVoltage = BatterySensor.GetBatteryVoltage();
-      //printf("%lu: ping! voltage is: %.2u\r\n", millis(), fBatteryVoltage);
-      
+      uint16_t iBatteryPercentage = BatterySensor.GetBatteryPercentage();
+      printf("%lu: ping! voltage is: %.2u, this is %i%%\r\n", millis(), fBatteryVoltage, iBatteryPercentage);
+      printf("%lu: Elapsed time: %s\r\n", millis(), cElapsedRaceTime);
+      Serial.println(dElapsedRaceTime);
+      LCDController.UpdateField(LCDController.BattLevel, String(iBatteryPercentage));
       lLastSerialOutput = millis();
    }
 
    if (digitalRead(iPushButtonPin) == LOW
-      || millis() > 5000 && LightsController.byOverallState == LightsController.STOPPED)  //TODO:start after 5 seconds since we don't have a pushbutton yet :-(
+      || millis() > 5000 && RaceHandler.RaceState == RaceHandler.STOPPED)  //TODO:start after 5 seconds since we don't have a pushbutton yet :-(
    {
       bDEBUG ? printf("%lu: Starting light sequence!\r\n", millis()) : NULL;
+
+      //TODO: Disabled lightsequence for now since this causes interference with the LCD display
       LightsController.InitiateStartSequence();
       RaceHandler.StartRace();
    }
@@ -110,13 +154,12 @@ void loop()
 }
 
 
-String fGetFormattedTime(long lMilliTime)
+String fGetFormattedTime(long lMicroTime)
 {
-  elapsedTime =   lMilliTime;
-  FormattedTime = String((int)(elapsedTime / 1000L));
-  FormattedTime = String(FormattedTime + ".");
+  FormattedTime = String((int)(lMicroTime / 1000000L));
+  FormattedTime = String(FormattedTime + ",");
   // use modulo operator to get fractional part of time 
-  fractional = (int)(elapsedTime % 1000L);
+  fractional = (int)(lMicroTime % 1000L);
   FormattedTime = String(FormattedTime + fractional);
   // pad in leading zeros - wouldn't it be nice if 
   // Arduino language had a flag for this? :)

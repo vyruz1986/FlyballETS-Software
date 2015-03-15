@@ -24,9 +24,9 @@ void LightsControllerClass::HandleLightStates()
    {
       bDEBUG ? printf("%lu: New light states: %i\r\n", millis(), _byNewLightsState) : NULL;
       _byCurrentLightsState = _byNewLightsState;
-      digitalWrite(_iLatchPin, LOW);
-      shiftOut(_iDataPin, _iClockPin, MSBFIRST, _byCurrentLightsState);
-      digitalWrite(_iLatchPin, HIGH);
+      //digitalWrite(_iLatchPin, LOW);
+      //shiftOut(_iDataPin, _iClockPin, MSBFIRST, _byCurrentLightsState);
+      //digitalWrite(_iLatchPin, HIGH);
    }
 }
 
