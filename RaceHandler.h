@@ -24,9 +24,9 @@ class RaceHandlerClass
    RaceStates RaceState = STOPPED;
    RaceStates PreviousRaceState = STOPPED;
 
-   uint8_t iCurrentDog = 1;
-   uint8_t iPreviousDog = 1;
-   long lDogTimes[4] = { 0, 0, 0, 0 };
+   uint8_t iCurrentDog = 0;
+   uint8_t iPreviousDog = 0;
+   unsigned long lDogTimes[4] = { 0, 0, 0, 0 };
    long lCrossingTimes[4] = { 0, 0, 0, 0 };
    long lStartTime = 0;
    void Main();
@@ -35,31 +35,33 @@ class RaceHandlerClass
    void TriggerSensor1();
    void TriggerSensor2();
 
-   double GetElapsedTime();
+   double GetRaceTime();
    double GetDogTime(int iDogNumber);
 
 private:
-   long _lRaceStartTime;
-   long _lPerfectCrossingTime;
+   long _lRaceStartTime = 0;
+   long _lRaceEndTime = 0;
+   long _lRaceTime = 0;
+   long _lPerfectCrossingTime = 0;
 
-   long _lNewS1Time;
-   long _lPrevS1Time;
+   long _lNewS1Time = 0;
+   long _lPrevS1Time = 0;
    bool _bS1TriggerState;
    int  _iS1Pin;
 
-   long _lNewS2Time;
-   long _lPrevS2Time;
+   long _lNewS2Time = 0;
+   long _lPrevS2Time = 0;
    bool _bS2TriggerState;
    int  _iS2Pin;
 
    bool _bFault = false;
-   long _lDogEnterTimes[4];
-   long _lDogExitTimes[4];
+   long _lDogEnterTimes[4] = { 0, 0, 0, 0 };
+   long _lDogExitTimes[4] = { 0, 0, 0, 0 };
+   
    enum _byDogStates {
       GOINGIN,
       COMINGBACK
    };
-
    _byDogStates _byDogState = GOINGIN;
    void _ChangeRaceState(RaceStates _byNewRaceState);
    void _ChangeDogState(_byDogStates _byNewDogState);

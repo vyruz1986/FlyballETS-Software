@@ -54,8 +54,7 @@ void RaceHandlerClass::Main()
       {
          //Store crossing time
          lCrossingTimes[iCurrentDog] = _lNewS1Time - _lPerfectCrossingTime;
-         //Store dog enter time
-         _lDogEnterTimes[iCurrentDog] = _lNewS1Time;
+         
          if (lCrossingTimes[iCurrentDog] < 0)
          {
             //Negative crossing means fault
@@ -83,15 +82,30 @@ void RaceHandlerClass::Main()
          if (micros() - _lDogEnterTimes[iCurrentDog] > 2000000)
          {
             _lDogExitTimes[iCurrentDog] = _lNewS2Time;
-            lDogTimes[iCurrentDog] = _lDogEnterTimes[iCurrentDog] - _lNewS2Time;
+            lDogTimes[iCurrentDog] = _lNewS2Time - _lDogEnterTimes[iCurrentDog];
+            //If this is the 4th dog and there is not fault we have to stop the race
+            if (iCurrentDog == 3 && _bFault == false)
+            {
+               _lRaceEndTime = micros();
+               _ChangeRaceState(STOPPED);
+            }
             //The time the dog came in is also the perfect crossing time
             _lPerfectCrossingTime = _lNewS2Time;
             //Set race back to expect incoming dog
             _ChangeDogState(GOINGIN);
             //And increase dog number
             _ChangeDogNumber(iCurrentDog + 1);
+            //Store next dog enter time
+            _lDogEnterTimes[iCurrentDog] = _lNewS1Time;
          }
       }
+
+      //Update racetime
+      if (RaceState == RUNNING)
+      {
+         _lRaceTime = micros() - _lRaceStartTime;
+      }
+
       _lPrevS2Time = _lNewS2Time;
       _lNewS2Time = 0;
    }
@@ -103,7 +117,9 @@ void RaceHandlerClass::StartTimers()
    _ChangeRaceState(RUNNING);
    lStartTime = micros();
    _lPerfectCrossingTime = lStartTime;
-   _lRaceStartTime = _lPerfectCrossingTime;
+   _lRaceStartTime = lStartTime;
+   //Store dog 1 enter time
+   _lDogEnterTimes[0] = lStartTime;
 }
 
 void RaceHandlerClass::StartRace()
@@ -138,25 +154,30 @@ void RaceHandlerClass::TriggerSensor2()
    _bS2TriggerState = digitalRead(_iS2Pin);
 }
 
-double RaceHandlerClass::GetElapsedTime()
+double RaceHandlerClass::GetRaceTime()
 {
-   double dElapsedTimeSeconds = 0;
-   if (RaceState != STOPPED
-      && RaceState != STARTING)
+   double dRaceTimeSeconds = 0;
+   if (RaceState != STARTING)
    {
-      long ElapsedTimeMicros = micros() - lStartTime;
-      dElapsedTimeSeconds = ElapsedTimeMicros / 1000000.0, 3;
+      dRaceTimeSeconds = _lRaceTime / 1000000.0, 3;
    }
 
-   return dElapsedTimeSeconds;
+   return dRaceTimeSeconds;
 }
 
 double RaceHandlerClass::GetDogTime(int iDogNumber)
 {
    double dDogTimeSeconds = 0;
+
+   //First check if we have final time for the requested dog number
    if (lDogTimes[iDogNumber] > 0)
    {
       dDogTimeSeconds = lDogTimes[iDogNumber] / 1000000.0, 3;
+   }
+   //Then check if the requested dog is perhaps running so we can return the time so far
+   else if (RaceState == RUNNING && iCurrentDog == iDogNumber)
+   {
+      dDogTimeSeconds = (micros() - _lDogEnterTimes[iDogNumber]) / 1000000.0, 3;
    }
    return dDogTimeSeconds;
 }

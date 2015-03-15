@@ -54,7 +54,7 @@ void setup()
   attachInterrupt(0, Sensor1Wrapper, CHANGE);
   BatterySensor.init(A0);
 
-  LightsController.init(13,12,11);
+  LightsController.init(13,8,9);
   RaceHandler.init(iS1Pin, iS2Pin);
   pinMode(iPushButtonPin, INPUT_PULLUP);
 
@@ -76,44 +76,47 @@ void loop()
    LCDController.Main();
    
    //Update time to display
-   double dElapsedRaceTime = RaceHandler.GetElapsedTime();
+   double dElapsedRaceTime = RaceHandler.GetRaceTime();
    char cElapsedRaceTime[8];
    dtostrf(dElapsedRaceTime, 7, 3, cElapsedRaceTime);
+   LCDController.UpdateField(LCDController.TeamTime, String(cElapsedRaceTime));
+
+   //Update battery percentage to display
+   fBatteryVoltage = BatterySensor.GetBatteryVoltage();
+   uint16_t iBatteryPercentage = BatterySensor.GetBatteryPercentage();
+   LCDController.UpdateField(LCDController.BattLevel, String(iBatteryPercentage));
 
    if (RaceHandler.RaceState == RaceHandler.RUNNING)
    {
-     
+      if (RaceHandler.GetDogTime(0) > 0)
+      {
+         char cDogTime[8];
+         dtostrf(RaceHandler.GetDogTime(0), 7, 3, cDogTime);
+         LCDController.UpdateField(LCDController.D1Time, cDogTime);
+      }
+
       if (RaceHandler.GetDogTime(1) > 0)
       {
          char cDogTime[8];
          dtostrf(RaceHandler.GetDogTime(1), 7, 3, cDogTime);
-         LCDController.UpdateField(LCDController.D1Time, cDogTime);
+         LCDController.UpdateField(LCDController.D2Time, cDogTime);
       }
 
       if (RaceHandler.GetDogTime(2) > 0)
       {
          char cDogTime[8];
          dtostrf(RaceHandler.GetDogTime(2), 7, 3, cDogTime);
-         LCDController.UpdateField(LCDController.D2Time, cDogTime);
+         LCDController.UpdateField(LCDController.D3Time, cDogTime);
       }
 
       if (RaceHandler.GetDogTime(3) > 0)
       {
          char cDogTime[8];
          dtostrf(RaceHandler.GetDogTime(3), 7, 3, cDogTime);
-         LCDController.UpdateField(LCDController.D3Time, cDogTime);
-      }
-
-      if (RaceHandler.GetDogTime(4) > 0)
-      {
-         char cDogTime[8];
-         dtostrf(RaceHandler.GetDogTime(4), 7, 3, cDogTime);
          LCDController.UpdateField(LCDController.D4Time, cDogTime);
       }
       
    }
-   
-   LCDController.UpdateField(LCDController.TeamTime, String(cElapsedRaceTime));
    
    if (RaceHandler.RaceState != RaceHandler.PreviousRaceState)
    {
@@ -128,12 +131,13 @@ void loop()
 
    if ((millis() - lLastSerialOutput) > 5000)
    {
-      fBatteryVoltage = BatterySensor.GetBatteryVoltage();
-      uint16_t iBatteryPercentage = BatterySensor.GetBatteryPercentage();
       printf("%lu: ping! voltage is: %.2u, this is %i%%\r\n", millis(), fBatteryVoltage, iBatteryPercentage);
       printf("%lu: Elapsed time: %s\r\n", millis(), cElapsedRaceTime);
-      Serial.println(dElapsedRaceTime);
-      LCDController.UpdateField(LCDController.BattLevel, String(iBatteryPercentage));
+      for (int i = 0; i < 4; i++)
+      {
+         printf("%lu: Dog %i time: %lu \r\n", millis(), i, RaceHandler.lDogTimes[i]);
+      }
+
       lLastSerialOutput = millis();
    }
 
