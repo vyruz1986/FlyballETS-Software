@@ -25,8 +25,6 @@ String strLCDLine1;
 int iS1Pin = 2;
 int iS2Pin = 3;
 
-
-
 uint16_t fBatteryVoltage = 0;
 
 //Initialise Lights stuff
@@ -50,8 +48,8 @@ void setup()
 
   pinMode(iS1Pin, INPUT);
   pinMode(iS2Pin, INPUT);
-  attachInterrupt(1, Sensor2Wrapper, CHANGE);
-  attachInterrupt(0, Sensor1Wrapper, CHANGE);
+  attachInterrupt(1, Sensor2Wrapper, RISING);
+  attachInterrupt(0, Sensor1Wrapper, RISING);
   BatterySensor.init(A0);
 
   LightsController.init(13,8,9);
@@ -75,17 +73,27 @@ void loop()
    //Handle LCD processing
    LCDController.Main();
    
-   //Update time to display
-   double dElapsedRaceTime = RaceHandler.GetRaceTime();
+   
+   /*Update LCD Display fields*/
+   //Update team time to display
    char cElapsedRaceTime[8];
-   dtostrf(dElapsedRaceTime, 7, 3, cElapsedRaceTime);
-   LCDController.UpdateField(LCDController.TeamTime, String(cElapsedRaceTime));
+   dtostrf(RaceHandler.GetRaceTime(), 7, 3, cElapsedRaceTime);
+   LCDController.UpdateField(LCDController.TeamTime, cElapsedRaceTime);
 
    //Update battery percentage to display
    fBatteryVoltage = BatterySensor.GetBatteryVoltage();
    uint16_t iBatteryPercentage = BatterySensor.GetBatteryPercentage();
    LCDController.UpdateField(LCDController.BattLevel, String(iBatteryPercentage));
 
+   //Update total crossing time
+   char cTotalCrossingTime[8];
+   dtostrf(RaceHandler.GetTotalCrossingTime(), 7, 3, cTotalCrossingTime);
+   LCDController.UpdateField(LCDController.TotalCrossTime, cTotalCrossingTime);
+
+   //Update race status to display
+   LCDController.UpdateField(LCDController.RaceState, RaceHandler.GetRaceStateString());
+
+   //Handle individual dog times
    if (RaceHandler.RaceState == RaceHandler.RUNNING)
    {
       if (RaceHandler.GetDogTime(0) > 0)
@@ -95,11 +103,25 @@ void loop()
          LCDController.UpdateField(LCDController.D1Time, cDogTime);
       }
 
+      if (RaceHandler.GetCrossingTime(0) > 0)
+      {
+         char cCrossingTime[7];
+         dtostrf(RaceHandler.GetCrossingTime(0), 6, 3, cCrossingTime);
+         LCDController.UpdateField(LCDController.D1CrossTime, cCrossingTime);
+      }
+
       if (RaceHandler.GetDogTime(1) > 0)
       {
          char cDogTime[8];
          dtostrf(RaceHandler.GetDogTime(1), 7, 3, cDogTime);
          LCDController.UpdateField(LCDController.D2Time, cDogTime);
+      }
+
+      if (RaceHandler.GetCrossingTime(1) > 0)
+      {
+         char cCrossingTime[7];
+         dtostrf(RaceHandler.GetCrossingTime(1), 6, 3, cCrossingTime);
+         LCDController.UpdateField(LCDController.D2CrossTime, cCrossingTime);
       }
 
       if (RaceHandler.GetDogTime(2) > 0)
@@ -109,6 +131,13 @@ void loop()
          LCDController.UpdateField(LCDController.D3Time, cDogTime);
       }
 
+      if (RaceHandler.GetCrossingTime(2) > 0)
+      {
+         char cCrossingTime[7];
+         dtostrf(RaceHandler.GetCrossingTime(2), 6, 3, cCrossingTime);
+         LCDController.UpdateField(LCDController.D3CrossTime, cCrossingTime);
+      }
+
       if (RaceHandler.GetDogTime(3) > 0)
       {
          char cDogTime[8];
@@ -116,8 +145,14 @@ void loop()
          LCDController.UpdateField(LCDController.D4Time, cDogTime);
       }
       
+      if (RaceHandler.GetCrossingTime(3) > 0)
+      {
+         char cCrossingTime[7];
+         dtostrf(RaceHandler.GetCrossingTime(3), 6, 3, cCrossingTime);
+         LCDController.UpdateField(LCDController.D4CrossTime, cCrossingTime);
+      }
    }
-   
+
    if (RaceHandler.RaceState != RaceHandler.PreviousRaceState)
    {
       printf("%lu: Race State Changed: %i\r\n", millis(), RaceHandler.RaceState);
@@ -125,28 +160,24 @@ void loop()
 
    if (RaceHandler.iCurrentDog != RaceHandler.iPreviousDog)
    {
-      printf("%lu: Dog %i time: %lu\r\n", millis(), RaceHandler.iPreviousDog, RaceHandler.lDogTimes[RaceHandler.iPreviousDog]);
+      char cDogTime[8];
+      dtostrf(RaceHandler.GetDogTime(RaceHandler.iPreviousDog), 7, 3, cDogTime);
+      printf("%lu: Dog %i time: %s\r\n", millis(), RaceHandler.iPreviousDog, cDogTime);
       printf("%lu: Dog number changed to: %i\r\n", millis(), RaceHandler.iCurrentDog);
    }
 
    if ((millis() - lLastSerialOutput) > 5000)
    {
-      printf("%lu: ping! voltage is: %.2u, this is %i%%\r\n", millis(), fBatteryVoltage, iBatteryPercentage);
-      printf("%lu: Elapsed time: %s\r\n", millis(), cElapsedRaceTime);
-      for (int i = 0; i < 4; i++)
-      {
-         printf("%lu: Dog %i time: %lu \r\n", millis(), i, RaceHandler.lDogTimes[i]);
-      }
+      //printf("%lu: ping! voltage is: %.2u, this is %i%%\r\n", millis(), fBatteryVoltage, iBatteryPercentage);
+      //printf("%lu: Elapsed time: %s\r\n", millis(), cElapsedRaceTime);
 
       lLastSerialOutput = millis();
    }
 
    if (digitalRead(iPushButtonPin) == LOW
-      || millis() > 5000 && RaceHandler.RaceState == RaceHandler.STOPPED)  //TODO:start after 5 seconds since we don't have a pushbutton yet :-(
+      || (millis() > 5000 && RaceHandler.RaceState == RaceHandler.STOPPED && RaceHandler.GetRaceTime() == 0))  //TODO:start after 5 seconds since we don't have a pushbutton yet :-(
    {
       bDEBUG ? printf("%lu: Starting light sequence!\r\n", millis()) : NULL;
-
-      //TODO: Disabled lightsequence for now since this causes interference with the LCD display
       LightsController.InitiateStartSequence();
       RaceHandler.StartRace();
    }

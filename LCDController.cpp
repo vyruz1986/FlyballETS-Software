@@ -16,23 +16,23 @@ void LCDControllerClass::init(LiquidCrystal* Clcd1, LiquidCrystal* Clcd2)
    _Clcd2->clear();
 
    //Put initial text on screen
-   _UpdateLCD(1, 0, String("D1: 000,000s CR: 00,000s| STOP   B:   0%"), 40);
-   _UpdateLCD(2, 0, String("D2: 000,000s CR: 00,000s| Team: 000,000s"), 40);
-   _UpdateLCD(3, 0, String("D3: 000,000s CR: 00,000s|   CR: 000,000s"), 40);
-   _UpdateLCD(4, 0, String("D4: 000,000s CR: 00,000s|"), 40);
+   _UpdateLCD(1, 0, String("D1:   0.000s CR:  0.000s| STOP   B:   0%"), 40);
+   _UpdateLCD(2, 0, String("D2:   0.000s CR:  0.000s| Team:   0.000s"), 40);
+   _UpdateLCD(3, 0, String("D3:   0.000s CR:  0.000s|   CR:   0.000s"), 40);
+   _UpdateLCD(4, 0, String("D4:   0.000s CR:  0.000s|"), 40);
 
-   _lcdfieldFields[D1Time] = { 1, 4, 7, String("000,000") };
-   _lcdfieldFields[D2Time] = { 2, 4, 7, String("000,000") };
-   _lcdfieldFields[D3Time] = { 3, 4, 7, String("000,000") };
-   _lcdfieldFields[D4Time] = { 4, 4, 7, String("000,000") };
-   _lcdfieldFields[D1CrossTime] = { 1, 17, 6, String("00,000") };
-   _lcdfieldFields[D2CrossTime] = { 2, 17, 6, String("00,000") };
-   _lcdfieldFields[D3CrossTime] = { 3, 17, 6, String("00,000") };
-   _lcdfieldFields[D4CrossTime] = { 4, 17, 6, String("00,000") };
+   _lcdfieldFields[D1Time] = { 1, 4, 7, String("  0.000") };
+   _lcdfieldFields[D2Time] = { 2, 4, 7, String("  0.000") };
+   _lcdfieldFields[D3Time] = { 3, 4, 7, String("  0.000") };
+   _lcdfieldFields[D4Time] = { 4, 4, 7, String("  0.000") };
+   _lcdfieldFields[D1CrossTime] = { 1, 17, 6, String(" 0.000") };
+   _lcdfieldFields[D2CrossTime] = { 2, 17, 6, String(" 0.000") };
+   _lcdfieldFields[D3CrossTime] = { 3, 17, 6, String(" 0.000") };
+   _lcdfieldFields[D4CrossTime] = { 4, 17, 6, String(" 0.000") };
    _lcdfieldFields[BattLevel] = { 1, 36, 3, String("0") };
-   _lcdfieldFields[RaceState] = { 1, 25, 5, String(" STOP") };
-   _lcdfieldFields[TeamTime] = { 2, 32, 7, String("000,000") };
-   _lcdfieldFields[TotalCrossTime] = { 3, 32, 7, String("000,000") };
+   _lcdfieldFields[RaceState] = { 1, 25, 7, String(" STOP") };
+   _lcdfieldFields[TeamTime] = { 2, 32, 7, String("  0.000") };
+   _lcdfieldFields[TotalCrossTime] = { 3, 32, 7, String("  0.000") };
 }
 
 void LCDControllerClass::Main()

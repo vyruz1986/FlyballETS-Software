@@ -26,9 +26,7 @@ class RaceHandlerClass
 
    uint8_t iCurrentDog = 0;
    uint8_t iPreviousDog = 0;
-   unsigned long lDogTimes[4] = { 0, 0, 0, 0 };
-   long lCrossingTimes[4] = { 0, 0, 0, 0 };
-   long lStartTime = 0;
+   
    void Main();
    void StartTimers();
    void StartRace();
@@ -37,6 +35,10 @@ class RaceHandlerClass
 
    double GetRaceTime();
    double GetDogTime(int iDogNumber);
+   double GetCrossingTime(int iDognumber);
+   double GetTotalCrossingTime();
+
+   String GetRaceStateString();
 
 private:
    long _lRaceStartTime = 0;
@@ -44,19 +46,22 @@ private:
    long _lRaceTime = 0;
    long _lPerfectCrossingTime = 0;
 
-   long _lNewS1Time = 0;
-   long _lPrevS1Time = 0;
+   volatile long _lNewS1Time = 0;
+   volatile long _lPrevS1Time = 0;
    bool _bS1TriggerState;
    int  _iS1Pin;
 
-   long _lNewS2Time = 0;
-   long _lPrevS2Time = 0;
+   volatile long _lNewS2Time = 0;
+   volatile long _lPrevS2Time = 0;
    bool _bS2TriggerState;
    int  _iS2Pin;
 
    bool _bFault = false;
    long _lDogEnterTimes[4] = { 0, 0, 0, 0 };
    long _lDogExitTimes[4] = { 0, 0, 0, 0 };
+
+   unsigned long _lDogTimes[4] = { 0, 0, 0, 0 };
+   long _lCrossingTimes[4] = { 0, 0, 0, 0 };
    
    enum _byDogStates {
       GOINGIN,
