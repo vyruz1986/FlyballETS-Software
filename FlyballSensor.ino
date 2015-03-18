@@ -69,6 +69,8 @@ int iRC2Pin = A1;
 int iRC3Pin = A4;
 int iRC4Pin = A5;
 int iRC5Pin = A6;
+//Array to hold last time button presses
+unsigned long lLastRCPress[6] = {0, 0, 0, 0, 0, 0};
 
 LiquidCrystal lcd(12, 11, 7, 6, 5, 4);  //declare two LCD's
 LiquidCrystal lcd2(12, 10, 7, 6, 5, 4); // Ths is the second
@@ -178,8 +180,10 @@ void loop()
    }
 
    //Race start/stop button (remote D0 output)
-   if (digitalRead(iRC0Pin) == HIGH)
+   if (digitalRead(iRC0Pin) == HIGH
+       && (millis() - lLastRCPress[0] > 2000))
    {
+     lLastRCPress[0] = millis();
       if (RaceHandler.RaceState == RaceHandler.STOPPED //If race is stopped
          && RaceHandler.GetRaceTime() == 0)           //and timers are zero
       {
@@ -197,8 +201,10 @@ void loop()
 
    //Race reset button (remote D1 output)
    if (digitalRead(iRC1Pin) == HIGH
-      && RaceHandler.RaceState == RaceHandler.STOPPED)   //Only allow reset when race is stopped first
+      && RaceHandler.RaceState == RaceHandler.STOPPED   //Only allow reset when race is stopped first
+      && (millis() - lLastRCPress[1] > 2000))
    {
+      lLastRCPress[1] = millis();
       LightsController.ResetLights();
       RaceHandler.ResetRace();
    }
