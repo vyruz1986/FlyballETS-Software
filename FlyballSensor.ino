@@ -137,27 +137,22 @@ void loop()
    dtostrf(RaceHandler.GetDogTime(0), 7, 3, cDogTime);
    LCDController.UpdateField(LCDController.D1Time, cDogTime);
    
-   
-   dtostrf(RaceHandler.GetCrossingTime(0), 6, 3, cCrossingTime);
-   LCDController.UpdateField(LCDController.D1CrossTime, cCrossingTime);
+   LCDController.UpdateField(LCDController.D1CrossTime, RaceHandler.GetCrossingTime(0));
 
    dtostrf(RaceHandler.GetDogTime(1), 7, 3, cDogTime);
    LCDController.UpdateField(LCDController.D2Time, cDogTime);
 
-   dtostrf(RaceHandler.GetCrossingTime(1), 6, 3, cCrossingTime);
-   LCDController.UpdateField(LCDController.D2CrossTime, cCrossingTime);
+   LCDController.UpdateField(LCDController.D2CrossTime, RaceHandler.GetCrossingTime(1));
 
    dtostrf(RaceHandler.GetDogTime(2), 7, 3, cDogTime);
    LCDController.UpdateField(LCDController.D3Time, cDogTime);
 
-   dtostrf(RaceHandler.GetCrossingTime(2), 6, 3, cCrossingTime);
-   LCDController.UpdateField(LCDController.D3CrossTime, cCrossingTime);
+   LCDController.UpdateField(LCDController.D3CrossTime, RaceHandler.GetCrossingTime(2));
 
    dtostrf(RaceHandler.GetDogTime(3), 7, 3, cDogTime);
    LCDController.UpdateField(LCDController.D4Time, cDogTime);
-      
-   dtostrf(RaceHandler.GetCrossingTime(3), 6, 3, cCrossingTime);
-   LCDController.UpdateField(LCDController.D4CrossTime, cCrossingTime);
+   
+   LCDController.UpdateField(LCDController.D4CrossTime, RaceHandler.GetCrossingTime(3));
 
    if (RaceHandler.RaceState != RaceHandler.PreviousRaceState)
    {

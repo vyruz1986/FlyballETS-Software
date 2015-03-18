@@ -12,6 +12,8 @@ void RaceHandlerClass::init(int iS1Pin, int iS2Pin)
    _iS1Pin = iS1Pin;
    _iS2Pin = iS2Pin;
 
+   ResetRace();
+
 }
 
 void RaceHandlerClass::_ChangeRaceState(RaceStates _byNewRaceState)
@@ -45,6 +47,11 @@ void RaceHandlerClass::_ChangeDogNumber(int _iNewDogNumber)
 
 void RaceHandlerClass::Main()
 {
+   //Don't handle anything if race is stopped
+   if (RaceState == STOPPED)
+   {
+      return;
+   }
    if (_lNewS1Time > 0)
    {
       bDEBUG ? printf("%lu: S1|Time: %lu|State: NA\r\n", millis(), _lNewS1Time, _bS1TriggerState) : NULL;
@@ -52,21 +59,23 @@ void RaceHandlerClass::Main()
       if (RaceState != STOPPED
          && (_lNewS1Time - _lPrevS2Time) > 100000) //100 ms debounce to avoid dog coming back immediately triggering the next dog
       {
+         //Check if this is a next dog which is too early
+         if (_byDogState == COMINGBACK)
+         {
+
+            //TODO: This code isn't working very well yet....
+            //This dog is too early!
+            //We assume previous dog came in at the more or less the same time
+            _lDogExitTimes[iCurrentDog] = _lNewS1Time;
+            _ChangeDogNumber(iCurrentDog + 1);
+            _lDogEnterTimes[iCurrentDog] = _lNewS1Time;
+            bDEBUG ? printf("%lu: Fault by dog %i!\r\n", millis(), iCurrentDog) : NULL;
+            //TODO: Trigger fault light
+         }
          //Store crossing time
          _lCrossingTimes[iCurrentDog] = _lNewS1Time - _lPerfectCrossingTime;
          
-         if (_lCrossingTimes[iCurrentDog] < 0)
-         {
-            //Negative crossing means fault
-            //TODO: Trigger fault light
-            bDEBUG ? printf("%lu: Fault by dog %i!\r\n", millis(), iCurrentDog) : NULL;
-         }
-         else
-         {
-            //Only change state when there was no fault
-            //set state to expect the dog back
-            _ChangeDogState(COMINGBACK);
-         }
+         _ChangeDogState(COMINGBACK);
       }
       _lPrevS1Time = _lNewS1Time;
       _lNewS1Time = 0;
@@ -111,9 +120,6 @@ void RaceHandlerClass::Main()
    {
       _lRaceTime = micros() - _lRaceStartTime;
    }
-
-   //printf("Racetime: %lu\r\n", _lRaceTime);
-
 }
 
 void RaceHandlerClass::StartTimers()
@@ -139,8 +145,6 @@ void RaceHandlerClass::StopRace()
       //Race is running, so we have to record the EndTime
       _lRaceEndTime = micros();
       _lRaceTime = _lRaceEndTime - _lRaceStartTime;
-      
-
    }
    _ChangeRaceState(STOPPED);
 }
@@ -149,18 +153,31 @@ void RaceHandlerClass::ResetRace()
 {
    if (RaceState == STOPPED)
    {
+      iCurrentDog = 0;
+      iPreviousDog = 0;
       _lRaceStartTime = 0;
       _lRaceEndTime = 0;
       _lRaceTime = 0;
       _lPerfectCrossingTime = 0;
-
+      _byDogState = GOINGIN;
+      _ChangeDogNumber(0);
       _bFault = false;
-      long _lDogEnterTimes[4] = { 0, 0, 0, 0 };
-      long _lDogExitTimes[4] = { 0, 0, 0, 0 };
-
-      unsigned long _lDogTimes[4] = { 0, 0, 0, 0 };
-      long _lCrossingTimes[4] = { 0, 0, 0, 0 };
-
+      for (auto& lTime : _lDogEnterTimes)
+      {
+         lTime = 0;
+      }
+      for (auto& lTime : _lDogExitTimes)
+      {
+         lTime = 0;
+      }
+      for (auto& lTime : _lDogTimes)
+      {
+         lTime = 0;
+      }
+      for (auto& lTime : _lCrossingTimes)
+      {
+         lTime = 0;
+      }
    }
 }
 
@@ -208,23 +225,34 @@ double RaceHandlerClass::GetDogTime(int _iDogNumber)
    {
       dDogTimeSeconds = _lDogTimes[_iDogNumber] / 1000000.0;
    }
-   //Then check if the requested dog is perhaps running so we can return the time so far
-   else if (RaceState == RUNNING && iCurrentDog == _iDogNumber)
+   //Then check if the requested dog is perhaps running (and coming back) so we can return the time so far
+   else if (RaceState == RUNNING && iCurrentDog == _iDogNumber && _byDogState == COMINGBACK)
    {
       dDogTimeSeconds = (micros() - _lDogEnterTimes[_iDogNumber]) / 1000000.0;
    }
+   dDogTimeSeconds -= (_lCrossingTimes[_iDogNumber] / 1000000.0);
    return dDogTimeSeconds;
 }
 
-double RaceHandlerClass::GetCrossingTime(int _iDognumber)
+String RaceHandlerClass::GetCrossingTime(int _iDognumber)
 {
    double dCrossingTime = 0;
-   if (_lCrossingTimes[_iDognumber] != 0)
+   char cCrossingTime[8];
+   String strCrossingTime;
+   dCrossingTime = _lCrossingTimes[_iDognumber] / 1000000.0;
+   if (dCrossingTime < 0)
    {
-      dCrossingTime = _lCrossingTimes[_iDognumber] / 1000000.0;
+      dCrossingTime = fabs(dCrossingTime);
+      strCrossingTime = "-";
    }
-
-   return dCrossingTime;
+   else
+   {
+      strCrossingTime = "+";
+   }
+   dtostrf(dCrossingTime, 7, 3, cCrossingTime);
+   strCrossingTime += cCrossingTime;
+   
+   return strCrossingTime;
 }
 
 double RaceHandlerClass::GetTotalCrossingTime()
