@@ -6,6 +6,31 @@
 #include "global.h"
 #include <LiquidCrystal.h>
 
+/*List of pins and the ones used:
+   - D0: Reserved for RX
+   - D1: Reserved for TX
+   - D2: S1 (handler side) photoelectric sensor
+   - D3: S2 (box side) photoelectric sensor
+   - D4: LCD Data0
+   - D5: LCD Data1
+   - D6: LCD Data2
+   - D7: LCD Data3
+   - D8: Lights 74HC595 clock pin
+   - D9: Lights 74HC595 data pin
+   - D10: LCD2 (line 3&4) enable pin
+   - D11: LCD1 (line 1&2) enable pin
+   - D12: LCD RS Pin
+   - D13: Lights 74HC595 latch pin
+   - A0: battery sensor pin
+   - A1: remote D2
+   - A2: remote D1
+   - A3: remote D0
+   - A4: remote D3
+   - A5: remote D4
+   - A6: remote D5
+   - A7: <free>
+*/
+
 #define ledPin  5                  // LED connected to digital pin 13
 
 int value = LOW;                    // previous value of the LED
@@ -25,6 +50,11 @@ String strLCDLine1;
 int iS1Pin = 2;
 int iS2Pin = 3;
 
+char cDogTime[8];
+char cCrossingTime[7];
+char cElapsedRaceTime[8];
+char cTotalCrossingTime[8];
+
 uint16_t fBatteryVoltage = 0;
 
 //Initialise Lights stuff
@@ -32,10 +62,14 @@ long lLastSerialOutput = 0;
 
 //int senspin = 3;
 
-//Pin connected to the Start/Stop button
-int iPushButtonPin = A1;
+//remote control pins
+int iRC0Pin = A3;
+int iRC1Pin = A2;
+int iRC2Pin = A1;
+int iRC3Pin = A4;
+int iRC4Pin = A5;
+int iRC5Pin = A6;
 
-//LiquidCrystal lcd(RS,RW,Enable1,Enable2, data3,data2,data1,data0);
 LiquidCrystal lcd(12, 11, 7, 6, 5, 4);  //declare two LCD's
 LiquidCrystal lcd2(12, 10, 7, 6, 5, 4); // Ths is the second
 
@@ -54,7 +88,12 @@ void setup()
 
   LightsController.init(13,8,9);
   RaceHandler.init(iS1Pin, iS2Pin);
-  pinMode(iPushButtonPin, INPUT_PULLUP);
+  pinMode(iRC0Pin, INPUT);
+  pinMode(iRC1Pin, INPUT);
+  pinMode(iRC2Pin, INPUT);
+  pinMode(iRC3Pin, INPUT);
+  pinMode(iRC4Pin, INPUT);
+  pinMode(iRC5Pin, INPUT);
 
   LCDController.init(&lcd, &lcd2);
 }
@@ -76,7 +115,6 @@ void loop()
    
    /*Update LCD Display fields*/
    //Update team time to display
-   char cElapsedRaceTime[8];
    dtostrf(RaceHandler.GetRaceTime(), 7, 3, cElapsedRaceTime);
    LCDController.UpdateField(LCDController.TeamTime, cElapsedRaceTime);
 
@@ -86,7 +124,6 @@ void loop()
    LCDController.UpdateField(LCDController.BattLevel, String(iBatteryPercentage));
 
    //Update total crossing time
-   char cTotalCrossingTime[8];
    dtostrf(RaceHandler.GetTotalCrossingTime(), 7, 3, cTotalCrossingTime);
    LCDController.UpdateField(LCDController.TotalCrossTime, cTotalCrossingTime);
 
@@ -94,64 +131,31 @@ void loop()
    LCDController.UpdateField(LCDController.RaceState, RaceHandler.GetRaceStateString());
 
    //Handle individual dog times
-   if (RaceHandler.RaceState == RaceHandler.RUNNING)
-   {
-      if (RaceHandler.GetDogTime(0) > 0)
-      {
-         char cDogTime[8];
-         dtostrf(RaceHandler.GetDogTime(0), 7, 3, cDogTime);
-         LCDController.UpdateField(LCDController.D1Time, cDogTime);
-      }
+   
+   dtostrf(RaceHandler.GetDogTime(0), 7, 3, cDogTime);
+   LCDController.UpdateField(LCDController.D1Time, cDogTime);
+   
+   
+   dtostrf(RaceHandler.GetCrossingTime(0), 6, 3, cCrossingTime);
+   LCDController.UpdateField(LCDController.D1CrossTime, cCrossingTime);
 
-      if (RaceHandler.GetCrossingTime(0) > 0)
-      {
-         char cCrossingTime[7];
-         dtostrf(RaceHandler.GetCrossingTime(0), 6, 3, cCrossingTime);
-         LCDController.UpdateField(LCDController.D1CrossTime, cCrossingTime);
-      }
+   dtostrf(RaceHandler.GetDogTime(1), 7, 3, cDogTime);
+   LCDController.UpdateField(LCDController.D2Time, cDogTime);
 
-      if (RaceHandler.GetDogTime(1) > 0)
-      {
-         char cDogTime[8];
-         dtostrf(RaceHandler.GetDogTime(1), 7, 3, cDogTime);
-         LCDController.UpdateField(LCDController.D2Time, cDogTime);
-      }
+   dtostrf(RaceHandler.GetCrossingTime(1), 6, 3, cCrossingTime);
+   LCDController.UpdateField(LCDController.D2CrossTime, cCrossingTime);
 
-      if (RaceHandler.GetCrossingTime(1) > 0)
-      {
-         char cCrossingTime[7];
-         dtostrf(RaceHandler.GetCrossingTime(1), 6, 3, cCrossingTime);
-         LCDController.UpdateField(LCDController.D2CrossTime, cCrossingTime);
-      }
+   dtostrf(RaceHandler.GetDogTime(2), 7, 3, cDogTime);
+   LCDController.UpdateField(LCDController.D3Time, cDogTime);
 
-      if (RaceHandler.GetDogTime(2) > 0)
-      {
-         char cDogTime[8];
-         dtostrf(RaceHandler.GetDogTime(2), 7, 3, cDogTime);
-         LCDController.UpdateField(LCDController.D3Time, cDogTime);
-      }
+   dtostrf(RaceHandler.GetCrossingTime(2), 6, 3, cCrossingTime);
+   LCDController.UpdateField(LCDController.D3CrossTime, cCrossingTime);
 
-      if (RaceHandler.GetCrossingTime(2) > 0)
-      {
-         char cCrossingTime[7];
-         dtostrf(RaceHandler.GetCrossingTime(2), 6, 3, cCrossingTime);
-         LCDController.UpdateField(LCDController.D3CrossTime, cCrossingTime);
-      }
-
-      if (RaceHandler.GetDogTime(3) > 0)
-      {
-         char cDogTime[8];
-         dtostrf(RaceHandler.GetDogTime(3), 7, 3, cDogTime);
-         LCDController.UpdateField(LCDController.D4Time, cDogTime);
-      }
+   dtostrf(RaceHandler.GetDogTime(3), 7, 3, cDogTime);
+   LCDController.UpdateField(LCDController.D4Time, cDogTime);
       
-      if (RaceHandler.GetCrossingTime(3) > 0)
-      {
-         char cCrossingTime[7];
-         dtostrf(RaceHandler.GetCrossingTime(3), 6, 3, cCrossingTime);
-         LCDController.UpdateField(LCDController.D4CrossTime, cCrossingTime);
-      }
-   }
+   dtostrf(RaceHandler.GetCrossingTime(3), 6, 3, cCrossingTime);
+   LCDController.UpdateField(LCDController.D4CrossTime, cCrossingTime);
 
    if (RaceHandler.RaceState != RaceHandler.PreviousRaceState)
    {
@@ -160,7 +164,6 @@ void loop()
 
    if (RaceHandler.iCurrentDog != RaceHandler.iPreviousDog)
    {
-      char cDogTime[8];
       dtostrf(RaceHandler.GetDogTime(RaceHandler.iPreviousDog), 7, 3, cDogTime);
       printf("%lu: Dog %i time: %s\r\n", millis(), RaceHandler.iPreviousDog, cDogTime);
       printf("%lu: Dog number changed to: %i\r\n", millis(), RaceHandler.iCurrentDog);
@@ -168,50 +171,42 @@ void loop()
 
    if ((millis() - lLastSerialOutput) > 5000)
    {
-      //printf("%lu: ping! voltage is: %.2u, this is %i%%\r\n", millis(), fBatteryVoltage, iBatteryPercentage);
+      printf("%lu: ping! voltage is: %.2u, this is %i%%\r\n", millis(), fBatteryVoltage, iBatteryPercentage);
       //printf("%lu: Elapsed time: %s\r\n", millis(), cElapsedRaceTime);
 
       lLastSerialOutput = millis();
    }
 
-   if (digitalRead(iPushButtonPin) == LOW
-      || (millis() > 5000 && RaceHandler.RaceState == RaceHandler.STOPPED && RaceHandler.GetRaceTime() == 0))  //TODO:start after 5 seconds since we don't have a pushbutton yet :-(
+   //Race start/stop button (remote D0 output)
+   if (digitalRead(iRC0Pin) == HIGH)
    {
-      bDEBUG ? printf("%lu: Starting light sequence!\r\n", millis()) : NULL;
-      LightsController.InitiateStartSequence();
-      RaceHandler.StartRace();
+      if (RaceHandler.RaceState == RaceHandler.STOPPED //If race is stopped
+         && RaceHandler.GetRaceTime() == 0)           //and timers are zero
+      {
+         //Then start the race
+         bDEBUG ? printf("%lu: Starting light sequence!\r\n", millis()) : NULL;
+         LightsController.InitiateStartSequence();
+         RaceHandler.StartRace();
+      }
+      else //If race state is running or starting, we should stop it
+      {
+         RaceHandler.StopRace();
+         LightsController.DeleteSchedules();
+      }
+   }
+
+   //Race reset button (remote D1 output)
+   if (digitalRead(iRC1Pin) == HIGH
+      && RaceHandler.RaceState == RaceHandler.STOPPED)   //Only allow reset when race is stopped first
+   {
+      LightsController.ResetLights();
+      RaceHandler.ResetRace();
    }
    //Cleanup
    //These variables are used to determine whether a value changed
    //They should be reset at the end of the loop since otherwise they stay always true
    RaceHandler.PreviousRaceState = RaceHandler.RaceState;
    RaceHandler.iPreviousDog = RaceHandler.iCurrentDog;
-}
-
-
-String fGetFormattedTime(long lMicroTime)
-{
-  FormattedTime = String((int)(lMicroTime / 1000000L));
-  FormattedTime = String(FormattedTime + ",");
-  // use modulo operator to get fractional part of time 
-  fractional = (int)(lMicroTime % 1000L);
-  FormattedTime = String(FormattedTime + fractional);
-  // pad in leading zeros - wouldn't it be nice if 
-  // Arduino language had a flag for this? :)
-  if (fractional == 0)
-  {
-    FormattedTime = String(FormattedTime + "000");
-  }
-  else if (fractional < 10)    // if fractional < 10 the 0 is ignored giving a wrong time, so add the zeros
-  {
-    FormattedTime = String(FormattedTime + "00");
-  }
-  else if (fractional < 100)
-  {
-    FormattedTime = String(FormattedTime + "00");
-  }
-  
-  return FormattedTime;
 }
 
 void Sensor2Wrapper()

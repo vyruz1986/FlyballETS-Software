@@ -101,6 +101,22 @@ void LightsControllerClass::InitiateStartSequence()
    byOverallState = STARTING;
 }
 
+void LightsControllerClass::ResetLights()
+{
+   byOverallState = STOPPED;
+   
+   //Set all lights off
+   _byNewLightsState = 0;
+   DeleteSchedules();
+}
+
+void LightsControllerClass::DeleteSchedules()
+{
+   //Delete any set schedules
+
+   //TODO: find a way to reset schedules
+}
+
 void LightsControllerClass::ToggleLightState(Lights byLight, LightStates byLightState)
 {
    bool byCurrentLightState = CheckLightState(byLight);

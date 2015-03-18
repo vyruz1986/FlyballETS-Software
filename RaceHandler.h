@@ -30,6 +30,8 @@ class RaceHandlerClass
    void Main();
    void StartTimers();
    void StartRace();
+   void StopRace();
+   void ResetRace();
    void TriggerSensor1();
    void TriggerSensor2();
 

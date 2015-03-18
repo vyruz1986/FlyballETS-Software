@@ -132,6 +132,38 @@ void RaceHandlerClass::StartRace()
    _lPerfectCrossingTime = _lRaceStartTime + 3000000;
 }
 
+void RaceHandlerClass::StopRace()
+{
+   if (RaceState == RUNNING)
+   {
+      //Race is running, so we have to record the EndTime
+      _lRaceEndTime = micros();
+      _lRaceTime = _lRaceEndTime - _lRaceStartTime;
+      
+
+   }
+   _ChangeRaceState(STOPPED);
+}
+
+void RaceHandlerClass::ResetRace()
+{
+   if (RaceState == STOPPED)
+   {
+      _lRaceStartTime = 0;
+      _lRaceEndTime = 0;
+      _lRaceTime = 0;
+      _lPerfectCrossingTime = 0;
+
+      _bFault = false;
+      long _lDogEnterTimes[4] = { 0, 0, 0, 0 };
+      long _lDogExitTimes[4] = { 0, 0, 0, 0 };
+
+      unsigned long _lDogTimes[4] = { 0, 0, 0, 0 };
+      long _lCrossingTimes[4] = { 0, 0, 0, 0 };
+
+   }
+}
+
 void RaceHandlerClass::TriggerSensor1()
 {
    /*Disable debounce for now

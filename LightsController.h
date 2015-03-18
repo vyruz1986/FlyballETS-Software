@@ -44,6 +44,8 @@ public:
    void HandleStartSequence();
    void InitiateStartSequence();
    void ToggleLightState(Lights byLight, LightStates byLightState = TOGGLE);
+   void ResetLights();
+   void DeleteSchedules();
    
 private:
    //Pin connected to ST_CP of 74HC595
