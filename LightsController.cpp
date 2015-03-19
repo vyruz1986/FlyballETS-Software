@@ -15,6 +15,10 @@ void LightsControllerClass::init(int iLatchPin, int iClockPin, int iDataPin)
    pinMode(_iLatchPin, OUTPUT);
    pinMode(_iClockPin, OUTPUT);
    pinMode(_iDataPin, OUTPUT);
+
+   digitalWrite(_iLatchPin, LOW);
+   shiftOut(_iDataPin, _iClockPin, MSBFIRST, 0);
+   digitalWrite(_iLatchPin, HIGH);
 }
 
 void LightsControllerClass::HandleLightStates()

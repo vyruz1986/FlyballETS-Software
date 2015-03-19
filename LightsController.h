@@ -26,12 +26,12 @@ public:
 
    //Decimal values of lights connected to 74HC595
    enum Lights {
-      WHITE = 2,
-      RED = 4,
-      YELLOW1 = 8,
+      WHITE = 128,
+      RED = 64,
+      YELLOW1 = 32,
       BLUE = 16,
-      YELLOW2 = 32,
-      GREEN = 64
+      YELLOW2 = 8,
+      GREEN = 4
    };
 
    enum LightStates {
@@ -56,7 +56,7 @@ private:
    int _iDataPin = 11;
 
    //This byte contains the combined states of all ligths at any given time
-   byte _byCurrentLightsState = 0;
+   byte _byCurrentLightsState = 256;
    byte _byNewLightsState = 0;
 
    bool _bStartSequenceStarted = 0;
