@@ -56,10 +56,18 @@ void RaceHandlerClass::Main()
       bDEBUG ? printf("%lu: S1|Time: %lu|State: %i\r\n", millis(), _lNewS1Time, _iS1TriggerState) : NULL;
       //Check what current state of race is
       if (RaceState != STOPPED
-         && (_lNewS1Time - _lPrevS2Time) > 100000
-         && _iS1TriggerState == 1) //100 ms debounce to avoid dog coming back immediately triggering the next dog
+         && (_lNewS1Time - _lPrevS2Time) > 100000 //100 ms debounce to avoid dog coming back immediately triggering the next dog
+         && _iS1TriggerState == 1)
       {
-         //Check if this is a next dog which is too early
+         //Potential fault occured
+         //Special handlign for dog 0
+         if (iCurrentDog == 0)
+         {
+            //Dog 0 is too early!
+            LightsController.ToggleFaultLight(iCurrentDog, LightsController.ON);
+            _bFault = true;
+         }
+         //Check if this is a next dog which is too early (we are expecting a dog to come back
          if (_byDogState == COMINGBACK)
          {
             //TODO: This code isn't working very well yet....
@@ -69,12 +77,11 @@ void RaceHandlerClass::Main()
             _ChangeDogNumber(iCurrentDog + 1);
             _lDogEnterTimes[iCurrentDog] = _lNewS1Time;
             bDEBUG ? printf("%lu: Fault by dog %i!\r\n", millis(), iCurrentDog) : NULL;
-            //TODO: Trigger fault light
             LightsController.ToggleFaultLight(iCurrentDog, LightsController.ON);
+            _bFault = true;
          }
          //Store crossing time
          _lCrossingTimes[iCurrentDog] = _lNewS1Time - _lPerfectCrossingTime;
-         
          _ChangeDogState(COMINGBACK);
       }
       _lPrevS1Time = _lNewS1Time;
