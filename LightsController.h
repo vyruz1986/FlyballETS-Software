@@ -33,19 +33,19 @@ public:
       YELLOW2 = 8,
       GREEN = 4
    };
-
    enum LightStates {
       OFF,
       ON,
       TOGGLE
    };
    LightStates CheckLightState(Lights byLight);
-   void HandleLightStates();
+   void Main();
    void HandleStartSequence();
    void InitiateStartSequence();
    void ToggleLightState(Lights byLight, LightStates byLightState = TOGGLE);
    void ResetLights();
    void DeleteSchedules();
+   void ToggleFaultLight(uint8_t iDogNumber, LightStates byLightState);
    
 private:
    //Pin connected to ST_CP of 74HC595
@@ -68,6 +68,13 @@ private:
       WHITE,
       RED,
       YELLOW1,
+      BLUE,
+      YELLOW2,
+      GREEN
+   };
+
+   Lights _byDogErrorLigths[4] = {
+      RED,
       BLUE,
       YELLOW2,
       GREEN

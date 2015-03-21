@@ -21,9 +21,27 @@ void LightsControllerClass::init(int iLatchPin, int iClockPin, int iDataPin)
    digitalWrite(_iLatchPin, HIGH);
 }
 
-void LightsControllerClass::HandleLightStates()
+void LightsControllerClass::Main()
 {
    HandleStartSequence();
+
+   //Check if we have to toggle any lights
+   for (int i = 0; i < 6; i++)
+   {
+      if (millis() > _lLightsOnSchedule[i]
+         && _lLightsOnSchedule[i] != 0)
+      {
+         ToggleLightState(_byLightsArray[i], ON);
+         _lLightsOnSchedule[i] = 0; //Delete schedule
+      }
+      if (millis() > _lLightsOutSchedule[i]
+         && _lLightsOutSchedule[i] != 0)
+      {
+         ToggleLightState(_byLightsArray[i], OFF);
+         _lLightsOutSchedule[i] = 0; //Delete schedule
+      }
+   }
+
    if (_byCurrentLightsState != _byNewLightsState)
    {
       bDEBUG ? printf("%lu: New light states: %i\r\n", millis(), _byNewLightsState) : NULL;
@@ -63,22 +81,10 @@ void LightsControllerClass::HandleStartSequence()
 
          _bStartSequenceStarted = true;
       }
-      //Check if we have to toggle any lights
+      //Check if the start sequence is busy
       bool bStartSequenceBusy = false;
       for (int i = 0; i < 6; i++)
       {
-         if (millis() > _lLightsOnSchedule[i]
-            && _lLightsOnSchedule[i] != 0)
-         {
-            ToggleLightState(_byLightsArray[i], ON);
-            _lLightsOnSchedule[i] = 0; //Delete schedule
-         }
-         if (millis() > _lLightsOutSchedule[i]
-            && _lLightsOutSchedule[i] != 0)
-         {
-            ToggleLightState(_byLightsArray[i], OFF);
-            _lLightsOutSchedule[i] = 0; //Delete schedule
-         }
          if (_lLightsOnSchedule[i] > 0
             || _lLightsOutSchedule[i] > 0)
          {
@@ -117,8 +123,11 @@ void LightsControllerClass::ResetLights()
 void LightsControllerClass::DeleteSchedules()
 {
    //Delete any set schedules
-
-   //TODO: find a way to reset schedules
+   for (int i = 0; i < 6; i++)
+   {
+      _lLightsOnSchedule[i] = 0; //Delete schedule
+      _lLightsOutSchedule[i] = 0; //Delete schedule
+   }
 }
 
 void LightsControllerClass::ToggleLightState(Lights byLight, LightStates byLightState)
@@ -148,6 +157,25 @@ void LightsControllerClass::ToggleLightState(Lights byLight, LightStates byLight
          _byNewLightsState = _byNewLightsState - byLight;
       }
    }
+}
+
+void LightsControllerClass::ToggleFaultLight(uint8_t DogNumber, LightStates byLightState)
+{
+   printf("Fault light triggered for dog %i\r\n", DogNumber);
+   //Get error light for dog number from array
+   Lights byLight = _byDogErrorLigths[DogNumber];
+   //Get current state of light
+   bool byCurrentLightState = CheckLightState(byLight);
+
+   if (byLightState == ON)
+   {
+      //If a fault lamp is turned on we have to light the white light for 1 sec
+      //Set schedule for WHITE light
+      _lLightsOnSchedule[0] = millis(); //Turn on NOW
+      _lLightsOutSchedule[0] = millis() + 1000; //keep on for 1 second
+   }
+
+   ToggleLightState(byLight, byLightState);
 }
 
 LightsControllerClass::LightStates LightsControllerClass::CheckLightState(Lights byLight)

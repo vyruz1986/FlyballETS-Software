@@ -50,12 +50,12 @@ private:
 
    volatile long _lNewS1Time;
    volatile long _lPrevS1Time;
-   bool _bS1TriggerState;
+   int _iS1TriggerState;
    int  _iS1Pin;
 
    volatile long _lNewS2Time;
    volatile long _lPrevS2Time;
-   bool _bS2TriggerState;
+   int _iS2TriggerState;
    int  _iS2Pin;
 
    bool _bFault = false;

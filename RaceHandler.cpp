@@ -1,7 +1,7 @@
 // 
 // 
 // 
-
+#include "LightsController.h"
 #include "RaceHandler.h"
 #include "global.h"
 
@@ -42,7 +42,6 @@ void RaceHandlerClass::_ChangeDogNumber(int _iNewDogNumber)
       iPreviousDog = iCurrentDog;
       iCurrentDog = _iNewDogNumber;
    }
-
 }
 
 void RaceHandlerClass::Main()
@@ -54,15 +53,15 @@ void RaceHandlerClass::Main()
    }
    if (_lNewS1Time > 0)
    {
-      bDEBUG ? printf("%lu: S1|Time: %lu|State: NA\r\n", millis(), _lNewS1Time, _bS1TriggerState) : NULL;
+      bDEBUG ? printf("%lu: S1|Time: %lu|State: %i\r\n", millis(), _lNewS1Time, _iS1TriggerState) : NULL;
       //Check what current state of race is
       if (RaceState != STOPPED
-         && (_lNewS1Time - _lPrevS2Time) > 100000) //100 ms debounce to avoid dog coming back immediately triggering the next dog
+         && (_lNewS1Time - _lPrevS2Time) > 100000
+         && _iS1TriggerState == 1) //100 ms debounce to avoid dog coming back immediately triggering the next dog
       {
          //Check if this is a next dog which is too early
          if (_byDogState == COMINGBACK)
          {
-
             //TODO: This code isn't working very well yet....
             //This dog is too early!
             //We assume previous dog came in at the more or less the same time
@@ -71,6 +70,7 @@ void RaceHandlerClass::Main()
             _lDogEnterTimes[iCurrentDog] = _lNewS1Time;
             bDEBUG ? printf("%lu: Fault by dog %i!\r\n", millis(), iCurrentDog) : NULL;
             //TODO: Trigger fault light
+            LightsController.ToggleFaultLight(iCurrentDog, LightsController.ON);
          }
          //Store crossing time
          _lCrossingTimes[iCurrentDog] = _lNewS1Time - _lPerfectCrossingTime;
@@ -83,12 +83,13 @@ void RaceHandlerClass::Main()
 
    if (_lNewS2Time > 0)
    {
-      bDEBUG ? printf("%lu: S2|Time: %lu|State: NA\r\n", millis(), _lNewS2Time, _bS2TriggerState) : NULL;
+      bDEBUG ? printf("%lu: S2|Time: %lu|State: %i\r\n", millis(), _lNewS2Time, _iS2TriggerState) : NULL;
       //Only check 2nd sensor if we're expecting a dog to come back
       if (_byDogState == COMINGBACK)
       {
          //Check how long current dog is away, we expect it to be away at least 2 seconds
-         if (_lNewS2Time - _lPrevS1Time > 2000000)
+         if (_lNewS2Time - _lPrevS1Time > 2000000
+            && _iS2TriggerState == 1)
          {
             _lDogExitTimes[iCurrentDog] = _lNewS2Time;
             _lDogTimes[iCurrentDog] = _lNewS2Time - _lDogEnterTimes[iCurrentDog];
@@ -190,7 +191,7 @@ void RaceHandlerClass::TriggerSensor1()
       return;
    }*/
    _lNewS1Time = micros();
-   //_bS1TriggerState = digitalRead(_iS1Pin);
+   _iS1TriggerState = digitalRead(_iS1Pin);
 }
 
 void RaceHandlerClass::TriggerSensor2()
@@ -202,7 +203,7 @@ void RaceHandlerClass::TriggerSensor2()
       return;
    }*/
    _lNewS2Time = micros();
-   //_bS2TriggerState = digitalRead(_iS2Pin);
+   _iS2TriggerState = digitalRead(_iS2Pin);
 }
 
 double RaceHandlerClass::GetRaceTime()

@@ -84,8 +84,8 @@ void setup()
 
   pinMode(iS1Pin, INPUT);
   pinMode(iS2Pin, INPUT);
-  attachInterrupt(1, Sensor2Wrapper, RISING);
-  attachInterrupt(0, Sensor1Wrapper, RISING);
+  attachInterrupt(1, Sensor2Wrapper, CHANGE);
+  attachInterrupt(0, Sensor1Wrapper, CHANGE);
   BatterySensor.init(A0);
 
   LightsController.init(13,8,9);
@@ -106,7 +106,7 @@ void loop()
    RaceHandler.Main();
 
    //Handle lights main processing
-   LightsController.HandleLightStates();
+   LightsController.Main();
 
    //Handle battery sensor main processing
    BatterySensor.CheckBatteryVoltage();
