@@ -60,29 +60,42 @@ void RaceHandlerClass::Main()
          && _iS1TriggerState == 1)
       {
          //Potential fault occured
-         //Special handlign for dog 0
-         if (iCurrentDog == 0)
+         //Special handling for dog 0 when it's not yet in the lane
+         if (iCurrentDog == 0
+            && _byDogState == GOINGIN
+            && _lNewS1Time < _lPerfectCrossingTime)
          {
             //Dog 0 is too early!
             LightsController.ToggleFaultLight(iCurrentDog, LightsController.ON);
+            bDEBUG ? printf("%lu: Fault by dog %i!\r\n", millis(), iCurrentDog) : NULL;
+            _lCrossingTimes[iCurrentDog] = _lNewS1Time - _lPerfectCrossingTime;
+            _ChangeDogState(COMINGBACK);
             _bFault = true;
          }
          //Check if this is a next dog which is too early (we are expecting a dog to come back
-         if (_byDogState == COMINGBACK)
+         else if (_byDogState == COMINGBACK)
          {
-            //TODO: This code isn't working very well yet....
             //This dog is too early!
             //We assume previous dog came in at the more or less the same time
+            //TODO: Since the previous dog didn't come in yet, we don't know what the perfect crossing time is
+            //Therefor we can't display a negative crossing time on the display
+            //So we don't set the CrossingTime for this dog (it stays +0.000s)
             _lDogExitTimes[iCurrentDog] = _lNewS1Time;
+            _lDogTimes[iCurrentDog] = _lNewS1Time - _lDogEnterTimes[iCurrentDog];
             _ChangeDogNumber(iCurrentDog + 1);
             _lDogEnterTimes[iCurrentDog] = _lNewS1Time;
             bDEBUG ? printf("%lu: Fault by dog %i!\r\n", millis(), iCurrentDog) : NULL;
             LightsController.ToggleFaultLight(iCurrentDog, LightsController.ON);
             _bFault = true;
          }
-         //Store crossing time
-         _lCrossingTimes[iCurrentDog] = _lNewS1Time - _lPerfectCrossingTime;
-         _ChangeDogState(COMINGBACK);
+
+         //Normal race handling (no faults)
+         if (_byDogState == GOINGIN)
+         {
+            //Store crossing time only when dogstate was GOINGIN
+            _lCrossingTimes[iCurrentDog] = _lNewS1Time - _lPerfectCrossingTime;
+            _ChangeDogState(COMINGBACK);
+         }
       }
       _lPrevS1Time = _lNewS1Time;
       _lNewS1Time = 0;
