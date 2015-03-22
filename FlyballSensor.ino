@@ -168,7 +168,7 @@ void loop()
 
    if ((millis() - lLastSerialOutput) > 5000)
    {
-      printf("%lu: ping! voltage is: %.2u, this is %i%%\r\n", millis(), fBatteryVoltage, iBatteryPercentage);
+      //printf("%lu: ping! voltage is: %.2u, this is %i%%\r\n", millis(), fBatteryVoltage, iBatteryPercentage);
       //printf("%lu: Elapsed time: %s\r\n", millis(), cElapsedRaceTime);
 
       lLastSerialOutput = millis();
