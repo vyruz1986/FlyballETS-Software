@@ -35,6 +35,13 @@ class RaceHandlerClass
    void TriggerSensor1();
    void TriggerSensor2();
 
+   enum DogFaults {
+      ON,
+      OFF,
+      TOGGLE
+   };
+   void SetDogFault(int iDogNumber, DogFaults State = TOGGLE);
+
    double GetRaceTime();
    double GetDogTime(int iDogNumber);
    String GetCrossingTime(int iDognumber);
@@ -58,7 +65,9 @@ private:
    int _iS2TriggerState;
    int  _iS2Pin;
 
-   bool _bFault = false;
+   bool _bFault;
+   bool _bDogFaults[4];
+   bool _bRerunBusy;
    long _lDogEnterTimes[4];
    long _lDogExitTimes[4];
 

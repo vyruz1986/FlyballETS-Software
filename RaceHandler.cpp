@@ -66,11 +66,10 @@ void RaceHandlerClass::Main()
             && _lNewS1Time < _lPerfectCrossingTime)
          {
             //Dog 0 is too early!
-            LightsController.ToggleFaultLight(iCurrentDog, LightsController.ON);
+            SetDogFault(iCurrentDog, ON);
             bDEBUG ? printf("%lu: Fault by dog %i!\r\n", millis(), iCurrentDog) : NULL;
             _lCrossingTimes[iCurrentDog] = _lNewS1Time - _lPerfectCrossingTime;
             _ChangeDogState(COMINGBACK);
-            _bFault = true;
          }
          //Check if this is a next dog which is too early (we are expecting a dog to come back
          else if (_byDogState == COMINGBACK)
@@ -85,8 +84,7 @@ void RaceHandlerClass::Main()
             _ChangeDogNumber(iCurrentDog + 1);
             _lDogEnterTimes[iCurrentDog] = _lNewS1Time;
             bDEBUG ? printf("%lu: Fault by dog %i!\r\n", millis(), iCurrentDog) : NULL;
-            LightsController.ToggleFaultLight(iCurrentDog, LightsController.ON);
-            _bFault = true;
+            SetDogFault(iCurrentDog, ON);
          }
 
          //Normal race handling (no faults)
@@ -113,12 +111,31 @@ void RaceHandlerClass::Main()
          {
             _lDogExitTimes[iCurrentDog] = _lNewS2Time;
             _lDogTimes[iCurrentDog] = _lNewS2Time - _lDogEnterTimes[iCurrentDog];
-            //If this is the 4th dog and there is no fault we have to stop the race
-            if (iCurrentDog == 3 && _bFault == false)
+            
+            if ((iCurrentDog == 3 && _bFault == false && _bRerunBusy == false) //If this is the 4th dog and there is no fault we have to stop the race
+                  || (_bRerunBusy == true && _bFault == false))                //Or if the rerun sequence was started but no fault exists anymore
             {
                _lRaceEndTime = _lNewS2Time;
                _lRaceTime = _lRaceEndTime - _lRaceStartTime;
                _ChangeRaceState(STOPPED);
+            }
+            else if ((iCurrentDog == 3 && _bFault == true && _bRerunBusy == false)  //If current dog is dog 4 and a fault exists, we have to initiate rerun sequence
+                     || _bRerunBusy == true)                                        //Or if rerun is busy (and faults still exist)
+            {
+               //Dog 3 came in but there is a fault, we have to initiate the rerun sequence
+               _bRerunBusy = true;
+               for (int i = 0; i < 4; i++)
+               {
+                  if (_bDogFaults[i])
+                  {
+                     //Set dognumber for first offending dog
+                     _ChangeDogNumber(i);
+                     //And remove fault for this dog
+                     SetDogFault(i, OFF);
+                     break;
+                  }
+               }
+               bDEBUG ? printf("%lu: Rerun busy, we'expecting dog %i back!\r\n", millis(), iCurrentDog) : NULL;
             }
             else
             {
@@ -140,6 +157,18 @@ void RaceHandlerClass::Main()
    if (RaceState == RUNNING)
    {
       _lRaceTime = micros() - _lRaceStartTime;
+   }
+
+   //Check for faults, loop through array of dogs checking for faults
+   _bFault = false;
+   for (auto bFault : _bDogFaults)
+   {
+      if (bFault)
+      {
+         //At least one dog with fault is found, set general fault value to true
+         _bFault = true;
+         break;
+      }
    }
 }
 
@@ -183,6 +212,12 @@ void RaceHandlerClass::ResetRace()
       _byDogState = GOINGIN;
       _ChangeDogNumber(0);
       _bFault = false;
+      _bRerunBusy = false;
+      
+      for (auto& bFault : _bDogFaults)
+      {
+         bFault = false;
+      }
       for (auto& lTime : _lDogEnterTimes)
       {
          lTime = 0;
@@ -199,6 +234,34 @@ void RaceHandlerClass::ResetRace()
       {
          lTime = 0;
       }
+   }
+}
+void RaceHandlerClass::SetDogFault(int iDogNumber, DogFaults State)
+{
+   bool bFault;
+   //Check if we have to toggle
+   if (State == TOGGLE)
+   {
+      bFault = !_bDogFaults[iDogNumber];
+   }
+   else
+   {
+      bFault = State;
+   }
+
+   //Set fault to specified value for relevant dog
+   _bDogFaults[iDogNumber] = bFault;
+
+   //If fault is true, set light to on and set general value fault variable to true
+   if (bFault)
+   {
+      LightsController.ToggleFaultLight(iDogNumber, LightsController.ON);
+      _bFault = true;
+   }
+   else
+   {
+      //If fault is false, turn off fault light for this dog
+      LightsController.ToggleFaultLight(iDogNumber, LightsController.OFF);
    }
 }
 

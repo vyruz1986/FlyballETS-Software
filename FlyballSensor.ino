@@ -21,17 +21,15 @@
    - D11: LCD1 (line 1&2) enable pin
    - D12: LCD RS Pin
    - D13: Lights 74HC595 latch pin
-   - A0: battery sensor pin
+   - A0: remote D5
    - A1: remote D2
    - A2: remote D1
    - A3: remote D0
    - A4: remote D3
    - A5: remote D4
-   - A6: remote D5
+   - A6: battery sensor pin
    - A7: <free>
 */
-
-#define ledPin  5                  // LED connected to digital pin 13
 
 int value = LOW;                    // previous value of the LED
 int blinking;                       // condition for blinking - timer is timing
@@ -55,12 +53,12 @@ char cCrossingTime[7];
 char cElapsedRaceTime[8];
 char cTotalCrossingTime[8];
 
+//Battery variables
+int iBatterySensorPin = A6;
 uint16_t fBatteryVoltage = 0;
 
 //Initialise Lights stuff
 long lLastSerialOutput = 0;
-
-//int senspin = 3;
 
 //remote control pins
 int iRC0Pin = A3;
@@ -68,7 +66,7 @@ int iRC1Pin = A2;
 int iRC2Pin = A1;
 int iRC3Pin = A4;
 int iRC4Pin = A5;
-int iRC5Pin = A6;
+int iRC5Pin = A0;
 //Array to hold last time button presses
 unsigned long lLastRCPress[6] = {0, 0, 0, 0, 0, 0};
 
@@ -79,14 +77,12 @@ void setup()
 {
   Serial.begin(115200);
   printf_begin();
-  //pinMode(senspin, INPUT);
-  pinMode(ledPin, OUTPUT);         // sets the digital pin as output
 
   pinMode(iS1Pin, INPUT);
   pinMode(iS2Pin, INPUT);
   attachInterrupt(1, Sensor2Wrapper, CHANGE);
   attachInterrupt(0, Sensor1Wrapper, CHANGE);
-  BatterySensor.init(A0);
+  BatterySensor.init(iBatterySensorPin);
 
   LightsController.init(13,8,9);
   RaceHandler.init(iS1Pin, iS2Pin);
@@ -203,6 +199,46 @@ void loop()
       LightsController.ResetLights();
       RaceHandler.ResetRace();
    }
+
+   //Dog0 fault RC button
+   if (digitalRead(iRC2Pin) == HIGH
+      && RaceHandler.RaceState == RaceHandler.RUNNING   //Only allow reset when race is stopped first
+      && (millis() - lLastRCPress[2] > 2000))
+   {
+      lLastRCPress[2] = millis();
+      //Toggle fault for dog
+      RaceHandler.SetDogFault(0);
+   }
+
+   //Dog1 fault RC button
+   if (digitalRead(iRC3Pin) == HIGH
+      && RaceHandler.RaceState == RaceHandler.RUNNING   //Only allow reset when race is stopped first
+      && (millis() - lLastRCPress[3] > 2000))
+   {
+      lLastRCPress[3] = millis();
+      //Toggle fault for dog
+      RaceHandler.SetDogFault(1);
+   }
+   //Dog2 fault RC button
+   if (digitalRead(iRC4Pin) == HIGH
+      && RaceHandler.RaceState == RaceHandler.RUNNING   //Only allow reset when race is stopped first
+      && (millis() - lLastRCPress[4] > 2000))
+   {
+      lLastRCPress[4] = millis();
+      //Toggle fault for dog
+      RaceHandler.SetDogFault(2);
+   }
+   
+   //Dog3 fault RC button
+   if (digitalRead(iRC5Pin) == HIGH
+      && RaceHandler.RaceState == RaceHandler.RUNNING   //Only allow reset when race is stopped first
+      && (millis() - lLastRCPress[5] > 2000))
+   {
+      lLastRCPress[5] = millis();
+      //Toggle fault for dog
+      RaceHandler.SetDogFault(3);
+   }
+
    //Cleanup
    //These variables are used to determine whether a value changed
    //They should be reset at the end of the loop since otherwise they stay always true
