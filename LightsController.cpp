@@ -95,8 +95,8 @@ void LightsControllerClass::HandleStartSequence()
       if (CheckLightState(GREEN) == ON
          && RaceHandler.RaceState == RaceHandler.STARTING)
       {
-         bDEBUG ? printf("%lu: GREEN light is ON!\r\n", millis()) : NULL;
          RaceHandler.StartTimers();
+         bDEBUG ? printf("%lu: GREEN light is ON!\r\n", millis()) : NULL;
       }
       if (!bStartSequenceBusy)
       {
@@ -146,7 +146,7 @@ void LightsControllerClass::ToggleLightState(Lights byLight, LightStates byLight
       }
    }
    if (byCurrentLightState != byLightState)
-   {
+   { 
       
       if (byLightState == ON)
       {
@@ -161,12 +161,8 @@ void LightsControllerClass::ToggleLightState(Lights byLight, LightStates byLight
 
 void LightsControllerClass::ToggleFaultLight(uint8_t DogNumber, LightStates byLightState)
 {
-   printf("Fault light triggered for dog %i\r\n", DogNumber);
    //Get error light for dog number from array
    Lights byLight = _byDogErrorLigths[DogNumber];
-   //Get current state of light
-   bool byCurrentLightState = CheckLightState(byLight);
-
    if (byLightState == ON)
    {
       //If a fault lamp is turned on we have to light the white light for 1 sec
@@ -174,8 +170,8 @@ void LightsControllerClass::ToggleFaultLight(uint8_t DogNumber, LightStates byLi
       _lLightsOnSchedule[0] = millis(); //Turn on NOW
       _lLightsOutSchedule[0] = millis() + 1000; //keep on for 1 second
    }
-
    ToggleLightState(byLight, byLightState);
+   bDEBUG ? printf("Fault light for dog %i: %i\r\n", DogNumber, byLightState) : NULL;
 }
 
 LightsControllerClass::LightStates LightsControllerClass::CheckLightState(Lights byLight)
