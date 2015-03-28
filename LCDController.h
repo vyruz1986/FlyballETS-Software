@@ -19,9 +19,13 @@ class LCDControllerClass
    void Main();
    enum LCDFields {
       D1Time,
+      D1RerunInfo,
       D2Time,
+      D2RerunInfo,
       D3Time,
+      D3RerunInfo,
       D4Time,
+      D4RerunInfo,
       D1CrossTime,
       D2CrossTime,
       D3CrossTime,
@@ -47,7 +51,7 @@ private:
       int iStartingPosition;
       int iFieldLength;
       String strText;
-   }_lcdfieldFields[12];
+   }_lcdfieldFields[16];
 
 };
 

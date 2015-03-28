@@ -44,7 +44,8 @@ class RaceHandlerClass
 
    double GetRaceTime();
    double GetDogTime(int iDogNumber);
-   String GetCrossingTime(int iDognumber);
+   String GetCrossingTime(int iDogNumber);
+   String GetRerunInfo(int iDogNumber);
    double GetTotalCrossingTime();
 
    String GetRaceStateString();
@@ -68,11 +69,14 @@ private:
    bool _bFault;
    bool _bDogFaults[4];
    bool _bRerunBusy;
+   uint8_t _iDogRunCounters[4];
+   long _lLastDogTimeReturnTimeStamp[4];
+   uint8_t _iLastReturnedRunNumber[4];
    long _lDogEnterTimes[4];
    long _lDogExitTimes[4];
 
-   unsigned long _lDogTimes[4];
-   long _lCrossingTimes[4];
+   unsigned long _lDogTimes[4][4];
+   long _lCrossingTimes[4][4];
    
    enum _byDogStates {
       GOINGIN,

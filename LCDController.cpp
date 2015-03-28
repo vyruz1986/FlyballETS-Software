@@ -24,9 +24,13 @@ void LCDControllerClass::init(LiquidCrystal* Clcd1, LiquidCrystal* Clcd2)
    _UpdateLCD(4, 0, String("4:   0.000s +  0.000s   |"), 40);
 
    _lcdfieldFields[D1Time] = { 1, 3, 7, String("  0.000") };
+   _lcdfieldFields[D1RerunInfo] = { 1, 22, 2, String("  ") };
    _lcdfieldFields[D2Time] = { 2, 3, 7, String("  0.000") };
+   _lcdfieldFields[D2RerunInfo] = { 2, 22, 2, String("  ") };
    _lcdfieldFields[D3Time] = { 3, 3, 7, String("  0.000") };
+   _lcdfieldFields[D3RerunInfo] = { 3, 22, 2, String("  ") };
    _lcdfieldFields[D4Time] = { 4, 3, 7, String("  0.000") };
+   _lcdfieldFields[D4RerunInfo] = { 4, 22, 2, String("  ") };
    _lcdfieldFields[D1CrossTime] = { 1, 12, 8, String("+  0.000") };
    _lcdfieldFields[D2CrossTime] = { 2, 12, 8, String("+  0.000") };
    _lcdfieldFields[D3CrossTime] = { 3, 12, 8, String("+  0.000") };
