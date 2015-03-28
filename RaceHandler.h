@@ -36,8 +36,8 @@ class RaceHandlerClass
    void TriggerSensor2();
 
    enum DogFaults {
-      ON,
       OFF,
+      ON,
       TOGGLE
    };
    void SetDogFault(int iDogNumber, DogFaults State = TOGGLE);
