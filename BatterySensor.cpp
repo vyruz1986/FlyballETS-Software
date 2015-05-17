@@ -1,8 +1,5 @@
-// 
-// 
-// 
-
 #include "BatterySensor.h"
+#include "global.h"
 
 void BatterySensorClass::init(int iBatterySensorPin)
 {
@@ -15,7 +12,7 @@ void BatterySensorClass::CheckBatteryVoltage()
 {
    if (_iNumberOfBatteryReadings < 10)
    {
-      _iBatteryReadings[_iNumberOfBatteryReadings] = _iRawBatteryLevel = analogRead(_iBatterySensorPin);
+      _iBatteryReadings[_iNumberOfBatteryReadings] = analogRead(_iBatterySensorPin);
       _iNumberOfBatteryReadings++;
    }
    else

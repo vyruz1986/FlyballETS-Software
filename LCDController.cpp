@@ -1,7 +1,3 @@
-// 
-// 
-// 
-
 #include "LCDController.h"
 #include <LiquidCrystal.h>
 

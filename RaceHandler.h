@@ -49,20 +49,21 @@ class RaceHandlerClass
    double GetTotalCrossingTime();
 
    String GetRaceStateString();
+   unsigned long* lRaceStartTime = &_lRaceStartTime;
 
 private:
-   long _lRaceStartTime;
-   long _lRaceEndTime;
-   long _lRaceTime;
-   long _lPerfectCrossingTime;
+   unsigned long _lRaceStartTime;
+   unsigned long _lRaceEndTime;
+   unsigned long _lRaceTime;
+   unsigned long _lPerfectCrossingTime;
 
-   volatile long _lNewS1Time;
-   volatile long _lPrevS1Time;
+   volatile unsigned long _lNewS1Time;
+   unsigned long _lPrevS1Time;
    int _iS1TriggerState;
    int  _iS1Pin;
 
-   volatile long _lNewS2Time;
-   volatile long _lPrevS2Time;
+   volatile unsigned long _lNewS2Time;
+   unsigned long _lPrevS2Time;
    int _iS2TriggerState;
    int  _iS2Pin;
 
@@ -70,10 +71,10 @@ private:
    bool _bDogFaults[4];
    bool _bRerunBusy;
    uint8_t _iDogRunCounters[4];
-   long _lLastDogTimeReturnTimeStamp[4];
+   unsigned long _lLastDogTimeReturnTimeStamp[4];
    uint8_t _iLastReturnedRunNumber[4];
-   long _lDogEnterTimes[4];
-   long _lDogExitTimes[4];
+   unsigned long _lDogEnterTimes[4];
+   unsigned long _lDogExitTimes[4];
 
    unsigned long _lDogTimes[4][4];
    long _lCrossingTimes[4][4];

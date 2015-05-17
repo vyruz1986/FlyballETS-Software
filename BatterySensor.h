@@ -22,7 +22,6 @@ public:
 private:
    int _iBatterySensorPin;
 
-   int _iRawBatteryLevel;
    int _iBatteryReadings[10];
    int _iNumberOfBatteryReadings = 0;
    float _fBatteryVoltage = 0;

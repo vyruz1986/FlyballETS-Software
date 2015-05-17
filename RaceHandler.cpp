@@ -53,7 +53,7 @@ void RaceHandlerClass::Main()
    }
    if (_lNewS1Time > 0)
    {
-      bDEBUG ? printf("%lu: S1|Time: %lu|State: %i\r\n", millis(), _lNewS1Time, _iS1TriggerState) : NULL;
+      if (bDEBUG) printf(F("S1|T:%lu|St:%i\r\n"), _lNewS1Time, _iS1TriggerState);
       //Check what current state of race is
       if (RaceState != STOPPED
          && (_lNewS1Time - _lPrevS2Time) > 100000 //100 ms debounce to avoid dog coming back immediately triggering the next dog
@@ -67,7 +67,7 @@ void RaceHandlerClass::Main()
          {
             //Dog 0 is too early!
             SetDogFault(iCurrentDog, ON);
-            bDEBUG ? printf("%lu: Fault by dog %i!\r\n", millis(), iCurrentDog) : NULL;
+            if (bDEBUG) printf("F! D:%i!\r\n", iCurrentDog);
             _lCrossingTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = _lNewS1Time - _lPerfectCrossingTime;
             _ChangeDogState(COMINGBACK);
          }
@@ -83,7 +83,7 @@ void RaceHandlerClass::Main()
             _lDogTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = _lNewS1Time - _lDogEnterTimes[iCurrentDog];
             _ChangeDogNumber(iCurrentDog + 1);
             _lDogEnterTimes[iCurrentDog] = _lNewS1Time;
-            bDEBUG ? printf("%lu: Fault by dog %i!\r\n", millis(), iCurrentDog) : NULL;
+            if (bDEBUG) printf("F! D:%i!\r\n", iCurrentDog);
             SetDogFault(iCurrentDog, ON);
          }
 
@@ -108,7 +108,7 @@ void RaceHandlerClass::Main()
 
    if (_lNewS2Time > 0)
    {
-      bDEBUG ? printf("%lu: S2|Time: %lu|State: %i\r\n", millis(), _lNewS2Time, _iS2TriggerState) : NULL;
+      if (bDEBUG) printf("S2|T:%lu|St:%i\r\n", _lNewS2Time, _iS2TriggerState);
       //Only check 2nd sensor if we're expecting a dog to come back
       if (_byDogState == COMINGBACK)
       {
@@ -149,7 +149,7 @@ void RaceHandlerClass::Main()
                      break;
                   }
                }
-               bDEBUG ? printf("%lu: Rerun busy, we'expecting dog %i back!\r\n", millis(), iCurrentDog) : NULL;
+               if (bDEBUG) printf("RR! D:%i\r\n", millis(), iCurrentDog);
             }
             else
             {
@@ -295,24 +295,12 @@ void RaceHandlerClass::SetDogFault(int iDogNumber, DogFaults State)
 
 void RaceHandlerClass::TriggerSensor1()
 {
-   /*Disable debounce for now
-   //Debounce code
-   if ((micros() - _lPrevS1Time) < 100000) //100ms debounce
-   {
-      return;
-   }*/
    _lNewS1Time = micros();
    _iS1TriggerState = digitalRead(_iS1Pin);
 }
 
 void RaceHandlerClass::TriggerSensor2()
 {
-   /*Disable debounce for now
-   //Debounce code
-   if ((micros() - _lPrevS2Time) < 100000) //100ms debounce
-   {
-      return;
-   }*/
    _lNewS2Time = micros();
    _iS2TriggerState = digitalRead(_iS2Pin);
 }
@@ -333,7 +321,7 @@ double RaceHandlerClass::GetDogTime(int iDogNumber)
    double dDogTimeSeconds = 0;
 
    uint8_t& iRunNumber = _iLastReturnedRunNumber[iDogNumber];
-   long& lLastReturnedTimeStamp = _lLastDogTimeReturnTimeStamp[iDogNumber];
+   auto& lLastReturnedTimeStamp = _lLastDogTimeReturnTimeStamp[iDogNumber];
    if (_iDogRunCounters[iDogNumber] > 0)
    {
       //We have multiple crossing times for this dog, so we must cycle through them
@@ -372,7 +360,7 @@ String RaceHandlerClass::GetCrossingTime(int iDogNumber)
    String strCrossingTime;
 
    uint8_t& iRunNumber = _iLastReturnedRunNumber[iDogNumber];
-   long& lLastReturnedTimeStamp = _lLastDogTimeReturnTimeStamp[iDogNumber];
+   auto& lLastReturnedTimeStamp = _lLastDogTimeReturnTimeStamp[iDogNumber];
    if (_iDogRunCounters[iDogNumber] > 0)
    {
       //We have multiple crossing times for this dog, so we must cycle through them
