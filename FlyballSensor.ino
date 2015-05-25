@@ -60,8 +60,9 @@ LiquidCrystal lcd(12, 11, 7, 6, 5, 4);  //declare two LCD's
 LiquidCrystal lcd2(12, 10, 7, 6, 5, 4); // Ths is the second
 
 //Char array for serial comms
-char cSerialData[20];
-byte bSerialIndex = 0;
+String strSerialData;
+byte bySerialIndex = 0;
+boolean bSerialStringComplete = false;
 
 void setup()
 {
@@ -84,7 +85,9 @@ void setup()
   pinMode(iRC5Pin, INPUT);
 
   LCDController.init(&lcd, &lcd2);
-  cSerialData[0] = 0;
+  strSerialData[0] = 0;
+
+  Serialprint("Ready!\r\n");
 }
 
 void loop()
@@ -100,21 +103,9 @@ void loop()
 
    //Handle LCD processing
    LCDController.Main();
-   
-   //Listen on serial port
-   Serial.flush();
-   while (Serial.available() > 0)
-   {
-      if (bSerialIndex < 19) // One less than the size of the array
-      {
-         char cInChar = Serial.read(); // Read a character
-         cSerialData[bSerialIndex] = cInChar; // Store it
-         bSerialIndex++; // Increment where to write next
-         cSerialData[bSerialIndex] = '\0'; // Null terminate the string
-      }
-   }
-   bSerialIndex = 0;
 
+   //Run simulator
+   //Simulator.Main();
    
    /*Update LCD Display fields*/
    //Update team time to display
@@ -177,8 +168,8 @@ void loop()
    //Race start/stop button (remote D0 output)
    if ((digitalRead(iRC0Pin) == HIGH
        && (millis() - lLastRCPress[0] > 2000))
-       || strcmp("START", cSerialData) == 0
-       || strcmp("STOP", cSerialData) == 0)
+       || strSerialData == "START"
+       || strSerialData == "STOP")
    {
      lLastRCPress[0] = millis();
       if (RaceHandler.RaceState == RaceHandler.STOPPED //If race is stopped
@@ -200,7 +191,7 @@ void loop()
    if ((digitalRead(iRC1Pin) == HIGH
       && RaceHandler.RaceState == RaceHandler.STOPPED   //Only allow reset when race is stopped first
       && (millis() - lLastRCPress[1] > 2000))
-      || strcmp("RESET", cSerialData) == 0)
+      || strSerialData == "RESET")
    {
       lLastRCPress[1] = millis();
       LightsController.ResetLights();
@@ -211,7 +202,7 @@ void loop()
    if ((digitalRead(iRC2Pin) == HIGH
       && RaceHandler.RaceState == RaceHandler.RUNNING   //Only allow reset when race is stopped first
       && (millis() - lLastRCPress[2] > 2000))
-      || strcmp("D0F", cSerialData) == 0)
+      || strSerialData == "D0F")
    {
       lLastRCPress[2] = millis();
       //Toggle fault for dog
@@ -222,7 +213,7 @@ void loop()
    if ((digitalRead(iRC3Pin) == HIGH
       && RaceHandler.RaceState == RaceHandler.RUNNING   //Only allow reset when race is stopped first
       && (millis() - lLastRCPress[3] > 2000))
-      || strcmp("D1F", cSerialData) == 0)
+      || strSerialData == "D1F")
    {
       lLastRCPress[3] = millis();
       //Toggle fault for dog
@@ -232,7 +223,7 @@ void loop()
    if ((digitalRead(iRC4Pin) == HIGH
       && RaceHandler.RaceState == RaceHandler.RUNNING   //Only allow reset when race is stopped first
       && (millis() - lLastRCPress[4] > 2000))
-      || strcmp("D2F", cSerialData) == 0)
+      || strSerialData == "D2F")
    {
       lLastRCPress[4] = millis();
       //Toggle fault for dog
@@ -243,7 +234,7 @@ void loop()
    if ((digitalRead(iRC5Pin) == HIGH
       && RaceHandler.RaceState == RaceHandler.RUNNING   //Only allow reset when race is stopped first
       && (millis() - lLastRCPress[5] > 2000))
-      || strcmp("D3F", cSerialData) == 0)
+      || strSerialData == "D3F")
    {
       lLastRCPress[5] = millis();
       //Toggle fault for dog
@@ -256,14 +247,32 @@ void loop()
    RaceHandler.PreviousRaceState = RaceHandler.RaceState;
    RaceHandler.iPreviousDog = RaceHandler.iCurrentDog;
 
-   if (strlen(cSerialData) > 0)
+   if (strSerialData.length() > 0
+       && bSerialStringComplete)
    {
-      printf("cSer: '%s'\r\n", cSerialData);
-      if (bDEBUG) printf("cSer: '%s'\r\n", cSerialData);
-      for (auto& cSerialChar : cSerialData)
+      char cSerialData[100];
+      strSerialData.toCharArray(cSerialData,100);
+      if (bDEBUG) Serialprint("cSer: '%s'\r\n", cSerialData);
+      strSerialData = "";
+      bSerialStringComplete = false;
+   }
+}
+
+void serialEvent()
+{
+   //Listen on serial port
+   Serial.flush();
+   while (Serial.available() > 0)
+   {
+      char cInChar = Serial.read(); // Read a character
+      if (cInChar == '\n')
       {
-         cSerialChar = 0;
+         bSerialStringComplete = true;
+         strSerialData += '\0'; // Null terminate the string
+         break;
       }
+      strSerialData += cInChar; // Store it
+      
    }
 }
 
