@@ -1,8 +1,12 @@
+#include <StreamPrint.h>
+#include <StandardCplusplus.h>
+#include <serstream>
+#include <string>
+#include <iterator>
 #include "LCDController.h"
 #include "RaceHandler.h"
 #include "LightsController.h"
 #include "BatterySensor.h"
-#include <StreamPrint.h>
 #include "global.h"
 #include <LiquidCrystal.h>
 
