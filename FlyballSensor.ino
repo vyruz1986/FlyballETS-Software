@@ -2,7 +2,7 @@
 #include "RaceHandler.h"
 #include "LightsController.h"
 #include "BatterySensor.h"
-#include "printf.h"
+#include <StreamPrint.h>
 #include "global.h"
 #include <LiquidCrystal.h>
 
@@ -60,13 +60,13 @@ LiquidCrystal lcd(12, 11, 7, 6, 5, 4);  //declare two LCD's
 LiquidCrystal lcd2(12, 10, 7, 6, 5, 4); // Ths is the second
 
 //Char array for serial comms
-char cSerialData[20];
-byte bSerialIndex = 0;
+String strSerialData;
+byte bySerialIndex = 0;
+boolean bSerialStringComplete = false;
 
 void setup()
 {
   Serial.begin(57600);
-  printf_begin();
 
   pinMode(iS1Pin, INPUT);
   pinMode(iS2Pin, INPUT);
@@ -84,7 +84,9 @@ void setup()
   pinMode(iRC5Pin, INPUT);
 
   LCDController.init(&lcd, &lcd2);
-  cSerialData[0] = 0;
+  strSerialData[0] = 0;
+
+  Serialprint("Ready!\r\n");
 }
 
 void loop()
@@ -97,7 +99,7 @@ void loop()
 
    //Handle battery sensor main processing
    BatterySensor.CheckBatteryVoltage();
-
+   
    //Handle LCD processing
    LCDController.Main();
    
@@ -156,20 +158,20 @@ void loop()
 
    if (RaceHandler.RaceState != RaceHandler.PreviousRaceState)
    {
-      printf("S: %i\r\n", RaceHandler.RaceState);
+      Serialprint("S: %i\r\n", RaceHandler.RaceState);
    }
 
    if (RaceHandler.iCurrentDog != RaceHandler.iPreviousDog)
    {
       dtostrf(RaceHandler.GetDogTime(RaceHandler.iPreviousDog), 7, 3, cDogTime);
-      printf("D%i: %s\r\n", RaceHandler.iPreviousDog, cDogTime);
-      printf("D: %i\r\n", RaceHandler.iCurrentDog);
+      Serialprint("D%i: %s\r\n", RaceHandler.iPreviousDog, cDogTime);
+      Serialprint("D: %i\r\n", RaceHandler.iCurrentDog);
    }
 
    if ((millis() - lLastSerialOutput) > 5000)
    {
-      //printf("%lu: ping! voltage is: %.2u, this is %i%%\r\n", millis(), fBatteryVoltage, iBatteryPercentage);
-      //printf("%lu: Elapsed time: %s\r\n", millis(), cElapsedRaceTime);
+      //Serialprint("%lu: ping! voltage is: %.2u, this is %i%%\r\n", millis(), fBatteryVoltage, iBatteryPercentage);
+      //Serialprint("%lu: Elapsed time: %s\r\n", millis(), cElapsedRaceTime);
 
       lLastSerialOutput = millis();
    }
@@ -177,15 +179,15 @@ void loop()
    //Race start/stop button (remote D0 output)
    if ((digitalRead(iRC0Pin) == HIGH
        && (millis() - lLastRCPress[0] > 2000))
-       || strcmp("START", cSerialData) == 0
-       || strcmp("STOP", cSerialData) == 0)
+       || strSerialData == "START"
+       || strSerialData == "STOP")
    {
      lLastRCPress[0] = millis();
       if (RaceHandler.RaceState == RaceHandler.STOPPED //If race is stopped
          && RaceHandler.GetRaceTime() == 0)           //and timers are zero
       {
          //Then start the race
-         if (bDEBUG) printf("START!\r\n", millis());
+         if (bDEBUG) Serialprint("START!\r\n", millis());
          LightsController.InitiateStartSequence();
          RaceHandler.StartRace();
       }
@@ -200,7 +202,7 @@ void loop()
    if ((digitalRead(iRC1Pin) == HIGH
       && RaceHandler.RaceState == RaceHandler.STOPPED   //Only allow reset when race is stopped first
       && (millis() - lLastRCPress[1] > 2000))
-      || strcmp("RESET", cSerialData) == 0)
+      || strSerialData == "RESET")
    {
       lLastRCPress[1] = millis();
       LightsController.ResetLights();
@@ -211,7 +213,7 @@ void loop()
    if ((digitalRead(iRC2Pin) == HIGH
       && RaceHandler.RaceState == RaceHandler.RUNNING   //Only allow reset when race is stopped first
       && (millis() - lLastRCPress[2] > 2000))
-      || strcmp("D0F", cSerialData) == 0)
+      || strSerialData == "D0F")
    {
       lLastRCPress[2] = millis();
       //Toggle fault for dog
@@ -222,7 +224,7 @@ void loop()
    if ((digitalRead(iRC3Pin) == HIGH
       && RaceHandler.RaceState == RaceHandler.RUNNING   //Only allow reset when race is stopped first
       && (millis() - lLastRCPress[3] > 2000))
-      || strcmp("D1F", cSerialData) == 0)
+      || strSerialData == "D1F")
    {
       lLastRCPress[3] = millis();
       //Toggle fault for dog
@@ -232,7 +234,7 @@ void loop()
    if ((digitalRead(iRC4Pin) == HIGH
       && RaceHandler.RaceState == RaceHandler.RUNNING   //Only allow reset when race is stopped first
       && (millis() - lLastRCPress[4] > 2000))
-      || strcmp("D2F", cSerialData) == 0)
+      || strSerialData == "D2F")
    {
       lLastRCPress[4] = millis();
       //Toggle fault for dog
@@ -243,7 +245,7 @@ void loop()
    if ((digitalRead(iRC5Pin) == HIGH
       && RaceHandler.RaceState == RaceHandler.RUNNING   //Only allow reset when race is stopped first
       && (millis() - lLastRCPress[5] > 2000))
-      || strcmp("D3F", cSerialData) == 0)
+      || strSerialData == "D3F")
    {
       lLastRCPress[5] = millis();
       //Toggle fault for dog
@@ -258,8 +260,6 @@ void loop()
 
    if (strlen(cSerialData) > 0)
    {
-      printf("cSer: '%s'\r\n", cSerialData);
-      if (bDEBUG) printf("cSer: '%s'\r\n", cSerialData);
       for (auto& cSerialChar : cSerialData)
       {
          cSerialChar = 0;

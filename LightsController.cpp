@@ -1,3 +1,4 @@
+#include <StreamPrint.h>
 #include "LightsController.h"
 #include "RaceHandler.h"
 #include "global.h"
@@ -40,7 +41,7 @@ void LightsControllerClass::Main()
 
    if (_byCurrentLightsState != _byNewLightsState)
    {
-      if (bDEBUG) printf("%lu: New light states: %i\r\n", millis(), _byNewLightsState);
+      if (bDEBUG) Serialprint("%lu: New light states: %i\r\n", millis(), _byNewLightsState);
       _byCurrentLightsState = _byNewLightsState;
       digitalWrite(_iLatchPin, LOW);
       shiftOut(_iDataPin, _iClockPin, MSBFIRST, _byCurrentLightsState);
@@ -92,7 +93,7 @@ void LightsControllerClass::HandleStartSequence()
          && RaceHandler.RaceState == RaceHandler.STARTING)
       {
          RaceHandler.StartTimers();
-         if (bDEBUG) printf("%lu: GREEN light is ON!\r\n", millis());
+         if (bDEBUG) Serialprint("%lu: GREEN light is ON!\r\n", millis());
       }
       if (!bStartSequenceBusy)
       {
@@ -167,7 +168,7 @@ void LightsControllerClass::ToggleFaultLight(uint8_t DogNumber, LightStates byLi
       _lLightsOutSchedule[0] = millis() + 1000; //keep on for 1 second
    }
    ToggleLightState(byLight, byLightState);
-   if (bDEBUG) printf("Fault light for dog %i: %i\r\n", DogNumber, byLightState);
+   if (bDEBUG) Serialprint("Fault light for dog %i: %i\r\n", DogNumber, byLightState);
 }
 
 LightsControllerClass::LightStates LightsControllerClass::CheckLightState(Lights byLight)
