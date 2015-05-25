@@ -102,20 +102,6 @@ void loop()
    
    //Handle LCD processing
    LCDController.Main();
-   
-   //Listen on serial port
-   Serial.flush();
-   while (Serial.available() > 0)
-   {
-      if (bSerialIndex < 19) // One less than the size of the array
-      {
-         char cInChar = Serial.read(); // Read a character
-         cSerialData[bSerialIndex] = cInChar; // Store it
-         bSerialIndex++; // Increment where to write next
-         cSerialData[bSerialIndex] = '\0'; // Null terminate the string
-      }
-   }
-   bSerialIndex = 0;
 
    
    /*Update LCD Display fields*/
@@ -258,12 +244,32 @@ void loop()
    RaceHandler.PreviousRaceState = RaceHandler.RaceState;
    RaceHandler.iPreviousDog = RaceHandler.iCurrentDog;
 
-   if (strlen(cSerialData) > 0)
+   if (strSerialData.length() > 0
+       && bSerialStringComplete)
    {
-      for (auto& cSerialChar : cSerialData)
+      char cSerialData[100];
+      strSerialData.toCharArray(cSerialData,100);
+      if (bDEBUG) Serialprint("cSer: '%s'\r\n", cSerialData);
+      strSerialData = "";
+      bSerialStringComplete = false;
+   }
+}
+
+void serialEvent()
+{
+   //Listen on serial port
+   Serial.flush();
+   while (Serial.available() > 0)
+   {
+      char cInChar = Serial.read(); // Read a character
+      if (cInChar == '\n')
       {
-         cSerialChar = 0;
+         bSerialStringComplete = true;
+         strSerialData += '\0'; // Null terminate the string
+         break;
       }
+      strSerialData += cInChar; // Store it
+      
    }
 }
 
