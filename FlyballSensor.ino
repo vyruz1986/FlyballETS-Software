@@ -2,6 +2,7 @@
 #include <StandardCplusplus.h>
 #include <serstream>
 #include <string>
+#include <queue>
 #include <iterator>
 #include "LCDController.h"
 #include "RaceHandler.h"
