@@ -1,6 +1,4 @@
-// 
-// 
-// 
+#include <StreamPrint.h>
 #include "LightsController.h"
 #include "RaceHandler.h"
 #include "global.h"
@@ -53,7 +51,6 @@ void RaceHandlerClass::Main()
    }
    if (_lNewS1Time > 0)
    {
-      if (bDEBUG) printf(F("S1|T:%lu|St:%i\r\n"), _lNewS1Time, _iS1TriggerState);
       //Check what current state of race is
       if (RaceState != STOPPED
          && (_lNewS1Time - _lPrevS2Time) > 100000 //100 ms debounce to avoid dog coming back immediately triggering the next dog
@@ -67,7 +64,6 @@ void RaceHandlerClass::Main()
          {
             //Dog 0 is too early!
             SetDogFault(iCurrentDog, ON);
-            if (bDEBUG) printf("F! D:%i!\r\n", iCurrentDog);
             _lCrossingTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = _lNewS1Time - _lPerfectCrossingTime;
             _ChangeDogState(COMINGBACK);
          }
@@ -83,7 +79,6 @@ void RaceHandlerClass::Main()
             _lDogTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = _lNewS1Time - _lDogEnterTimes[iCurrentDog];
             _ChangeDogNumber(iCurrentDog + 1);
             _lDogEnterTimes[iCurrentDog] = _lNewS1Time;
-            if (bDEBUG) printf("F! D:%i!\r\n", iCurrentDog);
             SetDogFault(iCurrentDog, ON);
          }
 
@@ -149,7 +144,7 @@ void RaceHandlerClass::Main()
                      break;
                   }
                }
-               if (bDEBUG) printf("RR! D:%i\r\n", millis(), iCurrentDog);
+               if (bDEBUG) Serialprint("RR! D:%i\r\n", millis(), iCurrentDog);
             }
             else
             {
