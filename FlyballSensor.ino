@@ -3,12 +3,14 @@
 #include <serstream>
 #include <string>
 #include <queue>
+#include <vector>
 #include <iterator>
 #include "LCDController.h"
 #include "RaceHandler.h"
 #include "LightsController.h"
 #include "BatterySensor.h"
 #include "global.h"
+#include "Simulator.h"
 #include <LiquidCrystal.h>
 
 /*List of pins and the ones used:
@@ -81,6 +83,7 @@ void setup()
 
   LightsController.init(13,8,9);
   RaceHandler.init(iS1Pin, iS2Pin);
+  Simulator.init(iS1Pin, iS2Pin);
   pinMode(iRC0Pin, INPUT);
   pinMode(iRC1Pin, INPUT);
   pinMode(iRC2Pin, INPUT);
@@ -98,16 +101,18 @@ void loop()
 {
    //Handle Race main processing
    RaceHandler.Main();
-
+   
    //Handle lights main processing
    LightsController.Main();
-
+   
    //Handle battery sensor main processing
    BatterySensor.CheckBatteryVoltage();
    
    //Handle LCD processing
    LCDController.Main();
-
+   
+   //Run simulator
+   Simulator.Main();
    
    /*Update LCD Display fields*/
    //Update team time to display
