@@ -68,15 +68,18 @@ private:
    int _iS1TriggerState;
    //std::queue<int> _viS1TriggerStates;
    int  _iS1Pin;
+   volatile int _iS1Counter = 0;
+   volatile int _iS2Counter = 0;
    struct STriggerRecord
    {
       volatile int iSensorNumber;
-      volatile int iSensorState;
       volatile unsigned long lTriggerTime;
+      volatile int iSensorState;
    };
-   std::queue<STriggerRecord> _STriggerQueue;
-   //SimpleFIFO<STriggerRecord, 10> _STriggerQueue;
+   STriggerRecord _STriggerQueue[10];
 
+   volatile uint8_t _iQueueReadIndex;
+   volatile uint8_t _iQueueWriteIndex;
    volatile unsigned long _lNewS2Time;
    unsigned long _lPrevS2Time;
    int _iS2TriggerState;
@@ -102,6 +105,9 @@ private:
    void _ChangeRaceState(RaceStates _byNewRaceState);
    void _ChangeDogState(_byDogStates _byNewDogState);
    void _ChangeDogNumber(int _iNewDogNumber);
+   void _QueuePush(STriggerRecord _InterruptTrigger);
+   STriggerRecord _QueuePop();
+   bool _QueueEmpty();
 };
 
 extern RaceHandlerClass RaceHandler;

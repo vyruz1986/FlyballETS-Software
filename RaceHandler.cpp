@@ -50,12 +50,15 @@ void RaceHandlerClass::Main()
       return;
    }
 
-   //Serialprint("Queue size: %i\r\n", _STriggerQueue.size());
-   if (_STriggerQueue.empty())
+   if (!_QueueEmpty())   //If read index is not equal to write index, it means there is stuff in the buffer
    {
-      
-      STriggerRecord STriggerRecord = _STriggerQueue.front();
-      _STriggerQueue.pop();
+      Serialprint("Queue empty: %i (R: %i, W: %i, S1: %i, S2: %i)\r\n", _QueueEmpty(), _iQueueReadIndex, _iQueueWriteIndex, _iS1Counter, _iS2Counter);
+      for (int i = 0; i < 10; i++)
+      {
+         Serialprint("Queue pos %i: S%i|T:%lu|St:%i\r\n", i, _STriggerQueue[i].iSensorNumber, _STriggerQueue[i].lTriggerTime, _STriggerQueue[i].iSensorState);
+      }
+      //Increase read index and get next record
+      STriggerRecord STriggerRecord = _QueuePop();
 
       if (bDEBUG) Serialprint("S%i|T:%lu|St:%i\r\n", STriggerRecord.iSensorNumber, STriggerRecord.lTriggerTime, STriggerRecord.iSensorState);
 
@@ -227,6 +230,8 @@ void RaceHandlerClass::ResetRace()
       _ChangeDogNumber(0);
       _bFault = false;
       _bRerunBusy = false;
+      _iQueueReadIndex = 0;
+      _iQueueWriteIndex = 0;
       
       for (auto& bFault : _bDogFaults)
       {
@@ -303,11 +308,8 @@ void RaceHandlerClass::TriggerSensor1()
    {
       return;
    }
-   STriggerRecord S1Trigger;
-   S1Trigger.lTriggerTime = micros();
-   S1Trigger.iSensorNumber = 1;
-   S1Trigger.iSensorState = digitalRead(_iS1Pin);
-   _STriggerQueue.push(S1Trigger);
+   _QueuePush({ 1, micros(), digitalRead(_iS1Pin) });
+   _iS1Counter++;
 }
 
 void RaceHandlerClass::TriggerSensor2()
@@ -316,11 +318,8 @@ void RaceHandlerClass::TriggerSensor2()
    {
       return;
    }
-   STriggerRecord S2Trigger;
-   S2Trigger.lTriggerTime = micros();
-   S2Trigger.iSensorNumber = 2;
-   S2Trigger.iSensorState = digitalRead(_iS2Pin);;
-   _STriggerQueue.push(S2Trigger);
+   _QueuePush({ 2, micros(), digitalRead(_iS2Pin) });
+   _iS2Counter++;
 }
 
 double RaceHandlerClass::GetRaceTime()
@@ -458,6 +457,60 @@ String RaceHandlerClass::GetRaceStateString()
    }
 
    return strRaceState;
+}
+
+void RaceHandlerClass::_QueuePush(RaceHandlerClass::STriggerRecord _InterruptTrigger)
+{
+   //Add record to queue
+   _STriggerQueue[_iQueueWriteIndex] = _InterruptTrigger;
+
+   //Write index has to be increased, check it we should wrap-around
+   if (_iQueueWriteIndex == 9)//(sizeof(_STriggerQueue) / sizeof(*_STriggerQueue) - 1))
+   {
+      //Write index has reached end of array, start at 0 again
+      _iQueueWriteIndex = 0;
+   }
+   else
+   {
+      //End of array not yet reached, increase index by 1
+      _iQueueWriteIndex++;
+   }
+}
+
+RaceHandlerClass::STriggerRecord RaceHandlerClass::_QueuePop()
+{
+   //This function returns the next record of the interrupt queue
+   STriggerRecord NextRecord = _STriggerQueue[_iQueueReadIndex];
+
+   //Read index has to be increased, check it we should wrap-around
+   if (_iQueueReadIndex == 9)//(sizeof(_STriggerQueue) / sizeof(*_STriggerQueue) - 1))
+   {
+      //Write index has reached end of array, start at 0 again
+      _iQueueReadIndex = 0;
+
+      Serialprint("Wraparound!\r\n");
+   }
+   else
+   {
+      //End of array not yet reached, increase index by 1
+      _iQueueReadIndex++;
+   }
+   return NextRecord;
+}
+
+bool RaceHandlerClass::_QueueEmpty()
+{
+   //This function checks if queue is empty.
+   //This is determined by comparing the read and write index.
+   //If they are equal, it means we have cought up reading and the queue is 'empty' (the array is not really emmpty...)
+   if (_iQueueReadIndex == _iQueueWriteIndex)
+   {
+      return true;
+   }
+   else
+   {
+      return false;
+   }
 }
 
 RaceHandlerClass RaceHandler;
