@@ -1,6 +1,10 @@
 // RaceHandler.h
-
 #include <StreamPrint.h>
+#include <StandardCplusplus.h>
+#include <serstream>
+#include <string>
+#include <queue>
+#include <iterator>
 #ifndef _RACEHANDLER_h
 #define _RACEHANDLER_h
 
@@ -58,10 +62,20 @@ private:
    unsigned long _lRaceTime;
    unsigned long _lPerfectCrossingTime;
 
-   volatile unsigned long _lNewS1Time;
+   unsigned long _lNewS1Time;
    unsigned long _lPrevS1Time;
+   //std::queue<unsigned long> _vlS1Times;
    int _iS1TriggerState;
+   //std::queue<int> _viS1TriggerStates;
    int  _iS1Pin;
+   struct STriggerRecord
+   {
+      volatile int iSensorNumber;
+      volatile int iSensorState;
+      volatile unsigned long lTriggerTime;
+   };
+   std::queue<STriggerRecord> _STriggerQueue;
+   //SimpleFIFO<STriggerRecord, 10> _STriggerQueue;
 
    volatile unsigned long _lNewS2Time;
    unsigned long _lPrevS2Time;
