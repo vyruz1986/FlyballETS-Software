@@ -1,10 +1,4 @@
 #include <StreamPrint.h>
-#include <StandardCplusplus.h>
-#include <serstream>
-#include <string>
-#include <queue>
-#include <vector>
-#include <iterator>
 #include "LCDController.h"
 #include "RaceHandler.h"
 #include "LightsController.h"
@@ -12,6 +6,7 @@
 #include "global.h"
 #include "Simulator.h"
 #include <LiquidCrystal.h>
+#include <avr/pgmspace.h>
 
 /*List of pins and the ones used:
    - D0: Reserved for RX
@@ -42,7 +37,7 @@ int iS1Pin = 2;
 int iS2Pin = 3;
 
 char cDogTime[8];
-char cCrossingTime[7];
+char cDogCrossingTime[8];
 char cElapsedRaceTime[8];
 char cTotalCrossingTime[8];
 
@@ -154,14 +149,15 @@ void loop()
 
    if (RaceHandler.RaceState != RaceHandler.PreviousRaceState)
    {
-      Serialprint("S: %i\r\n", RaceHandler.RaceState);
+      Serialprint("RS: %i\r\n", RaceHandler.RaceState);
    }
 
    if (RaceHandler.iCurrentDog != RaceHandler.iPreviousDog)
    {
       dtostrf(RaceHandler.GetDogTime(RaceHandler.iPreviousDog), 7, 3, cDogTime);
-      Serialprint("D%i: %s\r\n", RaceHandler.iPreviousDog, cDogTime);
+      Serialprint("D%i: %s|CR: %s\r\n", RaceHandler.iPreviousDog, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog).c_str());
       Serialprint("D: %i\r\n", RaceHandler.iCurrentDog);
+      Serialprint("RT: %s\r\n", cElapsedRaceTime);
    }
 
    if ((millis() - lLastSerialOutput) > 5000)
@@ -183,7 +179,7 @@ void loop()
          && RaceHandler.GetRaceTime() == 0)           //and timers are zero
       {
          //Then start the race
-         if (bDEBUG) Serialprint("START!\r\n", millis());
+         if (bDEBUG) Serialprint("%lu: START!\r\n", millis());
          LightsController.InitiateStartSequence();
          RaceHandler.StartRace();
       }
@@ -257,9 +253,7 @@ void loop()
    if (strSerialData.length() > 0
        && bSerialStringComplete)
    {
-      char cSerialData[100];
-      strSerialData.toCharArray(cSerialData,100);
-      if (bDEBUG) Serialprint("cSer: '%s'\r\n", cSerialData);
+      if (bDEBUG) Serialprint("cSer: '%s'\r\n", strSerialData.c_str());
       strSerialData = "";
       bSerialStringComplete = false;
    }

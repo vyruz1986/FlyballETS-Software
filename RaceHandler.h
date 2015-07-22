@@ -1,10 +1,5 @@
 // RaceHandler.h
 #include <StreamPrint.h>
-#include <StandardCplusplus.h>
-#include <serstream>
-#include <string>
-#include <queue>
-#include <iterator>
 #ifndef _RACEHANDLER_h
 #define _RACEHANDLER_h
 
@@ -62,14 +57,7 @@ private:
    unsigned long _lRaceTime;
    unsigned long _lPerfectCrossingTime;
 
-   unsigned long _lNewS1Time;
-   unsigned long _lPrevS1Time;
-   //std::queue<unsigned long> _vlS1Times;
-   int _iS1TriggerState;
-   //std::queue<int> _viS1TriggerStates;
    int  _iS1Pin;
-   volatile int _iS1Counter = 0;
-   volatile int _iS2Counter = 0;
    struct STriggerRecord
    {
       volatile int iSensorNumber;
@@ -80,9 +68,6 @@ private:
 
    volatile uint8_t _iQueueReadIndex;
    volatile uint8_t _iQueueWriteIndex;
-   volatile unsigned long _lNewS2Time;
-   unsigned long _lPrevS2Time;
-   int _iS2TriggerState;
    int  _iS2Pin;
 
    bool _bFault;
@@ -96,18 +81,23 @@ private:
 
    unsigned long _lDogTimes[4][4];
    long _lCrossingTimes[4][4];
+
+   String _strTransition;
    
    enum _byDogStates {
       GOINGIN,
       COMINGBACK
    };
    _byDogStates _byDogState;
+   bool _bGatesClear = false;
+
    void _ChangeRaceState(RaceStates _byNewRaceState);
    void _ChangeDogState(_byDogStates _byNewDogState);
    void _ChangeDogNumber(int _iNewDogNumber);
    void _QueuePush(STriggerRecord _InterruptTrigger);
    STriggerRecord _QueuePop();
    bool _QueueEmpty();
+   void _AddToTransitionString(STriggerRecord _InterruptTrigger);
 };
 
 extern RaceHandlerClass RaceHandler;
