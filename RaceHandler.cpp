@@ -3,7 +3,7 @@
 #include "RaceHandler.h"
 #include "global.h"
 
-void RaceHandlerClass::init(int iS1Pin, int iS2Pin)
+void RaceHandlerClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
 {
    //Start in stopped state
    _ChangeRaceState(STOPPED);
@@ -29,16 +29,19 @@ void RaceHandlerClass::_ChangeDogState(_byDogStates _byNewDogState)
    if (_byDogState != _byNewDogState)
    {
       _byDogState = _byNewDogState;
+      if(bDEBUG) Serialprint("DogState: %i\r\n", _byNewDogState);
    }
 }
 
-void RaceHandlerClass::_ChangeDogNumber(int _iNewDogNumber)
+void RaceHandlerClass::_ChangeDogNumber(uint8_t _iNewDogNumber)
 {
    //Check if the dog really changed (this function could be called superfluously)
    if (_iNewDogNumber != iCurrentDog)
    {
       iPreviousDog = iCurrentDog;
       iCurrentDog = _iNewDogNumber;
+      if(bDEBUG) Serialprint("Prev Dog: %i|ENT:%lu|EXIT:%lu|TOT:%lu\r\n", iPreviousDog, _lDogEnterTimes[iPreviousDog], _lDogExitTimes[iPreviousDog], _lDogTimes[iPreviousDog][_iDogRunCounters[iPreviousDog]]);
+
    }
 }
 
@@ -47,154 +50,166 @@ void RaceHandlerClass::Main()
    //Don't handle anything if race is stopped
    if (RaceState == STOPPED)
    {
+      //If we are debugging we should dump the remainder of the interrupt queue, even if the race is stopped
+      if (bDEBUG)
+      {
+         while (!_QueueEmpty())
+         {
+            STriggerRecord STempRecord = _QueuePop();
+            if (bDEBUG) Serialprint("S%i|T:%li|St:%i\r\n", STempRecord.iSensorNumber, STempRecord.lTriggerTime - _lRaceStartTime, STempRecord.iSensorState);
+         }
+      }
       return;
    }
 
    if (!_QueueEmpty())   //If read index is not equal to write index, it means there is stuff in the buffer
    {
-      //Check if the transition string up till now tells us the last dog cleared the gates
-      String strLast2TransitionChars = _strTransition.substring(_strTransition.length() -2);
-      if (_strTransition.length() == 0    //String might still be empty, in which case the dog was clear
-         || (strLast2TransitionChars == "ab"
-         || strLast2TransitionChars == "ba")) //Sensors going low in either direction indicate gates are clear
+      //Increase read index and get next record
+      STriggerRecord STriggerRecord = _QueuePop();
+      //If the transition string is not empty and is was not updated for 2 seconds then we have to clear it.
+      if (_strTransition.length() != 0
+         && (micros() - _lLastTransitionStringUpdate) > 2000000)
+      {
+         _strTransition = "";
+      }
+      if (_strTransition.length() == 0)
       {
          _bGatesClear = true;
-         _strTransition = "";
+      }
+
+      if (bDEBUG) Serialprint("S%i|T:%li|St:%i\r\n", STriggerRecord.iSensorNumber, STriggerRecord.lTriggerTime - _lRaceStartTime, STriggerRecord.iSensorState);
+      if (bDEBUG) Serialprint("bGatesClear: %i\r\n", _bGatesClear);
+
+      //Calculate what our next dog will be
+      if ((_bFault && _bRerunBusy)
+          ||(_bFault && iCurrentDog == 3))
+      {
+         for (uint8_t i = 0; i < 4; i++)
+         {
+            if (_bDogFaults[i])
+            {
+               //Set dognumber for first offending dog
+               iNextDog = i;
+               break;
+            }
+         }
       }
       else
       {
-         _bGatesClear = false;
+         //Not the last dog, just increase number
+         iNextDog = iCurrentDog + 1;
       }
 
-      //Increase read index and get next record
-      STriggerRecord STriggerRecord = _QueuePop();
-      if (bDEBUG) Serialprint("S%i|T:%lu|St:%i\r\n", STriggerRecord.iSensorNumber, STriggerRecord.lTriggerTime, STriggerRecord.iSensorState);
-
-      Serialprint("bGatesClear: %i\r\n", _bGatesClear);
-
-      if (STriggerRecord.iSensorNumber == 1)
+      if (STriggerRecord.iSensorNumber == 1
+         &&_bGatesClear
+         && STriggerRecord.iSensorState == 1)
       {
-         //Check what current state of race is
-         if (RaceState != STOPPED
-            && _bGatesClear
-            && STriggerRecord.iSensorState == 1)
+         //Potential fault occured
+         //Special handling for dog 0 when it's not yet in the lane
+         if (iCurrentDog == 0
+            && _byDogState == GOINGIN
+            && STriggerRecord.lTriggerTime < _lPerfectCrossingTime)
          {
-            //Potential fault occured
-            //Special handling for dog 0 when it's not yet in the lane
-            if (iCurrentDog == 0
-               && _byDogState == GOINGIN
-               && STriggerRecord.lTriggerTime < _lPerfectCrossingTime)
-            {
-               //Dog 0 is too early!
-               SetDogFault(iCurrentDog, ON);
-               if (bDEBUG) Serialprint("F! D:%i!\r\n", iCurrentDog);
-               _lCrossingTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = STriggerRecord.lTriggerTime - _lPerfectCrossingTime;
-               _lDogEnterTimes[iCurrentDog] = STriggerRecord.lTriggerTime;
-               _ChangeDogState(COMINGBACK);
-            }
-            //Check if this is a next dog which is too early (we are expecting a dog to come back)
-            else if (_byDogState == COMINGBACK)
-            {
-               //This dog is too early!
-               //We assume previous dog came in at the more or less the same time
-               //TODO: Since the previous dog didn't come in yet, we don't know what the perfect crossing time is
-               //Therefor we can't display a negative crossing time on the display
-               //So we don't set the CrossingTime for this dog (it stays +0.000s)
-               _lDogExitTimes[iCurrentDog] = STriggerRecord.lTriggerTime;
-               _lDogTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = STriggerRecord.lTriggerTime - _lDogEnterTimes[iCurrentDog];
+            //Dog 0 is too early!
+            SetDogFault(iCurrentDog, ON);
+            if (bDEBUG) Serialprint("F! D:%i!\r\n", iCurrentDog);
+            _lCrossingTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = STriggerRecord.lTriggerTime - _lPerfectCrossingTime;
+            _lDogEnterTimes[iCurrentDog] = STriggerRecord.lTriggerTime;
+         }
+         //Check if this is a next dog which is too early (we are expecting a dog to come back)
+         else if (_byDogState == COMINGBACK)
+         {
+            //This dog is too early!
+            //We don't increase the dog number at this point. The transition string further down in the code will determine whether current dog came in or not.
+            //Set fault light for next dog.
+            SetDogFault(iNextDog, ON);
 
-               //Handle next dog
-               _ChangeDogNumber(iCurrentDog + 1);
-               _lDogEnterTimes[iCurrentDog] = STriggerRecord.lTriggerTime;
-               if (bDEBUG) Serialprint("F! D:%i!\r\n", iCurrentDog);
-               SetDogFault(iCurrentDog, ON);
-            }
+            //For now we assume dogs crossed more or less at the same time.
+            //It is very unlike that a next dog clears the sensors before the previous dog crosses them (this would be a veeery early crossing).
+            _lDogExitTimes[iCurrentDog] = STriggerRecord.lTriggerTime;
+            _lDogTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = STriggerRecord.lTriggerTime - _lDogEnterTimes[iCurrentDog];
 
-            //Normal race handling (no faults)
-            if (_byDogState == GOINGIN)
+            //Handle next dog
+            _lDogEnterTimes[iNextDog] = STriggerRecord.lTriggerTime;
+            if (bDEBUG) Serialprint("F! D:%i!\r\n", iNextDog);
+         }
+
+         //Normal race handling (no faults)
+         if (_byDogState == GOINGIN)
+         {
+            //Store crossing time only when dogstate was GOINGIN
+            _lCrossingTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = STriggerRecord.lTriggerTime - _lPerfectCrossingTime;
+
+            //If this dog is doing a rerun we have to turn the error light for this dog off
+            if (_bRerunBusy)
             {
-               //Store crossing time only when dogstate was GOINGIN
-               _lCrossingTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = STriggerRecord.lTriggerTime - _lPerfectCrossingTime;
-               _ChangeDogState(COMINGBACK);
-               _lDogEnterTimes[iCurrentDog] = STriggerRecord.lTriggerTime;
-
-               //If this dog is doing a rerun we have to turn the error light for this dog off
-               if (_bRerunBusy)
-               {
-                  //remove fault for this dog
-                  SetDogFault(iCurrentDog, OFF);
-               }
+               //remove fault for this dog
+               SetDogFault(iCurrentDog, OFF);
             }
          }
       }
 
-      if (STriggerRecord.iSensorNumber == 2
-         && _byDogState == COMINGBACK) //Only check 2nd sensor if we're expecting a dog to come back
+      if (STriggerRecord.iSensorNumber == 2     //Handle sensor 2 (box side)
+         &&_bGatesClear                         //And if gates are clear
+         && STriggerRecord.iSensorState == 1)   //And if sensor is HIGH
       {
-         if (_bGatesClear
-            && STriggerRecord.iSensorState == 1)
+         if (_byDogState != COMINGBACK)
          {
-            //Check if current dog has a fault
-            //TODO: The current dog could also have a fault which is not caused by being too early (manually triggered fault).
-            //We should store the fault type also so we can check if the dog was too early or not.
-            if (iCurrentDog != 0                                                             //If dog is not 1st dog
-                && _bDogFaults[iCurrentDog]                                                  //and current dog has fault
-                && (STriggerRecord.lTriggerTime - _lDogEnterTimes[iCurrentDog]) < 2000000)   //And S2 is trigger less than 2s after current dog's enter time
-                                                                                             //Then we know It's actually the previous dog who's still coming back (current dog was way too early).
-            {
-               //Current dog had a fault (was too early), so we need to modify the previous dog crossing time (we didn't know this before)
-               //Update exit and total time of previous dog
-               _lDogExitTimes[iCurrentDog - 1] = STriggerRecord.lTriggerTime;
-               _lDogTimes[iCurrentDog - 1][_iDogRunCounters[iCurrentDog -1]] = _lDogExitTimes[iCurrentDog - 1] - _lDogEnterTimes[iCurrentDog - 1];
+            /* Gates were clear, we weren't expecting a dog back, but one came back.
+            This means we missed the dog going in,
+            most likely due to perfect crossing were next dog was faster than previous dog,
+            and thus passed through sensors unseen */
+            //Set enter time for this dog to exit time of previous dog
+            _lDogEnterTimes[iCurrentDog] = _lDogExitTimes[iPreviousDog];
+            if (bDEBUG) Serialprint("Invisible dog came back!\r\n");
+         }
 
-               //And update crossing time of this dog (who is in fault)
-               _lCrossingTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = _lDogEnterTimes[iCurrentDog] - _lDogExitTimes[iCurrentDog - 1];
+         //Check if current dog has a fault
+         //TODO: The current dog could also have a fault which is not caused by being too early (manually triggered fault).
+         //We should store the fault type also so we can check if the dog was too early or not.
+         if (iCurrentDog != 0                                                             //If dog is not 1st dog
+               && _bDogFaults[iCurrentDog]                                                  //and current dog has fault
+               && (STriggerRecord.lTriggerTime - _lDogEnterTimes[iCurrentDog]) < 2000000)   //And S2 is trigger less than 2s after current dog's enter time
+                                                                                          //Then we know It's actually the previous dog who's still coming back (current dog was way too early).
+         {
+            //Current dog had a fault (was too early), so we need to modify the previous dog crossing time (we didn't know this before)
+            //Update exit and total time of previous dog
+            _lDogExitTimes[iPreviousDog] = STriggerRecord.lTriggerTime;
+            _lDogTimes[iPreviousDog][_iDogRunCounters[iPreviousDog]] = _lDogExitTimes[iPreviousDog] - _lDogEnterTimes[iPreviousDog];
+
+            //And update crossing time of this dog (who is in fault)
+            _lCrossingTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = _lDogEnterTimes[iCurrentDog] - _lDogExitTimes[iPreviousDog];
+         }
+         else if ((STriggerRecord.lTriggerTime - _lDogEnterTimes[iCurrentDog]) > 2000000) //Filter out S2 HIGH signals that are < 2 seconds after dog enter time
+         {
+            //Normal handling for dog coming back
+            _lDogExitTimes[iCurrentDog] = STriggerRecord.lTriggerTime;
+            _lDogTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = STriggerRecord.lTriggerTime - _lDogEnterTimes[iCurrentDog];
+            //The time the dog came in is also the perfect crossing time
+            _lPerfectCrossingTime = STriggerRecord.lTriggerTime;
+
+            if ((iCurrentDog == 3 && _bFault == false && _bRerunBusy == false) //If this is the 4th dog and there is no fault we have to stop the race
+               || (_bRerunBusy == true && _bFault == false))                //Or if the rerun sequence was started but no faults exist anymore
+            {
+               StopRace(STriggerRecord.lTriggerTime);
+               if(bDEBUG) Serialprint("Prev Dog: %i|ENT:%lu|EXIT:%lu|TOT:%lu\r\n", iPreviousDog, _lDogEnterTimes[iPreviousDog], _lDogExitTimes[iPreviousDog], _lDogTimes[iPreviousDog][_iDogRunCounters[iPreviousDog]]);
+            }
+            else if ((iCurrentDog == 3 && _bFault == true && _bRerunBusy == false)  //If current dog is dog 4 and a fault exists, we have to initiate rerun sequence
+               || _bRerunBusy == true)                                        //Or if rerun is busy (and faults still exist)
+            {
+               //Dog 3 came in but there is a fault, we have to initiate the rerun sequence
+               _bRerunBusy = true;
+               //Reset timers for this dog
+               _lDogEnterTimes[iNextDog] = STriggerRecord.lTriggerTime;
+               _lDogExitTimes[iNextDog] = 0;
+               //Increase run counter for this dog
+               _iDogRunCounters[iNextDog]++;
+               Serialprint("RR%i\r\n", iNextDog);
             }
             else
             {
-               //Normal handling for dog coming back
-               _lDogExitTimes[iCurrentDog] = STriggerRecord.lTriggerTime;
-               _lDogTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = STriggerRecord.lTriggerTime - _lDogEnterTimes[iCurrentDog];
-               //The time the dog came in is also the perfect crossing time
-               _lPerfectCrossingTime = STriggerRecord.lTriggerTime;
-               //Set race back to expect incoming dog
-               _ChangeDogState(GOINGIN);
-
-               if ((iCurrentDog == 3 && _bFault == false && _bRerunBusy == false) //If this is the 4th dog and there is no fault we have to stop the race
-                  || (_bRerunBusy == true && _bFault == false))                //Or if the rerun sequence was started but no faults exist anymore
-               {
-                  _lRaceEndTime = STriggerRecord.lTriggerTime;
-                  _lRaceTime = _lRaceEndTime - _lRaceStartTime;
-                  _ChangeRaceState(STOPPED);
-               }
-               else if ((iCurrentDog == 3 && _bFault == true && _bRerunBusy == false)  //If current dog is dog 4 and a fault exists, we have to initiate rerun sequence
-                  || _bRerunBusy == true)                                        //Or if rerun is busy (and faults still exist)
-               {
-                  //Dog 3 came in but there is a fault, we have to initiate the rerun sequence
-                  _bRerunBusy = true;
-                  for (int i = 0; i < 4; i++)
-                  {
-                     if (_bDogFaults[i])
-                     {
-                        //Set dognumber for first offending dog
-                        _ChangeDogNumber(i);
-                        //Reset timers for this dog
-                        _lDogEnterTimes[i] = STriggerRecord.lTriggerTime;
-                        _lDogExitTimes[i] = 0;
-                        //Increase run counter for this dog
-                        _iDogRunCounters[i]++;
-                        break;
-                     }
-                  }
-                  if (bDEBUG) Serialprint("RR! D:%i\r\n", millis(), iCurrentDog);
-               }
-               else
-               {
-                  //And increase dog number
-                  _ChangeDogNumber(iCurrentDog + 1);
-                  //Store next dog enter time
-                  _lDogEnterTimes[iCurrentDog] = STriggerRecord.lTriggerTime;
-               }
+               //Store next dog enter time
+               _lDogEnterTimes[iNextDog] = STriggerRecord.lTriggerTime;
             }
          }
       }
@@ -202,21 +217,64 @@ void RaceHandlerClass::Main()
       //Add trigger record to transition string
       _AddToTransitionString(STriggerRecord);
 
-      //Check if more than 1 dog passed
-      if (_strTransition.length() > 3)  //If transistion string is at least 4 characters long
+      //Check if the transition string up till now tells us the last dog cleared the gates
+      String strLast2TransitionChars = _strTransition.substring(_strTransition.length() - 2);
+      if (_strTransition.length() == 0    //String might still be empty, in which case the dog was clear
+         || (strLast2TransitionChars == "ab"
+         || strLast2TransitionChars == "ba")) //Sensors going low in either direction indicate gates are clear
       {
-         //Transition string is 4 characters or longer
-         //So we can check what happened
-         if (_strTransition != "ABab"     //Dog going to box
-            && _strTransition != "BAba")  //Dog coming back
+         if (bDEBUG) Serialprint("Tstring: %s\r\n", _strTransition.c_str());
+         _bGatesClear = true;
+         //Only check transition string when gates are clear
+         //Check if more than 1 dog passed
+         if (_strTransition.length() > 3)  //If transistion string is at least 4 characters long
          {
-            //Transition string indicates more than 1 dog passed
-            //We increase the dog number and set perfect corssing time for new dog
-            _ChangeDogNumber(iCurrentDog + 1);
-            _lCrossingTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = 0;
-            _ChangeDogState(COMINGBACK);
-            _lDogEnterTimes[iCurrentDog] = _lDogExitTimes[iCurrentDog - 1];
+            //Transition string is 4 characters or longer
+            //So we can check what happened
+            if (_strTransition == "ABab")     //Dog going to box
+            {
+               //Next dog has no fault, change dog state
+               _ChangeDogState(COMINGBACK);
+            }
+            else if (_strTransition == "BAba")  //Dog coming back
+            {
+               //Normal handling, expect next dog to go in
+               _ChangeDogState(GOINGIN);
+               //dog number can be increased
+               _ChangeDogNumber(iNextDog);
+            }
+            else if (_strTransition == "BbAa")
+            {
+               //Transistion string BbAa indicates small object has passed through sensors
+               //Most likely dog spat ball
+               Serialprint("Spat ball detected?!\r\n");
+               SetDogFault(iCurrentDog, ON);
+
+            }
+            else  //Transition string indicated neither dog coming back, nor dog going in, it means 2 dogs must have passed
+            {
+               //Transition string indicates more than 1 dog passed
+               //We increase the dog number
+               _ChangeDogNumber(iNextDog);
+
+               //First check if no error was set for next dog (too early)
+               if (_bDogFaults[iCurrentDog])
+               {
+                  //This dog was too early, but since have a simultaneous crossing we don't know the crossing time.
+                  //Set it to 0 for now
+               }
+
+               // and set perfect crossing time for new dog
+               _ChangeDogState(COMINGBACK);
+               _lCrossingTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = 0;
+               _lDogEnterTimes[iCurrentDog] = _lDogExitTimes[iPreviousDog];
+            }
          }
+         _strTransition = "";
+      }
+      else
+      {
+         _bGatesClear = false;
       }
    }
 
@@ -242,25 +300,22 @@ void RaceHandlerClass::Main()
 void RaceHandlerClass::StartTimers()
 {
    _ChangeRaceState(RUNNING);
-   _lRaceStartTime = micros();
-   _lPerfectCrossingTime = _lRaceStartTime;
-   //Store dog 1 enter time
-   _lDogEnterTimes[0] = _lRaceStartTime;
 }
 
 void RaceHandlerClass::StartRace()
 {
    _ChangeRaceState(STARTING);
-   _lRaceStartTime = micros();
-   _lPerfectCrossingTime = _lRaceStartTime + 3000000;
+   _lRaceStartTime = micros() + 3000000;
+   _lPerfectCrossingTime = _lRaceStartTime;
+   _lDogEnterTimes[0] = _lRaceStartTime;
 }
 
-void RaceHandlerClass::StopRace()
+void RaceHandlerClass::StopRace(unsigned long StopTime)
 {
    if (RaceState == RUNNING)
    {
       //Race is running, so we have to record the EndTime
-      _lRaceEndTime = micros();
+      _lRaceEndTime = StopTime;
       _lRaceTime = _lRaceEndTime - _lRaceStartTime;
    }
    _ChangeRaceState(STOPPED);
@@ -283,6 +338,7 @@ void RaceHandlerClass::ResetRace()
       _iQueueReadIndex = 0;
       _iQueueWriteIndex = 0;
       _strTransition = "";
+      _bGatesClear = true;
       
       for (auto& bFault : _bDogFaults)
       {
@@ -324,7 +380,7 @@ void RaceHandlerClass::ResetRace()
       }
    }
 }
-void RaceHandlerClass::SetDogFault(int iDogNumber, DogFaults State)
+void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
 {
    bool bFault;
    //Check if we have to toggle
@@ -345,11 +401,13 @@ void RaceHandlerClass::SetDogFault(int iDogNumber, DogFaults State)
    {
       LightsController.ToggleFaultLight(iDogNumber, LightsController.ON);
       _bFault = true;
+      Serialprint("D%iF1\r\n", iDogNumber);
    }
    else
    {
       //If fault is false, turn off fault light for this dog
       LightsController.ToggleFaultLight(iDogNumber, LightsController.OFF);
+      Serialprint("D%iF0\r\n", iDogNumber);
    }
 }
 
@@ -382,27 +440,39 @@ double RaceHandlerClass::GetRaceTime()
    return dRaceTimeSeconds;
 }
 
-double RaceHandlerClass::GetDogTime(int iDogNumber)
+double RaceHandlerClass::GetDogTime(uint8_t iDogNumber, int8_t iRunNumber)
 {
    double dDogTimeSeconds = 0;
-
-   uint8_t& iRunNumber = _iLastReturnedRunNumber[iDogNumber];
-   auto& lLastReturnedTimeStamp = _lLastDogTimeReturnTimeStamp[iDogNumber];
    if (_iDogRunCounters[iDogNumber] > 0)
    {
-      //We have multiple crossing times for this dog, so we must cycle through them
-      if ((millis() - lLastReturnedTimeStamp) > 2000)
+      //We have multiple times for this dog.
+      //if run number is -1 (unspecified), we have to cycle throug them
+      if (iRunNumber == -1)
       {
-         if (iRunNumber == _iDogRunCounters[iDogNumber])
+         auto& lLastReturnedTimeStamp = _lLastDogTimeReturnTimeStamp[iDogNumber];
+         iRunNumber = _iLastReturnedRunNumber[iDogNumber];
+         if ((millis() - lLastReturnedTimeStamp) > 2000)
          {
-            iRunNumber = 0;
+            if (iRunNumber == _iDogRunCounters[iDogNumber])
+            {
+               iRunNumber = 0;
+            }
+            else
+            {
+               iRunNumber++;
+            }
+            lLastReturnedTimeStamp = millis();
          }
-         else
-         {
-            iRunNumber++;
-         }
-         lLastReturnedTimeStamp = millis();
       }
+      else if (iRunNumber == -2)
+      {
+         //if RunNumber is -2 it means we should return the last one
+         iRunNumber = _iDogRunCounters[iDogNumber];
+      }
+   }
+   else
+   {
+      iRunNumber = 0;
    }
 
    //First check if we have final time for the requested dog number
@@ -419,30 +489,45 @@ double RaceHandlerClass::GetDogTime(int iDogNumber)
    return dDogTimeSeconds;
 }
 
-String RaceHandlerClass::GetCrossingTime(int iDogNumber)
+String RaceHandlerClass::GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber)
 {
    double dCrossingTime = 0;
    char cCrossingTime[8];
    String strCrossingTime;
 
-   uint8_t& iRunNumber = _iLastReturnedRunNumber[iDogNumber];
-   auto& lLastReturnedTimeStamp = _lLastDogTimeReturnTimeStamp[iDogNumber];
+   
    if (_iDogRunCounters[iDogNumber] > 0)
    {
-      //We have multiple crossing times for this dog, so we must cycle through them
-      if ((millis() - lLastReturnedTimeStamp) > 2000)
+      //We have multiple times for this dog.
+      //if run number is -1 (unspecified), we have to cycle throug them
+      if (iRunNumber == -1)
       {
-         if (iRunNumber == _iDogRunCounters[iDogNumber])
+         auto& lLastReturnedTimeStamp = _lLastDogTimeReturnTimeStamp[iDogNumber];
+         iRunNumber = _iLastReturnedRunNumber[iDogNumber];
+         if ((millis() - lLastReturnedTimeStamp) > 2000)
          {
-            iRunNumber = 0;
+            if (iRunNumber == _iDogRunCounters[iDogNumber])
+            {
+               iRunNumber = 0;
+            }
+            else
+            {
+               iRunNumber++;
+            }
+            lLastReturnedTimeStamp = millis();
          }
-         else
-         {
-            iRunNumber++;
-         }
-         lLastReturnedTimeStamp = millis();
+      }
+      else if (iRunNumber == -2)
+      {
+         //if RunNumber is -2 it means we should return the last one
+         iRunNumber = _iDogRunCounters[iDogNumber];
       }
    }
+   else
+   {
+      iRunNumber = 0;
+   }
+
    dCrossingTime = _lCrossingTimes[iDogNumber][iRunNumber] / 1000000.0;
    if (dCrossingTime < 0)
    {
@@ -459,7 +544,7 @@ String RaceHandlerClass::GetCrossingTime(int iDogNumber)
    return strCrossingTime;
 }
 
-String RaceHandlerClass::GetRerunInfo(int iDogNumber)
+String RaceHandlerClass::GetRerunInfo(uint8_t iDogNumber)
 {
    String strRerunInfo = "  ";
    
@@ -565,6 +650,9 @@ void RaceHandlerClass::_AddToTransitionString(STriggerRecord _InterruptTrigger)
    //The transition string consists of lower and upper case A and B characters.
    //A indicates the handlers side, B indicates the boxes side
    //Uppercase indicates a high signal (dog broke beam), lowercase indicates a low signal (dog left beam)
+
+   _lLastTransitionStringUpdate = micros();
+
    char cTemp;
    switch (_InterruptTrigger.iSensorNumber)
    {
@@ -581,16 +669,15 @@ void RaceHandlerClass::_AddToTransitionString(STriggerRecord _InterruptTrigger)
    {
       cTemp = tolower(cTemp);
    }
+   //Add the character to the transition string
+   _strTransition += cTemp;
 
    //Filtering for unwanted sensor jitter
-   //If this letter in this case is already in the string we don't want it
-   if (_strTransition.indexOf(cTemp) == -1)
-   {
-      //Finally add the character to the transition string
-      _strTransition += cTemp;
-   }
-
-   Serialprint("Tstring: %s\r\n", _strTransition.c_str());
+   //Filter consecutive alternating changes out
+   _strTransition.replace("AaA", "A");
+   _strTransition.replace("aAa", "a");
+   _strTransition.replace("BbB", "B");
+   _strTransition.replace("bBb", "b");
 }
 
 RaceHandlerClass RaceHandler;

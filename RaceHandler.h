@@ -11,11 +11,12 @@
 
 class RaceHandlerClass
 {
+   friend class SimulatorClass;
  protected:
 
 
  public:
-	void init(int iS1Pin, int iS2Pin);
+	void init(uint8_t iS1Pin, uint8_t iS2Pin);
    enum RaceStates {
       STOPPED,
       STARTING,
@@ -26,11 +27,13 @@ class RaceHandlerClass
 
    uint8_t iCurrentDog;
    uint8_t iPreviousDog;
+   uint8_t iNextDog;
    
    void Main();
    void StartTimers();
    void StartRace();
    void StopRace();
+   void StopRace(unsigned long StopTime);
    void ResetRace();
    void TriggerSensor1();
    void TriggerSensor2();
@@ -40,35 +43,35 @@ class RaceHandlerClass
       ON,
       TOGGLE
    };
-   void SetDogFault(int iDogNumber, DogFaults State = TOGGLE);
+   void SetDogFault(uint8_t iDogNumber, DogFaults State = TOGGLE);
 
    double GetRaceTime();
-   double GetDogTime(int iDogNumber);
-   String GetCrossingTime(int iDogNumber);
-   String GetRerunInfo(int iDogNumber);
+   double GetDogTime(uint8_t iDogNumber, int8_t iRunNumber = -1);
+   String GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber = -1);
+   String GetRerunInfo(uint8_t iDogNumber);
    double GetTotalCrossingTime();
 
    String GetRaceStateString();
-   unsigned long* lRaceStartTime = &_lRaceStartTime;
 
 private:
    unsigned long _lRaceStartTime;
    unsigned long _lRaceEndTime;
    unsigned long _lRaceTime;
    unsigned long _lPerfectCrossingTime;
+   unsigned long _lLastTransitionStringUpdate;
 
-   int  _iS1Pin;
+   uint8_t  _iS1Pin;
    struct STriggerRecord
    {
-      volatile int iSensorNumber;
+      volatile uint8_t iSensorNumber;
       volatile unsigned long lTriggerTime;
-      volatile int iSensorState;
+      volatile uint8_t iSensorState;
    };
    STriggerRecord _STriggerQueue[10];
 
    volatile uint8_t _iQueueReadIndex;
    volatile uint8_t _iQueueWriteIndex;
-   int  _iS2Pin;
+   uint8_t  _iS2Pin;
 
    bool _bFault;
    bool _bDogFaults[4];
@@ -93,7 +96,7 @@ private:
 
    void _ChangeRaceState(RaceStates _byNewRaceState);
    void _ChangeDogState(_byDogStates _byNewDogState);
-   void _ChangeDogNumber(int _iNewDogNumber);
+   void _ChangeDogNumber(uint8_t _iNewDogNumber);
    void _QueuePush(STriggerRecord _InterruptTrigger);
    STriggerRecord _QueuePop();
    bool _QueueEmpty();
