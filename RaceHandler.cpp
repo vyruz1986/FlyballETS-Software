@@ -62,9 +62,9 @@ void RaceHandlerClass::Main()
       return;
    }
 
-   if (!_QueueEmpty())   //If read index is not equal to write index, it means there is stuff in the buffer
+   if (!_QueueEmpty())   //If queue is not empty, we have work to do
    {
-      //Increase read index and get next record
+      //Get next record from queue
       STriggerRecord STriggerRecord = _QueuePop();
       //If the transition string is not empty and is was not updated for 2 seconds then we have to clear it.
       if (_strTransition.length() != 0
@@ -84,11 +84,12 @@ void RaceHandlerClass::Main()
       if ((_bFault && _bRerunBusy)
           ||(_bFault && iCurrentDog == 3))
       {
+         //In case we are doing a rerun, we have to check which the next offending dog is
          for (uint8_t i = 0; i < 4; i++)
          {
             if (_bDogFaults[i])
             {
-               //Set dognumber for first offending dog
+               //Set dognumber to next/first offending dog
                iNextDog = i;
                break;
             }
@@ -96,16 +97,17 @@ void RaceHandlerClass::Main()
       }
       else
       {
-         //Not the last dog, just increase number
+         //Not the last dog, and no rerun busy, just increase number
          iNextDog = iCurrentDog + 1;
       }
-
+      
+      //Handle sensor 1 events (handlers side)
       if (STriggerRecord.iSensorNumber == 1
-         &&_bGatesClear
-         && STriggerRecord.iSensorState == 1)
+         &&_bGatesClear                         //Only if gates are clear
+         && STriggerRecord.iSensorState == 1)   //And act on HIGH events (beam broken)
       {
-         //Potential fault occured
-         //Special handling for dog 0 when it's not yet in the lane
+         //First check if we don't have a fault situation
+         //Special fault handling for dog 0 when it's not yet in the lane
          if (iCurrentDog == 0
             && _byDogState == GOINGIN
             && STriggerRecord.lTriggerTime < _lPerfectCrossingTime)
@@ -125,7 +127,7 @@ void RaceHandlerClass::Main()
             SetDogFault(iNextDog, ON);
 
             //For now we assume dogs crossed more or less at the same time.
-            //It is very unlike that a next dog clears the sensors before the previous dog crosses them (this would be a veeery early crossing).
+            //It is very unlikely that a next dog clears the sensors before the previous dog crosses them (this would be a veeery early crossing).
             _lDogExitTimes[iCurrentDog] = STriggerRecord.lTriggerTime;
             _lDogTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = STriggerRecord.lTriggerTime - _lDogEnterTimes[iCurrentDog];
 
@@ -137,7 +139,7 @@ void RaceHandlerClass::Main()
          //Normal race handling (no faults)
          if (_byDogState == GOINGIN)
          {
-            //Store crossing time only when dogstate was GOINGIN
+            //Store crossing time
             _lCrossingTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = STriggerRecord.lTriggerTime - _lPerfectCrossingTime;
 
             //If this dog is doing a rerun we have to turn the error light for this dog off
@@ -148,10 +150,11 @@ void RaceHandlerClass::Main()
             }
          }
       }
-
-      if (STriggerRecord.iSensorNumber == 2     //Handle sensor 2 (box side)
-         &&_bGatesClear                         //And if gates are clear
-         && STriggerRecord.iSensorState == 1)   //And if sensor is HIGH
+      
+      //Handle sensor 2 (box side)
+      if (STriggerRecord.iSensorNumber == 2
+         &&_bGatesClear                         //Only if gates are clear
+         && STriggerRecord.iSensorState == 1)   //And only if sensor is HIGH
       {
          if (_byDogState != COMINGBACK)
          {
@@ -213,34 +216,61 @@ void RaceHandlerClass::Main()
             }
          }
       }
-
+      
+      /***********************************
+       * The code below handles what we call the 'transition string'
+       * It is an algorithm which saves all sensor events in sequence, until it recognizes a pattern.
+       * We have 2 sensor columns: the handler side column, and the box side column
+       * To indicate the handler side column, we use the letter A
+       * To indicate the box side column, we use the letter B
+       * A HIGH sensor reading (beam broken), will be represented by an upper case character
+       * A LOW sensor reading (beam not broken), will be represented by a lower case character
+       * e.g.: A --> handler side HIGH reading, b --> box side LOW reading, etc...
+       * 
+       * We chain these characters up to get our 'transition string'
+       * Then we check this string to determine what happened
+       * For example:
+       * 'ABab'
+       *    --> Handler side HIGH, box side HIGH, handler side LOW, box side LOW
+       *    --> This tells us ONE dog passed the gates in the direction of the box
+       * 'BAba'
+       *    --> Box side HIGH, handler side HIGH, box side LOW, handler side LOW
+       *    --> This tells us ONE dog passed the gates in the direction of the handler
+       * 'BAab'
+       *    --> Box side HIGH, handler side HIGH, handler side LOW, box side LOW
+       *    --> This tells us TWO dogs crossed the gates simultaneously, and the dog going to the box was the last to leave the gates
+      ***********************************/
+      
       //Add trigger record to transition string
       _AddToTransitionString(STriggerRecord);
 
-      //Check if the transition string up till now tells us the last dog cleared the gates
+      //Check if the transition string up till now tells us the gates are clear
       String strLast2TransitionChars = _strTransition.substring(_strTransition.length() - 2);
-      if (_strTransition.length() == 0    //String might still be empty, in which case the dog was clear
+      if (_strTransition.length() == 0    //String might still be empty, in which case the gates were clear
          || (strLast2TransitionChars == "ab"
          || strLast2TransitionChars == "ba")) //Sensors going low in either direction indicate gates are clear
       {
-         if (bDEBUG) Serialprint("Tstring: %s\r\n", _strTransition.c_str());
+         //The gates are clear, set boolean
          _bGatesClear = true;
+         
+         //Print the transition string up til now for debugging purposes
+         if (bDEBUG) Serialprint("Tstring: %s\r\n", _strTransition.c_str());
+         
          //Only check transition string when gates are clear
-         //Check if more than 1 dog passed
-         if (_strTransition.length() > 3)  //If transistion string is at least 4 characters long
+         if (_strTransition.length() > 3)  //And if transistion string is at least 4 characters long
          {
             //Transition string is 4 characters or longer
             //So we can check what happened
             if (_strTransition == "ABab")     //Dog going to box
             {
-               //Next dog has no fault, change dog state
+               //Change dog state to coming back
                _ChangeDogState(COMINGBACK);
             }
             else if (_strTransition == "BAba")  //Dog coming back
             {
-               //Normal handling, expect next dog to go in
+               //Normal handling, change dog state to GOING IN
                _ChangeDogState(GOINGIN);
-               //dog number can be increased
+               //Set next dog active
                _ChangeDogNumber(iNextDog);
             }
             else if (_strTransition == "BbAa")
@@ -251,7 +281,7 @@ void RaceHandlerClass::Main()
                SetDogFault(iCurrentDog, ON);
 
             }
-            else  //Transition string indicated neither dog coming back, nor dog going in, it means 2 dogs must have passed
+            else  //Transition string indicated something other than dog coming back or dog going in, it means 2 dogs must have passed
             {
                //Transition string indicates more than 1 dog passed
                //We increase the dog number
