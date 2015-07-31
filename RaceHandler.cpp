@@ -480,7 +480,7 @@ double RaceHandlerClass::GetDogTime(uint8_t iDogNumber, int8_t iRunNumber)
       if (iRunNumber == -1)
       {
          auto& lLastReturnedTimeStamp = _lLastDogTimeReturnTimeStamp[iDogNumber];
-         iRunNumber = _iLastReturnedRunNumber[iDogNumber];
+         auto& iRunNumber = _iLastReturnedRunNumber[iDogNumber];
          if ((millis() - lLastReturnedTimeStamp) > 2000)
          {
             if (iRunNumber == _iDogRunCounters[iDogNumber])
@@ -533,7 +533,7 @@ String RaceHandlerClass::GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber)
       if (iRunNumber == -1)
       {
          auto& lLastReturnedTimeStamp = _lLastDogTimeReturnTimeStamp[iDogNumber];
-         iRunNumber = _iLastReturnedRunNumber[iDogNumber];
+         auto& iRunNumber = _iLastReturnedRunNumber[iDogNumber];
          if ((millis() - lLastReturnedTimeStamp) > 2000)
          {
             if (iRunNumber == _iDogRunCounters[iDogNumber])
