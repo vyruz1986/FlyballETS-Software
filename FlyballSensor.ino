@@ -32,7 +32,7 @@
    - A7: <free>
 */
 
-#define Simulate true
+#define Simulate false
 #if Simulate
    #include "Simulator.h"
 #endif
