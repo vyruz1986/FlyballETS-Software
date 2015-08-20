@@ -195,7 +195,7 @@ void RaceHandlerClass::Main()
                || (_bRerunBusy == true && _bFault == false))                //Or if the rerun sequence was started but no faults exist anymore
             {
                StopRace(STriggerRecord.lTriggerTime);
-               if(bDEBUG) Serialprint("Prev Dog: %i|ENT:%lu|EXIT:%lu|TOT:%lu\r\n", iPreviousDog, _lDogEnterTimes[iPreviousDog], _lDogExitTimes[iPreviousDog], _lDogTimes[iPreviousDog][_iDogRunCounters[iPreviousDog]]);
+               if (bDEBUG) Serialprint("Last Dog: %i|ENT:%lu|EXIT:%lu|TOT:%lu\r\n", iCurrentDog, _lDogEnterTimes[iCurrentDog], _lDogExitTimes[iCurrentDog], _lDogTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]]);
             }
             else if ((iCurrentDog == 3 && _bFault == true && _bRerunBusy == false)  //If current dog is dog 4 and a fault exists, we have to initiate rerun sequence
                || _bRerunBusy == true)                                        //Or if rerun is busy (and faults still exist)
@@ -480,7 +480,7 @@ double RaceHandlerClass::GetDogTime(uint8_t iDogNumber, int8_t iRunNumber)
       if (iRunNumber == -1)
       {
          auto& lLastReturnedTimeStamp = _lLastDogTimeReturnTimeStamp[iDogNumber];
-         auto& iRunNumber = _iLastReturnedRunNumber[iDogNumber];
+         iRunNumber = _iLastReturnedRunNumber[iDogNumber];
          if ((millis() - lLastReturnedTimeStamp) > 2000)
          {
             if (iRunNumber == _iDogRunCounters[iDogNumber])
@@ -493,6 +493,7 @@ double RaceHandlerClass::GetDogTime(uint8_t iDogNumber, int8_t iRunNumber)
             }
             lLastReturnedTimeStamp = millis();
          }
+         _iLastReturnedRunNumber[iDogNumber] = iRunNumber;
       }
       else if (iRunNumber == -2)
       {
@@ -533,7 +534,7 @@ String RaceHandlerClass::GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber)
       if (iRunNumber == -1)
       {
          auto& lLastReturnedTimeStamp = _lLastDogTimeReturnTimeStamp[iDogNumber];
-         auto& iRunNumber = _iLastReturnedRunNumber[iDogNumber];
+         iRunNumber = _iLastReturnedRunNumber[iDogNumber];
          if ((millis() - lLastReturnedTimeStamp) > 2000)
          {
             if (iRunNumber == _iDogRunCounters[iDogNumber])
@@ -546,6 +547,7 @@ String RaceHandlerClass::GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber)
             }
             lLastReturnedTimeStamp = millis();
          }
+         _iLastReturnedRunNumber[iDogNumber] = iRunNumber;
       }
       else if (iRunNumber == -2)
       {
