@@ -1,64 +1,26 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
-    </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
+    <ClCompile Include="BatterySensor.cpp" />
+    <ClCompile Include="global.cpp" />
+    <ClCompile Include="LCDController.cpp" />
+    <ClCompile Include="LightsController.cpp" />
+    <ClCompile Include="RaceHandler.cpp" />
+    <ClCompile Include="Simulator.cpp" />
+    <ClCompile Include="StreamPrint.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="FlyballSensor.ino" />
+    <ClInclude Include="BatterySensor.h" />
+    <ClInclude Include="global.h" />
+    <ClInclude Include="LCDController.h" />
+    <ClInclude Include="LightsController.h" />
+    <ClInclude Include="RaceHandler.h" />
+    <ClInclude Include="Simulator.h" />
+    <ClInclude Include="PROGMEM_readAnything.h" />
+    <ClInclude Include="Visual Micro\.FlyballSensor.vsarduino.h" />
+    <ClInclude Include="StreamPrint.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Visual Micro\.FlyballSensor.vsarduino.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BatterySensor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="LCDController.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="LightsController.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RaceHandler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="global.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="printf.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="BatterySensor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="LCDController.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="LightsController.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="RaceHandler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="global.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
+    <None Include="FlyballETS-Software.ino" />
   </ItemGroup>
 </Project>

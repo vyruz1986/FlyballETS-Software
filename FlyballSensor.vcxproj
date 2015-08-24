@@ -13,6 +13,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{7F3B4006-910D-4E88-BAF0-5AB1345B8070}</ProjectGuid>
     <RootNamespace>FlyballSensor</RootNamespace>
+    <ProjectName>FlyballETS-Software</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -44,7 +45,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Program Files (x86)\Arduino\hardware\arduino\avr\cores\arduino;C:\Program Files (x86)\Arduino\hardware\arduino\avr\variants\eightanaloginputs;C:\Users\Alex\Documents\Arduino\FlyballSensor;C:\Program Files (x86)\Arduino\libraries\LiquidCrystal\src;C:\Program Files (x86)\Arduino\libraries\LiquidCrystal\src\utility;C:\users\Alex\Documents\Arduino\libraries\StreamPrint;C:\users\Alex\Documents\Arduino\libraries\StreamPrint\utility;C:\Program Files (x86)\Arduino\libraries;C:\Program Files (x86)\Arduino\hardware\arduino\avr\libraries;C:\Program Files (x86)\Visual Micro\Visual Micro for Arduino\Micro Platforms\default\debuggers;C:\users\Alex\Documents\Arduino\libraries;C:\Program Files (x86)\Arduino\hardware\tools\avr/avr/include/;C:\Program Files (x86)\Arduino\hardware\tools\avr//avr/include/avr/;C:\Program Files (x86)\Arduino\hardware\tools\avr/lib\gcc\avr\4.8.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files (x86)\Arduino\hardware\arduino\avr\cores\arduino;C:\Program Files (x86)\Arduino\hardware\arduino\avr\variants\eightanaloginputs;C:\Users\Alex\Documents\Arduino\FlyballSensor;C:\Program Files (x86)\Arduino\libraries\LiquidCrystal\src;C:\Program Files (x86)\Arduino\libraries\LiquidCrystal\src\utility;C:\Program Files (x86)\Arduino\libraries;C:\Program Files (x86)\Arduino\hardware\arduino\avr\libraries;C:\Program Files (x86)\Visual Micro\Visual Micro for Arduino\Micro Platforms\default\debuggers;C:\users\Alex\Documents\Arduino\libraries;C:\Program Files (x86)\Arduino\hardware\tools\avr/avr/include/;C:\Program Files (x86)\Arduino\hardware\tools\avr//avr/include/avr/;C:\Program Files (x86)\Arduino\hardware\tools\avr/lib\gcc\avr\4.8.1\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>C:\Users\Alex\Documents\Arduino\FlyballSensor\Visual Micro\.FlyballSensor.vsarduino.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <IgnoreStandardIncludePath>true</IgnoreStandardIncludePath>
       <PreprocessorDefinitions>__AVR_ATmega328p__;__AVR_ATmega328P__;F_CPU=16000000L;ARDUINO=165;ARDUINO_AVR_NANO;ARDUINO_ARCH_AVR;__cplusplus;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -68,7 +69,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="FlyballSensor.ino">
+    <None Include="FlyballETS-Software.ino">
       <FileType>CppCode</FileType>
     </None>
   </ItemGroup>
@@ -85,9 +86,6 @@
     <ClInclude Include="LightsController.h">
       <FileType>CppCode</FileType>
     </ClInclude>
-    <ClInclude Include="printf.h">
-      <FileType>CppCode</FileType>
-    </ClInclude>
     <ClInclude Include="PROGMEM_readAnything.h" />
     <ClInclude Include="RaceHandler.h">
       <FileType>CppCode</FileType>
@@ -95,6 +93,7 @@
     <ClInclude Include="Simulator.h">
       <FileType>CppCode</FileType>
     </ClInclude>
+    <ClInclude Include="StreamPrint.h" />
     <ClInclude Include="Visual Micro\.FlyballSensor.vsarduino.h" />
   </ItemGroup>
   <ItemGroup>
@@ -104,6 +103,7 @@
     <ClCompile Include="LightsController.cpp" />
     <ClCompile Include="RaceHandler.cpp" />
     <ClCompile Include="Simulator.cpp" />
+    <ClCompile Include="StreamPrint.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
