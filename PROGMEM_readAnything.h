@@ -12,5 +12,16 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.If not, see <http://www.gnu.org/licenses/>
-#include "global.h"
-bool bDEBUG = true;
+#include <Arduino.h>  // for type definitions
+
+template <typename T> void PROGMEM_readAnything(const T * sce, T& dest)
+{
+   memcpy_P(&dest, sce, sizeof(T));
+}
+
+template <typename T> T PROGMEM_getAnything(const T * sce)
+{
+   static T temp;
+   memcpy_P(&temp, sce, sizeof(T));
+   return temp;
+}
