@@ -1,3 +1,26 @@
+// file:	FlyballETS-Software.ino summary: FlyballETS-Software v1, by Alex Goris
+// 
+// Flyball ETS (Electronic Training System) is an open source project which is designed to help
+// teams who practice flyball (a dog sport). Read all about the project, including extensive
+// information on how to build your own copy of Flyball ETS, on the following link: https://
+// sparkydevices.wordpress.com/tag/flyball-ets/
+// 
+// This part of the project (FlyballETS-Software) contains the Arduino source code for the Arduino
+// Pro Mini which controls all components in the Flyball ETS These sources are originally
+// distributed from: https://github.com/vyruz1986/FlyballETS-Software.
+// 
+// Copyright (C) 2015  Alex Goris
+// This file is part of FlyballETS-Software
+// FlyballETS-Software is free software : you can redistribute it and / or modify it under the terms of
+// the GNU General Public License as published by the Free Software Foundation, either version 3 of
+// the License, or (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+// without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License along with this program.If not,
+// see <http://www.gnu.org/licenses/> 
 #include "StreamPrint.h"
 #include "LCDController.h"
 #include "RaceHandler.h"
@@ -12,10 +35,10 @@
    - D1: Reserved for TX
    - D2: S1 (handler side) photoelectric sensor
    - D3: S2 (box side) photoelectric sensor
-   - D4: LCD Data0
-   - D5: LCD Data1
-   - D6: LCD Data2
-   - D7: LCD Data3
+   - D4: LCD Data7
+   - D5: LCD Data6
+   - D6: LCD Data5
+   - D7: LCD Data4
    - D8: Lights 74HC595 clock pin
    - D9: Lights 74HC595 data pin
    - D10: LCD2 (line 3&4) enable pin
@@ -32,6 +55,7 @@
    - A7: <free>
 */
 
+//Set simulate to true to enable simulator class (see Simulator.cpp/h)
 #define Simulate false
 #if Simulate
    #include "Simulator.h"
@@ -49,7 +73,7 @@ char cTotalCrossingTime[8];
 
 //Battery variables
 int iBatterySensorPin = A6;
-uint16_t fBatteryVoltage = 0;
+uint16_t iBatteryVoltage = 0;
 
 //Initialise Lights stuff
 long lLastSerialOutput = 0;
@@ -64,40 +88,53 @@ int iRC5Pin = A0;
 //Array to hold last time button presses
 unsigned long lLastRCPress[6] = {0, 0, 0, 0, 0, 0};
 
-LiquidCrystal lcd(12, 11, 7, 6, 5, 4);  //declare two LCD's
-LiquidCrystal lcd2(12, 10, 7, 6, 5, 4); // Ths is the second
+LiquidCrystal lcd(12, 11, 7, 6, 5, 4);  //declare two LCD's, this will be line 1&2
+LiquidCrystal lcd2(12, 10, 7, 6, 5, 4); //This is the second, this will be line 3&4
 
-//Char array for serial comms
+//String for serial comms storage
 String strSerialData;
 byte bySerialIndex = 0;
 boolean bSerialStringComplete = false;
-
+   
 void setup()
 {
-  Serial.begin(57600);
+   Serial.begin(57600);
 
-  pinMode(iS1Pin, INPUT);
-  pinMode(iS2Pin, INPUT);
-  attachInterrupt(1, Sensor2Wrapper, CHANGE);
-  attachInterrupt(0, Sensor1Wrapper, CHANGE);
-  BatterySensor.init(iBatterySensorPin);
+   pinMode(iS1Pin, INPUT);
+   pinMode(iS2Pin, INPUT);
 
-  LightsController.init(13,8,9);
-  RaceHandler.init(iS1Pin, iS2Pin);
-#if Simulate
-     Simulator.init(iS1Pin, iS2Pin);
-#endif
-  pinMode(iRC0Pin, INPUT);
-  pinMode(iRC1Pin, INPUT);
-  pinMode(iRC2Pin, INPUT);
-  pinMode(iRC3Pin, INPUT);
-  pinMode(iRC4Pin, INPUT);
-  pinMode(iRC5Pin, INPUT);
+   //Set ISR's with wrapper functions
+   attachInterrupt(1, Sensor2Wrapper, CHANGE);
+   attachInterrupt(0, Sensor1Wrapper, CHANGE);
 
-  LCDController.init(&lcd, &lcd2);
-  strSerialData[0] = 0;
+   //Initialize BatterySensor class with correct pin
+   BatterySensor.init(iBatterySensorPin);
 
-  Serialprint("Ready!\r\n");
+   //Initialize LightsController class with shift register pins
+   LightsController.init(13,8,9);
+
+   //Initialize RaceHandler class with S1 and S2 pins
+   RaceHandler.init(iS1Pin, iS2Pin);
+
+   //Initialize LCDController class with lcd1 and lcd2 objects
+   LCDController.init(&lcd, &lcd2);
+
+   //Initialize simulatorclass pins if applicable
+   #if Simulate
+      Simulator.init(iS1Pin, iS2Pin);
+   #endif
+
+   //initialize pins for remote control
+   pinMode(iRC0Pin, INPUT);
+   pinMode(iRC1Pin, INPUT);
+   pinMode(iRC2Pin, INPUT);
+   pinMode(iRC3Pin, INPUT);
+   pinMode(iRC4Pin, INPUT);
+   pinMode(iRC5Pin, INPUT);
+   
+   strSerialData[0] = 0;
+
+   Serialprint("Ready!\r\n");
 }
 
 void loop()
@@ -119,7 +156,7 @@ void loop()
    Simulator.Main();
 #endif
    
-   //Race start/stop button (remote D0 output)
+   //Race start/stop button (remote D0 output) or serial command
    if ((digitalRead(iRC0Pin) == HIGH
       && (millis() - lLastRCPress[0] > 2000))
       || strSerialData == "START"
@@ -206,7 +243,7 @@ void loop()
    LCDController.UpdateField(LCDController.TeamTime, cElapsedRaceTime);
 
    //Update battery percentage to display
-   fBatteryVoltage = BatterySensor.GetBatteryVoltage();
+   iBatteryVoltage = BatterySensor.GetBatteryVoltage();
    uint16_t iBatteryPercentage = BatterySensor.GetBatteryPercentage();
    LCDController.UpdateField(LCDController.BattLevel, String(iBatteryPercentage));
 
@@ -257,10 +294,12 @@ void loop()
       Serialprint("D: %i\r\n", RaceHandler.iCurrentDog);
       Serialprint("RT: %s\r\n", cElapsedRaceTime);
    }
+
+   //Enable (uncomment) the following if you want periodic status updates on the serial port
    /*
    if ((millis() - lLastSerialOutput) > 500)
    {
-      //Serialprint("%lu: ping! voltage is: %.2u, this is %i%%\r\n", millis(), fBatteryVoltage, iBatteryPercentage);
+      //Serialprint("%lu: ping! voltage is: %.2u, this is %i%%\r\n", millis(), iBatteryVoltage, iBatteryPercentage);
       //Serialprint("%lu: Elapsed time: %s\r\n", millis(), cElapsedRaceTime);
       if (RaceHandler.RaceState == RaceHandler.RUNNING)
       {
@@ -275,6 +314,7 @@ void loop()
    iCurrentDog = RaceHandler.iCurrentDog;
    iCurrentRaceState = RaceHandler.RaceState;
 
+   //Check if we have serial data which we should handle
    if (strSerialData.length() > 0
        && bSerialStringComplete)
    {
@@ -291,8 +331,10 @@ void serialEvent()
    while (Serial.available() > 0)
    {
       char cInChar = Serial.read(); // Read a character
+	  //Check if buffer contains complete serial message, terminated by newline (\n)
       if (cInChar == '\n')
       {
+		   //Serial message in buffer is complete, null terminate it and store it for further handling
          bSerialStringComplete = true;
          strSerialData += '\0'; // Null terminate the string
          break;
@@ -301,11 +343,17 @@ void serialEvent()
    }
 }
 
+/// <summary>
+///   These are wrapper functions which are necessary because it's not allowed to use a class member function directly as an ISR
+/// </summary>
 void Sensor2Wrapper()
 {
    RaceHandler.TriggerSensor2();
 }
 
+/// <summary>
+///   These are wrapper functions which are necessary because it's not allowed to use a class member function directly as an ISR
+/// </summary>
 void Sensor1Wrapper()
 {
    RaceHandler.TriggerSensor1();

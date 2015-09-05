@@ -1,8 +1,32 @@
+//  file:	RaceHandler.cpp
+//
+// summary:	Implements the race handler class
+// Copyright (C) 2015  Alex Goris
+// This file is part of FlyballETS-Software
+// FlyballETS-Software is free software : you can redistribute it and / or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.If not, see <http://www.gnu.org/licenses/>
+
 #include "StreamPrint.h"
 #include "LightsController.h"
 #include "RaceHandler.h"
 #include "global.h"
 
+/// <summary>
+///   Initialises this object andsets all counters to 0.
+/// </summary>
+///
+/// <param name="iS1Pin">  Zero-based index of the S1 pin. </param>
+/// <param name="iS2Pin">  Zero-based index of the S2 pin. </param>
 void RaceHandlerClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
 {
    //Start in stopped state
@@ -14,37 +38,58 @@ void RaceHandlerClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
 
 }
 
-void RaceHandlerClass::_ChangeRaceState(RaceStates _byNewRaceState)
+/// <summary>
+///   Changes race state, if byNewRaceState is different from current one.
+/// </summary>
+///
+/// <param name="byNewRaceState">   New race state. </param>
+void RaceHandlerClass::_ChangeRaceState(RaceStates byNewRaceState)
 {
    //First check if the new state (this function could be called superfluously)
-   if (RaceState != _byNewRaceState)
+   if (RaceState != byNewRaceState)
    {
       PreviousRaceState = RaceState;
-      RaceState = _byNewRaceState;
+      RaceState = byNewRaceState;
    }
 }
 
-void RaceHandlerClass::_ChangeDogState(_byDogStates _byNewDogState)
+/// <summary>
+///   Change dog state. If byNewDogState is different from current one.
+/// </summary>
+///
+/// <param name="byNewDogState"> State of the new dog. </param>
+void RaceHandlerClass::_ChangeDogState(_byDogStates byNewDogState)
 {
-   if (_byDogState != _byNewDogState)
+   if (_byDogState != byNewDogState)
    {
-      _byDogState = _byNewDogState;
-      if(bDEBUG) Serialprint("DogState: %i\r\n", _byNewDogState);
+      _byDogState = byNewDogState;
+      if(bDEBUG) Serialprint("DogState: %i\r\n", byNewDogState);
    }
 }
 
-void RaceHandlerClass::_ChangeDogNumber(uint8_t _iNewDogNumber)
+/// <summary>
+///   Change dog number, if new dognumber is different from current one.
+/// </summary>
+///
+/// <param name="iNewDogNumber"> Zero-based index of the new dog number. </param>
+void RaceHandlerClass::_ChangeDogNumber(uint8_t iNewDogNumber)
 {
    //Check if the dog really changed (this function could be called superfluously)
-   if (_iNewDogNumber != iCurrentDog)
+   if (iNewDogNumber != iCurrentDog)
    {
       iPreviousDog = iCurrentDog;
-      iCurrentDog = _iNewDogNumber;
+      iCurrentDog = iNewDogNumber;
       if(bDEBUG) Serialprint("Prev Dog: %i|ENT:%lu|EXIT:%lu|TOT:%lu\r\n", iPreviousDog, _lDogEnterTimes[iPreviousDog], _lDogExitTimes[iPreviousDog], _lDogTimes[iPreviousDog][_iDogRunCounters[iPreviousDog]]);
 
    }
 }
 
+/// <summary>
+///   Main entry-point for this application. This function should be called once every main loop.
+///   It will check if any new interrupts were saved from the sensors, and handle them if this
+///   the case. All timing related data and also fault handling of the dogs is done in this
+///   function.
+/// </summary>
 void RaceHandlerClass::Main()
 {
    //Don't handle anything if race is stopped
@@ -327,11 +372,18 @@ void RaceHandlerClass::Main()
    }
 }
 
+/// <summary>
+///   Starts the timers. Should be called once GREEN light comes ON.
+/// </summary>
 void RaceHandlerClass::StartTimers()
 {
    _ChangeRaceState(RUNNING);
 }
 
+/// <summary>
+///   Sets the status of the race to STARTING, should be called at same time when start light
+///   sequence is called.
+/// </summary>
 void RaceHandlerClass::StartRace()
 {
    _ChangeRaceState(STARTING);
@@ -340,6 +392,11 @@ void RaceHandlerClass::StartRace()
    _lDogEnterTimes[0] = _lRaceStartTime;
 }
 
+/// <summary>
+///   Stops a race.
+/// </summary>
+///
+/// <param name="StopTime">   The time in microseconds at which the race stopped. </param>
 void RaceHandlerClass::StopRace(unsigned long StopTime)
 {
    if (RaceState == RUNNING)
@@ -351,6 +408,10 @@ void RaceHandlerClass::StopRace(unsigned long StopTime)
    _ChangeRaceState(STOPPED);
 }
 
+/// <summary>
+///   Resets the race, this function should be called to reset all timers to 0 and prepare the
+///   software for starting a next race.
+/// </summary>
 void RaceHandlerClass::ResetRace()
 {
    if (RaceState == STOPPED)
@@ -410,6 +471,13 @@ void RaceHandlerClass::ResetRace()
       }
    }
 }
+
+/// <summary>
+///   Sets dog fault for given dog number to given state.
+/// </summary>
+///
+/// <param name="iDogNumber"> Zero-based index of the dog number. </param>
+/// <param name="State">      The state. </param>
 void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
 {
    bool bFault;
@@ -441,6 +509,10 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
    }
 }
 
+/// <summary>
+///   ISR function for sensor 1, this function will record the sensor number, microseconds and
+///   state (HIGH/LOW) of the sensor in the interrupt queue.
+/// </summary>
 void RaceHandlerClass::TriggerSensor1()
 {
    if (RaceState == STOPPED)
@@ -450,6 +522,10 @@ void RaceHandlerClass::TriggerSensor1()
    _QueuePush({ 1, micros(), digitalRead(_iS1Pin) });
 }
 
+/// <summary>
+///   ISR function for sensor 2, this function will record the sensor number, microseconds and
+///   state (HIGH/LOW) of the sensor in the interrupt queue.
+/// </summary>
 void RaceHandlerClass::TriggerSensor2()
 {
    if (RaceState == STOPPED)
@@ -459,6 +535,13 @@ void RaceHandlerClass::TriggerSensor2()
    _QueuePush({ 2, micros(), digitalRead(_iS2Pin) });
 }
 
+/// <summary>
+///   Gets race time. Time since start if race is still running, final time if race is finished.
+/// </summary>
+///
+/// <returns>
+///   The race time in seconds with 2 decimals places.
+/// </returns>
 double RaceHandlerClass::GetRaceTime()
 {
    double dRaceTimeSeconds = 0;
@@ -470,6 +553,20 @@ double RaceHandlerClass::GetRaceTime()
    return dRaceTimeSeconds;
 }
 
+/// <summary>
+///   Gets dog time, time since dog entered if dog is still running, final time if dog is already
+///   back in. Keep in mind each dog can have multiple runs (reruns for faultS).
+/// </summary>
+///
+/// <param name="iDogNumber"> Zero-based index of the dog number. </param>
+/// <param name="iRunNumber"> Zero-based index of the run number. If -1 is passed, this function
+///                           will alternate between each run we have for the dog, passing a new
+///                           run every 2 seconds. If -2 is passed, the last run number we have
+///                           for this dog will be passed. </param>
+///
+/// <returns>
+///   The dog time in seconds with 2 decimals.
+/// </returns>
 double RaceHandlerClass::GetDogTime(uint8_t iDogNumber, int8_t iRunNumber)
 {
    double dDogTimeSeconds = 0;
@@ -520,6 +617,19 @@ double RaceHandlerClass::GetDogTime(uint8_t iDogNumber, int8_t iRunNumber)
    return dDogTimeSeconds;
 }
 
+/// <summary>
+///   Gets dogs crossing time. Keep in mind each dog can have multiple runs (reruns for faultS).
+/// </summary>
+///
+/// <param name="iDogNumber"> Zero-based index of the dog number. </param>
+/// <param name="iRunNumber"> Zero-based index of the run number. If -1 is passed, this function
+///                           will alternate between each run we have for the dog, passing a new
+///                           run every 2 seconds. If -2 is passed, the last run number we have
+///                           for this dog will be passed. </param>
+///
+/// <returns>
+///   The dog time in seconds with 2 decimals.
+/// </returns>
 String RaceHandlerClass::GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber)
 {
    double dCrossingTime = 0;
@@ -576,6 +686,18 @@ String RaceHandlerClass::GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber)
    return strCrossingTime;
 }
 
+/// <summary>
+///   Gets rerun information to put on LCD. If a dog has done more than 1 run, before the dogs
+///   time we will display and * (asterisk) followed by the run number for which we are showing
+///   the time. If a dog has not done a rerun, the space before the dogs time is empty.
+/// </summary>
+///
+/// <param name="iDogNumber"> Zero-based index of the dog number. </param>
+///
+/// <returns>
+///   The rerun information. * (asterisk) followed by run number if there is more than 1 run for
+///   this dog. Empty string if the dog did only do 1 run.
+/// </returns>
 String RaceHandlerClass::GetRerunInfo(uint8_t iDogNumber)
 {
    String strRerunInfo = "  ";
@@ -589,6 +711,15 @@ String RaceHandlerClass::GetRerunInfo(uint8_t iDogNumber)
    return strRerunInfo;
 }
 
+/// <summary>
+///   Gets total crossing time. This will return the total crossing time of all dogs (and reruns
+///   if applicable). It allows the user to easily calculate the theoretical best time of the
+///   team by subtracting this number from the total team time.
+/// </summary>
+///
+/// <returns>
+///   The total crossing time in seconds with 2 decimals.
+/// </returns>
 double RaceHandlerClass::GetTotalCrossingTime()
 {
    long lTotalCrossingTime = 0;
@@ -604,6 +735,15 @@ double RaceHandlerClass::GetTotalCrossingTime()
    return dTotalCrossingTime;
 }
 
+/// <summary>
+///   Gets race state string. Internally the software uses a (enumerated) byte to keep the race
+///   state, however on the display we have to display english text. This function returns the
+///   correct english text for the current race state.
+/// </summary>
+///
+/// <returns>
+///   The race state string.
+/// </returns>
 String RaceHandlerClass::GetRaceStateString()
 {
    String strRaceState;
@@ -625,6 +765,11 @@ String RaceHandlerClass::GetRaceStateString()
    return strRaceState;
 }
 
+/// <summary>
+///   Pushes an interrupt trigger record to the back of the interrupt buffer.
+/// </summary>
+///
+/// <param name="_InterruptTrigger">   The interrupt trigger record. </param>
 void RaceHandlerClass::_QueuePush(RaceHandlerClass::STriggerRecord _InterruptTrigger)
 {
    //Add record to queue
@@ -643,6 +788,13 @@ void RaceHandlerClass::_QueuePush(RaceHandlerClass::STriggerRecord _InterruptTri
    }
 }
 
+/// <summary>
+///   Pops one interrupt record from the front of the interrupt buffer.
+/// </summary>
+///
+/// <returns>
+///   A RaceHandlerClass::STriggerRecord from the front of the interrupt buffer.
+/// </returns>
 RaceHandlerClass::STriggerRecord RaceHandlerClass::_QueuePop()
 {
    //This function returns the next record of the interrupt queue
@@ -662,6 +814,13 @@ RaceHandlerClass::STriggerRecord RaceHandlerClass::_QueuePop()
    return NextRecord;
 }
 
+/// <summary>
+///   Determines if the interrupt buffer queue is empty.
+/// </summary>
+///
+/// <returns>
+///   true if it is empty, false if it is not.
+/// </returns>
 bool RaceHandlerClass::_QueueEmpty()
 {
    //This function checks if queue is empty.
@@ -677,6 +836,14 @@ bool RaceHandlerClass::_QueueEmpty()
    }
 }
 
+/// <summary>
+///   Adds an interrupt record to the transition string. This function will automatically
+///   determine which character (upper or lowercase A or B) should be added to the string. Note
+///   that some filtering of consecutive LOW-HIGH-LOW and HIGH-LOW-HIGH signals is done also in
+///   this function.
+/// </summary>
+///
+/// <param name="_InterruptTrigger">   The interrupt trigger record. </param>
 void RaceHandlerClass::_AddToTransitionString(STriggerRecord _InterruptTrigger)
 {
    //The transition string consists of lower and upper case A and B characters.
@@ -712,5 +879,8 @@ void RaceHandlerClass::_AddToTransitionString(STriggerRecord _InterruptTrigger)
    _strTransition.replace("bBb", "b");
 }
 
+/// <summary>
+///   The race handler class.
+/// </summary>
 RaceHandlerClass RaceHandler;
 

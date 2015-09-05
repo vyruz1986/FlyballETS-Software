@@ -1,40 +1,80 @@
+// file:	Simulator.cpp
+// 
+// summary:	Implements the simulator class. Since this class is memory intensive, it should only be
+// included if actual simulation is wished. 
 #include "Simulator.h"
 #include "global.h"
 #include "RaceHandler.h"
 #include "PROGMEM_readAnything.h"
 #include <avr/pgmspace.h>
 
+/// <summary>
+///   Program the interrupt triggers which should be simulated here. See end of file for a collection of records from actual races.
+/// </summary>
 const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60] PROGMEM = {
    //See the end of this file for a collection of races
-   { 1, 124916, 1 }
-   , { 2, 138800, 1 }
-   , { 1, 250908, 0 }
-   , { 2, 264248, 0 }
-   , { 2, 5458908, 1 }
-   , { 1, 5475976, 1 }
-   , { 2, 5591880, 0 }
-   , { 1, 5605328, 0 }
-   , { 1, 7807924, 1 }
-   , { 2, 7825556, 1 }
-   , { 1, 7927644, 0 }
-   , { 2, 7940204, 0 }
-   , { 2, 7943104, 1 }
-   , { 2, 7944952, 0 }
-   , { 2, 12315532, 1 }
-   , { 1, 12332060, 1 }
-   , { 2, 12426864, 0 }
-   , { 2, 12429212, 1 }
-   , { 2, 12432960, 0 }
-   , { 1, 12438392, 0 }
-   , { 2, 12440424, 1 }
-   , { 2, 12442304, 0 }
-   , { 1, 12459764, 1 }
-   , { 2, 12476120, 1 }
-   , { 1, 12597820, 0 }
-   , { 2, 12623960, 0 }
-   , { 2, 16956808, 1 }
+   { 1, 112404, 1 }
+   , { 2, 131188, 1 }
+   , { 1, 252188, 0 }
+   , { 2, 272948, 0 }
+   , { 2, 4687684, 1 }
+   , { 1, 4703372, 1 }
+   , { 2, 4808008, 0 }
+   , { 2, 4813748, 1 }
+   , { 1, 4919152, 0 }
+   , { 2, 4937844, 0 }
+   , { 2, 9170216, 1 }
+   , { 2, 9175748, 0 }
+   , { 2, 9176816, 1 }
+   , { 1, 9185680, 1 }
+   , { 2, 9287468, 0 }
+   , { 2, 9289248, 1 }
+   , { 2, 9292836, 0 }
+   , { 1, 9299340, 0 }
+   , { 1, 9303384, 1 }
+   , { 1, 9307060, 0 }
+   , { 1, 9377212, 1 }
+   , { 2, 9393408, 1 }
+   , { 1, 9490232, 0 }
+   , { 2, 9512848, 0 }
+   , { 2, 13625136, 1 }
+   , { 2, 13628828, 0 }
+   , { 2, 13632500, 1 }
+   , { 1, 13639812, 1 }
+   , { 1, 13645448, 0 }
+   , { 1, 13647316, 1 }
+   , { 2, 13742472, 0 }
+   , { 2, 13743660, 1 }
+   , { 1, 13747180, 0 }
+   , { 2, 13750828, 0 }
+   , { 1, 13754144, 1 }
+   , { 1, 13763320, 0 }
+   , { 1, 13839084, 1 }
+   , { 2, 13856272, 1 }
+   , { 1, 13942596, 0 }
+   , { 1, 13951180, 1 }
+   , { 2, 13960028, 0 }
+   , { 1, 13960612, 0 }
+   , { 1, 13964144, 1 }
+   , { 2, 13966456, 1 }
+   , { 1, 13971392, 0 }
+   , { 2, 13990604, 0 }
+   , { 2, 18109548, 1 }
+   , { 1, 18132980, 1 }
+   , { 2, 18228996, 0 }
+   , { 2, 18234904, 1 }
+   , { 1, 18254300, 0 }
+   , { 2, 18257108, 0 }
+   , { 2, 18262468, 1 }
+   , { 2, 18267844, 0 }
 };
 
+/// <summary>
+///   Initialises this object.
+/// </summary>
+///
+/// <param name="iS1Pin">  Zero-based index of the S1 pin. </param>
+/// <param name="iS2Pin">  Zero-based index of the S2 pin. </param>
 void SimulatorClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
 {
    _iS1Pin = iS1Pin;
@@ -47,6 +87,9 @@ void SimulatorClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
    PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
 }
 
+/// <summary>
+///   Main entry-point for this application. Should be called every main loop cycle if simulation is wished.
+/// </summary>
 void SimulatorClass::Main()
 {
    if (RaceHandler.RaceState == RaceHandler.STOPPED)
@@ -88,6 +131,9 @@ void SimulatorClass::Main()
    }
 }
 
+/// <summary>
+///   The simulator class object.
+/// </summary>
 SimulatorClass Simulator;
 
 /*

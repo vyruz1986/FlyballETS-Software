@@ -19,6 +19,7 @@
     <ClInclude Include="PROGMEM_readAnything.h" />
     <ClInclude Include="Visual Micro\.FlyballSensor.vsarduino.h" />
     <ClInclude Include="StreamPrint.h" />
+    <ClInclude Include="Visual Micro\.FlyballETS-Software.vsarduino.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="FlyballETS-Software.ino" />
