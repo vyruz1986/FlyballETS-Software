@@ -187,6 +187,7 @@ FakesAssemblies/
 GeneratedArtifacts/
 _Pvt_Extensions/
 ModelManifest.xml
-FlyballSensor.vcxproj
-FlyballSensor.vcxproj
-FlyballSensor.vcxproj.filters
+FlyballETS-Software.vcxproj.filters
+
+#VisualMicro files
+Visual Micro/
