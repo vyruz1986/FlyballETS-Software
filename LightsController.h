@@ -40,12 +40,12 @@ public:
 
    //Decimal values of lights connected to 74HC595
    enum Lights {
-      WHITE = 128,
-      RED = 64,
-      YELLOW1 = 32,
-      BLUE = 16,
-      YELLOW2 = 8,
-      GREEN = 4
+      WHITE = 130,   //74HC595 QH (128) + QB (2). I made a boo-boo on my prototype, WHITE should be wired to QB.
+      RED = 64,      //74HC595 QG
+      YELLOW1 = 32,  //74HC595 QF
+      BLUE = 16,     //74HC595 QE
+      YELLOW2 = 8,   //74HC595 QD
+      GREEN = 4      //74HC595 QC
    };
    enum LightStates {
       OFF,
