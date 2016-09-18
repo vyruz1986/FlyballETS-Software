@@ -194,3 +194,6 @@ Visual Micro/
 __vm/Upload.vmps.xml
 __vm/Compile.vmps.xml
 __vm/Upload.vmps.xml
+__vm/Compile.vmps.xml
+__vm/Configuration.Debug.vmps.xml
+__vm/Upload.vmps.xml
