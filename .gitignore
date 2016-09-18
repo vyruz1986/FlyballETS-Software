@@ -191,3 +191,6 @@ FlyballETS-Software.vcxproj.filters
 
 #VisualMicro files
 Visual Micro/
+__vm/Upload.vmps.xml
+__vm/Compile.vmps.xml
+__vm/Upload.vmps.xml
