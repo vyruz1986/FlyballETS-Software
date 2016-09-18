@@ -481,6 +481,11 @@ void RaceHandlerClass::ResetRace()
 /// <param name="State">      The state. </param>
 void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
 {
+   //Don't process any faults when race is not running
+   if (RaceState == STOPPED)
+   {
+      return;
+   }
    bool bFault;
    //Check if we have to toggle
    if (State == TOGGLE)
