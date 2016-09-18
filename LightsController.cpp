@@ -20,6 +20,7 @@
 #include "LightsController.h"
 #include "RaceHandler.h"
 #include "global.h"
+#include <Adafruit_NeoPixel.h>
 
 /// <summary>
 ///   Initialises this object. This function needs to be passed the pin numbers for the shift
@@ -29,21 +30,12 @@
 /// <param name="iLatchPin">  Zero-based index of the latch pin. </param>
 /// <param name="iClockPin">  Zero-based index of the clock pin. </param>
 /// <param name="iDataPin">   Zero-based index of the data pin. </param>
-void LightsControllerClass::init(uint8_t iLatchPin, uint8_t iClockPin, uint8_t iDataPin)
+void LightsControllerClass::init(Adafruit_NeoPixel* LightsStrip)
 {
-   //Initialize pins for shift register
-   _iLatchPin = iLatchPin;
-   _iClockPin = iClockPin;
-   _iDataPin = iDataPin;
-
-   pinMode(_iLatchPin, OUTPUT);
-   pinMode(_iClockPin, OUTPUT);
-   pinMode(_iDataPin, OUTPUT);
-
-   //Write 0 to shift register to turn off all lights
-   digitalWrite(_iLatchPin, LOW);
-   shiftOut(_iDataPin, _iClockPin, MSBFIRST, 0);
-   digitalWrite(_iLatchPin, HIGH);
+   _LightsStrip = LightsStrip;
+   _LightsStrip->begin();
+   _LightsStrip->setBrightness(255);
+   _LightsStrip->show(); // Initialize all pixels to 'off'
 }
 
 /// <summary>
@@ -70,7 +62,10 @@ void LightsControllerClass::Main()
          _lLightsOutSchedule[i] = 0; //Delete schedule
       }
    }
+   //Update lights
+   _LightsStrip->show();
 
+   /*
    if (_byCurrentLightsState != _byNewLightsState)
    {
       if (bDEBUG) Serialprint("%lu: New light states: %i\r\n", millis(), _byNewLightsState);
@@ -78,7 +73,7 @@ void LightsControllerClass::Main()
       digitalWrite(_iLatchPin, LOW);
       shiftOut(_iDataPin, _iClockPin, MSBFIRST, _byCurrentLightsState);
       digitalWrite(_iLatchPin, HIGH);
-   }
+   }*/
 }
 
 /// <summary>
@@ -155,6 +150,10 @@ void LightsControllerClass::ResetLights()
    byOverallState = STOPPED;
    
    //Set all lights off
+   for (uint16_t i = 0; i < _LightsStrip->numPixels(); i++)
+   {
+      _LightsStrip->setPixelColor(i, 0);
+   }
    _byNewLightsState = 0;
    DeleteSchedules();
 }
@@ -193,18 +192,61 @@ void LightsControllerClass::ToggleLightState(Lights byLight, LightStates byLight
          byLightState = ON;
       }
    }
-   if (byCurrentLightState != byLightState)
-   { 
-      
-      if (byLightState == ON)
-      {
-         _byNewLightsState = _byNewLightsState + byLight;
-      }
-      else
-      {
-         _byNewLightsState = _byNewLightsState - byLight;
-      }
+   uint8_t iPixelNumber;
+   uint32_t iColor;
+
+
+   switch (byLight)
+   {
+   case WHITE:
+      iPixelNumber = 0;
+      iColor = _LightsStrip->Color(255, 255, 255);
+      break;
+   case RED:
+      iPixelNumber = 1;
+      iColor = _LightsStrip->Color(255, 0, 0);
+      break;
+   case YELLOW1:
+      iPixelNumber = 2;
+      iColor = _LightsStrip->Color(255, 100, 0);
+      break;
+   case BLUE:
+      iPixelNumber = 2;
+      iColor = _LightsStrip->Color(0, 0, 255);
+      break;
+   case YELLOW2:
+      iPixelNumber = 3;
+      iColor = _LightsStrip->Color(255, 100, 0);
+      break;
+   case GREEN:
+      iPixelNumber = 4;
+      iColor = _LightsStrip->Color(0, 255, 0);
+      break;
    }
+
+   if (byLightState == OFF)
+   {
+      iColor = _LightsStrip->Color(0, 0, 0);
+   }
+   /*
+   strip.setPixelColor(0, strip.Color( 0,0,0 ));
+   strip.setPixelColor(1, strip.Color(0, 0, 0));
+   strip.setPixelColor(2, strip.Color(0, 0, 0));
+   strip.setPixelColor(3, strip.Color(0, 0, 0));
+   strip.setPixelColor(4, strip.Color(0, 0, 0));
+   */
+   /*
+   Serial.print("Color value: ");
+   Serial.println(byLight);
+
+   Serial.print("State value: ");
+   Serial.println(byLightState);
+
+   Serial.print("Setting pixel ");
+   Serial.print(iPixelNumber);
+   Serial.print(" to color ");
+   Serial.println(iColor);*/
+   _LightsStrip->setPixelColor(iPixelNumber, iColor);
 }
 
 /// <summary>
@@ -240,7 +282,38 @@ void LightsControllerClass::ToggleFaultLight(uint8_t DogNumber, LightStates byLi
 /// </returns>
 LightsControllerClass::LightStates LightsControllerClass::CheckLightState(Lights byLight)
 {
-   if ((byLight & _byNewLightsState) == byLight)
+   uint8_t iPixelNumber;
+   uint32_t iCurrentColor;
+   uint32_t iIntendedColor;
+   switch (byLight)
+   {
+   case WHITE:
+      iPixelNumber = 0;
+      iIntendedColor = _LightsStrip->Color(255, 255, 255);
+      break;
+   case RED:
+      iPixelNumber = 1;
+      iIntendedColor = _LightsStrip->Color(255, 0, 0);
+      break;
+   case YELLOW1:
+      iPixelNumber = 2;
+      iIntendedColor = _LightsStrip->Color(255, 100, 0);
+      break;
+   case BLUE:
+      iPixelNumber = 2;
+      iIntendedColor = _LightsStrip->Color(0, 0, 255);
+      break;
+   case YELLOW2:
+      iPixelNumber = 3;
+      iIntendedColor = _LightsStrip->Color(255, 100, 0);
+      break;
+   case GREEN:
+      iPixelNumber = 4;
+      iIntendedColor = _LightsStrip->Color(0, 255, 0);
+      break;
+   }
+   iCurrentColor = _LightsStrip->getPixelColor(iPixelNumber);
+   if (iCurrentColor == iIntendedColor)
    {
       return ON;
    }

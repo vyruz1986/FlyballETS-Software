@@ -22,13 +22,14 @@
 #else
 	#include "WProgram.h"
 #endif
+#include <Adafruit_NeoPixel.h>
 
 class LightsControllerClass
 {
 protected:
 
 public:
-	void init(uint8_t iLatchPin, uint8_t iClockPin, uint8_t iDataPin);
+	void init(Adafruit_NeoPixel* LightsStrip);
 
    //Overal state of this class
    enum OverallStates{
@@ -62,12 +63,8 @@ public:
    void ToggleFaultLight(uint8_t iDogNumber, LightStates byLightState);
    
 private:
-   //Pin connected to ST_CP of 74HC595
-   uint8_t _iLatchPin = 12;
-   //Pin connected to SH_CP of 74HC595
-   uint8_t _iClockPin = 13;
-   //Pin connected to DS of 74HC595
-   uint8_t _iDataPin = 11;
+   //Neopixel object
+   Adafruit_NeoPixel* _LightsStrip;
 
    //This byte contains the combined states of all ligths at any given time
    byte _byCurrentLightsState = 256;

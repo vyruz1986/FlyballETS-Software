@@ -29,6 +29,7 @@
 #include "global.h"
 #include <LiquidCrystal.h>
 #include <avr/pgmspace.h>
+#include <Adafruit_NeoPixel.h>
 
 /*List of pins and the ones used:
    - D0: Reserved for RX
@@ -39,12 +40,12 @@
    - D5: LCD Data6
    - D6: LCD Data5
    - D7: LCD Data4
-   - D8: Lights 74HC595 clock pin
-   - D9: Lights 74HC595 data pin
+   - D8: WS2811B lights data pin
+   - D9: <free>
    - D10: LCD2 (line 3&4) enable pin
    - D11: LCD1 (line 1&2) enable pin
    - D12: LCD RS Pin
-   - D13: Lights 74HC595 latch pin
+   - D13: <free>
    - A0: remote D5
    - A1: remote D2
    - A2: remote D1
@@ -76,6 +77,9 @@ int iBatterySensorPin = A6;
 uint16_t iBatteryVoltage = 0;
 
 //Initialise Lights stuff
+uint8_t iLightsDataPin = 8;
+Adafruit_NeoPixel LightsStrip = Adafruit_NeoPixel(5, iLightsDataPin, NEO_RGB);
+
 long lLastSerialOutput = 0;
 
 //remote control pins
@@ -111,7 +115,7 @@ void setup()
    BatterySensor.init(iBatterySensorPin);
 
    //Initialize LightsController class with shift register pins
-   LightsController.init(13,8,9);
+   LightsController.init(&LightsStrip);
 
    //Initialize RaceHandler class with S1 and S2 pins
    RaceHandler.init(iS1Pin, iS2Pin);
