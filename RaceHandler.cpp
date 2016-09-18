@@ -302,6 +302,7 @@ void RaceHandlerClass::Main()
          if (bDEBUG) Serialprint("Tstring: %s\r\n", _strTransition.c_str());
          
          //Only check transition string when gates are clear
+         //TODO: If transistion string is 3 or longer but actually more events are coming related to same transition, these are not considered.
          if (_strTransition.length() > 3)  //And if transistion string is at least 4 characters long
          {
             //Transition string is 4 characters or longer

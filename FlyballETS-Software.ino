@@ -56,7 +56,7 @@
 */
 
 //Set simulate to true to enable simulator class (see Simulator.cpp/h)
-#define Simulate true
+#define Simulate false
 #if Simulate
    #include "Simulator.h"
 #endif
@@ -232,11 +232,6 @@ void loop()
       RaceHandler.SetDogFault(3);
    }
 
-   if (strSerialData == "DEBUG")
-   {
-      bDEBUG = !bDEBUG;
-   }
-
    /*Update LCD Display fields*/
    //Update team time to display
    dtostrf(RaceHandler.GetRaceTime(), 7, 3, cElapsedRaceTime);
@@ -282,7 +277,7 @@ void loop()
          //Race is finished, put final data on screen
          dtostrf(RaceHandler.GetDogTime(RaceHandler.iCurrentDog, -2), 7, 3, cDogTime);
          Serialprint("D%i: %s|CR: %s\r\n", RaceHandler.iCurrentDog, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iCurrentDog, -2).c_str());
-         Serialprint("RT: %s\r\n", cElapsedRaceTime);
+         Serialprint("RT:%s\r\n", cElapsedRaceTime);
       }
       Serialprint("RS: %i\r\n", RaceHandler.RaceState);
    }
@@ -292,7 +287,7 @@ void loop()
       dtostrf(RaceHandler.GetDogTime(RaceHandler.iPreviousDog, -2), 7, 3, cDogTime);
       Serialprint("D%i: %s|CR: %s\r\n", RaceHandler.iPreviousDog, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
       Serialprint("D: %i\r\n", RaceHandler.iCurrentDog);
-      Serialprint("RT: %s\r\n", cElapsedRaceTime);
+      Serialprint("RT:%s\r\n", cElapsedRaceTime);
    }
 
    //Enable (uncomment) the following if you want periodic status updates on the serial port
@@ -319,6 +314,18 @@ void loop()
        && bSerialStringComplete)
    {
       if (bDEBUG) Serialprint("cSer: '%s'\r\n", strSerialData.c_str());
+
+      //Handle different serial messages
+      if (strSerialData == "DEBUG")
+      {
+         bDEBUG = !bDEBUG;
+      }
+
+      if (strSerialData == "RT?")
+      {
+         Serialprint("RT:%s\r\n", cElapsedRaceTime);
+      }
+
       strSerialData = "";
       bSerialStringComplete = false;
    }
