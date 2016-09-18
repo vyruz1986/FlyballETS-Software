@@ -158,42 +158,21 @@ void loop()
    
    //Race start/stop button (remote D0 output) or serial command
    if ((digitalRead(iRC0Pin) == HIGH
-      && (millis() - lLastRCPress[0] > 2000))
-      || strSerialData == "START"
-      || strSerialData == "STOP")
+      && (millis() - lLastRCPress[0] > 2000)))
    {
-      lLastRCPress[0] = millis();
-      if (RaceHandler.RaceState == RaceHandler.STOPPED //If race is stopped
-         && RaceHandler.GetRaceTime() == 0)           //and timers are zero
-      {
-         //Then start the race
-         if (bDEBUG) Serialprint("%lu: START!\r\n", millis());
-         LightsController.InitiateStartSequence();
-         RaceHandler.StartRace();
-      }
-      else //If race state is running or starting, we should stop it
-      {
-         RaceHandler.StopRace(micros());
-         LightsController.DeleteSchedules();
-      }
+      StartStopRace();
    }
 
    //Race reset button (remote D1 output)
-   if ((digitalRead(iRC1Pin) == HIGH
-      && RaceHandler.RaceState == RaceHandler.STOPPED   //Only allow reset when race is stopped first
+   if (digitalRead(iRC1Pin) == HIGH
       && (millis() - lLastRCPress[1] > 2000))
-      || strSerialData == "RESET")
    {
-      lLastRCPress[1] = millis();
-      LightsController.ResetLights();
-      RaceHandler.ResetRace();
+      ResetRace();
    }
 
    //Dog0 fault RC button
-   if ((digitalRead(iRC2Pin) == HIGH
-      && RaceHandler.RaceState == RaceHandler.RUNNING   //Only allow reset when race is stopped first
+   if (digitalRead(iRC2Pin) == HIGH
       && (millis() - lLastRCPress[2] > 2000))
-      || strSerialData == "D0F")
    {
       lLastRCPress[2] = millis();
       //Toggle fault for dog
@@ -201,20 +180,16 @@ void loop()
    }
 
    //Dog1 fault RC button
-   if ((digitalRead(iRC3Pin) == HIGH
-      && RaceHandler.RaceState == RaceHandler.RUNNING   //Only allow reset when race is stopped first
+   if (digitalRead(iRC3Pin) == HIGH
       && (millis() - lLastRCPress[3] > 2000))
-      || strSerialData == "D1F")
    {
       lLastRCPress[3] = millis();
       //Toggle fault for dog
       RaceHandler.SetDogFault(1);
    }
    //Dog2 fault RC button
-   if ((digitalRead(iRC4Pin) == HIGH
-      && RaceHandler.RaceState == RaceHandler.RUNNING   //Only allow reset when race is stopped first
+   if (digitalRead(iRC4Pin) == HIGH
       && (millis() - lLastRCPress[4] > 2000))
-      || strSerialData == "D2F")
    {
       lLastRCPress[4] = millis();
       //Toggle fault for dog
@@ -222,10 +197,8 @@ void loop()
    }
 
    //Dog3 fault RC button
-   if ((digitalRead(iRC5Pin) == HIGH
-      && RaceHandler.RaceState == RaceHandler.RUNNING   //Only allow reset when race is stopped first
+   if (digitalRead(iRC5Pin) == HIGH
       && (millis() - lLastRCPress[5] > 2000))
-      || strSerialData == "D3F")
    {
       lLastRCPress[5] = millis();
       //Toggle fault for dog
@@ -315,7 +288,6 @@ void loop()
    {
       if (bDEBUG) Serialprint("cSer: '%s'\r\n", strSerialData.c_str());
 
-      //Handle different serial messages
       if (strSerialData == "DEBUG")
       {
          bDEBUG = !bDEBUG;
@@ -324,6 +296,37 @@ void loop()
       if (strSerialData == "RT?")
       {
          Serialprint("RT:%s\r\n", cElapsedRaceTime);
+      }
+
+      if (strSerialData == "START"
+         || strSerialData == "STOP")
+      {
+         StartStopRace();
+      }
+
+      if (strSerialData == "RESET")
+      {
+         ResetRace();
+      }
+
+      if (strSerialData == "D0F")
+      {
+         RaceHandler.SetDogFault(0);
+      }
+
+      if (strSerialData == "D1F")
+      {
+         RaceHandler.SetDogFault(1);
+      }
+
+      if (strSerialData == "D2F")
+      {
+         RaceHandler.SetDogFault(2);
+      }
+
+      if (strSerialData == "D3F")
+      {
+         RaceHandler.SetDogFault(3);
       }
 
       strSerialData = "";
@@ -364,4 +367,39 @@ void Sensor2Wrapper()
 void Sensor1Wrapper()
 {
    RaceHandler.TriggerSensor1();
+}
+
+/// <summary>
+///   Starts (if stopped) or stops (if started) a race. Start is only allowed if race is stopped and reset.
+/// </summary>
+void StartStopRace()
+{
+   lLastRCPress[0] = millis();
+   if (RaceHandler.RaceState == RaceHandler.STOPPED //If race is stopped
+      && RaceHandler.GetRaceTime() == 0)           //and timers are zero
+   {
+      //Then start the race
+      if (bDEBUG) Serialprint("%lu: START!\r\n", millis());
+      LightsController.InitiateStartSequence();
+      RaceHandler.StartRace();
+   }
+   else //If race state is running or starting, we should stop it
+   {
+      RaceHandler.StopRace(micros());
+      LightsController.DeleteSchedules();
+   }
+}
+
+/// <summary>
+///   Reset race so new one can be started, reset is only allowed when race is stopped
+/// </summary>
+void ResetRace()
+{
+   if (RaceHandler.RaceState != RaceHandler.STOPPED)   //Only allow reset when race is stopped first
+   {
+      return;
+   }
+   lLastRCPress[1] = millis();
+   LightsController.ResetLights();
+   RaceHandler.ResetRace();
 }
