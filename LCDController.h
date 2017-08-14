@@ -1,5 +1,5 @@
 // LCDController.h
-// Copyright (C) 2015  Alex Goris
+// Copyright (C) 2017 Alex Goris
 // This file is part of FlyballETS-Software
 // FlyballETS-Software is free software : you can redistribute it and / or modify
 // it under the terms of the GNU General Public License as published by

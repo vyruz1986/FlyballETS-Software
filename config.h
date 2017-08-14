@@ -1,4 +1,3 @@
-// BatterySensor.h
 // Copyright (C) 2017 Alex Goris
 // This file is part of FlyballETS-Software
 // FlyballETS-Software is free software : you can redistribute it and / or modify
@@ -14,35 +13,5 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.If not, see <http://www.gnu.org/licenses/>
 
-#ifndef _BATTERYSENSOR_h
-#define _BATTERYSENSOR_h
 
-#if defined(ARDUINO) && ARDUINO >= 100
-	#include "Arduino.h"
-#else
-	#include "WProgram.h"
-#endif
-
-class BatterySensorClass
-{
-protected:
-
-public:
-   void init(uint8_t iBatterySensorPin);
-   void CheckBatteryVoltage();
-   uint16_t GetBatteryVoltage();
-   uint16_t GetBatteryPercentage();
-   
-private:
-   uint8_t _iBatterySensorPin;
-
-   int _iBatteryReadings[10];
-   int _iNumberOfBatteryReadings = 0;
-   uint16_t _iBatteryVoltage = 0;
-   
-};
-
-extern BatterySensorClass BatterySensor;
-
-#endif
-
+#define WS281x //Comment out this line if you want to use the v1 setup which used a 74HC595 shift register to control lights
