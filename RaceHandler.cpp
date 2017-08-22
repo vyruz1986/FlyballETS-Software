@@ -1,7 +1,7 @@
 //  file:	RaceHandler.cpp
 //
 // summary:	Implements the race handler class
-// Copyright (C) 2015  Alex Goris
+// Copyright (C) 2017 Alex Goris
 // This file is part of FlyballETS-Software
 // FlyballETS-Software is free software : you can redistribute it and / or modify
 // it under the terms of the GNU General Public License as published by
@@ -302,6 +302,7 @@ void RaceHandlerClass::Main()
          if (bDEBUG) Serialprint("Tstring: %s\r\n", _strTransition.c_str());
          
          //Only check transition string when gates are clear
+         //TODO: If transistion string is 3 or longer but actually more events are coming related to same transition, these are not considered.
          if (_strTransition.length() > 3)  //And if transistion string is at least 4 characters long
          {
             //Transition string is 4 characters or longer
@@ -480,6 +481,11 @@ void RaceHandlerClass::ResetRace()
 /// <param name="State">      The state. </param>
 void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
 {
+   //Don't process any faults when race is not running
+   if (RaceState == STOPPED)
+   {
+      return;
+   }
    bool bFault;
    //Check if we have to toggle
    if (State == TOGGLE)
@@ -613,7 +619,13 @@ double RaceHandlerClass::GetDogTime(uint8_t iDogNumber, int8_t iRunNumber)
    {
       dDogTimeSeconds = (micros() - _lDogEnterTimes[iDogNumber]) / 1000000.0;
    }
-   dDogTimeSeconds -= (_lCrossingTimes[iDogNumber][iRunNumber] / 1000000.0);
+
+   //Fixes issue 7 (https://github.com/vyruz1986/FlyballETS-Software/issues/7)
+   //Only deduct crossing time if it is positive
+   if (_lCrossingTimes[iDogNumber][iRunNumber] > 0)
+   {
+      dDogTimeSeconds -= (_lCrossingTimes[iDogNumber][iRunNumber] / 1000000.0);
+   }
    return dDogTimeSeconds;
 }
 

@@ -1,5 +1,5 @@
 // LightsController.h
-// Copyright (C) 2015  Alex Goris
+// Copyright (C) 2017 Alex Goris
 // This file is part of FlyballETS-Software
 // FlyballETS-Software is free software : you can redistribute it and / or modify
 // it under the terms of the GNU General Public License as published by
@@ -22,14 +22,22 @@
 #else
 	#include "WProgram.h"
 #endif
+#include "config.h"
+#ifdef WS281x
+#include <Adafruit_NeoPixel.h>
+#endif // WS281x
 
 class LightsControllerClass
 {
 protected:
 
 public:
-	void init(uint8_t iLatchPin, uint8_t iClockPin, uint8_t iDataPin);
-
+   
+#ifdef WS281x
+   void init(Adafruit_NeoPixel* LightsStrip);
+#else
+   void init(uint8_t iLatchPin, uint8_t iClockPin, uint8_t iDataPin);
+#endif
    //Overal state of this class
    enum OverallStates{
       STOPPED,
@@ -40,12 +48,12 @@ public:
 
    //Decimal values of lights connected to 74HC595
    enum Lights {
-      WHITE = 128,
-      RED = 64,
-      YELLOW1 = 32,
-      BLUE = 16,
-      YELLOW2 = 8,
-      GREEN = 4
+      WHITE = 130,   //74HC595 QH (128) + QB (2). I made a boo-boo on my prototype, WHITE should be wired to QB.
+      RED = 64,      //74HC595 QG
+      YELLOW1 = 32,  //74HC595 QF
+      BLUE = 16,     //74HC595 QE
+      YELLOW2 = 8,   //74HC595 QD
+      GREEN = 4      //74HC595 QC
    };
    enum LightStates {
       OFF,
@@ -62,12 +70,17 @@ public:
    void ToggleFaultLight(uint8_t iDogNumber, LightStates byLightState);
    
 private:
+#ifdef WS281x
+   //Neopixel object
+   Adafruit_NeoPixel* _LightsStrip;
+#else
    //Pin connected to ST_CP of 74HC595
    uint8_t _iLatchPin = 12;
    //Pin connected to SH_CP of 74HC595
    uint8_t _iClockPin = 13;
    //Pin connected to DS of 74HC595
    uint8_t _iDataPin = 11;
+#endif // WS281x
 
    //This byte contains the combined states of all ligths at any given time
    byte _byCurrentLightsState = 256;
@@ -93,6 +106,16 @@ private:
       YELLOW2,
       GREEN
    };
+
+#ifdef WS281x
+   struct SNeoPixelConfig
+   {
+      uint32_t iColor;
+      uint8_t iPixelNumber;
+   };
+   SNeoPixelConfig _GetNeoPixelConfig(Lights byLight);
+#endif // WS281x
+
 
 };
 
