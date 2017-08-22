@@ -1,7 +1,7 @@
 // file:	LightsController.cpp
 //
 // summary:	Implements the lights controller class
-// Copyright (C) 2015  Alex Goris
+// Copyright (C) 2017 Alex Goris
 // This file is part of FlyballETS-Software
 // FlyballETS-Software is free software : you can redistribute it and / or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,6 +20,8 @@
 #include "LightsController.h"
 #include "RaceHandler.h"
 #include "global.h"
+#include "config.h"
+#include <Adafruit_NeoPixel.h>
 
 /// <summary>
 ///   Initialises this object. This function needs to be passed the pin numbers for the shift
@@ -29,8 +31,18 @@
 /// <param name="iLatchPin">  Zero-based index of the latch pin. </param>
 /// <param name="iClockPin">  Zero-based index of the clock pin. </param>
 /// <param name="iDataPin">   Zero-based index of the data pin. </param>
+#ifdef WS281x
+void LightsControllerClass::init(Adafruit_NeoPixel* LightsStrip)
+#else
 void LightsControllerClass::init(uint8_t iLatchPin, uint8_t iClockPin, uint8_t iDataPin)
+#endif // WS281x
 {
+#ifdef WS281x
+   _LightsStrip = LightsStrip;
+   _LightsStrip->begin();
+   _LightsStrip->setBrightness(255);
+   _LightsStrip->show(); // Initialize all pixels to 'off'
+#else
    //Initialize pins for shift register
    _iLatchPin = iLatchPin;
    _iClockPin = iClockPin;
@@ -44,6 +56,7 @@ void LightsControllerClass::init(uint8_t iLatchPin, uint8_t iClockPin, uint8_t i
    digitalWrite(_iLatchPin, LOW);
    shiftOut(_iDataPin, _iClockPin, MSBFIRST, 0);
    digitalWrite(_iLatchPin, HIGH);
+#endif // WS281x
 }
 
 /// <summary>
@@ -70,14 +83,20 @@ void LightsControllerClass::Main()
          _lLightsOutSchedule[i] = 0; //Delete schedule
       }
    }
+#ifdef WS281x
+   //Update lights
+   _LightsStrip->show();
+#endif // WS281x
 
    if (_byCurrentLightsState != _byNewLightsState)
    {
       if (bDEBUG) Serialprint("%lu: New light states: %i\r\n", millis(), _byNewLightsState);
       _byCurrentLightsState = _byNewLightsState;
+#ifndef WS281x
       digitalWrite(_iLatchPin, LOW);
       shiftOut(_iDataPin, _iClockPin, MSBFIRST, _byCurrentLightsState);
       digitalWrite(_iLatchPin, HIGH);
+#endif // WS281x
    }
 }
 
@@ -155,6 +174,12 @@ void LightsControllerClass::ResetLights()
    byOverallState = STOPPED;
    
    //Set all lights off
+#ifdef WS281x
+   for (uint16_t i = 0; i < _LightsStrip->numPixels(); i++)
+   {
+      _LightsStrip->setPixelColor(i, 0);
+   }
+#endif // WS281x
    _byNewLightsState = 0;
    DeleteSchedules();
 }
@@ -193,9 +218,18 @@ void LightsControllerClass::ToggleLightState(Lights byLight, LightStates byLight
          byLightState = ON;
       }
    }
+#ifdef WS281x
+   SNeoPixelConfig LightConfig = _GetNeoPixelConfig(byLight);
+
+   if (byLightState == OFF)
+   {
+      LightConfig.iColor = _LightsStrip->Color(0, 0, 0);
+   }
+   _LightsStrip->setPixelColor(LightConfig.iPixelNumber, LightConfig.iColor);
+#else
    if (byCurrentLightState != byLightState)
-   { 
-      
+   {
+
       if (byLightState == ON)
       {
          _byNewLightsState = _byNewLightsState + byLight;
@@ -205,6 +239,7 @@ void LightsControllerClass::ToggleLightState(Lights byLight, LightStates byLight
          _byNewLightsState = _byNewLightsState - byLight;
       }
    }
+#endif // WS281x
 }
 
 /// <summary>
@@ -240,7 +275,16 @@ void LightsControllerClass::ToggleFaultLight(uint8_t DogNumber, LightStates byLi
 /// </returns>
 LightsControllerClass::LightStates LightsControllerClass::CheckLightState(Lights byLight)
 {
+#ifdef WS281x
+   uint8_t iPixelNumber;
+   uint32_t iCurrentColor;
+   uint32_t iIntendedColor;
+   SNeoPixelConfig TargetConfig = _GetNeoPixelConfig(byLight);
+   iCurrentColor = _LightsStrip->getPixelColor(TargetConfig.iPixelNumber);
+   if (iCurrentColor == TargetConfig.iColor)
+#else
    if ((byLight & _byNewLightsState) == byLight)
+#endif // WS281x
    {
       return ON;
    }
@@ -249,6 +293,43 @@ LightsControllerClass::LightStates LightsControllerClass::CheckLightState(Lights
       return OFF;
    }
 }
+
+#ifdef WS281x
+LightsControllerClass::SNeoPixelConfig LightsControllerClass::_GetNeoPixelConfig(LightsControllerClass::Lights byLight)
+{
+   SNeoPixelConfig Config;
+   switch (byLight)
+   {
+   case WHITE:
+      Config.iPixelNumber = 0;
+      Config.iColor = _LightsStrip->Color(255, 255, 255);
+      break;
+   case RED:
+      Config.iPixelNumber = 1;
+      Config.iColor = _LightsStrip->Color(255, 0, 0);
+      break;
+   case YELLOW1:
+      Config.iPixelNumber = 2;
+      Config.iColor = _LightsStrip->Color(255, 100, 0);
+      break;
+   case BLUE:
+      Config.iPixelNumber = 2;
+      Config.iColor = _LightsStrip->Color(0, 0, 255);
+      break;
+   case YELLOW2:
+      Config.iPixelNumber = 3;
+      Config.iColor = _LightsStrip->Color(255, 100, 0);
+      break;
+   case GREEN:
+      Config.iPixelNumber = 4;
+      Config.iColor = _LightsStrip->Color(0, 255, 0);
+      break;
+   }
+
+   return Config;
+}
+#endif // WS281x
+
 
 /// <summary>
 ///   The lights controller.

@@ -9,7 +9,7 @@
 // Pro Mini which controls all components in the Flyball ETS These sources are originally
 // distributed from: https://github.com/vyruz1986/FlyballETS-Software.
 // 
-// Copyright (C) 2015  Alex Goris
+// Copyright (C) 2017 Alex Goris
 // This file is part of FlyballETS-Software
 // FlyballETS-Software is free software : you can redistribute it and / or modify it under the terms of
 // the GNU General Public License as published by the Free Software Foundation, either version 3 of
@@ -21,6 +21,7 @@
 // 
 // You should have received a copy of the GNU General Public License along with this program.If not,
 // see <http://www.gnu.org/licenses/> 
+#include "config.h"
 #include "StreamPrint.h"
 #include "LCDController.h"
 #include "RaceHandler.h"
@@ -39,12 +40,12 @@
    - D5: LCD Data6
    - D6: LCD Data5
    - D7: LCD Data4
-   - D8: Lights 74HC595 clock pin
-   - D9: Lights 74HC595 data pin
+   - D8: WS2811B lights data pin / Lights 74HC595 clock pin
+   - D9: <free> / Lights 74HC595 data pin
    - D10: LCD2 (line 3&4) enable pin
    - D11: LCD1 (line 1&2) enable pin
    - D12: LCD RS Pin
-   - D13: Lights 74HC595 latch pin
+   - D13: <free> / Lights 74HC595 latch pin
    - A0: remote D5
    - A1: remote D2
    - A2: remote D1
@@ -61,6 +62,10 @@
    #include "Simulator.h"
 #endif
 
+#ifdef WS281x
+   #include <Adafruit_NeoPixel.h>
+#endif // WS281x
+
 uint8_t iS1Pin = 2;
 uint8_t iS2Pin = 3;
 uint8_t iCurrentDog;
@@ -76,6 +81,18 @@ int iBatterySensorPin = A6;
 uint16_t iBatteryVoltage = 0;
 
 //Initialise Lights stuff
+#ifdef WS281x
+   uint8_t iLightsDataPin = 8;
+   Adafruit_NeoPixel LightsStrip = Adafruit_NeoPixel(5, iLightsDataPin, NEO_RGB);
+#else
+   uint8_t iLightsClockPin = 8;
+   uint8_t iLightsDataPin = 9;
+   uint8_t iLightsLatchPin = 13;
+#endif // WS281x
+
+
+
+//Set last serial output variable
 long lLastSerialOutput = 0;
 
 //remote control pins
@@ -111,7 +128,11 @@ void setup()
    BatterySensor.init(iBatterySensorPin);
 
    //Initialize LightsController class with shift register pins
-   LightsController.init(13,8,9);
+#ifdef WS281x
+   LightsController.init(&LightsStrip);
+#else
+   LightsController.init(iLightsLatchPin, iLightsClockPin, iLightsDataPin);
+#endif
 
    //Initialize RaceHandler class with S1 and S2 pins
    RaceHandler.init(iS1Pin, iS2Pin);
@@ -158,7 +179,10 @@ void loop()
    
    //Race start/stop button (remote D0 output) or serial command
    if ((digitalRead(iRC0Pin) == HIGH
-      && (millis() - lLastRCPress[0] > 2000)))
+      && (millis() - lLastRCPress[0] > 2000))
+      || (bSerialStringComplete
+         && (strSerialData == "START"
+            || strSerialData == "STOP")))
    {
       StartStopRace();
    }
@@ -166,6 +190,7 @@ void loop()
    //Race reset button (remote D1 output)
    if (digitalRead(iRC1Pin) == HIGH
       && (millis() - lLastRCPress[1] > 2000))
+      || (bSerialStringComplete && strSerialData == "RESET"))
    {
       ResetRace();
    }
@@ -173,6 +198,7 @@ void loop()
    //Dog0 fault RC button
    if (digitalRead(iRC2Pin) == HIGH
       && (millis() - lLastRCPress[2] > 2000))
+      || (bSerialStringComplete && strSerialData == "D0F"))
    {
       lLastRCPress[2] = millis();
       //Toggle fault for dog
@@ -182,6 +208,7 @@ void loop()
    //Dog1 fault RC button
    if (digitalRead(iRC3Pin) == HIGH
       && (millis() - lLastRCPress[3] > 2000))
+      || (bSerialStringComplete && strSerialData == "D1F"))
    {
       lLastRCPress[3] = millis();
       //Toggle fault for dog
@@ -190,6 +217,7 @@ void loop()
    //Dog2 fault RC button
    if (digitalRead(iRC4Pin) == HIGH
       && (millis() - lLastRCPress[4] > 2000))
+      || (bSerialStringComplete && strSerialData == "D2F"))
    {
       lLastRCPress[4] = millis();
       //Toggle fault for dog
@@ -199,6 +227,7 @@ void loop()
    //Dog3 fault RC button
    if (digitalRead(iRC5Pin) == HIGH
       && (millis() - lLastRCPress[5] > 2000))
+      || (bSerialStringComplete && strSerialData == "D3F"))
    {
       lLastRCPress[5] = millis();
       //Toggle fault for dog
@@ -291,42 +320,6 @@ void loop()
       if (strSerialData == "DEBUG")
       {
          bDEBUG = !bDEBUG;
-      }
-
-      if (strSerialData == "RT?")
-      {
-         Serialprint("RT:%s\r\n", cElapsedRaceTime);
-      }
-
-      if (strSerialData == "START"
-         || strSerialData == "STOP")
-      {
-         StartStopRace();
-      }
-
-      if (strSerialData == "RESET")
-      {
-         ResetRace();
-      }
-
-      if (strSerialData == "D0F")
-      {
-         RaceHandler.SetDogFault(0);
-      }
-
-      if (strSerialData == "D1F")
-      {
-         RaceHandler.SetDogFault(1);
-      }
-
-      if (strSerialData == "D2F")
-      {
-         RaceHandler.SetDogFault(2);
-      }
-
-      if (strSerialData == "D3F")
-      {
-         RaceHandler.SetDogFault(3);
       }
 
       strSerialData = "";

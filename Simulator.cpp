@@ -13,18 +13,32 @@
 /// </summary>
 const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60] PROGMEM = {
    //See the end of this file for a collection of races
-   { 1, -1108512, 1 }
-   ,{ 2, -1090856, 1 }
-   ,{ 1, -974416, 0 }
-   ,{ 2, -959284, 0 }
-   ,{ 2, 5222624, 1 }
-   ,{ 1, 5240736, 1 }
-   ,{ 1, 5248468, 0 }
-   ,{ 1, 5250384, 1 }
-   ,{ 2, 5352056, 0 }
-   ,{ 2, 5355656, 1 }
-   ,{ 2, 5359276, 0 }
-   ,{ 1, 5366648, 0 }
+   //Dog1
+   { 1, 41708, 1 }
+   ,{ 2, 60692, 1 }
+   ,{ 1, 176848, 0 }
+   ,{ 2, 197732, 0 }
+   //Dog1<->Dog2
+   ,{ 1, 4675580, 1 }  //This is the 2nd dog coming in too erly!
+   ,{ 2, 4692252, 1 }
+   ,{ 2, 4830180, 0 }
+   ,{ 1, 4849032, 0 }  //Sequence was ABba: This proves 2 dogs passed --> Perfect crossing
+                       //Dog2<->Dog3
+   ,{ 2, 9058416, 1 }
+   ,{ 1, 9074780, 1 }
+   ,{ 1, 9215868, 0 }
+   ,{ 2, 9234968, 0 }  //Sequence was BAab: This proves 2 dogs passed --> Perfect crossing
+                       //Dog3<->Dog4
+   ,{ 2, 13497276, 1 }
+   ,{ 2, 13500924, 0 }
+   ,{ 2, 13502728, 1 }
+   ,{ 1, 13514992, 1 }
+   ,{ 1, 13668000, 0 }
+   ,{ 1, 13669344, 1 }
+   ,{ 1, 13681828, 0 }
+   ,{ 2, 13701464, 0 } //BbBAaAaB --> Filtered to BbAa: This proves 2 dogs passed --> Perfect crossing
+                       //Waiting for dog4 to come back
+   ,{ 2, 18028788, 1 }//Dog 4 coming in, race finished
 };
 
 /// <summary>
