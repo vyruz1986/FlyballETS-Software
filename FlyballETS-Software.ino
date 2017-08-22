@@ -189,7 +189,7 @@ void loop()
 
    //Race reset button (remote D1 output)
    if (digitalRead(iRC1Pin) == HIGH
-      && (millis() - lLastRCPress[1] > 2000))
+      && (millis() - lLastRCPress[1] > 2000)
       || (bSerialStringComplete && strSerialData == "RESET"))
    {
       ResetRace();
@@ -197,7 +197,7 @@ void loop()
 
    //Dog0 fault RC button
    if (digitalRead(iRC2Pin) == HIGH
-      && (millis() - lLastRCPress[2] > 2000))
+      && (millis() - lLastRCPress[2] > 2000)
       || (bSerialStringComplete && strSerialData == "D0F"))
    {
       lLastRCPress[2] = millis();
@@ -207,7 +207,7 @@ void loop()
 
    //Dog1 fault RC button
    if (digitalRead(iRC3Pin) == HIGH
-      && (millis() - lLastRCPress[3] > 2000))
+      && (millis() - lLastRCPress[3] > 2000)
       || (bSerialStringComplete && strSerialData == "D1F"))
    {
       lLastRCPress[3] = millis();
@@ -216,7 +216,7 @@ void loop()
    }
    //Dog2 fault RC button
    if (digitalRead(iRC4Pin) == HIGH
-      && (millis() - lLastRCPress[4] > 2000))
+      && (millis() - lLastRCPress[4] > 2000)
       || (bSerialStringComplete && strSerialData == "D2F"))
    {
       lLastRCPress[4] = millis();
@@ -226,7 +226,7 @@ void loop()
 
    //Dog3 fault RC button
    if (digitalRead(iRC5Pin) == HIGH
-      && (millis() - lLastRCPress[5] > 2000))
+      && (millis() - lLastRCPress[5] > 2000)
       || (bSerialStringComplete && strSerialData == "D3F"))
    {
       lLastRCPress[5] = millis();
