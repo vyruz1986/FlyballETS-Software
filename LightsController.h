@@ -34,7 +34,7 @@ protected:
 public:
    
 #ifdef WS281x
-   void init(Adafruit_NeoPixel* LightsStrip);
+   void init(uint8_t iLightsDataPin);
 #else
    void init(uint8_t iLatchPin, uint8_t iClockPin, uint8_t iDataPin);
 #endif
@@ -72,7 +72,8 @@ public:
 private:
 #ifdef WS281x
    //Neopixel object
-   Adafruit_NeoPixel* _LightsStrip;
+   Adafruit_NeoPixel _LightsStrip;
+   unsigned long _lLastNPShow;
 #else
    //Pin connected to ST_CP of 74HC595
    uint8_t _iLatchPin = 12;

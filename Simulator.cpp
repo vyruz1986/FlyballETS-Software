@@ -6,7 +6,7 @@
 #include "global.h"
 #include "RaceHandler.h"
 #include "PROGMEM_readAnything.h"
-#include <avr/pgmspace.h>
+//#include <avr/pgmspace.h>
 
 /// <summary>
 ///   Program the interrupt triggers which should be simulated here. See end of file for a collection of records from actual races.
