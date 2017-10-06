@@ -21,7 +21,8 @@
 #include "RaceHandler.h"
 #include "global.h"
 #include "config.h"
-#include <Adafruit_NeoPixel.h>
+//#include <Adafruit_NeoPixel.h>
+#include <NeoPixelBus.h>
 
 /// <summary>
 ///   Initialises this object. This function needs to be passed the pin numbers for the shift
@@ -32,17 +33,19 @@
 /// <param name="iClockPin">  Zero-based index of the clock pin. </param>
 /// <param name="iDataPin">   Zero-based index of the data pin. </param>
 #ifdef WS281x
-void LightsControllerClass::init(uint8_t iLightsDataPin)
+void LightsControllerClass::init(NeoPixelBus<NeoRgbFeature, Neo400KbpsMethod>* LightsStrip)
 #else
 void LightsControllerClass::init(uint8_t iLatchPin, uint8_t iClockPin, uint8_t iDataPin)
 #endif // WS281x
 {
 #ifdef WS281x
-   _LightsStrip = Adafruit_NeoPixel(5, iLightsDataPin, NEO_RGB + NEO_KHZ800);
-   _LightsStrip.begin();
-   _LightsStrip.setBrightness(255);
-   _LightsStrip.show(); // Initialize all pixels to 'off'
-   _lLastNPShow = millis();
+   //pinMode(iLightsPin, OUTPUT);
+   _LightsStrip = LightsStrip;
+   //_LightsStrip = NeoPixelBus<NeoRgbFeature, Neo800KbpsMethod>(5, iLightsPin);
+   //_LightsStrip = Adafruit_NeoPixel(5, iLightsPin, NEO_RGB + NEO_KHZ800);
+   _LightsStrip->Begin();
+   //_LightsStrip->SetBrightness(255);
+   _LightsStrip->Show(); // Initialize all pixels to 'off'
 #else
    //Initialize pins for shift register
    _iLatchPin = iLatchPin;
@@ -86,10 +89,9 @@ void LightsControllerClass::Main()
    }
 #ifdef WS281x
    //Update lights
-   if ((millis() - _lLastNPShow) > 1)
+   if (_LightsStrip->CanShow())
    {
-      _LightsStrip.show();
-      _lLastNPShow = millis();
+      _LightsStrip->Show();
    }
 #endif // WS281x
 
@@ -111,7 +113,6 @@ void LightsControllerClass::Main()
 /// </summary>
 void LightsControllerClass::HandleStartSequence()
 {
-   
    //This function takes care of the starting lights sequence
    //First check if the overall state of this class is 'STARTING'
    if (byOverallState == STARTING)
@@ -119,23 +120,23 @@ void LightsControllerClass::HandleStartSequence()
       //The class is in the 'STARTING' state, check if the lights have been programmed yet
       if (!_bStartSequenceStarted)
       {
-         unsigned long lStart = millis();
-         Serial.printf("Started at: %lu", lStart);
          //Start sequence is not yet started, we need to schedule the lights on/off times
+         
          //Set schedule for RED light
-         _lLightsOnSchedule[1] = lStart; //Turn on NOW
-         _lLightsOutSchedule[1] = lStart + 1000; //keep on for 1 second
+         _lLightsOnSchedule[1] = millis(); //Turn on NOW
+         _lLightsOutSchedule[1] = millis() + 1000; //keep on for 1 second
+
          //Set schedule for YELLOW1 light
-         _lLightsOnSchedule[2] = lStart + 1000; //Turn on after 1 second
-         _lLightsOutSchedule[2] = lStart + 2000; //Turn off after 2 seconds
+         _lLightsOnSchedule[2] = millis() + 1000; //Turn on after 1 second
+         _lLightsOutSchedule[2] = millis() + 2000; //Turn off after 2 seconds
 
          //Set schedule for YELLOW2 light
-         _lLightsOnSchedule[4] = lStart + 2000; //Turn on after 2 seconds
-         _lLightsOutSchedule[4] = lStart + 3000; //Turn off after 2 seconds
+         _lLightsOnSchedule[4] = millis() + 2000; //Turn on after 2 seconds
+         _lLightsOutSchedule[4] = millis() + 3000; //Turn off after 3 seconds
 
          //Set schedule for GREEN light
-         _lLightsOnSchedule[5] = lStart + 3000; //Turn on after 3 seconds
-         _lLightsOutSchedule[5] = lStart + 4000; //Turn off after 4 seconds
+         _lLightsOnSchedule[5] = millis() + 3000; //Turn on after 3 seconds
+         _lLightsOutSchedule[5] = millis() + 4000; //Turn off after 4 seconds
 
          _bStartSequenceStarted = true;
       }
@@ -181,9 +182,9 @@ void LightsControllerClass::ResetLights()
    
    //Set all lights off
 #ifdef WS281x
-   for (uint16_t i = 0; i < _LightsStrip.numPixels(); i++)
+   for (uint16_t i = 0; i < _LightsStrip->PixelCount(); i++)
    {
-      _LightsStrip.setPixelColor(i, 0);
+      _LightsStrip->SetPixelColor(i, 0);
    }
 #endif // WS281x
    _byNewLightsState = 0;
@@ -229,10 +230,9 @@ void LightsControllerClass::ToggleLightState(Lights byLight, LightStates byLight
 
    if (byLightState == OFF)
    {
-      LightConfig.iColor = _LightsStrip.Color(0, 0, 0);
+      LightConfig.iColor = RgbColor(0,0,0);
    }
-   _LightsStrip.setPixelColor(LightConfig.iPixelNumber, LightConfig.iColor);
-   _LightsStrip.show();
+   _LightsStrip->SetPixelColor(LightConfig.iPixelNumber, LightConfig.iColor);
 #else
    if (byCurrentLightState != byLightState)
    {
@@ -283,11 +283,9 @@ void LightsControllerClass::ToggleFaultLight(uint8_t DogNumber, LightStates byLi
 LightsControllerClass::LightStates LightsControllerClass::CheckLightState(Lights byLight)
 {
 #ifdef WS281x
-   uint8_t iPixelNumber;
-   uint32_t iCurrentColor;
-   uint32_t iIntendedColor;
+   RgbColor iCurrentColor;
    SNeoPixelConfig TargetConfig = _GetNeoPixelConfig(byLight);
-   iCurrentColor = _LightsStrip.getPixelColor(TargetConfig.iPixelNumber);
+   iCurrentColor = _LightsStrip->GetPixelColor(TargetConfig.iPixelNumber);
    if (iCurrentColor == TargetConfig.iColor)
 #else
    if ((byLight & _byNewLightsState) == byLight)
@@ -309,27 +307,27 @@ LightsControllerClass::SNeoPixelConfig LightsControllerClass::_GetNeoPixelConfig
    {
    case WHITE:
       Config.iPixelNumber = 0;
-      Config.iColor = _LightsStrip.Color(255, 255, 255);
+      Config.iColor = RgbColor(255, 255, 255);
       break;
    case RED:
       Config.iPixelNumber = 1;
-      Config.iColor = _LightsStrip.Color(255, 0, 0);
+      Config.iColor = RgbColor(255, 0, 0);
       break;
    case YELLOW1:
       Config.iPixelNumber = 2;
-      Config.iColor = _LightsStrip.Color(255, 100, 0);
+      Config.iColor = RgbColor(255, 100, 0);
       break;
    case BLUE:
       Config.iPixelNumber = 2;
-      Config.iColor = _LightsStrip.Color(0, 0, 255);
+      Config.iColor = RgbColor(0, 0, 255);
       break;
    case YELLOW2:
       Config.iPixelNumber = 3;
-      Config.iColor = _LightsStrip.Color(255, 100, 0);
+      Config.iColor = RgbColor(255, 100, 0);
       break;
    case GREEN:
       Config.iPixelNumber = 4;
-      Config.iColor = _LightsStrip.Color(0, 255, 0);
+      Config.iColor = RgbColor(0, 255, 0);
       break;
    }
 

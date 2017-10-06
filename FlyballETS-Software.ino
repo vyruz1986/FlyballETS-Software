@@ -29,47 +29,61 @@
 #include "BatterySensor.h"
 #include "global.h"
 #include <LiquidCrystal.h>
+#include <WiFi.h>
+#include <WiFiMulti.h>
 //#include <avr/pgmspace.h>
 
 /*List of pins and the ones used (Lolin32 board):
-   - 33: S1 (handler side) photoelectric sensor
-   - 32: S2 (box side) photoelectric sensor
+   - 34: S1 (handler side) photoelectric sensor
+   - 33: S2 (box side) photoelectric sensor
+
    - 27: LCD Data7
    - 14: LCD Data6
    - 26: LCD Data5
-   - 13: LCD Data4
-   - 15: LCD2 (line 3&4) enable pin
+   - 12: LCD Data4
    -  2: LCD1 (line 1&2) enable pin
+   - 15: LCD2 (line 3&4) enable pin
    - 25: LCD RS Pin
-   -  0: WS2811B lights data pin / Lights 74HC595 clock pin
-   - 16: <free> / Lights 74HC595 data pin
 
-   - 21: <free> / Lights 74HC595 latch pin
+   -  0: WS2811B lights data pin / Lights 74HC595 clock pin
+   - xx: <free> / Lights 74HC595 data pin
+   - xx: <free> / Lights 74HC595 latch pin
+
    - 19: remote D0
    - 23: remote D1
    - 18: remote D2
    - 17: remote D3
    - 16: remote D4
    -  4: remote D5
-   - 34: battery sensor pin
+
+   - 35: battery sensor pin
+
    - 22: Side switch button
-   - 39: Laser trigger button
+
+   - 32: Laser trigger button
    - 12: Laser output
+
+   -  1: free/TX
+   -  3: free/RX
+   -  5: free/LED/SS
+   - 21: free/SCA
+   - 36: free/VP
+   - 39: free/VN
 */
 
 //Set simulate to true to enable simulator class (see Simulator.cpp/h)
-#define Simulate false
+//#define Simulate true
 #if Simulate
    #include "Simulator.h"
 #endif
 
 #ifdef WS281x
-   #include <Adafruit_NeoPixel.h>
-   //#include <NeoPixelBus.h>
+   //#include <Adafruit_NeoPixel.h>
+   #include <NeoPixelBus.h>
 #endif // WS281x
 
-uint8_t iS1Pin = 33;
-uint8_t iS2Pin = 32;
+uint8_t iS1Pin = 34;
+uint8_t iS2Pin = 33;
 uint8_t iCurrentDog;
 uint8_t iCurrentRaceState;
 
@@ -79,20 +93,22 @@ char cElapsedRaceTime[8];
 char cTotalCrossingTime[8];
 
 //Battery variables
-int iBatterySensorPin = 34;
+int iBatterySensorPin = 35;
 uint16_t iBatteryVoltage = 0;
 
 //Initialise Lights stuff
 #ifdef WS281x
    uint8_t iLightsDataPin = 0;
+   NeoPixelBus<NeoRgbFeature, Neo400KbpsMethod> LightsStrip(5, iLightsDataPin);
+
 #else
    uint8_t iLightsClockPin = 8;
    uint8_t iLightsDataPin = 9;
-   uint8_t iLightsLatchPin = 13;
+   uint8_t iLightsLatchPin = 21;
 #endif // WS281x
 
 //Other IO's
-uint8_t iLaserTriggerPin = 39;
+uint8_t iLaserTriggerPin = 32;
 uint8_t iLaserOutputPin = 12;
 boolean bLaserState = false;
 
@@ -172,7 +188,7 @@ void setup()
    
    //Initialize LightsController class with shift register pins
 #ifdef WS281x
-   LightsController.init(iLightsDataPin);
+   LightsController.init(&LightsStrip);
 #else
    LightsController.init(iLightsLatchPin, iLightsClockPin, iLightsDataPin);
 #endif
@@ -192,7 +208,6 @@ void setup()
 
    Serialprint("Ready!\r\n");
 
-   LightsController.InitiateStartSequence();
 }
 
 void loop()
@@ -211,7 +226,6 @@ void loop()
    
    //Handle LCD processing
    LCDController.Main();
-   /*
 #if Simulate
    //Run simulator
    Simulator.Main();
@@ -311,7 +325,7 @@ void loop()
    LCDController.UpdateField(LCDController.D4Time, cDogTime);
    LCDController.UpdateField(LCDController.D4CrossTime, RaceHandler.GetCrossingTime(3));
    LCDController.UpdateField(LCDController.D4RerunInfo, RaceHandler.GetRerunInfo(3));
-   *//*
+   
    if (iCurrentRaceState != RaceHandler.RaceState)
    {
       if (RaceHandler.RaceState == RaceHandler.STOPPED)
@@ -346,7 +360,6 @@ void loop()
       lLastSerialOutput = millis();
    }
    */
-/*
    //Cleanup variables used for checking if something changed
    iCurrentDog = RaceHandler.iCurrentDog;
    iCurrentRaceState = RaceHandler.RaceState;
@@ -367,14 +380,20 @@ void loop()
    }
    
    //Handle laser output
-   //digitalWrite(iLaserOutputPin, digitalRead(iLaserTriggerPin));
-   */
+   digitalWrite(iLaserOutputPin, !digitalRead(iLaserTriggerPin));
+
+   //Handle side switch button
+   if (digitalRead(iSwitchSideTriggerPin) == LOW)
+   {
+      Serial.printf("Switching sides!\r\n");
+   }
 }
 
 void serialEvent()
 {
    //Listen on serial port
-   //Serial.flush(); //For some reason this causes Serial.available() to miss stuff on ESP32, should be investigated
+   Serial.flush(); //For some reason this causes Serial.available() to miss stuff on ESP32, should be investigated
+
    while (Serial.available() > 0)
    {
       char cInChar = Serial.read(); // Read a character
