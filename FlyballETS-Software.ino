@@ -392,7 +392,6 @@ void loop()
 void serialEvent()
 {
    //Listen on serial port
-   Serial.flush(); //For some reason this causes Serial.available() to miss stuff on ESP32, should be investigated
 
    while (Serial.available() > 0)
    {
