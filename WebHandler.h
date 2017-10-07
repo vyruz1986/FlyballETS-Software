@@ -17,6 +17,8 @@
 #include <ArduinoJson.h>
 #include "Debug.h"
 #include "RaceHandler.h"
+#include "Structs.h"
+#include "LightsController.h"
 
 
 class WebHandlerClass
@@ -25,9 +27,13 @@ protected:
    AsyncWebServer *_server;
    AsyncWebSocket *_ws;
    void _WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len);
-   void wsSend_P(PGM_P payload);
-   void wsSend_P(uint32_t client_id, PGM_P payload);
-   boolean DoAction(String action, String * ReturnError);
+   void _wsSend_P(PGM_P payload);
+   void _wsSend_P(uint32_t client_id, PGM_P payload);
+   boolean _DoAction(String action, String * ReturnError);
+   void _SendRaceData(uint iRaceId = RaceHandler._iCurrentRaceId);
+
+   unsigned long _lLastRaceDataBroadcast;
+   unsigned long _lRaceDataBroadcastInterval;
 
 public:
    void init(int webPort);

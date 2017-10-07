@@ -22,6 +22,7 @@
 // You should have received a copy of the GNU General Public License along with this program.If not,
 // see <http://www.gnu.org/licenses/> 
 #include "Debug.h"
+#include "Structs.h"
 #include <Syslog.h>
 #include "WebHandler.h"
 #include "config.h"
@@ -414,19 +415,19 @@ void loop()
    }
 
    //Enable (uncomment) the following if you want periodic status updates on the serial port
-   /*
    if ((millis() - lLastSerialOutput) > 500)
    {
       //Serialprint("%lu: ping! voltage is: %.2u, this is %i%%\r\n", millis(), iBatteryVoltage, iBatteryPercentage);
       //Serialprint("%lu: Elapsed time: %s\r\n", millis(), cElapsedRaceTime);
+      /*
       if (RaceHandler.RaceState == RaceHandler.RUNNING)
       {
          dtostrf(RaceHandler.GetDogTime(RaceHandler.iCurrentDog), 7, 3, cDogTime);
          Serialprint("Dog %i: %ss\r\n", RaceHandler.iCurrentDog, cDogTime);
       }
+      */
       lLastSerialOutput = millis();
    }
-   */
    //Cleanup variables used for checking if something changed
    iCurrentDog = RaceHandler.iCurrentDog;
    iCurrentRaceState = RaceHandler.RaceState;

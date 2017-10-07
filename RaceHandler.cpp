@@ -34,6 +34,8 @@ void RaceHandlerClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
    _iS1Pin = iS1Pin;
    _iS2Pin = iS2Pin;
 
+   _iCurrentRaceId = 0;
+
    ResetRace();
 
 }
@@ -405,8 +407,11 @@ void RaceHandlerClass::StopRace(unsigned long StopTime)
       //Race is running, so we have to record the EndTime
       _lRaceEndTime = StopTime;
       _lRaceTime = _lRaceEndTime - _lRaceStartTime;
+      _lRaceStartTime = 0;
    }
    _ChangeRaceState(STOPPED);
+
+   _HistoricRaceData[_iCurrentRaceId] = GetRaceData(_iCurrentRaceId);
 }
 
 /// <summary>
@@ -470,6 +475,15 @@ void RaceHandlerClass::ResetRace()
       {
          iCounter = 0;
       }
+   }
+
+   if (_iCurrentRaceId == NUM_HISTORIC_RACE_RECORDS)
+   {
+      _iCurrentRaceId = 0;
+   }
+   else
+   {
+      _iCurrentRaceId++;
    }
 }
 
@@ -775,6 +789,30 @@ String RaceHandlerClass::GetRaceStateString()
    }
 
    return strRaceState;
+}
+
+RaceData RaceHandlerClass::GetRaceData()
+{
+   return GetRaceData(_iCurrentRaceId);
+}
+
+RaceData RaceHandlerClass::GetRaceData(uint iRaceId)
+{
+   RaceData RequestedRaceData;
+   
+   if (iRaceId == _iCurrentRaceId)
+   {
+      //We need to return data for the current dace
+      RequestedRaceData.Id = _iCurrentRaceId;
+      RequestedRaceData.StartTime = _lRaceStartTime;
+      RequestedRaceData.EndTime = _lRaceEndTime;
+      RequestedRaceData.ElapsedTime = _lRaceTime / 1000;
+      RequestedRaceData.RaceState = RaceState;
+   }
+   else {
+      RequestedRaceData = _HistoricRaceData[_iCurrentRaceId];
+   }
+   return RequestedRaceData;
 }
 
 /// <summary>

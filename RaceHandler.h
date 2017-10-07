@@ -1,5 +1,6 @@
 // RaceHandler.h
 #include "StreamPrint.h"
+#include "Structs.h"
 #ifndef _RACEHANDLER_h
 #define _RACEHANDLER_h
 
@@ -8,6 +9,8 @@
 #else
 	#include "WProgram.h"
 #endif
+
+#define NUM_HISTORIC_RACE_RECORDS 100
 
 class RaceHandlerClass
 {
@@ -33,7 +36,6 @@ class RaceHandlerClass
    void Main();
    void StartTimers();
    void StartRace();
-   void StopRace();
    void StopRace(unsigned long StopTime);
    void ResetRace();
    void TriggerSensor1();
@@ -53,6 +55,9 @@ class RaceHandlerClass
    double GetTotalCrossingTime();
 
    String GetRaceStateString();
+
+   RaceData GetRaceData();
+   RaceData GetRaceData(uint iRaceId);
 
 private:
    unsigned long _lRaceStartTime;
@@ -94,6 +99,9 @@ private:
    };
    _byDogStates _byDogState;
    bool _bGatesClear = false;
+
+   RaceData _HistoricRaceData[];
+   uint _iCurrentRaceId;
 
    void _ChangeRaceState(RaceStates _byNewRaceState);
    void _ChangeDogState(_byDogStates _byNewDogState);

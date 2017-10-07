@@ -15,7 +15,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
 {
    if (type == WS_EVT_CONNECT) {
       Serial.printf("ws[%s][%u] connect\n", server->url(), client->id());
-      client->printf("Hello Client %u :)", client->id());
+      //client->printf("Hello Client %u :)", client->id());
       client->ping();
    }
    else if (type == WS_EVT_DISCONNECT) {
@@ -81,8 +81,6 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
       }
       
       // Parse JSON input
-      //DynamicJsonBuffer jsonBuffer;
-      //msg = "{\"sensor\":\"gps\",\"time\":1351824120,\"data\":[48.756080,2.302038]}";
       DynamicJsonBuffer jsonBufferRequest;
       JsonObject& request = jsonBufferRequest.parseObject(msg);
       if (!request.success()) {
@@ -94,14 +92,15 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
 
       if (request.containsKey("action")) {
          DynamicJsonBuffer jsonBufferResponse;
-         JsonObject& response = jsonBufferResponse.createObject();
+         JsonObject& JsonRoot = jsonBufferResponse.createObject();
+         JsonObject& ActionResult = JsonRoot.createNestedObject("ActionResult");
          String errorText;
-         bool result = DoAction(request["action"], &errorText);
-         response["success"] = result;
-         response["error"] = errorText;
+         bool result = _DoAction(request["action"], &errorText);
+         ActionResult["success"] = result;
+         ActionResult["error"] = errorText;
 
          String jsonResponse;
-         response.printTo(jsonResponse);
+         JsonRoot.printTo(jsonResponse);
          client->text(jsonResponse);
       }
    }
@@ -130,13 +129,21 @@ void WebHandlerClass::init(int webPort)
    _server->serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
 
    _server->begin();
+
+   _lLastRaceDataBroadcast = 0;
+   _lRaceDataBroadcastInterval = 500;
 }
 
 void WebHandlerClass::loop()
 {
+   if (millis() - _lLastRaceDataBroadcast > _lRaceDataBroadcastInterval)
+   {
+      _SendRaceData();
+      _lLastRaceDataBroadcast = millis();
+   }
 }
 
-void WebHandlerClass::wsSend_P(PGM_P payload) {
+void WebHandlerClass::_wsSend_P(PGM_P payload) {
    if (_ws->count() > 0) {
       char buffer[strlen_P(payload)];
       strcpy_P(buffer, payload);
@@ -144,13 +151,13 @@ void WebHandlerClass::wsSend_P(PGM_P payload) {
    }
 }
 
-void WebHandlerClass::wsSend_P(uint32_t client_id, PGM_P payload) {
+void WebHandlerClass::_wsSend_P(uint32_t client_id, PGM_P payload) {
    char buffer[strlen_P(payload)];
    strcpy_P(buffer, payload);
    _ws->text(client_id, buffer);
 }
 
-boolean WebHandlerClass::DoAction(String action, String * ReturnError) {
+boolean WebHandlerClass::_DoAction(String action, String * ReturnError) {
    if (action == "StartRace") {
       if (RaceHandler.RaceState != RaceHandler.STOPPED) {
          //ReturnError = String("Race was not stopped, stop it first!");
@@ -158,9 +165,51 @@ boolean WebHandlerClass::DoAction(String action, String * ReturnError) {
       }
       else
       {
+         LightsController.InitiateStartSequence();
          RaceHandler.StartRace();
          return true;
       }
+   }
+   else if (action == "StopRace")
+   {
+      if (RaceHandler.RaceState == RaceHandler.STOPPED) {
+         //ReturnError = String("Race was not stopped, stop it first!");
+         return false;
+      }
+      else
+      {
+         RaceHandler.StopRace(micros());
+         LightsController.DeleteSchedules();
+         return true;
+      }
+   }
+}
+
+void WebHandlerClass::_SendRaceData(uint iRaceId)
+{
+   RaceData RequestedRaceData;
+   RequestedRaceData = RaceHandler.GetRaceData();
+
+   DynamicJsonBuffer JsonBuffer;
+   JsonObject& JsonRoot = JsonBuffer.createObject();
+   JsonObject& JsonRaceData = JsonRoot.createNestedObject("RaceData");
+   JsonRaceData["Id"] = RequestedRaceData.Id;
+   JsonRaceData["StartTime"] = RequestedRaceData.StartTime;
+   JsonRaceData["EndTime"] = RequestedRaceData.EndTime;
+   JsonRaceData["ElapsedTime"] = RequestedRaceData.ElapsedTime;
+   JsonRaceData["RaceState"] = RequestedRaceData.RaceState;
+   if (!JsonRaceData.success())
+   {
+      Debug.DebugSend(LOG_ERR, "Error parsing JSON!");
+      //wsSend_P(client->id(), PSTR("{\"message\": 3}"));
+      _ws->textAll("{\"error\": \"Error parsing JSON from RaceData!\"}");
+      return;
+   }
+   else
+   {
+      String JsonString;
+      JsonRoot.printTo(JsonString);
+      _ws->textAll(JsonString);
    }
 }
 
