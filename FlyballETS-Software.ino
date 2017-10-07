@@ -152,9 +152,9 @@ boolean bSerialStringComplete = false;
    
 //Wifi stuff
 //WiFiMulti wm;
-IPAddress IPGateway = IPAddress(192, 168, 20, 1);
-IPAddress IPNetwork = IPAddress(192, 168, 20, 0);
-IPAddress IPSubnet = IPAddress(255, 255, 255, 0);
+IPAddress IPGateway(192, 168, 20, 1);
+IPAddress IPNetwork(192, 168, 20, 0);
+IPAddress IPSubnet(255, 255, 255, 0);
 
 String strDeviceName = "FlyballETS";
 String strAppName = "FlyballETS";
@@ -222,12 +222,15 @@ void setup()
 
    //Setup AP
    WiFi.mode(WIFI_MODE_AP);
-   WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
    if (!WiFi.softAP("FlyballETS", "FlyballETS.1234"))
    {
-      Debug.DebugSend(LOG_ALERT, "Error initializing softAP!");
+      Debug.DebugSend(LOG_ALERT, "Error initializing softAP!\r\n");
    }
-   
+   else
+   {
+      Debug.DebugSend(LOG_INFO, "Wifi started successfully!\r\n");
+   }
+   WiFi.onEvent(WiFiEvent);
 
    //configure webserver
    WebHandler.init(80);
@@ -521,4 +524,19 @@ void ResetRace()
    lLastRCPress[1] = millis();
    LightsController.ResetLights();
    RaceHandler.ResetRace();
+}
+
+void WiFiEvent(WiFiEvent_t event) {
+   switch (event) {
+   case SYSTEM_EVENT_AP_START:
+      Serial.println("AP Started");
+      WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
+      break;
+   case SYSTEM_EVENT_AP_STOP:
+      Serial.println("AP Stopped");
+      break;
+
+   default:
+      break;
+   }
 }
