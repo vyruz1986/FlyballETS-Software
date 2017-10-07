@@ -221,14 +221,17 @@ void setup()
    //Setup AP
    WiFi.mode(WIFI_MODE_AP);
    WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
-   WiFi.softAP("FlyballETS", "FlyballETS.1234");
+   if (!WiFi.softAP("FlyballETS", "FlyballETS.1234"))
+   {
+      Debug.DebugSend(LOG_ALERT, "Error initializing softAP!");
+   }
    
 
    //configure webserver
    WebHandler.init(80);
 
    Serialprint("Ready!\r\n");
-   Debug.DebugSend(LOG_INFO, "Ready!\r\n");
+   Debug.DebugSend(LOG_INFO, "Ready on IP %s!\r\n", WiFi.softAPIP().toString().c_str());
 }
 
 void loop()
