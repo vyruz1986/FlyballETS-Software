@@ -31,6 +31,8 @@
 #include <LiquidCrystal.h>
 #include <WiFi.h>
 #include <WiFiMulti.h>
+#include <ESPmDNS.h>
+#include <ArduinoOTA.h>
 //#include <avr/pgmspace.h>
 
 /*List of pins and the ones used (Lolin32 board):
@@ -145,6 +147,15 @@ String strSerialData;
 byte bySerialIndex = 0;
 boolean bSerialStringComplete = false;
    
+//Wifi stuff
+//WiFiMulti wm;
+IPAddress IPGateway = IPAddress(192, 168, 20, 1);
+IPAddress IPNetwork = IPAddress(192, 168, 20, 0);
+IPAddress IPSubnet = IPAddress(255, 255, 255, 0);
+
+String strDeviceName = "FlyballETS";
+String strAppName = "FlyballETS";
+
 void setup()
 {
    
@@ -206,12 +217,50 @@ void setup()
    
    strSerialData[0] = 0;
 
+   //Setup AP
+   WiFi.mode(WIFI_MODE_AP);
+   WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
+   WiFi.softAP("FlyballETS", "FlyballETS.1234");
+   
    Serialprint("Ready!\r\n");
+
+   //Ota setup
+   ArduinoOTA.setPassword("FlyballETS.1234");
+   ArduinoOTA.setPort(3232);
+   ArduinoOTA.onStart([]() {
+      String type;
+      if (ArduinoOTA.getCommand() == U_FLASH)
+         type = "sketch";
+      else // U_SPIFFS
+         type = "filesystem";
+
+      // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
+      Serial.println("Start updating " + type);
+   });
+
+   ArduinoOTA.onEnd([]() {
+      Serial.println("\nEnd");
+   });
+   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+      Serial.printf("Progress: %u%%\r\n", (progress / (total / 100)));
+   });
+   ArduinoOTA.onError([](ota_error_t error) {
+      Serial.printf("Error[%u]: ", error);
+      if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+      else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+      else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+      else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+      else if (error == OTA_END_ERROR) Serial.println("End Failed");
+   });
+   ArduinoOTA.begin();
 
 }
 
 void loop()
 {
+   //Handle OTA update if incoming
+   ArduinoOTA.handle();
+
    //Handle lights main processing
    LightsController.Main();
 
