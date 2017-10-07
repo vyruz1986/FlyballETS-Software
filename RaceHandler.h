@@ -12,6 +12,7 @@
 class RaceHandlerClass
 {
    friend class SimulatorClass;
+   friend class WebHandlerClass;
  protected:
 
 

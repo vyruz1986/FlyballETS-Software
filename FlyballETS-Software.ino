@@ -21,6 +21,9 @@
 // 
 // You should have received a copy of the GNU General Public License along with this program.If not,
 // see <http://www.gnu.org/licenses/> 
+#include "Debug.h"
+#include <Syslog.h>
+#include "WebHandler.h"
 #include "config.h"
 #include "StreamPrint.h"
 #include "LCDController.h"
@@ -144,11 +147,20 @@ LiquidCrystal lcd2(iLCDRSPin, iLCDE2Pin, iLCDData4Pin, iLCDData5Pin, iLCDData6Pi
 String strSerialData;
 byte bySerialIndex = 0;
 boolean bSerialStringComplete = false;
-   
+
+//Wifi stuff
+//WiFiMulti wm;
+IPAddress IPGateway = IPAddress(192, 168, 20, 1);
+IPAddress IPNetwork = IPAddress(192, 168, 20, 0);
+IPAddress IPSubnet  = IPAddress(255, 255, 255, 0);
+
+String strDeviceName = "FlyballETS";
+String strAppName = "FlyballETS";
+
 void setup()
 {
-   
    Serial.begin(115200);
+   Debug.init("255.255.255.255", "FlyballETS", "FlyballETSApp");
    
    pinMode(iS1Pin, INPUT);
    pinMode(iS2Pin, INPUT);
@@ -206,8 +218,17 @@ void setup()
    
    strSerialData[0] = 0;
 
-   Serialprint("Ready!\r\n");
+   //Setup AP
+   WiFi.mode(WIFI_MODE_AP);
+   WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
+   WiFi.softAP("FlyballETS", "FlyballETS.1234");
+   
 
+   //configure webserver
+   WebHandler.init(80);
+
+   Serialprint("Ready!\r\n");
+   Debug.DebugSend(LOG_INFO, "Ready!\r\n");
 }
 
 void loop()
@@ -226,6 +247,10 @@ void loop()
    
    //Handle LCD processing
    LCDController.Main();
+
+   //Handle WebSocket server
+   WebHandler.loop();
+   
 #if Simulate
    //Run simulator
    Simulator.Main();
