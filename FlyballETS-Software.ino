@@ -29,45 +29,61 @@
 #include "BatterySensor.h"
 #include "global.h"
 #include <LiquidCrystal.h>
-#include <avr/pgmspace.h>
+#include <WiFi.h>
+#include <WiFiMulti.h>
+//#include <avr/pgmspace.h>
 
-/*List of pins and the ones used:
-   - D0: Reserved for RX
-   - D1: Reserved for TX
-   - D2: S1 (handler side) photoelectric sensor
-   - D3: S2 (box side) photoelectric sensor
-   - D4: LCD Data7
-   - D5: LCD Data6
-   - D6: LCD Data5
-   - D7: LCD Data4
-   - D8: WS2811B lights data pin / Lights 74HC595 clock pin
-   - D9: <free> / Lights 74HC595 data pin
-   - D10: LCD2 (line 3&4) enable pin
-   - D11: LCD1 (line 1&2) enable pin
-   - D12: LCD RS Pin
-   - D13: <free> / Lights 74HC595 latch pin
-   - A0: remote D5
-   - A1: remote D2
-   - A2: remote D1
-   - A3: remote D0
-   - A4: remote D3
-   - A5: remote D4
-   - A6: battery sensor pin
-   - A7: <free>
+/*List of pins and the ones used (Lolin32 board):
+   - 34: S1 (handler side) photoelectric sensor
+   - 33: S2 (box side) photoelectric sensor
+
+   - 27: LCD Data7
+   - 14: LCD Data6
+   - 26: LCD Data5
+   - 12: LCD Data4
+   -  2: LCD1 (line 1&2) enable pin
+   - 15: LCD2 (line 3&4) enable pin
+   - 25: LCD RS Pin
+
+   -  0: WS2811B lights data pin / Lights 74HC595 clock pin
+   - xx: <free> / Lights 74HC595 data pin
+   - xx: <free> / Lights 74HC595 latch pin
+
+   - 19: remote D0
+   - 23: remote D1
+   - 18: remote D2
+   - 17: remote D3
+   - 16: remote D4
+   -  4: remote D5
+
+   - 35: battery sensor pin
+
+   - 22: Side switch button
+
+   - 32: Laser trigger button
+   - 12: Laser output
+
+   -  1: free/TX
+   -  3: free/RX
+   -  5: free/LED/SS
+   - 21: free/SCA
+   - 36: free/VP
+   - 39: free/VN
 */
 
 //Set simulate to true to enable simulator class (see Simulator.cpp/h)
-#define Simulate false
+//#define Simulate true
 #if Simulate
    #include "Simulator.h"
 #endif
 
 #ifdef WS281x
-   #include <Adafruit_NeoPixel.h>
+   //#include <Adafruit_NeoPixel.h>
+   #include <NeoPixelBus.h>
 #endif // WS281x
 
-uint8_t iS1Pin = 2;
-uint8_t iS2Pin = 3;
+uint8_t iS1Pin = 34;
+uint8_t iS2Pin = 33;
 uint8_t iCurrentDog;
 uint8_t iCurrentRaceState;
 
@@ -77,36 +93,52 @@ char cElapsedRaceTime[8];
 char cTotalCrossingTime[8];
 
 //Battery variables
-int iBatterySensorPin = A6;
+int iBatterySensorPin = 35;
 uint16_t iBatteryVoltage = 0;
 
 //Initialise Lights stuff
 #ifdef WS281x
-   uint8_t iLightsDataPin = 8;
-   Adafruit_NeoPixel LightsStrip = Adafruit_NeoPixel(5, iLightsDataPin, NEO_RGB);
+   uint8_t iLightsDataPin = 0;
+   NeoPixelBus<NeoRgbFeature, Neo400KbpsMethod> LightsStrip(5, iLightsDataPin);
+
 #else
    uint8_t iLightsClockPin = 8;
    uint8_t iLightsDataPin = 9;
-   uint8_t iLightsLatchPin = 13;
+   uint8_t iLightsLatchPin = 21;
 #endif // WS281x
 
+//Other IO's
+uint8_t iLaserTriggerPin = 32;
+uint8_t iLaserOutputPin = 12;
+boolean bLaserState = false;
+
+uint8_t iSwitchSideTriggerPin = 22;
 
 
 //Set last serial output variable
 long lLastSerialOutput = 0;
 
 //remote control pins
-int iRC0Pin = A3;
-int iRC1Pin = A2;
-int iRC2Pin = A1;
-int iRC3Pin = A4;
-int iRC4Pin = A5;
-int iRC5Pin = A0;
+int iRC0Pin = 19;
+int iRC1Pin = 23;
+int iRC2Pin = 18;
+int iRC3Pin = 17;
+int iRC4Pin = 16;
+int iRC5Pin = 4;
 //Array to hold last time button presses
 unsigned long lLastRCPress[6] = {0, 0, 0, 0, 0, 0};
 
-LiquidCrystal lcd(12, 11, 7, 6, 5, 4);  //declare two LCD's, this will be line 1&2
-LiquidCrystal lcd2(12, 10, 7, 6, 5, 4); //This is the second, this will be line 3&4
+
+uint8_t iLCDData4Pin = 13;
+uint8_t iLCDData5Pin = 26;
+uint8_t iLCDData6Pin = 14;
+uint8_t iLCDData7Pin = 27;
+uint8_t iLCDE1Pin = 2;
+uint8_t iLCDE2Pin = 15;
+uint8_t iLCDRSPin = 25;
+
+LiquidCrystal lcd(iLCDRSPin, iLCDE1Pin, iLCDData4Pin, iLCDData5Pin, iLCDData6Pin, iLCDData7Pin);  //declare two LCD's, this will be line 1&2
+LiquidCrystal lcd2(iLCDRSPin, iLCDE2Pin, iLCDData4Pin, iLCDData5Pin, iLCDData6Pin, iLCDData7Pin);  //declare two LCD's, this will be line 1&2
 
 //String for serial comms storage
 String strSerialData;
@@ -115,25 +147,52 @@ boolean bSerialStringComplete = false;
    
 void setup()
 {
-   Serial.begin(57600);
-
+   
+   Serial.begin(115200);
+   
    pinMode(iS1Pin, INPUT);
    pinMode(iS2Pin, INPUT);
+   
+   //Set light data pin as output
+   pinMode(iLightsDataPin, OUTPUT);
+   
+   //initialize pins for remote control
+   pinMode(iRC0Pin, INPUT_PULLDOWN);
+   pinMode(iRC1Pin, INPUT_PULLDOWN);
+   pinMode(iRC2Pin, INPUT_PULLDOWN);
+   pinMode(iRC3Pin, INPUT_PULLDOWN);
+   pinMode(iRC4Pin, INPUT_PULLDOWN);
+   pinMode(iRC5Pin, INPUT_PULLDOWN);
+   
+   //LCD pins as output
+   pinMode(iLCDData4Pin, OUTPUT);
+   pinMode(iLCDData5Pin, OUTPUT);
+   pinMode(iLCDData6Pin, OUTPUT);
+   pinMode(iLCDData7Pin, OUTPUT);
+   pinMode(iLCDE1Pin, OUTPUT);
+   pinMode(iLCDE2Pin, OUTPUT);
+   pinMode(iLCDRSPin, OUTPUT);
+   
+
+   //Initialize other I/O's
+   pinMode(iLaserTriggerPin, INPUT_PULLUP);
+   pinMode(iLaserOutputPin, OUTPUT);
+   pinMode(iSwitchSideTriggerPin, INPUT_PULLUP);
 
    //Set ISR's with wrapper functions
-   attachInterrupt(1, Sensor2Wrapper, CHANGE);
-   attachInterrupt(0, Sensor1Wrapper, CHANGE);
+   attachInterrupt(digitalPinToInterrupt(iS2Pin), Sensor2Wrapper, CHANGE);
+   attachInterrupt(digitalPinToInterrupt(iS1Pin), Sensor1Wrapper, CHANGE);
 
    //Initialize BatterySensor class with correct pin
    BatterySensor.init(iBatterySensorPin);
-
+   
    //Initialize LightsController class with shift register pins
 #ifdef WS281x
    LightsController.init(&LightsStrip);
 #else
    LightsController.init(iLightsLatchPin, iLightsClockPin, iLightsDataPin);
 #endif
-
+   
    //Initialize RaceHandler class with S1 and S2 pins
    RaceHandler.init(iS1Pin, iS2Pin);
 
@@ -144,34 +203,29 @@ void setup()
    #if Simulate
       Simulator.init(iS1Pin, iS2Pin);
    #endif
-
-   //initialize pins for remote control
-   pinMode(iRC0Pin, INPUT);
-   pinMode(iRC1Pin, INPUT);
-   pinMode(iRC2Pin, INPUT);
-   pinMode(iRC3Pin, INPUT);
-   pinMode(iRC4Pin, INPUT);
-   pinMode(iRC5Pin, INPUT);
    
    strSerialData[0] = 0;
 
    Serialprint("Ready!\r\n");
+
 }
 
 void loop()
 {
-   //Handle Race main processing
-   RaceHandler.Main();
-   
    //Handle lights main processing
    LightsController.Main();
+
+   //Check for serial events
+   serialEvent();
+   
+   //Handle Race main processing
+   RaceHandler.Main();
    
    //Handle battery sensor main processing
    BatterySensor.CheckBatteryVoltage();
    
    //Handle LCD processing
    LCDController.Main();
-   
 #if Simulate
    //Run simulator
    Simulator.Main();
@@ -234,7 +288,7 @@ void loop()
       RaceHandler.SetDogFault(3);
    }
 
-   /*Update LCD Display fields*/
+   //Update LCD Display fields
    //Update team time to display
    dtostrf(RaceHandler.GetRaceTime(), 7, 3, cElapsedRaceTime);
    LCDController.UpdateField(LCDController.TeamTime, cElapsedRaceTime);
@@ -250,7 +304,7 @@ void loop()
 
    //Update race status to display
    LCDController.UpdateField(LCDController.RaceState, RaceHandler.GetRaceStateString());
-
+   
    //Handle individual dog info
    dtostrf(RaceHandler.GetDogTime(0), 7, 3, cDogTime);
    LCDController.UpdateField(LCDController.D1Time, cDogTime);
@@ -271,7 +325,7 @@ void loop()
    LCDController.UpdateField(LCDController.D4Time, cDogTime);
    LCDController.UpdateField(LCDController.D4CrossTime, RaceHandler.GetCrossingTime(3));
    LCDController.UpdateField(LCDController.D4RerunInfo, RaceHandler.GetRerunInfo(3));
-
+   
    if (iCurrentRaceState != RaceHandler.RaceState)
    {
       if (RaceHandler.RaceState == RaceHandler.STOPPED)
@@ -306,7 +360,6 @@ void loop()
       lLastSerialOutput = millis();
    }
    */
-
    //Cleanup variables used for checking if something changed
    iCurrentDog = RaceHandler.iCurrentDog;
    iCurrentRaceState = RaceHandler.RaceState;
@@ -325,16 +378,26 @@ void loop()
       strSerialData = "";
       bSerialStringComplete = false;
    }
+   
+   //Handle laser output
+   digitalWrite(iLaserOutputPin, !digitalRead(iLaserTriggerPin));
+
+   //Handle side switch button
+   if (digitalRead(iSwitchSideTriggerPin) == LOW)
+   {
+      Serial.printf("Switching sides!\r\n");
+   }
 }
 
 void serialEvent()
 {
    //Listen on serial port
-   Serial.flush();
+   Serial.flush(); //For some reason this causes Serial.available() to miss stuff on ESP32, should be investigated
+
    while (Serial.available() > 0)
    {
       char cInChar = Serial.read(); // Read a character
-	  //Check if buffer contains complete serial message, terminated by newline (\n)
+	   //Check if buffer contains complete serial message, terminated by newline (\n)
       if (cInChar == '\n')
       {
 		   //Serial message in buffer is complete, null terminate it and store it for further handling

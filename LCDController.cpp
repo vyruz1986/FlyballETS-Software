@@ -71,10 +71,7 @@ void LCDControllerClass::Main()
    //This is the main loop which handles LCD updates
    if ((millis() - _lLastLCDUpdate) > _iLCDUpdateInterval)
    {
-      //Remark: The for statement below is a range-for loop, this is new in C++11,
-      //which is not (yet) enabled by default in Arduino (as of Arduino IDE 1.6.1).
-      //See this link on how to enable C++11: http://stackoverflow.com/questions/16224746/how-to-use-c11-to-program-the-arduino
-      //If you do not enable C++11 than the statement below will fail to compile.
+
       for (const SLCDField& lcdField : _SlcdfieldFields)
       {
          _UpdateLCD(lcdField.iLine, lcdField.iStartingPosition, lcdField.strText, lcdField.iFieldLength);
@@ -120,7 +117,7 @@ void LCDControllerClass::_UpdateLCD(int iLine, int iPosition, String strText, in
       to a real display line (0-1) by substracting 1 again
    */
    iLine = iLine - 1;
-
+   
    //Check how long strMessage is:
    int iMessageLength = strText.length();
    if (iMessageLength > iFieldLength)
@@ -147,6 +144,7 @@ void LCDControllerClass::_UpdateLCD(int iLine, int iPosition, String strText, in
    }
    CActiveLCD->setCursor(iPosition, iLine);
    CActiveLCD->print(strText);
+   
 }
 
 /// <summary>

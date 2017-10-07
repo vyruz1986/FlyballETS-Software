@@ -24,7 +24,8 @@
 #endif
 #include "config.h"
 #ifdef WS281x
-#include <Adafruit_NeoPixel.h>
+//#include <Adafruit_NeoPixel.h>
+#include <NeoPixelBus.h>
 #endif // WS281x
 
 class LightsControllerClass
@@ -34,7 +35,7 @@ protected:
 public:
    
 #ifdef WS281x
-   void init(Adafruit_NeoPixel* LightsStrip);
+   void init(NeoPixelBus<NeoRgbFeature, Neo400KbpsMethod>* LightsStrip);
 #else
    void init(uint8_t iLatchPin, uint8_t iClockPin, uint8_t iDataPin);
 #endif
@@ -72,7 +73,8 @@ public:
 private:
 #ifdef WS281x
    //Neopixel object
-   Adafruit_NeoPixel* _LightsStrip;
+   //Adafruit_NeoPixel _LightsStrip;
+   NeoPixelBus<NeoRgbFeature, Neo400KbpsMethod>* _LightsStrip;
 #else
    //Pin connected to ST_CP of 74HC595
    uint8_t _iLatchPin = 12;
@@ -110,7 +112,8 @@ private:
 #ifdef WS281x
    struct SNeoPixelConfig
    {
-      uint32_t iColor;
+      //uint32_t iColor;
+      RgbColor iColor;
       uint8_t iPixelNumber;
    };
    SNeoPixelConfig _GetNeoPixelConfig(Lights byLight);
