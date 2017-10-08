@@ -2,14 +2,17 @@
   <div class="col-md-6 col-xs-12">
     <h4>Race Time</h4>
     <div class="teamTime">
-      00:00<span>.000</span> s
+      {{currentRace.elapsedTime | date: 'mm:ss'}}<span>.{{currentRace.elapsedTime % 1000}}</span> s
+    </div>
+    <div [ngClass]="{'label': true, 'label-success': currentRace.raceState == 0, 'label-warning': currentRace.raceState == 1, 'label-danger': currentRace.raceState == 2}">
+      {{currentRace.raceStateFriendly}}
     </div>
   </div>
   <div class="col-md-6 col-xs-12">
     <h4>Controls</h4>
-    <button type="button" class="btn btn-success" (click)="startRace()">Start</button>
-    <button type="button" class="btn btn-danger" (click)="stopRace()">Stop</button>
-    <button type="button" class="btn btn-info" (click)="resetRace()">Reset</button>
+    <button type="button" class="btn btn-success" (click)="startRace()" [disabled]="currentRace.raceState != 0">Start</button>
+    <button type="button" class="btn btn-danger" (click)="stopRace()" [disabled]="currentRace.raceState == 0">Stop</button>
+    <button type="button" class="btn btn-info" (click)="resetRace()" [disabled]="currentRace.raceState == 0">Reset</button>
   </div>
   <div class="col-md-6 col-xs-12">
     <h4>Dog details</h4>

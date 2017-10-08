@@ -1,6 +1,5 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { MdIconRegistry, MdIconModule } from '@angular/material';
 import { DomSanitizer } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
@@ -29,8 +28,7 @@ const appRoutes: Routes = [
   imports: [
      BrowserModule,
      BrowserAnimationsModule,
-     RouterModule.forRoot(appRoutes, { useHash: true }),
-     MdIconModule
+     RouterModule.forRoot(appRoutes, { useHash: true })
   ],
   providers: [RaceDataService],
   bootstrap: [AppComponent]

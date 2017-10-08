@@ -1,28 +1,42 @@
 import { Injectable } from '@angular/core';
 import { Observable, Subject } from 'rxjs/Rx';
 import { WebsocketService } from './websocket.service';
-import { WebsocketAction, WebsocketActionResult } from "../interfaces/websocketaction";
+import { WebsocketAction } from "../interfaces/websocketaction";
 
-const CHAT_URL = 'ws://echo.websocket.org/';
+const ETS_URL = 'ws://192.168.20.1/ws';
 
 
 @Injectable()
 export class RaceDataService {
 
-   public action: Subject<WebsocketAction>;
+   /*
+   public actions: Subject<WebsocketAction>;
 
    constructor(wsService: WebsocketService) {
-      this.action = <Subject<WebsocketAction>>wsService
-         .connect(CHAT_URL)
-         .map((result: MessageEvent): WebsocketAction => {
-            let data = JSON.parse(result.data);
+      this.actions = <Subject<WebsocketAction>>wsService
+         .connect(ETS_URL)
+         .map((response:MessageEvent): WebsocketAction => {
+            let data = JSON.parse(response.data);
             return {
+               action: data.action,
                response: {
                   success: data.success,
                   error: data.error
                }
             }
-         });
+         })
+   }
+   */
+
+   public dataStream: Subject<any>;
+
+   constructor(wsService: WebsocketService) {
+      this.dataStream = <Subject<any>>wsService
+         .connect(ETS_URL)
+         .map((response:any): any => {
+            let data = JSON.parse(response.data);
+            return data
+         })
    }
 
    raceData = {
@@ -38,8 +52,6 @@ export class RaceDataService {
    }
 
    sendAction(action:WebsocketAction) {
-
-      let data = JSON.stringify({ type: "action", actionType: action });
-      console.log(data);
+      this.dataStream.next(action);
    }
 }

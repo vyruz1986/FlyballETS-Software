@@ -1,9 +1,10 @@
 import { RaceState } from '../enums/race-enums.enum';
 
 export interface Race {
-   id: number,
-   startTime: Date,
-   endTime: Date,
+   id: Number,
+   startTime: Number,
+   endTime: Number,
    elapsedTime: Number,
-   raceState: RaceState
+   raceState: RaceState,
+   raceStateFriendly: String
 }
