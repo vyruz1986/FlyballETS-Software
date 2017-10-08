@@ -419,6 +419,7 @@ void loop()
    {
       //Serialprint("%lu: ping! voltage is: %.2u, this is %i%%\r\n", millis(), iBatteryVoltage, iBatteryPercentage);
       //Serialprint("%lu: Elapsed time: %s\r\n", millis(), cElapsedRaceTime);
+      //Serialprint("Free heap: %d\r\n", system_get_free_heap_size());
       /*
       if (RaceHandler.RaceState == RaceHandler.RUNNING)
       {

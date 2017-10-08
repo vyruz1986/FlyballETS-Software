@@ -407,7 +407,6 @@ void RaceHandlerClass::StopRace(unsigned long StopTime)
       //Race is running, so we have to record the EndTime
       _lRaceEndTime = StopTime;
       _lRaceTime = _lRaceEndTime - _lRaceStartTime;
-      _lRaceStartTime = 0;
    }
    _ChangeRaceState(STOPPED);
 
@@ -804,8 +803,8 @@ RaceData RaceHandlerClass::GetRaceData(uint iRaceId)
    {
       //We need to return data for the current dace
       RequestedRaceData.Id = _iCurrentRaceId;
-      RequestedRaceData.StartTime = _lRaceStartTime;
-      RequestedRaceData.EndTime = _lRaceEndTime;
+      RequestedRaceData.StartTime = _lRaceStartTime / 1000;
+      RequestedRaceData.EndTime = _lRaceEndTime / 1000;
       RequestedRaceData.ElapsedTime = _lRaceTime / 1000;
       RequestedRaceData.RaceState = RaceState;
    }

@@ -173,7 +173,7 @@ boolean WebHandlerClass::_DoAction(String action, String * ReturnError) {
    else if (action == "StopRace")
    {
       if (RaceHandler.RaceState == RaceHandler.STOPPED) {
-         //ReturnError = String("Race was not stopped, stop it first!");
+         //ReturnError = "Race was already stopped!";
          return false;
       }
       else
@@ -187,18 +187,10 @@ boolean WebHandlerClass::_DoAction(String action, String * ReturnError) {
 
 void WebHandlerClass::_SendRaceData(uint iRaceId)
 {
-   RaceData RequestedRaceData;
-   RequestedRaceData = RaceHandler.GetRaceData();
-
    DynamicJsonBuffer JsonBuffer;
    JsonObject& JsonRoot = JsonBuffer.createObject();
-   JsonObject& JsonRaceData = JsonRoot.createNestedObject("RaceData");
-   JsonRaceData["Id"] = RequestedRaceData.Id;
-   JsonRaceData["StartTime"] = RequestedRaceData.StartTime;
-   JsonRaceData["EndTime"] = RequestedRaceData.EndTime;
-   JsonRaceData["ElapsedTime"] = RequestedRaceData.ElapsedTime;
-   JsonRaceData["RaceState"] = RequestedRaceData.RaceState;
-   if (!JsonRaceData.success())
+   
+   if (!JsonRoot.success())
    {
       Debug.DebugSend(LOG_ERR, "Error parsing JSON!");
       //wsSend_P(client->id(), PSTR("{\"message\": 3}"));
@@ -207,8 +199,16 @@ void WebHandlerClass::_SendRaceData(uint iRaceId)
    }
    else
    {
+      JsonObject& JsonRaceData = JsonRoot.createNestedObject("RaceData");
+      RaceData RequestedRaceData = RaceHandler.GetRaceData();
+      JsonRaceData["Id"] = RequestedRaceData.Id;
+      JsonRaceData["StartTime"] = RequestedRaceData.StartTime;
+      JsonRaceData["EndTime"] = RequestedRaceData.EndTime;
+      JsonRaceData["ElapsedTime"] = RequestedRaceData.ElapsedTime;
+      JsonRaceData["RaceState"] = RequestedRaceData.RaceState;
       String JsonString;
       JsonRoot.printTo(JsonString);
+      //Serial.printf("json: %s\r\n", JsonString.c_str());
       _ws->textAll(JsonString);
    }
 }
