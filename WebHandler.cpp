@@ -163,6 +163,11 @@ boolean WebHandlerClass::_DoAction(String action, String * ReturnError) {
          //ReturnError = String("Race was not stopped, stop it first!");
          return false;
       }
+      else if (RaceHandler.GetRaceTime() != 0)
+      {
+         //ReturnError = "Race was not reset, reset race first!";
+         return false;
+      }
       else
       {
          LightsController.InitiateStartSequence();
@@ -217,15 +222,27 @@ void WebHandlerClass::_SendRaceData(uint iRaceId)
    else
    {
       JsonObject& JsonRaceData = JsonRoot.createNestedObject("RaceData");
-      RaceData RequestedRaceData = RaceHandler.GetRaceData();
+      stRaceData RequestedRaceData = RaceHandler.GetRaceData();
       JsonRaceData["Id"] = RequestedRaceData.Id;
       JsonRaceData["StartTime"] = RequestedRaceData.StartTime;
       JsonRaceData["EndTime"] = RequestedRaceData.EndTime;
       JsonRaceData["ElapsedTime"] = RequestedRaceData.ElapsedTime;
       JsonRaceData["RaceState"] = RequestedRaceData.RaceState;
+      
+      JsonArray& JsonDogDataArray = JsonRaceData.createNestedArray("DogData");
+      for (uint8_t i = 0; i < 4; i++)
+      {
+         JsonObject& JsonDogData = JsonDogDataArray.createNestedObject();
+         JsonDogData["DogNumber"]      = RequestedRaceData.DogData[i].DogNumber;
+         JsonDogData["Time"]           = RequestedRaceData.DogData[i].Time;
+         JsonDogData["CrossingTime"]   = RequestedRaceData.DogData[i].CrossingTime;
+         JsonDogData["Fault"]          = RequestedRaceData.DogData[i].Fault;
+         JsonDogData["Running"]        = RequestedRaceData.DogData[i].Running;
+      }
+      
       String JsonString;
       JsonRoot.printTo(JsonString);
-      Serial.printf("json: %s\r\n", JsonString.c_str());
+      //Serial.printf("json: %s\r\n", JsonString.c_str());
       _ws->textAll(JsonString);
    }
 }

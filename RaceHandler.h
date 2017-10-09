@@ -50,14 +50,16 @@ class RaceHandlerClass
 
    double GetRaceTime();
    double GetDogTime(uint8_t iDogNumber, int8_t iRunNumber = -1);
+   unsigned long GetDogTimeMillis(uint8_t iDogNumber, int8_t iRunNumber = -1);
    String GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber = -1);
+   unsigned long GetCrossingTimeMillis(uint8_t iDogNumber, int8_t iRunNumber = -1);
    String GetRerunInfo(uint8_t iDogNumber);
    double GetTotalCrossingTime();
 
    String GetRaceStateString();
 
-   RaceData GetRaceData();
-   RaceData GetRaceData(uint iRaceId);
+   stRaceData GetRaceData();
+   stRaceData GetRaceData(uint iRaceId);
 
 private:
    unsigned long _lRaceStartTime;
@@ -100,7 +102,7 @@ private:
    _byDogStates _byDogState;
    bool _bGatesClear = false;
 
-   RaceData _HistoricRaceData[NUM_HISTORIC_RACE_RECORDS];
+   stRaceData _HistoricRaceData[NUM_HISTORIC_RACE_RECORDS];
    uint _iCurrentRaceId;
 
    void _ChangeRaceState(RaceStates _byNewRaceState);

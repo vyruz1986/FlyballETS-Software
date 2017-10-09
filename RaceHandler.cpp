@@ -587,7 +587,11 @@ double RaceHandlerClass::GetRaceTime()
 /// </returns>
 double RaceHandlerClass::GetDogTime(uint8_t iDogNumber, int8_t iRunNumber)
 {
-   double dDogTimeSeconds = 0;
+   double dDogTimeMillis = GetDogTimeMillis(iDogNumber, iRunNumber) / 1000.0;
+}
+unsigned long RaceHandlerClass::GetDogTimeMillis(uint8_t iDogNumber, int8_t iRunNumber)
+{
+   unsigned long ulDogTimeMillis = 0;
    if (_iDogRunCounters[iDogNumber] > 0)
    {
       //We have multiple times for this dog.
@@ -624,21 +628,21 @@ double RaceHandlerClass::GetDogTime(uint8_t iDogNumber, int8_t iRunNumber)
    //First check if we have final time for the requested dog number
    if (_lDogTimes[iDogNumber][iRunNumber] > 0)
    {
-      dDogTimeSeconds = _lDogTimes[iDogNumber][iRunNumber] / 1000000.0;
+      ulDogTimeMillis = _lDogTimes[iDogNumber][iRunNumber] / 1000;
    }
    //Then check if the requested dog is perhaps running (and coming back) so we can return the time so far
    else if (RaceState == RUNNING && iCurrentDog == iDogNumber && _byDogState == COMINGBACK)
    {
-      dDogTimeSeconds = (micros() - _lDogEnterTimes[iDogNumber]) / 1000000.0;
+      ulDogTimeMillis = (micros() - _lDogEnterTimes[iDogNumber]) / 1000;
    }
 
    //Fixes issue 7 (https://github.com/vyruz1986/FlyballETS-Software/issues/7)
    //Only deduct crossing time if it is positive
    if (_lCrossingTimes[iDogNumber][iRunNumber] > 0)
    {
-      dDogTimeSeconds -= (_lCrossingTimes[iDogNumber][iRunNumber] / 1000000.0);
+      ulDogTimeMillis -= (_lCrossingTimes[iDogNumber][iRunNumber] / 1000);
    }
-   return dDogTimeSeconds;
+   return ulDogTimeMillis;
 }
 
 /// <summary>
@@ -659,8 +663,24 @@ String RaceHandlerClass::GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber)
    double dCrossingTime = 0;
    char cCrossingTime[8];
    String strCrossingTime;
+   dCrossingTime = GetCrossingTimeMillis(iDogNumber, iRunNumber) / 1000.0;
+   if (dCrossingTime < 0)
+   {
+      dCrossingTime = fabs(dCrossingTime);
+      strCrossingTime = "-";
+   }
+   else
+   {
+      strCrossingTime = "+";
+   }
+   dtostrf(dCrossingTime, 7, 3, cCrossingTime);
+   strCrossingTime += cCrossingTime;
 
-   
+   return strCrossingTime;
+}
+unsigned long RaceHandlerClass::GetCrossingTimeMillis(uint8_t iDogNumber, int8_t iRunNumber)
+{
+   unsigned long ulCrossingTime = 0;
    if (_iDogRunCounters[iDogNumber] > 0)
    {
       //We have multiple times for this dog.
@@ -694,20 +714,9 @@ String RaceHandlerClass::GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber)
       iRunNumber = 0;
    }
 
-   dCrossingTime = _lCrossingTimes[iDogNumber][iRunNumber] / 1000000.0;
-   if (dCrossingTime < 0)
-   {
-      dCrossingTime = fabs(dCrossingTime);
-      strCrossingTime = "-";
-   }
-   else
-   {
-      strCrossingTime = "+";
-   }
-   dtostrf(dCrossingTime, 7, 3, cCrossingTime);
-   strCrossingTime += cCrossingTime;
+   ulCrossingTime = _lCrossingTimes[iDogNumber][iRunNumber] / 1000;
    
-   return strCrossingTime;
+   return ulCrossingTime;
 }
 
 /// <summary>
@@ -789,14 +798,14 @@ String RaceHandlerClass::GetRaceStateString()
    return strRaceState;
 }
 
-RaceData RaceHandlerClass::GetRaceData()
+stRaceData RaceHandlerClass::GetRaceData()
 {
    return GetRaceData(_iCurrentRaceId);
 }
 
-RaceData RaceHandlerClass::GetRaceData(uint iRaceId)
+stRaceData RaceHandlerClass::GetRaceData(uint iRaceId)
 {
-   RaceData RequestedRaceData;
+   stRaceData RequestedRaceData;
    
    if (iRaceId == _iCurrentRaceId)
    {
@@ -806,6 +815,17 @@ RaceData RaceHandlerClass::GetRaceData(uint iRaceId)
       RequestedRaceData.EndTime = _lRaceEndTime / 1000;
       RequestedRaceData.ElapsedTime = _lRaceTime / 1000;
       RequestedRaceData.RaceState = RaceState;
+      
+      //Get Dog info
+      for (uint8_t i = 0; i < 4; i++)
+      {
+         RequestedRaceData.DogData[i].DogNumber = i;
+         //TODO: Multiple runs should be supported somehow
+         RequestedRaceData.DogData[i].Time = GetDogTimeMillis(i, -2);
+         RequestedRaceData.DogData[i].CrossingTime = GetCrossingTimeMillis(i, -2);
+         RequestedRaceData.DogData[i].Fault = _bDogFaults[i];
+         RequestedRaceData.DogData[i].Running = (iCurrentDog == i);
+      }
    }
    else {
       RequestedRaceData = _HistoricRaceData[iRaceId];
