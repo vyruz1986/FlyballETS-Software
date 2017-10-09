@@ -3,9 +3,9 @@
     <h4>Race Time</h4>
     <div class="teamTime">
       {{currentRace.elapsedTime | date: 'mm:ss'}}<span>.{{currentRace.elapsedTime % 1000}}</span> s
-    </div>
-    <div [ngClass]="{'label': true, 'label-success': currentRace.raceState == 0, 'label-warning': currentRace.raceState == 1, 'label-danger': currentRace.raceState == 2}">
-      {{currentRace.raceStateFriendly}}
+      <span [ngClass]="{'label': true, 'label-success': currentRace.raceState == 0, 'label-warning': currentRace.raceState == 1, 'label-danger': currentRace.raceState == 2}">
+          {{currentRace.raceStateFriendly}}
+        </span>
     </div>
   </div>
   <div class="col-md-6 col-xs-12">
