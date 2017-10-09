@@ -208,7 +208,7 @@ void WebHandlerClass::_SendRaceData(uint iRaceId)
       JsonRaceData["RaceState"] = RequestedRaceData.RaceState;
       String JsonString;
       JsonRoot.printTo(JsonString);
-      //Serial.printf("json: %s\r\n", JsonString.c_str());
+      Serial.printf("json: %s\r\n", JsonString.c_str());
       _ws->textAll(JsonString);
    }
 }

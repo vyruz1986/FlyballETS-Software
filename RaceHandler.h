@@ -100,7 +100,7 @@ private:
    _byDogStates _byDogState;
    bool _bGatesClear = false;
 
-   RaceData _HistoricRaceData[];
+   RaceData _HistoricRaceData[NUM_HISTORIC_RACE_RECORDS];
    uint _iCurrentRaceId;
 
    void _ChangeRaceState(RaceStates _byNewRaceState);

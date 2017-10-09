@@ -34,10 +34,9 @@ void RaceHandlerClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
    _iS1Pin = iS1Pin;
    _iS2Pin = iS2Pin;
 
-   _iCurrentRaceId = 0;
-
    ResetRace();
 
+   _iCurrentRaceId = 0;
 }
 
 /// <summary>
@@ -809,7 +808,7 @@ RaceData RaceHandlerClass::GetRaceData(uint iRaceId)
       RequestedRaceData.RaceState = RaceState;
    }
    else {
-      RequestedRaceData = _HistoricRaceData[_iCurrentRaceId];
+      RequestedRaceData = _HistoricRaceData[iRaceId];
    }
    return RequestedRaceData;
 }
