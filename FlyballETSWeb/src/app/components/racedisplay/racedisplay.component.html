@@ -10,9 +10,9 @@
   </div>
   <div class="col-md-6 col-xs-12">
     <h4>Controls</h4>
-    <button type="button" class="btn btn-success" (click)="startRace()" [disabled]="currentRace.raceState != 0">Start</button>
-    <button type="button" class="btn btn-danger" (click)="stopRace()" [disabled]="currentRace.raceState == 0">Stop</button>
-    <button type="button" class="btn btn-info" (click)="resetRace()" [disabled]="currentRace.raceState == 0">Reset</button>
+    <button type="button" class="btn btn-success" (click)="startRace()" [disabled]="startDisabled">Start</button>
+    <button type="button" class="btn btn-danger" (click)="stopRace()" [disabled]="stopDisabled">Stop</button>
+    <button type="button" class="btn btn-info" (click)="resetRace()" [disabled]="resetDisabled">Reset</button>
   </div>
   <div class="col-md-6 col-xs-12">
     <h4>Dog details</h4>

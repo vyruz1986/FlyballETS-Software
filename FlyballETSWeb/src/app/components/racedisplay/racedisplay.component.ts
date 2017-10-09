@@ -74,5 +74,8 @@ export class RacedisplayComponent implements OnInit {
         this.currentRace.raceStateFriendly = "Running";
         break;
     }
+    this.startDisabled = !(this.currentRace.raceState == 0 && this.currentRace.startTime == 0);
+    this.stopDisabled = (this.currentRace.raceState == 0);
+    this.resetDisabled = !(this.currentRace.raceState == 0 && this.currentRace.startTime != 0);
   }
 }
