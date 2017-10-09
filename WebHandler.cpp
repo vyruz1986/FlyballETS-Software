@@ -183,6 +183,23 @@ boolean WebHandlerClass::_DoAction(String action, String * ReturnError) {
          return true;
       }
    }
+   else if (action == "ResetRace")
+   {
+      if (RaceHandler.RaceState != RaceHandler.STOPPED) {
+         //ReturnError = "Race was not stopped, first stop it before resetting!";
+         return false;
+      }
+      else if (RaceHandler._lRaceStartTime == 0) {
+         //ReturnError = "Race was already reset!";
+         return false;
+      }
+      else
+      {
+         LightsController.ResetLights();
+         RaceHandler.ResetRace();
+         return true;
+      }
+   }
 }
 
 void WebHandlerClass::_SendRaceData(uint iRaceId)
