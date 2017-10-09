@@ -19,8 +19,18 @@ export class RacedisplayComponent implements OnInit {
     endTime: 0,
     elapsedTime: 0,
     raceState: 0,
-    raceStateFriendly: "Stopped"
+    raceStateFriendly: "Stopped",
+    dogTimes: [
+      {dogNumber: 0,  time: 0, crossingTime: 0, fault: false, running: false},
+      {dogNumber: 0,  time: 0, crossingTime: 0, fault: false, running: false},
+      {dogNumber: 0,  time: 0, crossingTime: 0, fault: false, running: false},
+      {dogNumber: 0,  time: 0, crossingTime: 0, fault: false, running: false}
+    ]
   };
+
+  startDisabled: boolean;
+  stopDisabled: boolean;
+  resetDisabled: boolean;
 
   constructor(private raceDataService:RaceDataService) {
     raceDataService.dataStream.subscribe(
@@ -57,12 +67,27 @@ export class RacedisplayComponent implements OnInit {
   }
   resetRace() {
     console.log('resetting race');
+    let StopAction:WebsocketAction = {
+      action: "ResetRace"
+     };
+    this.raceDataService.sendAction(StopAction);
   }
 
   HandleCurrentRaceData(raceData) {
     console.log("Received current race data!");
     this.currentRace.elapsedTime = raceData.ElapsedTime;
     this.currentRace.raceState = raceData.RaceState;
+    this.currentRace.startTime = raceData.StartTime;
+    this.currentRace.endTime = raceData.EndTime;
+    this.currentRace.dogTimes = raceData.DogData;
+    for (let i in raceData.DogData) {
+      this.currentRace.dogTimes[i].dogNumber = raceData.DogData[i].DogNumber;
+      this.currentRace.dogTimes[i].time = raceData.DogData[i].Time;
+      this.currentRace.dogTimes[i].crossingTime = raceData.DogData[i].CrossingTime;
+      this.currentRace.dogTimes[i].fault = raceData.DogData[i].Fault;
+      this.currentRace.dogTimes[i].running = raceData.DogData[i].Running;
+    }
+
     switch(raceData.RaceState) {
       case 0:
         this.currentRace.raceStateFriendly = "Stopped";
