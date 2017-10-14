@@ -2,7 +2,7 @@
   <div class="col-md-6 col-xs-12">
     <h4>Race Time</h4>
     <div class="teamTime">
-      {{currentRace.elapsedTime | date: 'mm:ss'}}<span>.{{currentRace.elapsedTime % 1000}}</span> s
+      {{currentRace.elapsedTime | date: 'mm:ss.SSS'}} s
       <span [ngClass]="{'label': true, 'label-success': currentRace.raceState == 0, 'label-warning': currentRace.raceState == 1, 'label-danger': currentRace.raceState == 2}">
           {{currentRace.raceStateFriendly}}
         </span>
@@ -18,7 +18,7 @@
     <h4>Dog details</h4>
       <ul class="list-group">
         <li *ngFor="let dog of currentRace.dogTimes" [ngClass]="{'list-group-item': true, 'active': dog.running}">
-          Dog {{dog.dogNumber + 1}}: {{dog.time | date: 's'}}.{{dog.time % 1000}} + {{dog.crossingTime | date: 's'}}.{{dog.crossingTime % 1000}}
+          Dog {{dog.dogNumber + 1}}: {{dog.time | date: 's.SSS'}} + {{dog.crossingTime | date: 's.SSS'}}
            | Fault <input type="checkbox" value="" [checked]="dog.fault">
         </li>
       </ul>
