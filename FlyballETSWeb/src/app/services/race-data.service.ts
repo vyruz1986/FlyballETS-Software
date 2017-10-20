@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable, Subject } from 'rxjs/Rx';
 import { WebsocketService } from './websocket.service';
 import { WebsocketAction } from "../interfaces/websocketaction";
+import 'rxjs/add/operator/retryWhen';
 
 const ETS_URL = 'ws://192.168.20.1/ws';
 
@@ -37,18 +38,7 @@ export class RaceDataService {
             let data = JSON.parse(response.data);
             return data
          })
-   }
-
-   raceData = {
-      "id": 1,
-      "startTime": "Mon Sep 25 2017 19:27:01 GMT+0200 (Romance Daylight Time)",
-      "endTime": "Mon Sep 25 2017 19:27:28 GMT+0200 (Romance Daylight Time)",
-      "elapsedTime": 27845,
-      "raceState": 1
-   };
-
-   getRaceData() {
-      return this.raceData;
+         .retry()
    }
 
    sendAction(action:WebsocketAction) {
