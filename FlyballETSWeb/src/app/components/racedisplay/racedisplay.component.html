@@ -1,4 +1,8 @@
-<div class="container">
+<div *ngIf="!isConnected && !sessionEnded" class="container">
+    <ngx-loading [show]="!isConnected && !sessionEnded" [config]="{ backdropBorderRadius: '14px' }"></ngx-loading>
+    <div class="alert alert-danger text-center" role="alert">Connecting to FlyballETS, please wait...</div>
+</div>
+<div class="container" *ngIf="isConnected && !sessionEnded">
   <div class="col-md-6 col-xs-12">
     <h4>Race Time</h4>
     <div class="teamTime">
@@ -19,8 +23,14 @@
       <ul class="list-group">
         <li *ngFor="let dog of currentRace.dogTimes" [ngClass]="{'list-group-item': true, 'active': dog.running}">
           Dog {{dog.dogNumber + 1}}: {{dog.time | date: 's.SSS'}} + {{dog.crossingTime | date: 's.SSS'}}
-           | Fault <input type="checkbox" value="" [checked]="dog.fault">
+            | Fault <input type="checkbox" value="" [checked]="dog.fault">
         </li>
       </ul>
   </div>
+</div>
+<div *ngIf="!isConnected && sessionEnded" class="container">
+    <div class="alert alert-success text-center" role="alert">
+      Session ended.<br>
+      <button type="button" class="btn btn-success" (click)="reconnect()" >Reconnect</button>
+    </div>
 </div>

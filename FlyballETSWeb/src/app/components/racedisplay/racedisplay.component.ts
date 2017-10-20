@@ -33,6 +33,7 @@ export class RacedisplayComponent implements OnInit {
   resetDisabled: boolean;
 
   isConnected: boolean;
+  sessionEnded: boolean;
 
   constructor(private raceDataService:RaceDataService) {
     raceDataService.dataStream.subscribe(
@@ -42,15 +43,20 @@ export class RacedisplayComponent implements OnInit {
         if(msg.RaceData) {
           this.HandleCurrentRaceData(msg.RaceData);
         }
-      }/*,
-      err => {console.log(err)},
-      () => {console.log("complete")}*/
+      },
+      err => {
+        this.isConnected = false;
+      },
+      () => {
+        this.sessionEnded = true;
+      }
     )
   }
 
   ngOnInit() {
      //this.currentRace = this.raceDataService.getRaceData();
      this.isConnected = false;
+     this.sessionEnded = true;
   }
 
   startRace() {
@@ -105,5 +111,10 @@ export class RacedisplayComponent implements OnInit {
     this.startDisabled = !(this.currentRace.raceState == 0 && this.currentRace.startTime == 0);
     this.stopDisabled = (this.currentRace.raceState == 0);
     this.resetDisabled = !(this.currentRace.raceState == 0 && this.currentRace.startTime != 0);
+  }
+
+  reconnect() {
+    this.isConnected = false;
+    this.sessionEnded = false;
   }
 }
