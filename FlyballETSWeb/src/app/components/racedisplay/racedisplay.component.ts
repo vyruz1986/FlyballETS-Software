@@ -54,7 +54,6 @@ export class RacedisplayComponent implements OnInit {
   }
 
   ngOnInit() {
-     //this.currentRace = this.raceDataService.getRaceData();
      this.isConnected = false;
      this.sessionEnded = true;
   }

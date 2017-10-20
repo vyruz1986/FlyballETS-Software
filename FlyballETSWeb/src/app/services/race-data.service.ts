@@ -38,7 +38,7 @@ export class RaceDataService {
             let data = JSON.parse(response.data);
             return data
          })
-         .retry()
+         .retry(3)
    }
 
    sendAction(action:WebsocketAction) {
