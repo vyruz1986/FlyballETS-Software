@@ -36,26 +36,13 @@ export class RacedisplayComponent implements OnInit {
   sessionEnded: boolean;
 
   constructor(private raceDataService:RaceDataService) {
-    raceDataService.dataStream.subscribe(
-      msg => {
-        console.log("Response from websocket: ");
-        console.log(msg);
-        if(msg.RaceData) {
-          this.HandleCurrentRaceData(msg.RaceData);
-        }
-      },
-      err => {
-        this.isConnected = false;
-      },
-      () => {
-        this.sessionEnded = true;
-      }
-    )
+    this.raceDataService = raceDataService;
+    this.initiateConnection();
   }
 
   ngOnInit() {
      this.isConnected = false;
-     this.sessionEnded = true;
+     this.sessionEnded = false;
   }
 
   startRace() {
@@ -113,7 +100,31 @@ export class RacedisplayComponent implements OnInit {
   }
 
   reconnect() {
+    this.initiateConnection();
+  }
+
+  initiateConnection() {
     this.isConnected = false;
     this.sessionEnded = false;
+    this.raceDataService.dataStream.subscribe(
+      msg => {
+        this.isConnected = true;
+        console.log("Response from websocket: ");
+        console.log(msg);
+        if(msg.RaceData) {
+          this.HandleCurrentRaceData(msg.RaceData);
+        }
+      },
+      err => {
+        console.log("ws error: ");
+        console.log(err);
+        this.isConnected = false;
+        this.initiateConnection();  //Retry connection since this was unexpected
+      },
+      () => {
+        console.log("ws closed");
+        this.sessionEnded = true; 
+      }
+    )
   }
 }

@@ -28,7 +28,7 @@ export class RaceDataService {
          })
    }
    */
-
+   /*
    public dataStream: Subject<any>;
 
    constructor(wsService: WebsocketService) {
@@ -40,8 +40,12 @@ export class RaceDataService {
          })
          .retry(3)
    }
-
+*/
+   public dataStream;
+   constructor() {
+      this.dataStream = Observable.webSocket(ETS_URL);
+   }
    sendAction(action:WebsocketAction) {
-      this.dataStream.next(action);
+      this.dataStream.next(JSON.stringify(action));
    }
 }
