@@ -4,7 +4,7 @@ import { WebsocketService } from './websocket.service';
 import { WebsocketAction } from "../interfaces/websocketaction";
 import 'rxjs/add/operator/retryWhen';
 
-const ETS_URL = 'ws://192.168.20.1/ws';
+const ETS_URL = 'ws://' + window.location.host + '/ws';
 
 
 @Injectable()
