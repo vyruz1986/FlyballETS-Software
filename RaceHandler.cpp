@@ -358,7 +358,10 @@ void RaceHandlerClass::Main()
    //Update racetime
    if (RaceState == RUNNING)
    {
-      _lRaceTime = micros() - _lRaceStartTime;
+      if (micros() > _lRaceStartTime)
+      {
+         _lRaceTime = micros() - _lRaceStartTime;
+      }
    }
 
    //Check for faults, loop through array of dogs checking for faults
