@@ -590,7 +590,11 @@ double RaceHandlerClass::GetRaceTime()
 /// </returns>
 double RaceHandlerClass::GetDogTime(uint8_t iDogNumber, int8_t iRunNumber)
 {
-   double dDogTimeMillis = GetDogTimeMillis(iDogNumber, iRunNumber) / 1000.0;
+   double dDogTime;
+   unsigned long ulDogTimeMillis= GetDogTimeMillis(iDogNumber, iRunNumber);
+   dDogTime = ulDogTimeMillis / 1000.0;
+
+   return dDogTime;
 }
 unsigned long RaceHandlerClass::GetDogTimeMillis(uint8_t iDogNumber, int8_t iRunNumber)
 {
