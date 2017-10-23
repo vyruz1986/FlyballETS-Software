@@ -78,7 +78,7 @@
 */
 
 //Set simulate to true to enable simulator class (see Simulator.cpp/h)
-#define Simulate true
+#define Simulate false
 #if Simulate
    #include "Simulator.h"
 #endif
