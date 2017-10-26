@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 
 import { Race } from '../../interfaces/race';
-import { RaceDataService } from '../../services/race-data.service';
 import { WebsocketService } from '../../services/websocket.service';
 import { WebsocketAction } from '../../interfaces/websocketaction';
 
@@ -9,7 +8,7 @@ import { WebsocketAction } from '../../interfaces/websocketaction';
   selector: 'app-racedisplay',
   templateUrl: './racedisplay.component.html',
   styleUrls: ['./racedisplay.component.css'],
-  providers: [WebsocketService, RaceDataService]
+  providers: [WebsocketService, WebsocketService]
 })
 export class RacedisplayComponent implements OnInit {
 
@@ -35,7 +34,7 @@ export class RacedisplayComponent implements OnInit {
   isConnected: boolean;
   sessionEnded: boolean;
 
-  constructor(private raceDataService:RaceDataService) {
+  constructor(private raceDataService:WebsocketService) {
     this.raceDataService = raceDataService;
     this.initiateConnection();
   }
@@ -69,7 +68,7 @@ export class RacedisplayComponent implements OnInit {
   }
 
   HandleCurrentRaceData(raceData) {
-    console.log("Received current race data!");
+    //console.log("Received current race data!");
     this.currentRace.elapsedTime = raceData.ElapsedTime;
     this.currentRace.raceState = raceData.RaceState;
     this.currentRace.startTime = raceData.StartTime;
@@ -104,20 +103,21 @@ export class RacedisplayComponent implements OnInit {
   }
 
   initiateConnection() {
+    console.log("Attempting WS connection!");
     this.isConnected = false;
     this.sessionEnded = false;
     this.raceDataService.dataStream.subscribe(
       msg => {
         this.isConnected = true;
-        console.log("Response from websocket: ");
-        console.log(msg);
+        //console.log("Response from websocket: ");
+        //console.log(msg);
         if(msg.RaceData) {
           this.HandleCurrentRaceData(msg.RaceData);
         }
       },
       err => {
-        console.log("ws error: ");
-        console.log(err);
+        //console.log("ws error: ");
+        //console.log(err);
         this.isConnected = false;
         this.initiateConnection();  //Retry connection since this was unexpected
       },

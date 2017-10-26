@@ -7,17 +7,19 @@ import { HttpModule } from '@angular/http';
 import { FormsModule } from '@angular/forms';
 import { LoadingModule, ANIMATION_TYPES } from 'ngx-loading';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-
 import { AppComponent } from './app.component';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { HomeComponent } from './components/home/home.component';
 import { RacedisplayComponent } from './components/racedisplay/racedisplay.component';
+import { ConfigComponent } from './components/config/config.component';
 
-import { RaceDataService } from './services/race-data.service';
+import { WebsocketService } from './services/websocket.service';
+
 
 const appRoutes: Routes = [
    { path: '', component: HomeComponent },
-   { path: 'racedisplay', component: RacedisplayComponent }
+   { path: 'racedisplay', component: RacedisplayComponent },
+   { path: 'config', component: ConfigComponent }
 ];
 
 @NgModule({
@@ -25,10 +27,12 @@ const appRoutes: Routes = [
     AppComponent,
     NavbarComponent,
     HomeComponent,
-    RacedisplayComponent
+    RacedisplayComponent,
+    ConfigComponent
   ],
   imports: [
      BrowserModule,
+     FormsModule,
      BrowserAnimationsModule,
      RouterModule.forRoot(appRoutes, { useHash: true }),
      LoadingModule.forRoot({
@@ -37,7 +41,7 @@ const appRoutes: Routes = [
       }),
       NgbModule.forRoot()
   ],
-  providers: [RaceDataService],
+  providers: [WebsocketService],
   bootstrap: [AppComponent]
 })
 export class AppModule { } 
