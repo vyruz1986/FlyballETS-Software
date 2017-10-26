@@ -10,12 +10,16 @@
 #include <SPIFFS.h>
 #include <ArduinoJson.h>
 #include "Debug.h"
+#include "SettingsManager.h"
+#include <rom/rtc.h>
 
 void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t * data, size_t len)
 {
    if (type == WS_EVT_CONNECT) {
       Serial.printf("ws[%s][%u] connect\n", server->url(), client->id());
       //client->printf("Hello Client %u :)", client->id());
+      _SendRaceData();  //Make sure we always broadcast racedata when new client connects
+      //TODO: Would be nicer if we only send this the specific client who just connected instead of all clients
       client->ping();
    }
    else if (type == WS_EVT_DISCONNECT) {
@@ -89,20 +93,37 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
          client->text("{\"error\":\"Invalid JSON received\"}");
          return;
       }
+      DynamicJsonBuffer jsonBufferResponse;
+      JsonObject& JsonResponseRoot = jsonBufferResponse.createObject();
 
       if (request.containsKey("action")) {
-         DynamicJsonBuffer jsonBufferResponse;
-         JsonObject& JsonRoot = jsonBufferResponse.createObject();
-         JsonObject& ActionResult = JsonRoot.createNestedObject("ActionResult");
+         JsonObject& ActionResult = JsonResponseRoot.createNestedObject("ActionResult");
          String errorText;
          bool result = _DoAction(request["action"], &errorText);
          ActionResult["success"] = result;
          ActionResult["error"] = errorText;
-
-         String jsonResponse;
-         JsonRoot.printTo(jsonResponse);
-         client->text(jsonResponse);
       }
+
+      if (request.containsKey("config")) {
+         JsonObject& ConfigResult = JsonResponseRoot.createNestedObject("configResult");
+         String errorText;
+         JsonArray& config = request["config"];
+         bool result = _ProcessConfig(config, &errorText);
+         ConfigResult["success"] = result;
+         ConfigResult["error"] = errorText;
+      }
+
+      if (request.containsKey("getData")) {
+         String dataName = request["getData"];
+         JsonObject& DataResult = JsonResponseRoot.createNestedObject("dataResult");
+         JsonObject& DataObject = DataResult.createNestedObject(dataName + "Data");
+         bool result = _GetData(dataName, DataObject);
+         DataResult["success"] = result;
+      }
+
+      String strJsonResponse;
+      JsonResponseRoot.printTo(strJsonResponse);
+      client->text(strJsonResponse);
    }
 }
 
@@ -132,14 +153,31 @@ void WebHandlerClass::init(int webPort)
 
    _lLastRaceDataBroadcast = 0;
    _lRaceDataBroadcastInterval = 500;
+
+   _lLastSystemDataBroadcast = 0;
+   _lSystemDataBroadcastInterval = 2000;
+
+   _SystemData.CPU0ResetReason = rtc_get_reset_reason(0);
+   _SystemData.CPU1ResetReason = rtc_get_reset_reason(1);
 }
 
 void WebHandlerClass::loop()
 {
-   if (millis() - _lLastRaceDataBroadcast > _lRaceDataBroadcastInterval)
+   //When race is starting or running, or time > 0 (stopped but not reset)
+   if ((RaceHandler.RaceState != RaceHandler.STOPPED || RaceHandler.GetRaceTime() > 0))
    {
-      _SendRaceData();
-      _lLastRaceDataBroadcast = millis();
+      //Send race data each 200ms
+      if (millis() - _lLastRaceDataBroadcast > _lRaceDataBroadcastInterval)
+      {
+         _SendRaceData();
+         _lLastRaceDataBroadcast = millis();
+      }
+   }
+   if (millis() - _lLastSystemDataBroadcast > _lSystemDataBroadcastInterval)
+   {
+      _GetSystemData();
+      _SendSystemData();
+      _lLastSystemDataBroadcast = millis();
    }
 }
 
@@ -246,6 +284,78 @@ void WebHandlerClass::_SendRaceData(uint iRaceId)
       _ws->textAll(JsonString);
    }
 }
+
+boolean WebHandlerClass::_ProcessConfig(JsonArray& newConfig, String * ReturnError)
+{
+   bool save = false;
+   bool changed = false;
+
+   String strAPName;
+   String strAPPass;
+
+   for (unsigned int i = 0; i < newConfig.size(); i++)
+   {
+      String key = newConfig[i]["name"];
+      String value = newConfig[i]["value"];
+
+      if (value != SettingsManager.getSetting(key))
+      {
+         Debug.DebugSend(LOG_DEBUG, "[WEBHANDLER] Storing %s = %s\r\n", key.c_str(), value.c_str());
+         SettingsManager.setSetting(key, value);
+         save = changed = true;
+      }
+      
+   }
+
+   if (save)
+   {
+      SettingsManager.saveSettings();
+   }
+
+   return true;
+}
+
+boolean WebHandlerClass::_GetData(String dataType, JsonObject& Data)
+{
+   if (dataType == "config")
+   {
+      Data["APName"] = SettingsManager.getSetting("APName");
+      Data["APPass"] = SettingsManager.getSetting("APPass");
+   }
+   else
+   {
+      Data["error"] = "Unknown datatype (" + dataType + ") requested!";
+      return false;
+   }
+
+   return true;
+}
+
+stSystemData WebHandlerClass::_GetSystemData()
+{
+   _SystemData.FreeHeap = esp_get_free_heap_size();
+   _SystemData.Uptime = millis();
+   _SystemData.NumClients = _ws->count();
+}
+
+void WebHandlerClass::_SendSystemData()
+{
+   DynamicJsonBuffer JsonBuffer;
+   JsonObject& JsonRoot = JsonBuffer.createObject();
+
+   JsonObject& JsonSystemData = JsonRoot.createNestedObject("SystemData");
+   JsonSystemData["Uptime"]            = _SystemData.Uptime;
+   JsonSystemData["FreeHeap"]          = _SystemData.FreeHeap;
+   JsonSystemData["CPU0ResetReason"]   = (int)_SystemData.CPU0ResetReason;
+   JsonSystemData["CPU1ResetReason"]   = (int)_SystemData.CPU1ResetReason;
+   JsonSystemData["NumClients"]        = _SystemData.NumClients;
+
+   String JsonString;
+   JsonRoot.printTo(JsonString);
+   //Serial.printf("json: %s\r\n", JsonString.c_str());
+   _ws->textAll(JsonString);
+}
+
 
 
 WebHandlerClass WebHandler;

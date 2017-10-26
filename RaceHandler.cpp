@@ -20,6 +20,7 @@
 #include "LightsController.h"
 #include "RaceHandler.h"
 #include "global.h"
+#include "WebHandler.h"
 
 /// <summary>
 ///   Initialises this object andsets all counters to 0.
@@ -486,6 +487,9 @@ void RaceHandlerClass::ResetRace()
    {
       _iCurrentRaceId++;
    }
+
+   //Send updated racedata to any web clients
+   WebHandler._SendRaceData();
 }
 
 /// <summary>

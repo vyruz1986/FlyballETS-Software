@@ -15,3 +15,4 @@
 
 
 #define WS281x //Comment out this line if you want to use the v1 setup which used a 74HC595 shift register to control lights
+#define EEPROM_SIZE 4096 // EEPROM size in bytes

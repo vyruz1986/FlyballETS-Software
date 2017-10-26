@@ -21,6 +21,7 @@
 // 
 // You should have received a copy of the GNU General Public License along with this program.If not,
 // see <http://www.gnu.org/licenses/> 
+#include "SettingsManager.h"
 #include "Debug.h"
 #include "Structs.h"
 #include <Syslog.h>
@@ -37,6 +38,7 @@
 #include <WiFiMulti.h>
 #include <ESPmDNS.h>
 #include <ArduinoOTA.h>
+#include <EEPROM.h>
 //#include <avr/pgmspace.h>
 
 /*List of pins and the ones used (Lolin32 board):
@@ -162,7 +164,9 @@ String strAppName = "FlyballETS";
 
 void setup()
 {
+   EEPROM.begin(EEPROM_SIZE);
    Serial.begin(115200);
+   SettingsManager.init();
    Debug.init("255.255.255.255", "FlyballETS", "FlyballETSApp");
    
    pinMode(iS1Pin, INPUT);
@@ -207,34 +211,36 @@ void setup()
 #else
    LightsController.init(iLightsLatchPin, iLightsClockPin, iLightsDataPin);
 #endif
-   
-   //Initialize RaceHandler class with S1 and S2 pins
-   RaceHandler.init(iS1Pin, iS2Pin);
 
    //Initialize LCDController class with lcd1 and lcd2 objects
    LCDController.init(&lcd, &lcd2);
-
-   //Initialize simulatorclass pins if applicable
-   #if Simulate
-      Simulator.init(iS1Pin, iS2Pin);
-   #endif
    
    strSerialData[0] = 0;
 
    //Setup AP
    WiFi.mode(WIFI_MODE_AP);
-   if (!WiFi.softAP("FlyballETS", "FlyballETS.1234"))
+   String strAPName = SettingsManager.getSetting("APName", "FlyballETS");
+   String strAPPass = SettingsManager.getSetting("APPass", "FlyballETS.1234");
+   if (!WiFi.softAP(strAPName.c_str(), strAPPass.c_str()))
    {
       Debug.DebugSend(LOG_ALERT, "Error initializing softAP!\r\n");
    }
    else
    {
-      Debug.DebugSend(LOG_INFO, "Wifi started successfully!\r\n");
+      Debug.DebugSend(LOG_INFO, "Wifi started successfully, AP name: %s!\r\n", strAPName.c_str());
    }
    WiFi.onEvent(WiFiEvent);
 
    //configure webserver
    WebHandler.init(80);
+
+   //Initialize RaceHandler class with S1 and S2 pins
+   RaceHandler.init(iS1Pin, iS2Pin);
+
+   //Initialize simulatorclass pins if applicable
+#if Simulate
+   Simulator.init(iS1Pin, iS2Pin);
+#endif
 
    Serialprint("Ready!\r\n");
    Debug.DebugSend(LOG_INFO, "Ready on IP %s!\r\n", WiFi.softAPIP().toString().c_str());
@@ -293,6 +299,9 @@ void loop()
 
    //Handle WebSocket server
    WebHandler.loop();
+
+   //Handle settings manager loop
+   SettingsManager.loop();
    
 #if Simulate
    //Run simulator
