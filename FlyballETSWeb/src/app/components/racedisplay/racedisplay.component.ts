@@ -19,7 +19,7 @@ export class RacedisplayComponent implements OnInit {
     elapsedTime: 0,
     raceState: 0,
     raceStateFriendly: "Stopped",
-    dogTimes: [
+    dogData: [
       {dogNumber: 0,  time: 0, crossingTime: 0, fault: false, running: false},
       {dogNumber: 0,  time: 0, crossingTime: 0, fault: false, running: false},
       {dogNumber: 0,  time: 0, crossingTime: 0, fault: false, running: false},
@@ -34,8 +34,9 @@ export class RacedisplayComponent implements OnInit {
   isConnected: boolean;
   sessionEnded: boolean;
 
-  constructor(private raceDataService:WebsocketService) {
-    this.raceDataService = raceDataService;
+  raceDataService = new WebsocketService('ws://' + window.location.host + '/ws');
+
+  constructor() {
     this.initiateConnection();
   }
 
@@ -67,22 +68,10 @@ export class RacedisplayComponent implements OnInit {
     this.raceDataService.sendAction(StopAction);
   }
 
-  HandleCurrentRaceData(raceData) {
-    //console.log("Received current race data!");
-    this.currentRace.elapsedTime = raceData.ElapsedTime;
-    this.currentRace.raceState = raceData.RaceState;
-    this.currentRace.startTime = raceData.StartTime;
-    this.currentRace.endTime = raceData.EndTime;
-    this.currentRace.dogTimes = raceData.DogData;
-    for (let i in raceData.DogData) {
-      this.currentRace.dogTimes[i].dogNumber = raceData.DogData[i].DogNumber;
-      this.currentRace.dogTimes[i].time = raceData.DogData[i].Time;
-      this.currentRace.dogTimes[i].crossingTime = raceData.DogData[i].CrossingTime;
-      this.currentRace.dogTimes[i].fault = raceData.DogData[i].Fault;
-      this.currentRace.dogTimes[i].running = raceData.DogData[i].Running;
-    }
-
-    switch(raceData.RaceState) {
+  HandleCurrentRaceData(raceData:Race) {
+    this.currentRace =  raceData;
+    
+    switch(this.currentRace.raceState) {
       case 0:
         this.currentRace.raceStateFriendly = "Stopped";
         break;
@@ -112,7 +101,7 @@ export class RacedisplayComponent implements OnInit {
         //console.log("Response from websocket: ");
         //console.log(msg);
         if(msg.RaceData) {
-          this.HandleCurrentRaceData(msg.RaceData);
+          this.HandleCurrentRaceData(<Race>msg.RaceData);
         }
       },
       err => {

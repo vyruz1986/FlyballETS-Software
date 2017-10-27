@@ -5,14 +5,11 @@ import 'rxjs/add/operator/retryWhen';
 import { WebsocketDataRequest } from '../interfaces/websocket-data-request';
 import { ConfigArray } from '../interfaces/config-array';
 
-const ETS_URL = 'ws://' + window.location.host + '/ws';
-
-
 @Injectable()
 export class WebsocketService {
    public dataStream;
-   constructor() {
-      this.dataStream = Observable.webSocket(ETS_URL);
+   constructor(wsUrl:string) {
+      this.dataStream = Observable.webSocket(wsUrl);
    }
    sendAction(action:WebsocketAction) {
       this.dataStream.next(JSON.stringify(action));

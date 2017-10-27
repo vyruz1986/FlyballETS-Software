@@ -7,5 +7,5 @@ export interface Race {
    elapsedTime: Number,
    raceState: RaceState,
    raceStateFriendly: String,
-   dogTimes: Array<{dogNumber: Number, time: Number, crossingTime: Number, fault: boolean, running: boolean}>
+   dogData: Array<{dogNumber: Number, time: Number, crossingTime: Number, fault: boolean, running: boolean}>
 }

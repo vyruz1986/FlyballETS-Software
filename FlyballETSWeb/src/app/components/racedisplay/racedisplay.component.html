@@ -22,7 +22,7 @@
       <div class="col-xs-12 col-md-6">
         <h4>Dog details</h4>
           <ul class="list-group">
-            <li *ngFor="let dog of currentRace.dogTimes" [ngClass]="{'list-group-item': true, 'active': dog.running}">
+            <li *ngFor="let dog of currentRace.dogData" [ngClass]="{'list-group-item': true, 'active': dog.running}">
               Dog {{dog.dogNumber + 1}}: {{dog.time | date: 's.SSS'}} + {{dog.crossingTime | date: 's.SSS'}}
                 | Fault <input type="checkbox" value="" [checked]="dog.fault">
             </li>

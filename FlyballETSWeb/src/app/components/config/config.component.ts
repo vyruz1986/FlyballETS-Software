@@ -4,7 +4,6 @@ import { WebsocketDataRequest } from '../../interfaces/websocket-data-request';
 import { ConfigArray } from '../../interfaces/config-array';
 import { ConfigData } from '../../class/config-data';
 
-
 @Component({
   selector: 'app-config',
   templateUrl: './config.component.html',
@@ -16,10 +15,11 @@ export class ConfigComponent implements OnInit {
   sessionEnded: boolean;
   submitted: boolean;
 
-  configData = new ConfigData("","");
+  configData = new ConfigData("","","");
 
-  constructor(private configDataService:WebsocketService) {
-    this.configDataService = configDataService;
+  configDataService = new WebsocketService('ws://' + window.location.host + '/wsa');
+
+  constructor() {
     this.initiateConnection();
   }
 
@@ -28,6 +28,7 @@ export class ConfigComponent implements OnInit {
      this.sessionEnded = false;
      this.submitted = false;
      this.requestConfigData();
+     this.configDataService
   }
 
   handleConfigData(newConfigData) {
@@ -53,7 +54,9 @@ export class ConfigComponent implements OnInit {
     let newConfigArray:ConfigArray = {
       config: [
         {name: "APName", value: this.configData.APName},
-        {name: "APPass", value: this.configData.APPass}
+        {name: "APPass", value: this.configData.APPass},
+        {name: "AdminPass", value: this.configData.AdminPass},
+        {name: "UserPass", value: this.configData.UserPass}
       ]
     };
     console.log(newConfigArray);

@@ -1,42 +1,57 @@
 <div style="position: relative;">
-  <ngx-loading [show]="!isConnected && !sessionEnded" [config]="{ backdropBorderRadius: '14px' }"></ngx-loading>
-  <div class="container" *ngIf="!sessionEnded">
-    <div class="row">
-      <div class="col-lg-12">
-        <div class="alert alert-danger text-center" *ngIf="!isConnected && !sessionEnded" role="alert">Connecting to FlyballETS, please wait...</div>
+    <ngx-loading [show]="!isConnected && !sessionEnded" [config]="{ backdropBorderRadius: '14px' }"></ngx-loading>
+    <div class="container" *ngIf="!sessionEnded">
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="alert alert-danger text-center" *ngIf="!isConnected && !sessionEnded" role="alert">Connecting to FlyballETS, please wait...</div>
+        </div>
+      </div>
+      <div class="row">
+        <form (ngSubmit)="onSubmit()" #configForm="ngForm">
+          <ngx-loading [show]="submitted" [config]="{ backdropBorderRadius: '14px' }"></ngx-loading>
+          <div class="form-group">
+            <label for="APName">Access point name</label>
+            <input type="text" class="form-control" id="APName"
+            required
+            [(ngModel)]="configData.APName" name="APName"
+            #APName="ngModel">
+            <div [hidden]="APName.valid || APName.pristine" class="alert alert-danger">
+              Name is required!
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="APPass">Access point password</label>
+            <input type="password" class="form-control" id="APPass"
+            required
+            [(ngModel)]="configData.APPass" name="APPass"
+            #APPass="ngModel">
+            <div [hidden]="APPass.valid || APPass.pristine" class="alert alert-danger">
+                AP Password is required!
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="AdminPass">Admin password</label>
+            <input type="password" class="form-control" id="AdminPass"
+            required
+            [(ngModel)]="configData.AdminPass" name="AdminPass"
+            #AdminPass="ngModel">
+            <div [hidden]="AdminPass.valid || AdminPass.pristine" class="alert alert-danger">
+                AP Password is required!
+            </div>
+          </div>
+          <div class="form-group">
+              <label for="UserPass">User password</label>
+              <input type="password" class="form-control" id="UserPass"
+              [(ngModel)]="configData.UserPass" name="UserPass">
+            </div>
+          <button type="submit" class="btn btn-success" [disabled]="!configForm.form.valid">Submit</button>
+        </form>
       </div>
     </div>
-    <div class="row">
-      <form (ngSubmit)="onSubmit()" #configForm="ngForm">
-        <ngx-loading [show]="submitted" [config]="{ backdropBorderRadius: '14px' }"></ngx-loading>
-        <div class="form-group">
-          <label for="APName">Access point name</label>
-          <input type="text" class="form-control" id="APName"
-          required
-          [(ngModel)]="configData.APName" name="APName"
-          #APName="ngModel">
-          <div [hidden]="APName.valid || APName.pristine" class="alert alert-danger">
-            Name is required
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="APPass">Access point password</label>
-          <input type="text" class="form-control" id="APPass"
-          required
-          [(ngModel)]="configData.APPass" name="APPass"
-          #APPass="ngModel">
-          <div [hidden]="APPass.valid || APPass.pristine" class="alert alert-danger">
-              Name is required
-          </div>
-        </div>
-        <button type="submit" class="btn btn-success" [disabled]="!configForm.form.valid">Submit</button>
-      </form>
+  </div>  
+  <div *ngIf="!isConnected && sessionEnded" class="container">
+    <div class="alert alert-success text-center" role="alert">
+      Session ended.<br>
+      <button type="button" class="btn btn-success" (click)="reconnect()" >Reconnect</button>
     </div>
   </div>
-</div>  
-<div *ngIf="!isConnected && sessionEnded" class="container">
-  <div class="alert alert-success text-center" role="alert">
-    Session ended.<br>
-    <button type="button" class="btn btn-success" (click)="reconnect()" >Reconnect</button>
-  </div>
-</div>
