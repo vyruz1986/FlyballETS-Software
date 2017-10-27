@@ -83,6 +83,10 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
             }
          }
       }
+
+      //FIXME: The next line works but introduces an unnecessary String. The 2nd line does not work, I don't know why...
+      boolean isAdmin = String("/wsa").equals(server->url());
+      //boolean isAdmin = (server->url() == "/wsa");
       
       // Parse JSON input
       DynamicJsonBuffer jsonBufferRequest;
@@ -108,7 +112,17 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
          JsonObject& ConfigResult = JsonResponseRoot.createNestedObject("configResult");
          String errorText;
          JsonArray& config = request["config"];
-         bool result = _ProcessConfig(config, &errorText);
+         //We allow setting config only over admin websocket
+         bool result;
+         if (isAdmin)
+         {
+            result = _ProcessConfig(config, &errorText);
+         }
+         else
+         {
+            result = false;
+            errorText = "Unsupported message on this socket!";
+         }
          ConfigResult["success"] = result;
          ConfigResult["error"] = errorText;
       }
@@ -117,7 +131,16 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
          String dataName = request["getData"];
          JsonObject& DataResult = JsonResponseRoot.createNestedObject("dataResult");
          JsonObject& DataObject = DataResult.createNestedObject(dataName + "Data");
-         bool result = _GetData(dataName, DataObject);
+         bool result;
+         if (dataName == "config" && !isAdmin)
+         {
+            result = false;
+            DataResult["error"] = "You can't get this datatype on this socket!";
+         }
+         else
+         {
+            result = _GetData(dataName, DataObject);
+         }
          DataResult["success"] = result;
       }
 
@@ -131,7 +154,24 @@ void WebHandlerClass::init(int webPort)
 {
    _server = new AsyncWebServer(webPort);
    _ws = new AsyncWebSocket("/ws");
+   _wsa = new AsyncWebSocket("/wsa");
+   Serial.printf("Setting pass: %s\r\n", SettingsManager.getSetting("AdminPass").c_str());
+   _wsa->setAuthentication("admin", SettingsManager.getSetting("AdminPass").c_str());
+   //_wsa->setAuthentication("admin", "pass");
+   String strUserPass = SettingsManager.getSetting("UserPass", "");
+   if (strUserPass.length() > 0)
+   {
+      _ws->setAuthentication("user", strUserPass.c_str());
+   }
    _ws->onEvent(std::bind(&WebHandlerClass::_WsEvent, this
+      , std::placeholders::_1
+      , std::placeholders::_2
+      , std::placeholders::_3
+      , std::placeholders::_4
+      , std::placeholders::_5
+      , std::placeholders::_6));
+   
+   _wsa->onEvent(std::bind(&WebHandlerClass::_WsEvent, this
       , std::placeholders::_1
       , std::placeholders::_2
       , std::placeholders::_3
@@ -140,6 +180,7 @@ void WebHandlerClass::init(int webPort)
       , std::placeholders::_6));
 
    _server->addHandler(_ws);
+   _server->addHandler(_wsa);
 
    _server->onNotFound([](AsyncWebServerRequest *request) {
       Serial.printf("Not found: %s!\r\n", request->url().c_str());
@@ -179,20 +220,6 @@ void WebHandlerClass::loop()
       _SendSystemData();
       _lLastSystemDataBroadcast = millis();
    }
-}
-
-void WebHandlerClass::_wsSend_P(PGM_P payload) {
-   if (_ws->count() > 0) {
-      char buffer[strlen_P(payload)];
-      strcpy_P(buffer, payload);
-      _ws->textAll(buffer);
-   }
-}
-
-void WebHandlerClass::_wsSend_P(uint32_t client_id, PGM_P payload) {
-   char buffer[strlen_P(payload)];
-   strcpy_P(buffer, payload);
-   _ws->text(client_id, buffer);
 }
 
 boolean WebHandlerClass::_DoAction(String action, String * ReturnError) {
@@ -261,21 +288,21 @@ void WebHandlerClass::_SendRaceData(uint iRaceId)
    {
       JsonObject& JsonRaceData = JsonRoot.createNestedObject("RaceData");
       stRaceData RequestedRaceData = RaceHandler.GetRaceData();
-      JsonRaceData["Id"] = RequestedRaceData.Id;
-      JsonRaceData["StartTime"] = RequestedRaceData.StartTime;
-      JsonRaceData["EndTime"] = RequestedRaceData.EndTime;
-      JsonRaceData["ElapsedTime"] = RequestedRaceData.ElapsedTime;
-      JsonRaceData["RaceState"] = RequestedRaceData.RaceState;
+      JsonRaceData["id"] = RequestedRaceData.Id;
+      JsonRaceData["startTime"] = RequestedRaceData.StartTime;
+      JsonRaceData["endTime"] = RequestedRaceData.EndTime;
+      JsonRaceData["elapsedTime"] = RequestedRaceData.ElapsedTime;
+      JsonRaceData["raceState"] = RequestedRaceData.RaceState;
       
-      JsonArray& JsonDogDataArray = JsonRaceData.createNestedArray("DogData");
+      JsonArray& JsonDogDataArray = JsonRaceData.createNestedArray("dogData");
       for (uint8_t i = 0; i < 4; i++)
       {
          JsonObject& JsonDogData = JsonDogDataArray.createNestedObject();
-         JsonDogData["DogNumber"]      = RequestedRaceData.DogData[i].DogNumber;
-         JsonDogData["Time"]           = RequestedRaceData.DogData[i].Time;
-         JsonDogData["CrossingTime"]   = RequestedRaceData.DogData[i].CrossingTime;
-         JsonDogData["Fault"]          = RequestedRaceData.DogData[i].Fault;
-         JsonDogData["Running"]        = RequestedRaceData.DogData[i].Running;
+         JsonDogData["dogNumber"]      = RequestedRaceData.DogData[i].DogNumber;
+         JsonDogData["time"]           = RequestedRaceData.DogData[i].Time;
+         JsonDogData["crossingTime"]   = RequestedRaceData.DogData[i].CrossingTime;
+         JsonDogData["fault"]          = RequestedRaceData.DogData[i].Fault;
+         JsonDogData["running"]        = RequestedRaceData.DogData[i].Running;
       }
       
       String JsonString;
@@ -289,9 +316,6 @@ boolean WebHandlerClass::_ProcessConfig(JsonArray& newConfig, String * ReturnErr
 {
    bool save = false;
    bool changed = false;
-
-   String strAPName;
-   String strAPPass;
 
    for (unsigned int i = 0; i < newConfig.size(); i++)
    {
@@ -321,6 +345,8 @@ boolean WebHandlerClass::_GetData(String dataType, JsonObject& Data)
    {
       Data["APName"] = SettingsManager.getSetting("APName");
       Data["APPass"] = SettingsManager.getSetting("APPass");
+      Data["UserPass"] = SettingsManager.getSetting("UserPass");
+      Data["AdminPass"] = SettingsManager.getSetting("AdminPass");
    }
    else
    {
@@ -329,7 +355,7 @@ boolean WebHandlerClass::_GetData(String dataType, JsonObject& Data)
    }
 
    return true;
-}
+}  
 
 stSystemData WebHandlerClass::_GetSystemData()
 {

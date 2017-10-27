@@ -25,6 +25,8 @@ public:
    bool setSetting(const String& key, String value);
 
    void saveSettings();
+   bool hasSetting(const String & key);
+   void setDefaultSettings();
 };
 
 extern SettingsManagerClass SettingsManager;

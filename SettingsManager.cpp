@@ -26,6 +26,8 @@ void SettingsManagerClass::init()
       [](size_t pos, char value) { EEPROM.write(pos, value); },
       []() {}
    );
+
+   setDefaultSettings();
 }
 
 String SettingsManagerClass::getSetting(const String& key, String defaultValue)
@@ -49,6 +51,29 @@ bool SettingsManagerClass::setSetting(const String& key, String value)
 void SettingsManagerClass::saveSettings()
 {
    _settings_save = true;
+}
+
+bool SettingsManagerClass::hasSetting(const String& key)
+{
+   return getSetting(key).length() != 0;
+}
+
+void SettingsManagerClass::setDefaultSettings()
+{
+   if (!hasSetting("AdminPass")) {
+      setSetting("AdminPass", "FlyballETS.1234");
+      saveSettings();
+   }
+
+   if (!hasSetting("APName")) {
+      setSetting("APName", "FlyballETS");
+      saveSettings();
+   }
+
+   if (!hasSetting("APPass")) {
+      setSetting("APPass", "FlyballETS.1234");
+      saveSettings();
+   }
 }
 
 SettingsManagerClass SettingsManager;

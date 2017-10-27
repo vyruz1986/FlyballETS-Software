@@ -159,9 +159,6 @@ IPAddress IPGateway(192, 168, 20, 1);
 IPAddress IPNetwork(192, 168, 20, 0);
 IPAddress IPSubnet(255, 255, 255, 0);
 
-String strDeviceName = "FlyballETS";
-String strAppName = "FlyballETS";
-
 void setup()
 {
    EEPROM.begin(EEPROM_SIZE);
@@ -219,8 +216,8 @@ void setup()
 
    //Setup AP
    WiFi.mode(WIFI_MODE_AP);
-   String strAPName = SettingsManager.getSetting("APName", "FlyballETS");
-   String strAPPass = SettingsManager.getSetting("APPass", "FlyballETS.1234");
+   String strAPName = SettingsManager.getSetting("APName");
+   String strAPPass = SettingsManager.getSetting("APPass");
    if (!WiFi.softAP(strAPName.c_str(), strAPPass.c_str()))
    {
       Debug.DebugSend(LOG_ALERT, "Error initializing softAP!\r\n");
