@@ -14,9 +14,11 @@
         <h4>Race Time</h4>
         <div class="teamTime">
           {{currentRace.elapsedTime | date: 'mm:ss.SSS'}} s
-          <span [ngClass]="{'label': true, 'label-success': currentRace.raceState == 0, 'label-warning': currentRace.raceState == 1, 'label-danger': currentRace.raceState == 2}">
-              {{currentRace.raceStateFriendly}}
-            </span>
+        </div>
+        <div class="raceState">
+          <span [ngClass]="{'badge': true, 'badge-success': currentRace.raceState == 0, 'badge-warning': currentRace.raceState == 1, 'badge-danger': currentRace.raceState == 2}">
+            {{currentRace.raceStateFriendly}}
+          </span>
         </div>
       </div>
       <div class="col-xs-12 col-md-6">
