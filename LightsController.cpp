@@ -33,7 +33,7 @@
 /// <param name="iClockPin">  Zero-based index of the clock pin. </param>
 /// <param name="iDataPin">   Zero-based index of the data pin. </param>
 #ifdef WS281x
-void LightsControllerClass::init(NeoPixelBus<NeoRgbFeature, Neo400KbpsMethod>* LightsStrip)
+void LightsControllerClass::init(NeoPixelBus<NeoRgbFeature, NeoWs2813Method>* LightsStrip)
 #else
 void LightsControllerClass::init(uint8_t iLatchPin, uint8_t iClockPin, uint8_t iDataPin)
 #endif // WS281x
@@ -41,7 +41,7 @@ void LightsControllerClass::init(uint8_t iLatchPin, uint8_t iClockPin, uint8_t i
 #ifdef WS281x
    //pinMode(iLightsPin, OUTPUT);
    _LightsStrip = LightsStrip;
-   //_LightsStrip = NeoPixelBus<NeoRgbFeature, Neo800KbpsMethod>(5, iLightsPin);
+   //_LightsStrip = NeoPixelBus<NeoRgbFeature, NeoWs2813Method>(5, iLightsPin);
    //_LightsStrip = Adafruit_NeoPixel(5, iLightsPin, NEO_RGB + NEO_KHZ800);
    _LightsStrip->Begin();
    //_LightsStrip->SetBrightness(255);
@@ -230,7 +230,7 @@ void LightsControllerClass::ToggleLightState(Lights byLight, LightStates byLight
 
    if (byLightState == OFF)
    {
-      LightConfig.iColor = RgbColor(0,0,0);
+      LightConfig.iColor = RgbColor(0);
    }
    _LightsStrip->SetPixelColor(LightConfig.iPixelNumber, LightConfig.iColor);
 #else

@@ -35,7 +35,7 @@ protected:
 public:
    
 #ifdef WS281x
-   void init(NeoPixelBus<NeoRgbFeature, Neo400KbpsMethod>* LightsStrip);
+   void init(NeoPixelBus<NeoRgbFeature, NeoWs2813Method>* LightsStrip);
 #else
    void init(uint8_t iLatchPin, uint8_t iClockPin, uint8_t iDataPin);
 #endif
@@ -74,7 +74,7 @@ private:
 #ifdef WS281x
    //Neopixel object
    //Adafruit_NeoPixel _LightsStrip;
-   NeoPixelBus<NeoRgbFeature, Neo400KbpsMethod>* _LightsStrip;
+   NeoPixelBus<NeoRgbFeature, NeoWs2813Method>* _LightsStrip;
 #else
    //Pin connected to ST_CP of 74HC595
    uint8_t _iLatchPin = 12;
