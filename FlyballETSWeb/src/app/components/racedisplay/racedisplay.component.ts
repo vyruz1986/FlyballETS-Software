@@ -8,7 +8,7 @@ import { WebsocketAction } from '../../interfaces/websocketaction';
   selector: 'app-racedisplay',
   templateUrl: './racedisplay.component.html',
   styleUrls: ['./racedisplay.component.css'],
-  providers: [WebsocketService, WebsocketService]
+  providers: [WebsocketService]
 })
 export class RacedisplayComponent implements OnInit {
 

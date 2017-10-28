@@ -7,7 +7,8 @@ import { ConfigData } from '../../class/config-data';
 @Component({
   selector: 'app-config',
   templateUrl: './config.component.html',
-  styleUrls: ['./config.component.css']
+  styleUrls: ['./config.component.css'],
+  providers: [WebsocketService]
 })
 export class ConfigComponent implements OnInit {
 
