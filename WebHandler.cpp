@@ -299,8 +299,13 @@ void WebHandlerClass::_SendRaceData(uint iRaceId)
       {
          JsonObject& JsonDogData = JsonDogDataArray.createNestedObject();
          JsonDogData["dogNumber"]      = RequestedRaceData.DogData[i].DogNumber;
-         JsonDogData["time"]           = RequestedRaceData.DogData[i].Time;
-         JsonDogData["crossingTime"]   = RequestedRaceData.DogData[i].CrossingTime;
+         JsonArray& JsonDogDataTimingArray = JsonDogData.createNestedArray("timing");
+         for (uint8_t i2 = 0; i2 < 4; i2++)
+         {
+            JsonObject& DogTiming = JsonDogDataTimingArray.createNestedObject();
+            DogTiming["time"] = RequestedRaceData.DogData[i].Timing[i2].Time;
+            DogTiming["crossingTime"] = RequestedRaceData.DogData[i].Timing[i2].CrossingTime;
+         }
          JsonDogData["fault"]          = RequestedRaceData.DogData[i].Fault;
          JsonDogData["running"]        = RequestedRaceData.DogData[i].Running;
       }
@@ -370,11 +375,11 @@ void WebHandlerClass::_SendSystemData()
    JsonObject& JsonRoot = JsonBuffer.createObject();
 
    JsonObject& JsonSystemData = JsonRoot.createNestedObject("SystemData");
-   JsonSystemData["Uptime"]            = _SystemData.Uptime;
-   JsonSystemData["FreeHeap"]          = _SystemData.FreeHeap;
+   JsonSystemData["uptime"]            = _SystemData.Uptime;
+   JsonSystemData["freeHeap"]          = _SystemData.FreeHeap;
    JsonSystemData["CPU0ResetReason"]   = (int)_SystemData.CPU0ResetReason;
    JsonSystemData["CPU1ResetReason"]   = (int)_SystemData.CPU1ResetReason;
-   JsonSystemData["NumClients"]        = _SystemData.NumClients;
+   JsonSystemData["numClients"]        = _SystemData.NumClients;
 
    String JsonString;
    JsonRoot.printTo(JsonString);

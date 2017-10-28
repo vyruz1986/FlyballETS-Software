@@ -1,12 +1,17 @@
 #pragma once
 #include <rom/rtc.h>
 
+struct stDogTimeData
+{
+   unsigned long Time;
+   long CrossingTime;
+};
+
 struct stDogData
 {
    uint8_t DogNumber;
    //String DogName;
-   unsigned long Time;
-   unsigned long CrossingTime;
+   stDogTimeData Timing[4];
    boolean Running;
    boolean Fault;
 };

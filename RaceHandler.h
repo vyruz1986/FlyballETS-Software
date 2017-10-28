@@ -69,6 +69,8 @@ private:
    unsigned long _lLastTransitionStringUpdate;
 
    uint8_t  _iS1Pin;
+   uint8_t  _iS2Pin;
+
    struct STriggerRecord
    {
       volatile uint8_t iSensorNumber;
@@ -79,12 +81,11 @@ private:
 
    volatile uint8_t _iQueueReadIndex;
    volatile uint8_t _iQueueWriteIndex;
-   uint8_t  _iS2Pin;
 
    bool _bFault;
    bool _bDogFaults[4];
    bool _bRerunBusy;
-   uint8_t _iDogRunCounters[4];
+   uint8_t _iDogRunCounters[4];  //Number of (re-)runs for each dog
    unsigned long _lLastDogTimeReturnTimeStamp[4];
    uint8_t _iLastReturnedRunNumber[4];
    unsigned long _lDogEnterTimes[4];

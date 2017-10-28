@@ -631,7 +631,7 @@ unsigned long RaceHandlerClass::GetDogTimeMillis(uint8_t iDogNumber, int8_t iRun
          iRunNumber = _iDogRunCounters[iDogNumber];
       }
    }
-   else
+   else if (iRunNumber < 0)
    {
       iRunNumber = 0;
    }
@@ -642,7 +642,8 @@ unsigned long RaceHandlerClass::GetDogTimeMillis(uint8_t iDogNumber, int8_t iRun
       ulDogTimeMillis = _lDogTimes[iDogNumber][iRunNumber] / 1000;
    }
    //Then check if the requested dog is perhaps running (and coming back) so we can return the time so far
-   else if (RaceState == RUNNING && iCurrentDog == iDogNumber && _byDogState == COMINGBACK)
+   else if ((RaceState == RUNNING && iCurrentDog == iDogNumber && _byDogState == COMINGBACK)
+            && iRunNumber <= _iDogRunCounters[iDogNumber]) //And if requested run number is lower then number of times dog has run
    {
       ulDogTimeMillis = (micros() - _lDogEnterTimes[iDogNumber]) / 1000;
    }
@@ -720,7 +721,7 @@ unsigned long RaceHandlerClass::GetCrossingTimeMillis(uint8_t iDogNumber, int8_t
          iRunNumber = _iDogRunCounters[iDogNumber];
       }
    }
-   else
+   else if (iRunNumber < 0)
    {
       iRunNumber = 0;
    }
@@ -831,9 +832,12 @@ stRaceData RaceHandlerClass::GetRaceData(uint iRaceId)
       for (uint8_t i = 0; i < 4; i++)
       {
          RequestedRaceData.DogData[i].DogNumber = i;
-         //TODO: Multiple runs should be supported somehow
-         RequestedRaceData.DogData[i].Time = GetDogTimeMillis(i, -2);
-         RequestedRaceData.DogData[i].CrossingTime = GetCrossingTimeMillis(i, -2);
+
+         for (uint8_t i2 = 0; i2 < 4; i2++)
+         {
+            RequestedRaceData.DogData[i].Timing[i2].Time = GetDogTimeMillis(i, i2);
+            RequestedRaceData.DogData[i].Timing[i2].CrossingTime = GetCrossingTimeMillis(i, i2);
+         }
          RequestedRaceData.DogData[i].Fault = _bDogFaults[i];
          RequestedRaceData.DogData[i].Running = (iCurrentDog == i);
       }
