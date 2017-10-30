@@ -14,6 +14,7 @@ import { RacedisplayComponent } from './components/racedisplay/racedisplay.compo
 import { ConfigComponent } from './components/config/config.component';
 
 import { WebsocketService } from './services/websocket.service';
+import { SystemDataComponent } from './components/system-data/system-data.component';
 
 
 const appRoutes: Routes = [
@@ -28,7 +29,8 @@ const appRoutes: Routes = [
     NavbarComponent,
     HomeComponent,
     RacedisplayComponent,
-    ConfigComponent
+    ConfigComponent,
+    SystemDataComponent
   ],
   imports: [
      BrowserModule,

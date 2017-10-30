@@ -1,0 +1,10 @@
+<footer class="footer">
+  <div class="container">
+    <span class="badge badge-info">
+      U: {{systemData.uptime - 3600000| date: 'hh:mm:ss'}}
+       | H: {{systemData.freeHeap}}
+       | B: {{systemData.CPU0ResetReason}}/{{systemData.CPU1ResetReason}}
+       | C: {{systemData.numClients}}
+    </span>
+  </div>
+</footer>
