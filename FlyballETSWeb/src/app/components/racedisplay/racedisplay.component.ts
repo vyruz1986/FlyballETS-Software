@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 
 import { Race } from '../../interfaces/race';
 import { WebsocketService } from '../../services/websocket.service';
@@ -8,7 +8,7 @@ import { WebsocketAction } from '../../interfaces/websocketaction';
   selector: 'app-racedisplay',
   templateUrl: './racedisplay.component.html',
   styleUrls: ['./racedisplay.component.css'],
-  providers: [WebsocketService]
+  providers: []
 })
 export class RacedisplayComponent implements OnInit {
 
@@ -22,6 +22,8 @@ export class RacedisplayComponent implements OnInit {
     dogData: []
   };
 
+  disposeMe;
+
   startDisabled: boolean;
   stopDisabled: boolean;
   resetDisabled: boolean;
@@ -29,7 +31,8 @@ export class RacedisplayComponent implements OnInit {
   isConnected: boolean;
   sessionEnded: boolean;
 
-  raceDataService = new WebsocketService('ws://' + window.location.host + '/ws');
+  //raceDataService = new WebsocketService('ws://' + window.location.host + '/ws');
+  raceDataService = new WebsocketService();
 
   constructor() {
     this.initiateConnection();
@@ -38,6 +41,10 @@ export class RacedisplayComponent implements OnInit {
   ngOnInit() {
      this.isConnected = false;
      this.sessionEnded = false;
+  }
+
+  ngOnDestroy() {
+    this.disposeMe.unsubscribe()
   }
 
   startRace() {
@@ -90,7 +97,7 @@ export class RacedisplayComponent implements OnInit {
     console.log("Attempting WS connection!");
     this.isConnected = false;
     this.sessionEnded = false;
-    this.raceDataService.dataStream.subscribe(
+    this.disposeMe = this.raceDataService.dataStream.subscribe(
       msg => {
         this.isConnected = true;
         //console.log("Response from websocket: ");
@@ -109,6 +116,6 @@ export class RacedisplayComponent implements OnInit {
         console.log("ws closed");
         this.sessionEnded = true; 
       }
-    )
+    );
   }
 }

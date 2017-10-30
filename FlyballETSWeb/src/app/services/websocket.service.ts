@@ -8,8 +8,10 @@ import { ConfigArray } from '../interfaces/config-array';
 @Injectable()
 export class WebsocketService {
    public dataStream;
-   constructor(wsUrl:string) {
-      this.dataStream = Observable.webSocket(wsUrl);
+   //constructor(wsUrl:string) {
+   constructor() {
+      //this.dataStream = Observable.webSocket(wsUrl);
+      this.dataStream = Observable.webSocket('ws://' + window.location.host + '/ws');
    }
    sendAction(action:WebsocketAction) {
       this.dataStream.next(JSON.stringify(action));

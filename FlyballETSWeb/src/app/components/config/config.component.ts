@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { WebsocketService } from '../../services/websocket.service';
 import { WebsocketDataRequest } from '../../interfaces/websocket-data-request';
 import { ConfigArray } from '../../interfaces/config-array';
@@ -8,17 +8,19 @@ import { ConfigData } from '../../class/config-data';
   selector: 'app-config',
   templateUrl: './config.component.html',
   styleUrls: ['./config.component.css'],
-  providers: [WebsocketService]
+  providers: []
 })
 export class ConfigComponent implements OnInit {
 
   isConnected: boolean;
   sessionEnded: boolean;
   submitted: boolean;
+  disposeMe;
 
   configData = new ConfigData("","","");
 
-  configDataService = new WebsocketService('ws://' + window.location.host + '/wsa');
+  //configDataService = new WebsocketService('ws://' + window.location.host + '/wsa');
+  configDataService = new WebsocketService();
 
   constructor() {
     this.initiateConnection();
@@ -30,6 +32,10 @@ export class ConfigComponent implements OnInit {
      this.submitted = false;
      this.requestConfigData();
      this.configDataService
+  }
+
+  ngOnDestroy() {
+    this.disposeMe.unsubscribe();
   }
 
   handleConfigData(newConfigData) {
@@ -70,7 +76,7 @@ export class ConfigComponent implements OnInit {
     console.log("Attempting WS connection!");
     this.isConnected = false;
     this.sessionEnded = false;
-    this.configDataService.dataStream.subscribe(
+    this.disposeMe = this.configDataService.dataStream.subscribe(
       msg => {
         this.isConnected = true;
         console.log("received data: ");
