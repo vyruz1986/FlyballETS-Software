@@ -15,6 +15,7 @@ import { ConfigComponent } from './components/config/config.component';
 
 import { WebsocketService } from './services/websocket.service';
 import { SystemDataComponent } from './components/system-data/system-data.component';
+import { LightsComponent } from './components/lights/lights.component';
 
 
 const appRoutes: Routes = [
@@ -30,7 +31,8 @@ const appRoutes: Routes = [
     HomeComponent,
     RacedisplayComponent,
     ConfigComponent,
-    SystemDataComponent
+    SystemDataComponent,
+    LightsComponent
   ],
   imports: [
      BrowserModule,

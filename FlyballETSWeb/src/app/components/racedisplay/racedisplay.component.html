@@ -7,7 +7,7 @@
       </div>
     </div>
     <div class="row">
-      <div class="col-xs-12 col-md-6 text-center">
+      <div class="col-8 col-md-5 text-center">
         <button type="button" class="btn btn-success" (click)="startRace()" [disabled]="startDisabled">Start</button>
         <button type="button" class="btn btn-danger" (click)="stopRace()" [disabled]="stopDisabled">Stop</button>
         <button type="button" class="btn btn-info" (click)="resetRace()" [disabled]="resetDisabled">Reset</button>
@@ -21,7 +21,10 @@
           </span>
         </div>
       </div>
-      <div class="col-xs-12 col-md-6">
+      <div class="col-4 col-md-1">
+        <app-lights></app-lights>
+      </div>
+      <div class="col-12 col-md-6">
         <h4>Dog details</h4>
           <ul class="list-group">
             <li *ngFor="let dog of currentRace.dogData" [ngClass]="{'list-group-item': true, 'active': dog.running}">
