@@ -1,4 +1,9 @@
+.material-icons.white {
+   color: rgb(255, 0, 255);
+}
 .material-icons.orange { color: orange; }
 .material-icons.red { color: red; }
 .material-icons.blue { color: blue; }
-.material-icons.green { color: green; }
+.material-icons.green { color: limegreen; }
+
+.material-icons.md-48 { font-size: 48px; }

@@ -1,9 +1,9 @@
 <div style="position: relative;">
-  <ngx-loading [show]="!isConnected && !sessionEnded" [config]="{ backdropBorderRadius: '14px' }"></ngx-loading>
+  <ngx-loading [show]="!etsDataService.isConnected" [config]="{ backdropBorderRadius: '14px' }"></ngx-loading>
   <div class="container" *ngIf="!sessionEnded">
     <div class="row">
       <div class="col-lg-12">
-        <div class="alert alert-danger text-center" *ngIf="!isConnected && !sessionEnded" role="alert">Connecting to FlyballETS, please wait...</div>
+        <div class="alert alert-danger text-center" *ngIf="!etsDataService.isConnected" role="alert">Connecting to FlyballETS, please wait...</div>
       </div>
     </div>
     <div class="row">

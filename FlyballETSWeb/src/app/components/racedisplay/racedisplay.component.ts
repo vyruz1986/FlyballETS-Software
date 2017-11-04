@@ -3,12 +3,12 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Race } from '../../interfaces/race';
 import { WebsocketService } from '../../services/websocket.service';
 import { WebsocketAction } from '../../interfaces/websocketaction';
+import { EtsdataService } from '../../services/etsdata.service';
 
 @Component({
   selector: 'app-racedisplay',
   templateUrl: './racedisplay.component.html',
-  styleUrls: ['./racedisplay.component.css'],
-  providers: []
+  styleUrls: ['./racedisplay.component.css']
 })
 export class RacedisplayComponent implements OnInit {
 
@@ -22,29 +22,31 @@ export class RacedisplayComponent implements OnInit {
     dogData: []
   };
 
-  disposeMe;
-
   startDisabled: boolean;
   stopDisabled: boolean;
   resetDisabled: boolean;
-
-  isConnected: boolean;
-  sessionEnded: boolean;
-
-  //raceDataService = new WebsocketService('ws://' + window.location.host + '/ws');
-  raceDataService = new WebsocketService();
-
-  constructor() {
-    this.initiateConnection();
+   constructor(private etsDataService:EtsdataService) {
+      this.etsDataService.dataStream.subscribe(
+         (data) => {
+            if(data.RaceData) {
+               this.HandleCurrentRaceData(data.RaceData);
+            }
+         },
+         (err) => {
+            console.log(err);
+         },
+         () => {
+            console.log("disconnected");
+         }
+      );
+      //this.HandleCurrentRaceData(this.etsDataService.dataStream.getValue());
   }
 
   ngOnInit() {
-     this.isConnected = false;
-     this.sessionEnded = false;
   }
 
   ngOnDestroy() {
-    this.disposeMe.unsubscribe()
+     
   }
 
   startRace() {
@@ -52,7 +54,7 @@ export class RacedisplayComponent implements OnInit {
      let StartAction:WebsocketAction = {
        action: "StartRace"
       };
-     this.raceDataService.sendAction(StartAction);
+     this.etsDataService.sendAction(StartAction);
   }
 
   stopRace() {
@@ -60,14 +62,14 @@ export class RacedisplayComponent implements OnInit {
     let StopAction:WebsocketAction = {
       action: "StopRace"
      };
-    this.raceDataService.sendAction(StopAction);
+    this.etsDataService.sendAction(StopAction);
   }
   resetRace() {
     console.log('resetting race');
     let StopAction:WebsocketAction = {
       action: "ResetRace"
      };
-    this.raceDataService.sendAction(StopAction);
+    this.etsDataService.sendAction(StopAction);
   }
 
   HandleCurrentRaceData(raceData:Race) {
@@ -90,32 +92,7 @@ export class RacedisplayComponent implements OnInit {
   }
 
   reconnect() {
-    this.initiateConnection();
   }
 
-  initiateConnection() {
-    console.log("Attempting WS connection!");
-    this.isConnected = false;
-    this.sessionEnded = false;
-    this.disposeMe = this.raceDataService.dataStream.subscribe(
-      msg => {
-        this.isConnected = true;
-        //console.log("Response from websocket: ");
-        //console.log(msg);
-        if(msg.RaceData) {
-          this.HandleCurrentRaceData(<Race>msg.RaceData);
-        }
-      },
-      err => {
-        //console.log("ws error: ");
-        //console.log(err);
-        this.isConnected = false;
-        this.initiateConnection();  //Retry connection since this was unexpected
-      },
-      () => {
-        console.log("ws closed");
-        this.sessionEnded = true; 
-      }
-    );
-  }
+  
 }

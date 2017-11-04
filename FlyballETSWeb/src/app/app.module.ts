@@ -16,6 +16,8 @@ import { ConfigComponent } from './components/config/config.component';
 import { WebsocketService } from './services/websocket.service';
 import { SystemDataComponent } from './components/system-data/system-data.component';
 import { LightsComponent } from './components/lights/lights.component';
+import { EtsdataService } from './services/etsdata.service';
+import { SecureEtsDataService } from './services/secure-ets-data.service';
 
 
 const appRoutes: Routes = [
@@ -45,7 +47,7 @@ const appRoutes: Routes = [
       }),
       NgbModule.forRoot()
   ],
-  providers: [WebsocketService],
+  providers: [WebsocketService,EtsdataService,SecureEtsDataService],
   bootstrap: [AppComponent]
 })
 export class AppModule { } 
