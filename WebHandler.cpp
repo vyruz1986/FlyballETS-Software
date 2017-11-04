@@ -222,6 +222,29 @@ void WebHandlerClass::loop()
    }
 }
 
+void WebHandlerClass::SendLightsData(stLightsState LightStates)
+{
+   DynamicJsonBuffer JsonBuffer;
+   JsonObject& JsonRoot = JsonBuffer.createObject();
+
+   if (!JsonRoot.success())
+   {
+      Debug.DebugSend(LOG_ERR, "Error creating JSON object!");
+      _ws->textAll("{\"error\": \"Error creating JSON object!\"}");
+      return;
+   }
+   else
+   {
+      JsonArray& JsonLightsData = JsonRoot.createNestedArray("LightsData");
+      JsonLightsData.copyFrom(LightStates.State);
+
+      String JsonString;
+      JsonRoot.printTo(JsonString);
+      //Serial.printf("json: %s\r\n", JsonString.c_str());
+      _ws->textAll(JsonString);
+   }
+}
+
 boolean WebHandlerClass::_DoAction(String action, String * ReturnError) {
    if (action == "StartRace") {
       if (RaceHandler.RaceState != RaceHandler.STOPPED) {

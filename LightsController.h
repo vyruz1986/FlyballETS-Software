@@ -23,6 +23,7 @@
 	#include "WProgram.h"
 #endif
 #include "config.h"
+#include "Structs.h"
 #ifdef WS281x
 //#include <Adafruit_NeoPixel.h>
 #include <NeoPixelBus.h>
@@ -69,6 +70,8 @@ public:
    void ResetLights();
    void DeleteSchedules();
    void ToggleFaultLight(uint8_t iDogNumber, LightStates byLightState);
+
+   stLightsState GetLightsState();
    
 private:
 #ifdef WS281x

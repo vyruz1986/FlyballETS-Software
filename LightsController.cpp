@@ -21,6 +21,8 @@
 #include "RaceHandler.h"
 #include "global.h"
 #include "config.h"
+#include "Structs.h"
+#include "WebHandler.h"
 //#include <Adafruit_NeoPixel.h>
 #include <NeoPixelBus.h>
 
@@ -104,6 +106,8 @@ void LightsControllerClass::Main()
       shiftOut(_iDataPin, _iClockPin, MSBFIRST, _byCurrentLightsState);
       digitalWrite(_iLatchPin, HIGH);
 #endif // WS281x
+      //Send data to websocket clients
+      WebHandler.SendLightsData(GetLightsState());
    }
 }
 
@@ -233,7 +237,7 @@ void LightsControllerClass::ToggleLightState(Lights byLight, LightStates byLight
       LightConfig.iColor = RgbColor(0);
    }
    _LightsStrip->SetPixelColor(LightConfig.iPixelNumber, LightConfig.iColor);
-#else
+#endif // WS281x
    if (byCurrentLightState != byLightState)
    {
 
@@ -246,7 +250,6 @@ void LightsControllerClass::ToggleLightState(Lights byLight, LightStates byLight
          _byNewLightsState = _byNewLightsState - byLight;
       }
    }
-#endif // WS281x
 }
 
 /// <summary>
@@ -269,6 +272,31 @@ void LightsControllerClass::ToggleFaultLight(uint8_t DogNumber, LightStates byLi
    }
    ToggleLightState(byLight, byLightState);
    if (bDEBUG) Serialprint("Fault light for dog %i: %i\r\n", DogNumber, byLightState);
+}
+
+stLightsState LightsControllerClass::GetLightsState()
+{
+   stLightsState CurrentLightsState;
+
+   CurrentLightsState.State[0] = CheckLightState(WHITE) == 1 ? 1 : 0;
+   CurrentLightsState.State[1] = CheckLightState(RED) == 1 ? 1 : 0;
+   //3rd light can have 2 colors
+   if (CheckLightState(YELLOW1) == 1)
+   {
+      CurrentLightsState.State[2] = 1;
+   }
+   else if(CheckLightState(BLUE))
+   {
+      CurrentLightsState.State[2] = 2;
+   }
+   else
+   {
+      CurrentLightsState.State[2] = 0;
+   }
+   CurrentLightsState.State[3] = CheckLightState(YELLOW2) == 1 ? 1 : 0;
+   CurrentLightsState.State[4] = CheckLightState(GREEN) == 1 ? 1 : 0;
+
+   return CurrentLightsState;
 }
 
 /// <summary>

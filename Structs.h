@@ -34,3 +34,8 @@ struct stSystemData
    RESET_REASON CPU1ResetReason;
    uint NumClients;
 };
+
+struct stLightsState
+{
+   uint8_t State[5];
+};

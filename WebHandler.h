@@ -51,6 +51,7 @@ protected:
 public:
    void init(int webPort);
    void loop();
+   void SendLightsData(stLightsState LightStates);
 };
 
 extern WebHandlerClass WebHandler;

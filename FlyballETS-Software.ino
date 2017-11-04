@@ -239,7 +239,6 @@ void setup()
    Simulator.init(iS1Pin, iS2Pin);
 #endif
 
-   Serialprint("Ready!\r\n");
    Debug.DebugSend(LOG_INFO, "Ready on IP %s!\r\n", WiFi.softAPIP().toString().c_str());
 
    //Ota setup
