@@ -52,6 +52,7 @@ void RaceHandlerClass::_ChangeRaceState(RaceStates byNewRaceState)
    {
       PreviousRaceState = RaceState;
       RaceState = byNewRaceState;
+      WebHandler._SendRaceData();
    }
 }
 
