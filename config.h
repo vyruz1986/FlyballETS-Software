@@ -14,5 +14,8 @@
 // along with this program.If not, see <http://www.gnu.org/licenses/>
 
 
-#define WS281x //Comment out this line if you want to use the v1 setup which used a 74HC595 shift register to control lights
-#define EEPROM_SIZE 4096 // EEPROM size in bytes
+#define WS281x                     //Comment out this line if you want to use the v1 setup which used a 74HC595 shift register to control lights
+#define EEPROM_SIZE           4096 // EEPROM size in bytes
+
+#define WS_TICKET_BUFFER_SIZE 5           //Number of websocket tickets kept in memory
+#define WS_TIMEOUT            1800000     // Timeout for secured websocket

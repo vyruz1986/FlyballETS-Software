@@ -38,15 +38,23 @@ protected:
    boolean _GetData(String dataType, JsonObject& ReturnError);
 
    stSystemData _GetSystemData();
-
    void _SendSystemData();
-   
+   void _onAuth(AsyncWebServerRequest * request);
+   bool _authenticate(AsyncWebServerRequest * request);
+   bool _wsAuth(AsyncWebSocketClient * client);
+
    unsigned long _lLastRaceDataBroadcast;
    unsigned long _lRaceDataBroadcastInterval;
    unsigned long _lLastSystemDataBroadcast;
    unsigned long _lSystemDataBroadcastInterval;
-
    stSystemData _SystemData;
+   
+   typedef struct
+   {
+      IPAddress ip;
+      unsigned long timestamp = 0;
+   } ws_ticket_t;
+   ws_ticket_t _ticket[WS_TICKET_BUFFER_SIZE];
 
 public:
    void init(int webPort);

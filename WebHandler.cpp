@@ -15,11 +15,27 @@
 
 void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t * data, size_t len)
 {
-   if (type == WS_EVT_CONNECT) {
+   //FIXME: The next line works but introduces an unnecessary String. The 2nd line does not work, I don't know why...
+   boolean isAdmin = String("/wsa").equals(server->url());
+   //boolean isAdmin = (server->url() == "/wsa");
+
+   if (type == WS_EVT_CONNECT)
+   {
       Serial.printf("ws[%s][%u] connect\n", server->url(), client->id());
       //client->printf("Hello Client %u :)", client->id());
+
+      //Should we check authentication?
+      if (isAdmin)
+      {
+         if (!_wsAuth(client))
+         {
+            client->close();
+            return;
+         }
+      }
+
+      //TODO: Would be nicer if we only send this to the specific client who just connected instead of all clients
       _SendRaceData();  //Make sure we always broadcast racedata when new client connects
-      //TODO: Would be nicer if we only send this the specific client who just connected instead of all clients
       client->ping();
    }
    else if (type == WS_EVT_DISCONNECT) {
@@ -84,10 +100,6 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
          }
       }
 
-      //FIXME: The next line works but introduces an unnecessary String. The 2nd line does not work, I don't know why...
-      boolean isAdmin = String("/wsa").equals(server->url());
-      //boolean isAdmin = (server->url() == "/wsa");
-      
       // Parse JSON input
       DynamicJsonBuffer jsonBufferRequest;
       JsonObject& request = jsonBufferRequest.parseObject(msg);
@@ -155,14 +167,7 @@ void WebHandlerClass::init(int webPort)
    _server = new AsyncWebServer(webPort);
    _ws = new AsyncWebSocket("/ws");
    _wsa = new AsyncWebSocket("/wsa");
-   Serial.printf("Setting pass: %s\r\n", SettingsManager.getSetting("AdminPass").c_str());
-   _wsa->setAuthentication("admin", SettingsManager.getSetting("AdminPass").c_str());
-   //_wsa->setAuthentication("admin", "pass");
-   String strUserPass = SettingsManager.getSetting("UserPass", "");
-   if (strUserPass.length() > 0)
-   {
-      _ws->setAuthentication("user", strUserPass.c_str());
-   }
+
    _ws->onEvent(std::bind(&WebHandlerClass::_WsEvent, this
       , std::placeholders::_1
       , std::placeholders::_2
@@ -187,8 +192,12 @@ void WebHandlerClass::init(int webPort)
       request->send(404);
    });
 
+   //Regular webpages
    SPIFFS.begin(true);
    _server->serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
+
+   //Authentication handler
+   _server->on("/auth", HTTP_GET, std::bind(&WebHandlerClass::_onAuth, this, std::placeholders::_1));
 
    _server->begin();
 
@@ -408,6 +417,61 @@ void WebHandlerClass::_SendSystemData()
    JsonRoot.printTo(JsonString);
    //Serial.printf("json: %s\r\n", JsonString.c_str());
    _ws->textAll(JsonString);
+}
+
+void WebHandlerClass::_onAuth(AsyncWebServerRequest *request)
+{
+   if (!_authenticate(request)) return request->requestAuthentication("",false);
+
+   IPAddress ip = request->client()->remoteIP();
+   unsigned long now = millis();
+   unsigned short index;
+   for (index = 0; index < WS_TICKET_BUFFER_SIZE; index++) {
+      if (_ticket[index].ip == ip) break;
+      if (_ticket[index].timestamp == 0) break;
+      if (now - _ticket[index].timestamp > WS_TIMEOUT) break;
+   }
+   if (index == WS_TICKET_BUFFER_SIZE) {
+      request->send(429);
+   }
+   else {
+      _ticket[index].ip = ip;
+      _ticket[index].timestamp = now;
+      request->send(204);
+   }
+}
+
+bool WebHandlerClass::_authenticate(AsyncWebServerRequest *request) {
+   String password = SettingsManager.getSetting("AdminPass");
+   char httpPassword[password.length() + 1];
+   password.toCharArray(httpPassword, password.length() + 1);
+   return request->authenticate("Admin", httpPassword);
+}
+
+bool WebHandlerClass::_wsAuth(AsyncWebSocketClient * client) {
+
+   IPAddress ip = client->remoteIP();
+   unsigned long now = millis();
+   unsigned short index = 0;
+
+   //TODO: Here be dragons, this way of 'authenticating' is all but secure
+   //We are just storing the client's IP and an expiration timestamp of now + 30 mins
+   //So if someone logs in, then disconnects from the WiFi, and then someone else connects
+   //this new user will/could have the same IP as the previous user, and will be authenticated :(
+
+   for (index = 0; index < WS_TICKET_BUFFER_SIZE; index++) {
+      Serial.printf("Checking ticket: %i, ip: %s, time: %lu\r\n", index, _ticket[index].ip.toString().c_str(), _ticket[index].timestamp);
+      if ((_ticket[index].ip == ip) && (now - _ticket[index].timestamp < WS_TIMEOUT)) break;
+   }
+
+   if (index == WS_TICKET_BUFFER_SIZE) {
+      Debug.DebugSend(LOG_INFO, "[WEBSOCKET] Validation check failed\n");
+      client->text("{\"success\": false, \"error\": \"You shall not pass!!!! Please authenticate first :-)\", \"authenticated\": false}");
+      return false;
+   }
+
+   return true;
+
 }
 
 
