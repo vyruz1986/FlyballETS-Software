@@ -25,7 +25,6 @@
 #include "config.h"
 #include "Structs.h"
 #ifdef WS281x
-//#include <Adafruit_NeoPixel.h>
 #include <NeoPixelBus.h>
 #endif // WS281x
 

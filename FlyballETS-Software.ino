@@ -21,6 +21,7 @@
 // 
 // You should have received a copy of the GNU General Public License along with this program.If not,
 // see <http://www.gnu.org/licenses/> 
+#include "GPSHandler.h"
 #include "SettingsManager.h"
 #include "Debug.h"
 #include "Structs.h"
@@ -75,12 +76,11 @@
    -  3: free/RX
    -  5: free/LED/SS
    - 21: free/SCA
-   - 36: free/VP
-   - 39: free/VN
+   - 36/VP: GPS tx
+   - 39/VN: GPS rx
 */
 
 //Set simulate to true to enable simulator class (see Simulator.cpp/h)
-#define Simulate true
 #if Simulate
    #include "Simulator.h"
 #endif
@@ -158,6 +158,9 @@ boolean bSerialStringComplete = false;
 IPAddress IPGateway(192, 168, 20, 1);
 IPAddress IPNetwork(192, 168, 20, 0);
 IPAddress IPSubnet(255, 255, 255, 0);
+
+//Define serial pins for GPS module
+HardwareSerial GPSSerial(1);
 
 void setup()
 {
@@ -271,6 +274,9 @@ void setup()
    });
    ArduinoOTA.begin();
 
+   //Initialize GPS Serial port and class
+   GPSSerial.begin(9600, SERIAL_8N1, 39, 36);
+   GPSHandler.init(&GPSSerial);
 }
 
 void loop()
@@ -298,6 +304,9 @@ void loop()
 
    //Handle settings manager loop
    SettingsManager.loop();
+
+   //Handle GPS
+   GPSHandler.loop();
    
 #if Simulate
    //Run simulator

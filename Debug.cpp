@@ -21,7 +21,7 @@ void DebugClass::DebugSend(uint8_t priority, const char * format, ...) {
 
    char * cPrio = _TranslatePriority(priority);
 
-   Serial.printf("%s: %s", cPrio, buffer);
+   Serial.printf("%s: %s\r\n", cPrio, buffer);
    if (len > DEBUG_MESSAGE_MAX_LENGTH) {
       Serial.printf(" (...)\n");
    }
