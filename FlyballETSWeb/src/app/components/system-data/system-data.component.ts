@@ -1,6 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { SystemData } from '../../interfaces/system-data';
-import { WebsocketService } from '../../services/websocket.service';
 import { EtsdataService } from '../../services/etsdata.service';
 
 @Component({

@@ -13,11 +13,12 @@ import { HomeComponent } from './components/home/home.component';
 import { RacedisplayComponent } from './components/racedisplay/racedisplay.component';
 import { ConfigComponent } from './components/config/config.component';
 
-import { WebsocketService } from './services/websocket.service';
 import { SystemDataComponent } from './components/system-data/system-data.component';
 import { LightsComponent } from './components/lights/lights.component';
 import { EtsdataService } from './services/etsdata.service';
 import { SecureEtsDataService } from './services/secure-ets-data.service';
+import { LoginComponent } from './components/login/login.component';
+import { HttpClientModule } from '@angular/common/http';
 
 
 const appRoutes: Routes = [
@@ -34,7 +35,8 @@ const appRoutes: Routes = [
     RacedisplayComponent,
     ConfigComponent,
     SystemDataComponent,
-    LightsComponent
+    LightsComponent,
+    LoginComponent
   ],
   imports: [
      BrowserModule,
@@ -45,9 +47,10 @@ const appRoutes: Routes = [
       animationType: ANIMATION_TYPES.rectangleBounce,
       backdropBorderRadius: '4px'
       }),
-      NgbModule.forRoot()
+      NgbModule.forRoot(),
+      HttpClientModule
   ],
-  providers: [WebsocketService,EtsdataService,SecureEtsDataService],
+  providers: [EtsdataService,SecureEtsDataService],
   bootstrap: [AppComponent]
 })
 export class AppModule { } 

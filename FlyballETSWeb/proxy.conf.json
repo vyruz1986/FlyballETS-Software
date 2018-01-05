@@ -3,5 +3,9 @@
         "target": "ws://192.168.20.1",
         "secure": false,
         "ws": true
+    },
+    "/auth": {
+        "target": "http://192.168.20.1",
+        "secure": false
     }
 }

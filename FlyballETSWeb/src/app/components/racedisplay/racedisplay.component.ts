@@ -1,7 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 
 import { Race } from '../../interfaces/race';
-import { WebsocketService } from '../../services/websocket.service';
 import { WebsocketAction } from '../../interfaces/websocketaction';
 import { EtsdataService } from '../../services/etsdata.service';
 
@@ -25,7 +24,7 @@ export class RacedisplayComponent implements OnInit {
   startDisabled: boolean;
   stopDisabled: boolean;
   resetDisabled: boolean;
-   constructor(private etsDataService:EtsdataService) {
+   constructor(public etsDataService:EtsdataService) {  //TODO why does making etsDataService private cause build to fail?
       this.etsDataService.dataStream.subscribe(
          (data) => {
             if(data.RaceData) {
@@ -43,10 +42,6 @@ export class RacedisplayComponent implements OnInit {
   }
 
   ngOnInit() {
-  }
-
-  ngOnDestroy() {
-     
   }
 
   startRace() {
