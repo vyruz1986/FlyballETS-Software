@@ -14,14 +14,14 @@ class GPSHandlerClass
 {
 protected:
    HardwareSerial* _SerialPort;
-   String _strSerialData;
-   boolean _bSerialMessageComplete;
    void _HandleSerialPort();
-   void _HandleSerialMessage();
+   void _FormatUTCTime();
    TinyGPSPlus _Tgps;
+   char _cUTCTime[25];
 public:
    void init(HardwareSerial* SerialPort);
    void loop();
+   char* GetUTCTimestamp();
    
 };
 extern GPSHandlerClass GPSHandler;

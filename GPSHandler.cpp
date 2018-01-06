@@ -12,46 +12,42 @@ void GPSHandlerClass::_HandleSerialPort()
    {
       char cInChar = _SerialPort->read(); // Read a character
       _Tgps.encode(cInChar);
-      if (cInChar == '\n') //Check if buffer contains complete serial message, terminated by newline (\n)
-      {
-         //Serial message in buffer is complete, null terminate it and store it for further handling
-         _bSerialMessageComplete = true;
-         _strSerialData += '\0'; // Null terminate the string
-         break;
-      }
-      _strSerialData += cInChar; // Store it
    }
-}
-
-void GPSHandlerClass::_HandleSerialMessage()
-{
-   Debug.DebugSend(LOG_INFO, "GPS: Serial message received: %s", _strSerialData.c_str());
-
-   Debug.DebugSend(LOG_INFO, "GPS: Time from GPS: %i", _Tgps.time.value());
-   
-
-
-   //Reset serial input string and flag
-   _strSerialData = "";
-   _bSerialMessageComplete = false;
 }
 
 void GPSHandlerClass::init(HardwareSerial * SerialPort)
 {
    _SerialPort = SerialPort;
-   _bSerialMessageComplete = false;
-   _strSerialData = "";
+   _FormatUTCTime();
    Debug.DebugSend(LOG_INFO, "GPS Class initialized!");
 }
 
 void GPSHandlerClass::loop()
 {
    _HandleSerialPort();
-   if (_bSerialMessageComplete)
+   
+   if (_Tgps.time.isUpdated())
    {
-      _HandleSerialMessage();
+      _FormatUTCTime();
+      Debug.DebugSend(LOG_DEBUG, "UTC time: %s", _cUTCTime);
    }
+}
 
+char* GPSHandlerClass::GetUTCTimestamp()
+{
+   return _cUTCTime;
+}
+
+void GPSHandlerClass::_FormatUTCTime()
+{
+   sprintf(_cUTCTime, "%i-%02i-%02iT%02i:%02i:%02i.%02iZ",
+      _Tgps.date.year()
+      , _Tgps.date.month()
+      , _Tgps.date.day()
+      , _Tgps.time.hour()
+      , _Tgps.time.minute()
+      , _Tgps.time.second()
+      , _Tgps.time.centisecond());
 }
 
 GPSHandlerClass GPSHandler;

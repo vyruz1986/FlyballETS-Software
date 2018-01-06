@@ -11,6 +11,7 @@
 #include <ArduinoJson.h>
 #include "Debug.h"
 #include "SettingsManager.h"
+#include "GPSHandler.h"
 #include <rom/rtc.h>
 
 void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t * data, size_t len)
@@ -412,6 +413,7 @@ void WebHandlerClass::_SendSystemData()
    JsonSystemData["CPU0ResetReason"]   = (int)_SystemData.CPU0ResetReason;
    JsonSystemData["CPU1ResetReason"]   = (int)_SystemData.CPU1ResetReason;
    JsonSystemData["numClients"]        = _SystemData.NumClients;
+   JsonSystemData["systemTimestamp"]   = GPSHandler.GetUTCTimestamp();
 
    String JsonString;
    JsonRoot.printTo(JsonString);
@@ -422,7 +424,6 @@ void WebHandlerClass::_SendSystemData()
 void WebHandlerClass::_onAuth(AsyncWebServerRequest *request)
 {
    if (!_authenticate(request)) return request->requestAuthentication("",false);
-
    IPAddress ip = request->client()->remoteIP();
    unsigned long now = millis();
    unsigned short index;
