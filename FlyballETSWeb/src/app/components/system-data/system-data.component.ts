@@ -11,12 +11,13 @@ export class SystemDataComponent implements OnInit {
 
   hmsTime:string;
 
-  systemData:SystemData = {uptime: 0, freeHeap: 0, CPU0ResetReason: 0, CPU1ResetReason: 0, numClients: 0};
+  systemData:SystemData = {uptime: 0, freeHeap: 0, CPU0ResetReason: 0, CPU1ResetReason: 0, numClients: 0, systemTimestamp: null};
   constructor(private etsDataService:EtsdataService) {
     this.etsDataService.dataStream.subscribe((data) => {
       if(data.SystemData) {
         this.systemData = <SystemData>data.SystemData;
         this.formatHMSTime(data.SystemData.uptime / 1000);
+        //this.systemData.systemTime = 
       }
     });
   }  
