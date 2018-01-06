@@ -9,6 +9,7 @@
 #include "WProgram.h"
 #endif
 
+#include "SettingsManager.h"
 #include <Hash.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
@@ -17,21 +18,48 @@
 #include <ArduinoJson.h>
 #include "Debug.h"
 #include "RaceHandler.h"
+#include "Structs.h"
+#include "LightsController.h"
 
 
 class WebHandlerClass
 {
+   friend class RaceHandlerClass;
 protected:
    AsyncWebServer *_server;
    AsyncWebSocket *_ws;
+   AsyncWebSocket *_wsa;
    void _WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len);
-   void wsSend_P(PGM_P payload);
-   void wsSend_P(uint32_t client_id, PGM_P payload);
-   boolean DoAction(String action, String * ReturnError);
+   boolean _DoAction(String action, String * ReturnError);
+   void _SendRaceData(uint iRaceId = RaceHandler._iCurrentRaceId);
+
+   boolean _ProcessConfig(JsonArray& newConfig, String * ReturnError);
+
+   boolean _GetData(String dataType, JsonObject& ReturnError);
+
+   stSystemData _GetSystemData();
+   void _SendSystemData();
+   void _onAuth(AsyncWebServerRequest * request);
+   bool _authenticate(AsyncWebServerRequest * request);
+   bool _wsAuth(AsyncWebSocketClient * client);
+
+   unsigned long _lLastRaceDataBroadcast;
+   unsigned long _lRaceDataBroadcastInterval;
+   unsigned long _lLastSystemDataBroadcast;
+   unsigned long _lSystemDataBroadcastInterval;
+   stSystemData _SystemData;
+   
+   typedef struct
+   {
+      IPAddress ip;
+      unsigned long timestamp = 0;
+   } ws_ticket_t;
+   ws_ticket_t _ticket[WS_TICKET_BUFFER_SIZE];
 
 public:
    void init(int webPort);
    void loop();
+   void SendLightsData(stLightsState LightStates);
 };
 
 extern WebHandlerClass WebHandler;

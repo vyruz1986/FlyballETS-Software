@@ -13,32 +13,50 @@
 /// </summary>
 const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60] PROGMEM = {
    //See the end of this file for a collection of races
-   //Dog1
-   { 1, 41708, 1 }
-   ,{ 2, 60692, 1 }
-   ,{ 1, 176848, 0 }
-   ,{ 2, 197732, 0 }
-   //Dog1<->Dog2
-   ,{ 1, 4675580, 1 }  //This is the 2nd dog coming in too erly!
-   ,{ 2, 4692252, 1 }
-   ,{ 2, 4830180, 0 }
-   ,{ 1, 4849032, 0 }  //Sequence was ABba: This proves 2 dogs passed --> Perfect crossing
-                       //Dog2<->Dog3
-   ,{ 2, 9058416, 1 }
-   ,{ 1, 9074780, 1 }
-   ,{ 1, 9215868, 0 }
-   ,{ 2, 9234968, 0 }  //Sequence was BAab: This proves 2 dogs passed --> Perfect crossing
-                       //Dog3<->Dog4
-   ,{ 2, 13497276, 1 }
-   ,{ 2, 13500924, 0 }
-   ,{ 2, 13502728, 1 }
-   ,{ 1, 13514992, 1 }
-   ,{ 1, 13668000, 0 }
-   ,{ 1, 13669344, 1 }
-   ,{ 1, 13681828, 0 }
-   ,{ 2, 13701464, 0 } //BbBAaAaB --> Filtered to BbAa: This proves 2 dogs passed --> Perfect crossing
-                       //Waiting for dog4 to come back
-   ,{ 2, 18028788, 1 }//Dog 4 coming in, race finished
+   { 1, 796, 1 }
+   ,{ 2, 17748, 1 }
+   ,{ 2, 23276, 0 }
+   ,{ 2, 24332, 1 }
+   ,{ 1, 134032, 0 }
+   ,{ 2, 150208, 0 }
+   ,{ 1, 4383940, 1 }
+   ,{ 2, 4389808, 1 }
+   ,{ 2, 4525776, 0 }
+   ,{ 1, 4528556, 0 }
+   ,{ 2, 9092276, 1 }
+   ,{ 1, 9108100, 1 }
+   ,{ 2, 9228060, 0 }
+   ,{ 2, 9237604, 1 }
+   ,{ 1, 9354632, 0 }
+   ,{ 2, 9370068, 0 }  //Gates clear!
+
+                       //The next 2 records are 'bogus' signals that were picked up, shortly after the gate was cleared, not visible on 120fps video
+                       //Code has been implemented to filter these out.
+   ,{ 2, 9370240, 1 }
+   ,{ 2, 9373992, 0 }
+
+   ,{ 2, 14112436, 1 }
+   ,{ 1, 14127916, 1 }
+   ,{ 2, 14233032, 0 }
+   ,{ 1, 14250128, 0 }
+   ,{ 1, 14656284, 1 }
+   ,{ 2, 14670520, 1 }
+   ,{ 2, 14799688, 0 }
+   ,{ 2, 14800436, 1 }
+   ,{ 1, 14817364, 0 }
+   ,{ 2, 14840280, 0 }
+   ,{ 2, 20071076, 1 }
+   ,{ 1, 20091288, 1 }
+   ,{ 2, 20221648, 0 }
+   ,{ 1, 20249052, 0 }
+   ,{ 1, 25835668, 1 }
+   ,{ 2, 25849524, 1 }
+   ,{ 1, 25956512, 0 }
+   ,{ 2, 25975860, 0 }
+   ,{ 2, 30514448, 1 }
+   ,{ 1, 30531412, 1 }
+   ,{ 2, 30663400, 0 }
+   ,{ 1, 30682888, 0 }
 };
 
 /// <summary>

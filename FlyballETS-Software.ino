@@ -21,7 +21,10 @@
 // 
 // You should have received a copy of the GNU General Public License along with this program.If not,
 // see <http://www.gnu.org/licenses/> 
+#include "GPSHandler.h"
+#include "SettingsManager.h"
 #include "Debug.h"
+#include "Structs.h"
 #include <Syslog.h>
 #include "WebHandler.h"
 #include "config.h"
@@ -36,6 +39,7 @@
 #include <WiFiMulti.h>
 #include <ESPmDNS.h>
 #include <ArduinoOTA.h>
+#include <EEPROM.h>
 //#include <avr/pgmspace.h>
 
 /*List of pins and the ones used (Lolin32 board):
@@ -72,12 +76,11 @@
    -  3: free/RX
    -  5: free/LED/SS
    - 21: free/SCA
-   - 36: free/VP
-   - 39: free/VN
+   - 36/VP: GPS tx
+   - 39/VN: GPS rx
 */
 
 //Set simulate to true to enable simulator class (see Simulator.cpp/h)
-//#define Simulate true
 #if Simulate
    #include "Simulator.h"
 #endif
@@ -104,7 +107,7 @@ uint16_t iBatteryVoltage = 0;
 //Initialise Lights stuff
 #ifdef WS281x
    uint8_t iLightsDataPin = 0;
-   NeoPixelBus<NeoRgbFeature, Neo400KbpsMethod> LightsStrip(5, iLightsDataPin);
+   NeoPixelBus<NeoRgbFeature, NeoWs2813Method> LightsStrip(5, iLightsDataPin);
 
 #else
    uint8_t iLightsClockPin = 8;
@@ -152,16 +155,18 @@ boolean bSerialStringComplete = false;
    
 //Wifi stuff
 //WiFiMulti wm;
-IPAddress IPGateway = IPAddress(192, 168, 20, 1);
-IPAddress IPNetwork = IPAddress(192, 168, 20, 0);
-IPAddress IPSubnet = IPAddress(255, 255, 255, 0);
+IPAddress IPGateway(192, 168, 20, 1);
+IPAddress IPNetwork(192, 168, 20, 0);
+IPAddress IPSubnet(255, 255, 255, 0);
 
-String strDeviceName = "FlyballETS";
-String strAppName = "FlyballETS";
+//Define serial pins for GPS module
+HardwareSerial GPSSerial(1);
 
 void setup()
 {
+   EEPROM.begin(EEPROM_SIZE);
    Serial.begin(115200);
+   SettingsManager.init();
    Debug.init("255.255.255.255", "FlyballETS", "FlyballETSApp");
    
    pinMode(iS1Pin, INPUT);
@@ -206,33 +211,37 @@ void setup()
 #else
    LightsController.init(iLightsLatchPin, iLightsClockPin, iLightsDataPin);
 #endif
-   
-   //Initialize RaceHandler class with S1 and S2 pins
-   RaceHandler.init(iS1Pin, iS2Pin);
 
    //Initialize LCDController class with lcd1 and lcd2 objects
    LCDController.init(&lcd, &lcd2);
-
-   //Initialize simulatorclass pins if applicable
-   #if Simulate
-      Simulator.init(iS1Pin, iS2Pin);
-   #endif
    
    strSerialData[0] = 0;
 
    //Setup AP
    WiFi.mode(WIFI_MODE_AP);
-   WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
-   if (!WiFi.softAP("FlyballETS", "FlyballETS.1234"))
+   String strAPName = SettingsManager.getSetting("APName");
+   String strAPPass = SettingsManager.getSetting("APPass");
+   if (!WiFi.softAP(strAPName.c_str(), strAPPass.c_str()))
    {
-      Debug.DebugSend(LOG_ALERT, "Error initializing softAP!");
+      Debug.DebugSend(LOG_ALERT, "Error initializing softAP!\r\n");
    }
-   
+   else
+   {
+      Debug.DebugSend(LOG_INFO, "Wifi started successfully, AP name: %s!\r\n", strAPName.c_str());
+   }
+   WiFi.onEvent(WiFiEvent);
 
    //configure webserver
    WebHandler.init(80);
 
-   Serialprint("Ready!\r\n");
+   //Initialize RaceHandler class with S1 and S2 pins
+   RaceHandler.init(iS1Pin, iS2Pin);
+
+   //Initialize simulatorclass pins if applicable
+#if Simulate
+   Simulator.init(iS1Pin, iS2Pin);
+#endif
+
    Debug.DebugSend(LOG_INFO, "Ready on IP %s!\r\n", WiFi.softAPIP().toString().c_str());
 
    //Ota setup
@@ -265,6 +274,9 @@ void setup()
    });
    ArduinoOTA.begin();
 
+   //Initialize GPS Serial port and class
+   GPSSerial.begin(9600, SERIAL_8N1, 39, 36);
+   GPSHandler.init(&GPSSerial);
 }
 
 void loop()
@@ -289,6 +301,12 @@ void loop()
 
    //Handle WebSocket server
    WebHandler.loop();
+
+   //Handle settings manager loop
+   SettingsManager.loop();
+
+   //Handle GPS
+   GPSHandler.loop();
    
 #if Simulate
    //Run simulator
@@ -411,19 +429,20 @@ void loop()
    }
 
    //Enable (uncomment) the following if you want periodic status updates on the serial port
-   /*
    if ((millis() - lLastSerialOutput) > 500)
    {
       //Serialprint("%lu: ping! voltage is: %.2u, this is %i%%\r\n", millis(), iBatteryVoltage, iBatteryPercentage);
       //Serialprint("%lu: Elapsed time: %s\r\n", millis(), cElapsedRaceTime);
+      //Serialprint("Free heap: %d\r\n", system_get_free_heap_size());
+      /*
       if (RaceHandler.RaceState == RaceHandler.RUNNING)
       {
          dtostrf(RaceHandler.GetDogTime(RaceHandler.iCurrentDog), 7, 3, cDogTime);
          Serialprint("Dog %i: %ss\r\n", RaceHandler.iCurrentDog, cDogTime);
       }
+      */
       lLastSerialOutput = millis();
    }
-   */
    //Cleanup variables used for checking if something changed
    iCurrentDog = RaceHandler.iCurrentDog;
    iCurrentRaceState = RaceHandler.RaceState;
@@ -521,4 +540,19 @@ void ResetRace()
    lLastRCPress[1] = millis();
    LightsController.ResetLights();
    RaceHandler.ResetRace();
+}
+
+void WiFiEvent(WiFiEvent_t event) {
+   switch (event) {
+   case SYSTEM_EVENT_AP_START:
+      Serial.println("AP Started");
+      WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
+      break;
+   case SYSTEM_EVENT_AP_STOP:
+      Serial.println("AP Stopped");
+      break;
+
+   default:
+      break;
+   }
 }

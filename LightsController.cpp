@@ -21,6 +21,8 @@
 #include "RaceHandler.h"
 #include "global.h"
 #include "config.h"
+#include "Structs.h"
+#include "WebHandler.h"
 //#include <Adafruit_NeoPixel.h>
 #include <NeoPixelBus.h>
 
@@ -33,7 +35,7 @@
 /// <param name="iClockPin">  Zero-based index of the clock pin. </param>
 /// <param name="iDataPin">   Zero-based index of the data pin. </param>
 #ifdef WS281x
-void LightsControllerClass::init(NeoPixelBus<NeoRgbFeature, Neo400KbpsMethod>* LightsStrip)
+void LightsControllerClass::init(NeoPixelBus<NeoRgbFeature, NeoWs2813Method>* LightsStrip)
 #else
 void LightsControllerClass::init(uint8_t iLatchPin, uint8_t iClockPin, uint8_t iDataPin)
 #endif // WS281x
@@ -41,7 +43,7 @@ void LightsControllerClass::init(uint8_t iLatchPin, uint8_t iClockPin, uint8_t i
 #ifdef WS281x
    //pinMode(iLightsPin, OUTPUT);
    _LightsStrip = LightsStrip;
-   //_LightsStrip = NeoPixelBus<NeoRgbFeature, Neo800KbpsMethod>(5, iLightsPin);
+   //_LightsStrip = NeoPixelBus<NeoRgbFeature, NeoWs2813Method>(5, iLightsPin);
    //_LightsStrip = Adafruit_NeoPixel(5, iLightsPin, NEO_RGB + NEO_KHZ800);
    _LightsStrip->Begin();
    //_LightsStrip->SetBrightness(255);
@@ -104,6 +106,8 @@ void LightsControllerClass::Main()
       shiftOut(_iDataPin, _iClockPin, MSBFIRST, _byCurrentLightsState);
       digitalWrite(_iLatchPin, HIGH);
 #endif // WS281x
+      //Send data to websocket clients
+      WebHandler.SendLightsData(GetLightsState());
    }
 }
 
@@ -230,10 +234,10 @@ void LightsControllerClass::ToggleLightState(Lights byLight, LightStates byLight
 
    if (byLightState == OFF)
    {
-      LightConfig.iColor = RgbColor(0,0,0);
+      LightConfig.iColor = RgbColor(0);
    }
    _LightsStrip->SetPixelColor(LightConfig.iPixelNumber, LightConfig.iColor);
-#else
+#endif // WS281x
    if (byCurrentLightState != byLightState)
    {
 
@@ -246,7 +250,6 @@ void LightsControllerClass::ToggleLightState(Lights byLight, LightStates byLight
          _byNewLightsState = _byNewLightsState - byLight;
       }
    }
-#endif // WS281x
 }
 
 /// <summary>
@@ -269,6 +272,31 @@ void LightsControllerClass::ToggleFaultLight(uint8_t DogNumber, LightStates byLi
    }
    ToggleLightState(byLight, byLightState);
    if (bDEBUG) Serialprint("Fault light for dog %i: %i\r\n", DogNumber, byLightState);
+}
+
+stLightsState LightsControllerClass::GetLightsState()
+{
+   stLightsState CurrentLightsState;
+
+   CurrentLightsState.State[0] = CheckLightState(WHITE) == 1 ? 1 : 0;
+   CurrentLightsState.State[1] = CheckLightState(RED) == 1 ? 1 : 0;
+   //3rd light can have 2 colors
+   if (CheckLightState(YELLOW1) == 1)
+   {
+      CurrentLightsState.State[2] = 1;
+   }
+   else if(CheckLightState(BLUE))
+   {
+      CurrentLightsState.State[2] = 2;
+   }
+   else
+   {
+      CurrentLightsState.State[2] = 0;
+   }
+   CurrentLightsState.State[3] = CheckLightState(YELLOW2) == 1 ? 1 : 0;
+   CurrentLightsState.State[4] = CheckLightState(GREEN) == 1 ? 1 : 0;
+
+   return CurrentLightsState;
 }
 
 /// <summary>

@@ -7,7 +7,7 @@
 void DebugClass::init(char * SysLogDest, char * DeviceName, char * AppName)
 {
    Syslog _Syslog(_DebugUDP, SysLogDest, 514, DeviceName, AppName, LOG_KERN);
-   _Syslog.setSerialPrint(false);
+   _Syslog.setSerialPrint(true);
 }
 
 void DebugClass::DebugSend(uint8_t priority, const char * format, ...) {
@@ -21,7 +21,7 @@ void DebugClass::DebugSend(uint8_t priority, const char * format, ...) {
 
    char * cPrio = _TranslatePriority(priority);
 
-   Serial.printf("%s: %s", cPrio, buffer);
+   Serial.printf("%s: %s\r\n", cPrio, buffer);
    if (len > DEBUG_MESSAGE_MAX_LENGTH) {
       Serial.printf(" (...)\n");
    }

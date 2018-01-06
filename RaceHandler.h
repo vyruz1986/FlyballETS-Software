@@ -1,5 +1,6 @@
 // RaceHandler.h
 #include "StreamPrint.h"
+#include "Structs.h"
 #ifndef _RACEHANDLER_h
 #define _RACEHANDLER_h
 
@@ -8,6 +9,8 @@
 #else
 	#include "WProgram.h"
 #endif
+
+#define NUM_HISTORIC_RACE_RECORDS 100
 
 class RaceHandlerClass
 {
@@ -33,7 +36,6 @@ class RaceHandlerClass
    void Main();
    void StartTimers();
    void StartRace();
-   void StopRace();
    void StopRace(unsigned long StopTime);
    void ResetRace();
    void TriggerSensor1();
@@ -48,11 +50,16 @@ class RaceHandlerClass
 
    double GetRaceTime();
    double GetDogTime(uint8_t iDogNumber, int8_t iRunNumber = -1);
+   unsigned long GetDogTimeMillis(uint8_t iDogNumber, int8_t iRunNumber = -1);
    String GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber = -1);
+   unsigned long GetCrossingTimeMillis(uint8_t iDogNumber, int8_t iRunNumber = -1);
    String GetRerunInfo(uint8_t iDogNumber);
    double GetTotalCrossingTime();
 
    String GetRaceStateString();
+
+   stRaceData GetRaceData();
+   stRaceData GetRaceData(uint iRaceId);
 
 private:
    unsigned long _lRaceStartTime;
@@ -62,6 +69,8 @@ private:
    unsigned long _lLastTransitionStringUpdate;
 
    uint8_t  _iS1Pin;
+   uint8_t  _iS2Pin;
+
    struct STriggerRecord
    {
       volatile uint8_t iSensorNumber;
@@ -72,12 +81,11 @@ private:
 
    volatile uint8_t _iQueueReadIndex;
    volatile uint8_t _iQueueWriteIndex;
-   uint8_t  _iS2Pin;
 
    bool _bFault;
    bool _bDogFaults[4];
    bool _bRerunBusy;
-   uint8_t _iDogRunCounters[4];
+   uint8_t _iDogRunCounters[4];  //Number of (re-)runs for each dog
    unsigned long _lLastDogTimeReturnTimeStamp[4];
    uint8_t _iLastReturnedRunNumber[4];
    unsigned long _lDogEnterTimes[4];
@@ -94,6 +102,9 @@ private:
    };
    _byDogStates _byDogState;
    bool _bGatesClear = false;
+
+   stRaceData _HistoricRaceData[NUM_HISTORIC_RACE_RECORDS];
+   uint _iCurrentRaceId;
 
    void _ChangeRaceState(RaceStates _byNewRaceState);
    void _ChangeDogState(_byDogStates _byNewDogState);
