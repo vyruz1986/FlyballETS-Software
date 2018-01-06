@@ -13,5 +13,17 @@ You will see there are also 2 Visual Studio files, FlyballETS-Software.sln and .
 ## Requirements
 
 The source files are 100% Arduino compatible, this means you can compile them by just installing the latest Arduino IDE and opening the FlyballETS-Software.ino file.
-**One small change is required!** Since I have used some features which are only available since C++11 (Arduino IDE uses C++98 by default).
-To modify your Arduino IDE installation to support these features, follow [this answer on Stackoverflow.](http://stackoverflow.com/a/26175586/1177847), it's as simple as modifying one single text file.
+You do need the ESP32-Arduino SDK however, see [this link](https://github.com/espressif/arduino-esp32) for details and instructions.
+
+## Thanks
+
+This project was made possible by the following awesome libraries/projects and their developers:
+
+* [TinyGPS++](http://arduiniana.org/libraries/tinygpsplus/) for interacting with the GPS module
+* [Syslog for ESP8266](https://github.com/arcao/Syslog) for remote logging
+* [ArduinoJson](https://github.com/bblanchon/ArduinoJson) for easily building JSON objects in Arduino
+* [ESPAsyncWebServer](https://github.com/me-no-dev/ESPAsyncWebServer) for providing a very powerful and featured webserver & websocket interface
+* [Arduino core SDK for ESP32](https://github.com/espressif/arduino-esp32) for being able to use the ESP32 platform at all
+* [Embedis](https://github.com/thingSoC/embedis) for providing an easy to use EEPROM interface to store settings
+* [NeoPixelBus](https://github.com/Makuna/NeoPixelBus) for reliably controlling WS2812 LEDs using ESP32
+* [Espurna Project](https://bitbucket.org/xoseperez/espurna) was used as a great example to solve several problems, such as the web UI and the settings interface.
