@@ -47,9 +47,19 @@ void BatterySensorClass::CheckBatteryVoltage()
       {
          iBatteryReadingsTotal = iBatteryReadingsTotal + _iBatteryReadings[i];
       }
-      int iAverageBatteryReading = iBatteryReadingsTotal / _iNumberOfBatteryReadings;
+      _iAverageBatteryReading = iBatteryReadingsTotal / _iNumberOfBatteryReadings;
+
+#ifdef ESP32
+      //For ESP32 we're using +12V--R33K--PIN--R10K--GND circuit
+      //This voltage divider allows reading 0-14.19V
+      //Also ESP32 has 12-bit ADC, so 3.3V = 4095 analogRead value
+      //First calculate voltage at ADC pin
+      int iPinVoltage = map(_iAverageBatteryReading, 0, 4095, 0, 315);
+      _iBatteryVoltage = iPinVoltage * 4.3;  // 14.19/3.3=4.3
+#else
       float fMeasuredVoltage = iAverageBatteryReading * 0.0048828125;
       _iBatteryVoltage = fMeasuredVoltage * 2.5 * 100;
+#endif
       _iNumberOfBatteryReadings = 0;
    }
 }
@@ -77,6 +87,18 @@ uint16_t BatterySensorClass::GetBatteryPercentage()
 {
    uint16_t iBatteryPercentage = map(_iBatteryVoltage, 960, 1260, 0, 100);
    return iBatteryPercentage;
+}
+
+/// <summary>
+///   Gets the last analogRead value from battery sense pin.
+/// </summary>
+///
+/// <returns>
+///   A value from 0-4095
+/// </returns>
+uint16_t BatterySensorClass::GetLastAnalogRead()
+{
+   return _iAverageBatteryReading;
 }
 
 /// <summary>

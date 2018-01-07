@@ -32,6 +32,7 @@ public:
    void CheckBatteryVoltage();
    uint16_t GetBatteryVoltage();
    uint16_t GetBatteryPercentage();
+   uint16_t GetLastAnalogRead();
    
 private:
    uint8_t _iBatterySensorPin;
@@ -39,6 +40,7 @@ private:
    int _iBatteryReadings[10];
    int _iNumberOfBatteryReadings = 0;
    uint16_t _iBatteryVoltage = 0;
+   uint16_t _iAverageBatteryReading;
    
 };
 

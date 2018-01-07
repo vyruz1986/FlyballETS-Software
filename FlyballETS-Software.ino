@@ -431,7 +431,7 @@ void loop()
    //Enable (uncomment) the following if you want periodic status updates on the serial port
    if ((millis() - lLastSerialOutput) > 500)
    {
-      //Serialprint("%lu: ping! voltage is: %.2u, this is %i%%\r\n", millis(), iBatteryVoltage, iBatteryPercentage);
+      Serialprint("%lu: ping! analog: %i ,voltage is: %i, this is %i%%\r\n", millis(), BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
       //Serialprint("%lu: Elapsed time: %s\r\n", millis(), cElapsedRaceTime);
       //Serialprint("Free heap: %d\r\n", system_get_free_heap_size());
       /*
