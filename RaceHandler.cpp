@@ -676,7 +676,8 @@ String RaceHandlerClass::GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber)
    double dCrossingTime = 0;
    char cCrossingTime[8];
    String strCrossingTime;
-   dCrossingTime = GetCrossingTimeMillis(iDogNumber, iRunNumber) / 1000.0;
+   long lCrossingTimeMillis = GetCrossingTimeMillis(iDogNumber, iRunNumber);
+   dCrossingTime = lCrossingTimeMillis / 1000.0;
    if (dCrossingTime < 0)
    {
       dCrossingTime = fabs(dCrossingTime);
@@ -693,7 +694,7 @@ String RaceHandlerClass::GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber)
 }
 unsigned long RaceHandlerClass::GetCrossingTimeMillis(uint8_t iDogNumber, int8_t iRunNumber)
 {
-   unsigned long ulCrossingTime = 0;
+   long lCrossingTime = 0;
    if (_iDogRunCounters[iDogNumber] > 0)
    {
       //We have multiple times for this dog.
@@ -727,9 +728,9 @@ unsigned long RaceHandlerClass::GetCrossingTimeMillis(uint8_t iDogNumber, int8_t
       iRunNumber = 0;
    }
 
-   ulCrossingTime = _lCrossingTimes[iDogNumber][iRunNumber] / 1000;
+   lCrossingTime = _lCrossingTimes[iDogNumber][iRunNumber] / 1000;
    
-   return ulCrossingTime;
+   return lCrossingTime;
 }
 
 /// <summary>
