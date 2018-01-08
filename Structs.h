@@ -33,6 +33,8 @@ struct stSystemData
    RESET_REASON CPU0ResetReason;
    RESET_REASON CPU1ResetReason;
    uint NumClients;
+   char* UTCSystemTime;
+   uint BatteryPercentage;
 };
 
 struct stLightsState

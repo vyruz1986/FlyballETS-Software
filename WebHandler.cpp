@@ -12,6 +12,7 @@
 #include "Debug.h"
 #include "SettingsManager.h"
 #include "GPSHandler.h"
+#include "BatterySensor.h"
 #include <rom/rtc.h>
 
 void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t * data, size_t len)
@@ -400,6 +401,8 @@ stSystemData WebHandlerClass::_GetSystemData()
    _SystemData.FreeHeap = esp_get_free_heap_size();
    _SystemData.Uptime = millis();
    _SystemData.NumClients = _ws->count();
+   _SystemData.UTCSystemTime = GPSHandler.GetUTCTimestamp();
+   _SystemData.BatteryPercentage = BatterySensor.GetBatteryPercentage();
 }
 
 void WebHandlerClass::_SendSystemData()
@@ -413,7 +416,8 @@ void WebHandlerClass::_SendSystemData()
    JsonSystemData["CPU0ResetReason"]   = (int)_SystemData.CPU0ResetReason;
    JsonSystemData["CPU1ResetReason"]   = (int)_SystemData.CPU1ResetReason;
    JsonSystemData["numClients"]        = _SystemData.NumClients;
-   JsonSystemData["systemTimestamp"]   = GPSHandler.GetUTCTimestamp();
+   JsonSystemData["systemTimestamp"]   = _SystemData.UTCSystemTime;
+   JsonSystemData["batteryPercentage"]   = _SystemData.BatteryPercentage;
 
    String JsonString;
    JsonRoot.printTo(JsonString);
