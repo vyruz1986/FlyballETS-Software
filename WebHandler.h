@@ -43,11 +43,14 @@ protected:
    bool _authenticate(AsyncWebServerRequest * request);
    bool _wsAuth(AsyncWebSocketClient * client);
 
+   void _onHome(AsyncWebServerRequest * request);
+
    unsigned long _lLastRaceDataBroadcast;
    unsigned long _lRaceDataBroadcastInterval;
    unsigned long _lLastSystemDataBroadcast;
    unsigned long _lSystemDataBroadcastInterval;
    stSystemData _SystemData;
+   char _last_modified[50];
    
    typedef struct
    {

@@ -14,6 +14,7 @@
 #include "GPSHandler.h"
 #include "BatterySensor.h"
 #include <rom/rtc.h>
+#include "static\index.html.gz.h"
 
 void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t * data, size_t len)
 {
@@ -166,6 +167,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
 
 void WebHandlerClass::init(int webPort)
 {
+   snprintf_P(_last_modified, sizeof(_last_modified), PSTR("%s %s GMT"), __DATE__, __TIME__);
    _server = new AsyncWebServer(webPort);
    _ws = new AsyncWebSocket("/ws");
    _wsa = new AsyncWebSocket("/wsa");
@@ -194,9 +196,11 @@ void WebHandlerClass::init(int webPort)
       request->send(404);
    });
 
-   //Regular webpages
-   SPIFFS.begin(true);
-   _server->serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
+   // Rewrites
+   _server->rewrite("/", "/index.html");
+
+   // Serve home (basic authentication protection)
+   _server->on("/index.html", HTTP_GET, std::bind(&WebHandlerClass::_onHome, this, std::placeholders::_1));
 
    //Authentication handler
    _server->on("/auth", HTTP_GET, std::bind(&WebHandlerClass::_onAuth, this, std::placeholders::_1));
@@ -476,6 +480,22 @@ bool WebHandlerClass::_wsAuth(AsyncWebSocketClient * client) {
    }
 
    return true;
+
+}
+
+void WebHandlerClass::_onHome(AsyncWebServerRequest *request) {
+
+   //if (!_authenticate(request)) return request->requestAuthentication(getSetting("hostname").c_str());
+
+   if (request->header("If-Modified-Since").equals(_last_modified)) {
+      request->send(304);
+   }
+   else {
+      AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", index_html_gz, index_html_gz_len);
+      response->addHeader("Content-Encoding", "gzip");
+      response->addHeader("Last-Modified", _last_modified);
+      request->send(response);
+   }
 
 }
 
