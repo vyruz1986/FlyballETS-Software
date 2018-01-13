@@ -30,8 +30,8 @@
             <li *ngFor="let dog of currentRace.dogData" [ngClass]="{'list-group-item': true, 'active': dog.running}">
               Dog {{dog.dogNumber + 1}} <span *ngIf="dog.fault" class="badge badge-danger">Fault!</span><br>
               <span *ngFor="let dogTime of dog.timing; let i = index">
-                <ng-container *ngIf="dogTime.crossingTime > 0 || dogTime.time > 0 || i == 0">
-                  {{dogTime.time | date: 's.SSS'}} + {{dogTime.crossingTime | date: 's.SSS'}}<br>
+                <ng-container *ngIf="dogTime.crossingTime != 0 || dogTime.time != 0 || i == 0">
+                  {{dogTime.time | date: 's.SSS'}} {{dogTime.crossingTime | dogCrossingTime}}<br>
                 </ng-container>
               </span>
             </li>
@@ -39,7 +39,7 @@
       </div>
     </div>
   </div>
-</div>  
+</div>
 <div *ngIf="!etsDataService.isConnected && etsDataService.sessionEnded" class="container">
     <div class="alert alert-success text-center" role="alert">
       Session ended.<br>
