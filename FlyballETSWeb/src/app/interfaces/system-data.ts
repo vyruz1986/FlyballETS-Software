@@ -6,5 +6,6 @@ export interface SystemData {
    CPU0ResetReason:number,
    CPU1ResetReason:number,
    numClients:number,
-   systemTimestamp:Date
+   systemTimestamp:Date,
+   batteryPercentage:Number
 }
