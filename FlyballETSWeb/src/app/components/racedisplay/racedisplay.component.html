@@ -13,7 +13,8 @@
         <button type="button" class="btn btn-info" (click)="resetRace()" [disabled]="resetDisabled">Reset</button>
         <h4>Race Time</h4>
         <div class="teamTime">
-          {{currentRace.elapsedTime | date: 'mm:ss.SSS'}} s
+          {{currentRace.elapsedTime | date: 'mm:ss.SSS'}} s<br />
+          ({{(currentRace.elapsedTime - currentRace.totalCrossingTime) | date: 'ss.SSS'}} + {{currentRace.totalCrossingTime | date: 's.SSS'}})
         </div>
         <div class="raceState">
           <span [ngClass]="{'badge': true, 'badge-success': currentRace.raceState == 0, 'badge-warning': currentRace.raceState == 1, 'badge-danger': currentRace.raceState == 2}">

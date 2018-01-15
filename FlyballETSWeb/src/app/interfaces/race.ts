@@ -13,6 +13,7 @@ export interface Race {
    startTime: Number,
    endTime: Number,
    elapsedTime: Number,
+   totalCrossingTime: Number,
    raceState: RaceState,
    raceStateFriendly: String,
    dogData: Array<DogData>

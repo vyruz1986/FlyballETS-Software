@@ -16,6 +16,7 @@ export class RacedisplayComponent implements OnInit {
     startTime: 0,
     endTime: 0,
     elapsedTime: 0,
+    totalCrossingTime: 0,
     raceState: 0,
     raceStateFriendly: "Stopped",
     dogData: []
