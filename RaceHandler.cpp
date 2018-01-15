@@ -652,7 +652,8 @@ unsigned long RaceHandlerClass::GetDogTimeMillis(uint8_t iDogNumber, int8_t iRun
 
    //Fixes issue 7 (https://github.com/vyruz1986/FlyballETS-Software/issues/7)
    //Only deduct crossing time if it is positive
-   if (_lCrossingTimes[iDogNumber][iRunNumber] > 0)
+   if (_lCrossingTimes[iDogNumber][iRunNumber] > 0
+      && ulDogTimeMillis > (_lCrossingTimes[iDogNumber][iRunNumber] / 1000))
    {
       ulDogTimeMillis -= (_lCrossingTimes[iDogNumber][iRunNumber] / 1000);
    }
