@@ -329,6 +329,7 @@ void WebHandlerClass::_SendRaceData(uint iRaceId)
       JsonRaceData["startTime"] = RequestedRaceData.StartTime;
       JsonRaceData["endTime"] = RequestedRaceData.EndTime;
       JsonRaceData["elapsedTime"] = RequestedRaceData.ElapsedTime;
+      JsonRaceData["totalCrossingTime"] = RequestedRaceData.TotalCrossingTime;
       JsonRaceData["raceState"] = RequestedRaceData.RaceState;
       
       JsonArray& JsonDogDataArray = JsonRaceData.createNestedArray("dogData");

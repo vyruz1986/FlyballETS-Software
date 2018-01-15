@@ -767,9 +767,9 @@ String RaceHandlerClass::GetRerunInfo(uint8_t iDogNumber)
 /// </summary>
 ///
 /// <returns>
-///   The total crossing time in seconds with 2 decimals.
+///   The total crossing time in milliseconds
 /// </returns>
-double RaceHandlerClass::GetTotalCrossingTime()
+long RaceHandlerClass::GetTotalCrossingTimeMillis()
 {
    long lTotalCrossingTime = 0;
 
@@ -780,7 +780,21 @@ double RaceHandlerClass::GetTotalCrossingTime()
          lTotalCrossingTime += lTime;
       }
    }
-   double dTotalCrossingTime = lTotalCrossingTime / 1000000.0;
+   return lTotalCrossingTime / 1000;
+}
+
+/// <summary>
+///   Gets total crossing time. This will return the total crossing time of all dogs (and reruns
+///   if applicable). It allows the user to easily calculate the theoretical best time of the
+///   team by subtracting this number from the total team time.
+/// </summary>
+///
+/// <returns>
+///   The total crossing time in seconds with 2 decimals.
+/// </returns>
+double RaceHandlerClass::GetTotalCrossingTime()
+{
+   double dTotalCrossingTime = this->GetTotalCrossingTimeMillis() / 1000.0;
    return dTotalCrossingTime;
 }
 
@@ -830,6 +844,7 @@ stRaceData RaceHandlerClass::GetRaceData(uint iRaceId)
       RequestedRaceData.StartTime = _lRaceStartTime / 1000;
       RequestedRaceData.EndTime = _lRaceEndTime / 1000;
       RequestedRaceData.ElapsedTime = _lRaceTime / 1000;
+      RequestedRaceData.TotalCrossingTime = this->GetTotalCrossingTimeMillis();
       RequestedRaceData.RaceState = RaceState;
       
       //Get Dog info
