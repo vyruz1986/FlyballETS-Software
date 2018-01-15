@@ -2,9 +2,9 @@ import { Pipe, PipeTransform } from '@angular/core';
 import { DatePipe } from '@angular/common';
 
 @Pipe({
-  name: 'dogCrossingTime'
+  name: 'crossingTime'
 })
-export class DogCrossingTimePipe implements PipeTransform {
+export class CrossingTime implements PipeTransform {
 
   constructor(private datePipe:DatePipe){}
 

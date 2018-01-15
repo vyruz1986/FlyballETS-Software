@@ -19,7 +19,7 @@ import { EtsdataService } from './services/etsdata.service';
 import { SecureEtsDataService } from './services/secure-ets-data.service';
 import { LoginComponent } from './components/login/login.component';
 import { HttpClientModule } from '@angular/common/http';
-import { DogCrossingTimePipe } from './pipes/dog-crossing-time.pipe';
+import { CrossingTime } from './pipes/crossing-time.pipe';
 import { DatePipe } from '@angular/common';
 
 
@@ -39,7 +39,7 @@ const appRoutes: Routes = [
     SystemDataComponent,
     LightsComponent,
     LoginComponent,
-    DogCrossingTimePipe
+    CrossingTime
   ],
   imports: [
      BrowserModule,

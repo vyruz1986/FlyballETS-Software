@@ -14,7 +14,7 @@
         <h4>Race Time</h4>
         <div class="teamTime">
           {{currentRace.elapsedTime | date: 'mm:ss.SSS'}} s<br />
-          ({{(currentRace.elapsedTime - currentRace.totalCrossingTime) | date: 'ss.SSS'}} + {{currentRace.totalCrossingTime | date: 's.SSS'}})
+          ({{(currentRace.elapsedTime - currentRace.totalCrossingTime) | date: 'ss.SSS'}} {{currentRace.totalCrossingTime | crossingTime}})
         </div>
         <div class="raceState">
           <span [ngClass]="{'badge': true, 'badge-success': currentRace.raceState == 0, 'badge-warning': currentRace.raceState == 1, 'badge-danger': currentRace.raceState == 2}">
@@ -32,7 +32,7 @@
               Dog {{dog.dogNumber + 1}} <span *ngIf="dog.fault" class="badge badge-danger">Fault!</span><br>
               <span *ngFor="let dogTime of dog.timing; let i = index">
                 <ng-container *ngIf="dogTime.crossingTime != 0 || dogTime.time != 0 || i == 0">
-                  {{dogTime.time | date: 's.SSS'}} {{dogTime.crossingTime | dogCrossingTime}}<br>
+                  {{dogTime.time | date: 's.SSS'}} {{dogTime.crossingTime | crossingTime}}<br>
                 </ng-container>
               </span>
             </li>
