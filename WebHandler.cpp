@@ -9,7 +9,6 @@
 #include <FS.h>
 #include <SPIFFS.h>
 #include <ArduinoJson.h>
-#include "Debug.h"
 #include "SettingsManager.h"
 #include "GPSHandler.h"
 #include "BatterySensor.h"
@@ -24,7 +23,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
 
    if (type == WS_EVT_CONNECT)
    {
-      Serial.printf("ws[%s][%u] connect\n", server->url(), client->id());
+      syslog.logf_P("ws[%s][%u] connect\n", server->url(), client->id());
       //client->printf("Hello Client %u :)", client->id());
 
       //Should we check authentication?
@@ -42,20 +41,20 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
       client->ping();
    }
    else if (type == WS_EVT_DISCONNECT) {
-      Serial.printf("ws[%s][%u] disconnect: %u\n", server->url(), client->id());
+      syslog.logf_P("ws[%s][%u] disconnect: %u\n", server->url(), client->id());
    }
    else if (type == WS_EVT_ERROR) {
-      Serial.printf("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
+      syslog.logf_P("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
    }
    else if (type == WS_EVT_PONG) {
-      Serial.printf("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len) ? (char*)data : "");
+      syslog.logf_P("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len) ? (char*)data : "");
    }
    else if (type == WS_EVT_DATA) {
       AwsFrameInfo * info = (AwsFrameInfo*)arg;
       String msg = "";
       if (info->final && info->index == 0 && info->len == len) {
          //the whole message is in a single frame and we got all of it's data
-         Serial.printf("ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT) ? "text" : "binary", info->len);
+         syslog.logf_P("ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT) ? "text" : "binary", info->len);
 
          if (info->opcode == WS_TEXT) {
             for (size_t i = 0; i < info->len; i++) {
@@ -69,17 +68,17 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
                msg += buff;
             }
          }
-         Serial.printf("%s\n", msg.c_str());
+         syslog.logf_P("%s\n", msg.c_str());
       }
       else {
          //message is comprised of multiple frames or the frame is split into multiple packets
          if (info->index == 0) {
             if (info->num == 0)
-               Serial.printf("ws[%s][%u] %s-message start\n", server->url(), client->id(), (info->message_opcode == WS_TEXT) ? "text" : "binary");
-            Serial.printf("ws[%s][%u] frame[%u] start[%llu]\n", server->url(), client->id(), info->num, info->len);
+               syslog.logf_P("ws[%s][%u] %s-message start\n", server->url(), client->id(), (info->message_opcode == WS_TEXT) ? "text" : "binary");
+            syslog.logf_P("ws[%s][%u] frame[%u] start[%llu]\n", server->url(), client->id(), info->num, info->len);
          }
 
-         Serial.printf("ws[%s][%u] frame[%u] %s[%llu - %llu]: ", server->url(), client->id(), info->num, (info->message_opcode == WS_TEXT) ? "text" : "binary", info->index, info->index + len);
+         syslog.logf_P("ws[%s][%u] frame[%u] %s[%llu - %llu]: ", server->url(), client->id(), info->num, (info->message_opcode == WS_TEXT) ? "text" : "binary", info->index, info->index + len);
 
          if (info->opcode == WS_TEXT) {
             for (size_t i = 0; i < info->len; i++) {
@@ -93,12 +92,12 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
                msg += buff;
             }
          }
-         Serial.printf("%s\n", msg.c_str());
+         syslog.logf_P("%s\n", msg.c_str());
 
          if ((info->index + len) == info->len) {
-            Serial.printf("ws[%s][%u] frame[%u] end[%llu]\n", server->url(), client->id(), info->num, info->len);
+            syslog.logf_P("ws[%s][%u] frame[%u] end[%llu]\n", server->url(), client->id(), info->num, info->len);
             if (info->final) {
-               Serial.printf("ws[%s][%u] %s-message end\n", server->url(), client->id(), (info->message_opcode == WS_TEXT) ? "text" : "binary");
+               syslog.logf_P("ws[%s][%u] %s-message end\n", server->url(), client->id(), (info->message_opcode == WS_TEXT) ? "text" : "binary");
             }
          }
       }
@@ -107,7 +106,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
       DynamicJsonBuffer jsonBufferRequest;
       JsonObject& request = jsonBufferRequest.parseObject(msg);
       if (!request.success()) {
-         Debug.DebugSend(LOG_ERR, "Error parsing JSON!");
+         syslog.logf_P(LOG_ERR, "Error parsing JSON!");
          //wsSend_P(client->id(), PSTR("{\"message\": 3}"));
          client->text("{\"error\":\"Invalid JSON received\"}");
          return;
@@ -192,7 +191,7 @@ void WebHandlerClass::init(int webPort)
    _server->addHandler(_wsa);
 
    _server->onNotFound([](AsyncWebServerRequest *request) {
-      Serial.printf("Not found: %s!\r\n", request->url().c_str());
+      syslog.logf_P(LOG_ERR, "Not found: %s!\r\n", request->url().c_str());
       request->send(404);
    });
 
@@ -244,7 +243,7 @@ void WebHandlerClass::SendLightsData(stLightsState LightStates)
 
    if (!JsonRoot.success())
    {
-      Debug.DebugSend(LOG_ERR, "Error creating JSON object!");
+      syslog.logf_P(LOG_ERR, "Error creating JSON object!");
       _ws->textAll("{\"error\": \"Error creating JSON object!\"}");
       return;
    }
@@ -255,7 +254,7 @@ void WebHandlerClass::SendLightsData(stLightsState LightStates)
 
       String JsonString;
       JsonRoot.printTo(JsonString);
-      //Serial.printf("json: %s\r\n", JsonString.c_str());
+      //syslog.logf_P("json: %s\r\n", JsonString.c_str());
       _ws->textAll(JsonString);
    }
 }
@@ -317,7 +316,7 @@ void WebHandlerClass::_SendRaceData(uint iRaceId)
    
    if (!JsonRoot.success())
    {
-      Debug.DebugSend(LOG_ERR, "Error parsing JSON!");
+      syslog.logf_P(LOG_ERR, "Error parsing JSON!");
       //wsSend_P(client->id(), PSTR("{\"message\": 3}"));
       _ws->textAll("{\"error\": \"Error parsing JSON from RaceData!\"}");
       return;
@@ -350,7 +349,7 @@ void WebHandlerClass::_SendRaceData(uint iRaceId)
       
       String JsonString;
       JsonRoot.printTo(JsonString);
-      //Serial.printf("json: %s\r\n", JsonString.c_str());
+      //syslog.logf_P("json: %s\r\n", JsonString.c_str());
       _ws->textAll(JsonString);
    }
 }
@@ -367,7 +366,7 @@ boolean WebHandlerClass::_ProcessConfig(JsonArray& newConfig, String * ReturnErr
 
       if (value != SettingsManager.getSetting(key))
       {
-         Debug.DebugSend(LOG_DEBUG, "[WEBHANDLER] Storing %s = %s\r\n", key.c_str(), value.c_str());
+         syslog.logf_P(LOG_DEBUG, "[WEBHANDLER] Storing %s = %s\r\n", key.c_str(), value.c_str());
          SettingsManager.setSetting(key, value);
          save = changed = true;
       }
@@ -425,7 +424,7 @@ void WebHandlerClass::_SendSystemData()
 
    String JsonString;
    JsonRoot.printTo(JsonString);
-   //Serial.printf("json: %s\r\n", JsonString.c_str());
+   //syslog.logf_P("json: %s\r\n", JsonString.c_str());
    _ws->textAll(JsonString);
 }
 
@@ -469,12 +468,12 @@ bool WebHandlerClass::_wsAuth(AsyncWebSocketClient * client) {
    //this new user will/could have the same IP as the previous user, and will be authenticated :(
 
    for (index = 0; index < WS_TICKET_BUFFER_SIZE; index++) {
-      Serial.printf("Checking ticket: %i, ip: %s, time: %lu\r\n", index, _ticket[index].ip.toString().c_str(), _ticket[index].timestamp);
+      syslog.logf_P("Checking ticket: %i, ip: %s, time: %lu\r\n", index, _ticket[index].ip.toString().c_str(), _ticket[index].timestamp);
       if ((_ticket[index].ip == ip) && (now - _ticket[index].timestamp < WS_TIMEOUT)) break;
    }
 
    if (index == WS_TICKET_BUFFER_SIZE) {
-      Debug.DebugSend(LOG_INFO, "[WEBSOCKET] Validation check failed\n");
+      syslog.logf_P("[WEBSOCKET] Validation check failed\n");
       client->text("{\"success\": false, \"error\": \"You shall not pass!!!! Please authenticate first :-)\", \"authenticated\": false}");
       return false;
    }

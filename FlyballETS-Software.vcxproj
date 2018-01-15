@@ -82,7 +82,6 @@
       <FileType>CppCode</FileType>
     </ClInclude>
     <ClInclude Include="config.h" />
-    <ClInclude Include="Debug.h" />
     <ClInclude Include="global.h">
       <FileType>CppCode</FileType>
     </ClInclude>
@@ -104,12 +103,12 @@
     <ClInclude Include="static\index.html.gz.h" />
     <ClInclude Include="StreamPrint.h" />
     <ClInclude Include="Structs.h" />
+    <ClInclude Include="syslog.h" />
     <ClInclude Include="WebHandler.h" />
     <ClInclude Include="__vm\.FlyballETS-Software.vsarduino.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BatterySensor.cpp" />
-    <ClCompile Include="Debug.cpp" />
     <ClCompile Include="global.cpp" />
     <ClCompile Include="GPSHandler.cpp" />
     <ClCompile Include="LCDController.cpp" />

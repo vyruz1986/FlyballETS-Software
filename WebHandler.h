@@ -16,10 +16,10 @@
 #include <FS.h>
 #include <SPIFFS.h>
 #include <ArduinoJson.h>
-#include "Debug.h"
 #include "RaceHandler.h"
 #include "Structs.h"
 #include "LightsController.h"
+#include "syslog.h"
 
 
 class WebHandlerClass
