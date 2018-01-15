@@ -23,9 +23,7 @@
 // see <http://www.gnu.org/licenses/> 
 #include "GPSHandler.h"
 #include "SettingsManager.h"
-#include "Debug.h"
 #include "Structs.h"
-#include <Syslog.h>
 #include "WebHandler.h"
 #include "config.h"
 #include "StreamPrint.h"
@@ -41,6 +39,9 @@
 #include <ArduinoOTA.h>
 #include <EEPROM.h>
 //#include <avr/pgmspace.h>
+#include <WiFiUdp.h>
+#include <Syslog.h>
+#include "syslog.h"
 
 /*List of pins and the ones used (Lolin32 board):
    - 34: S1 (handler side) photoelectric sensor
@@ -162,12 +163,16 @@ IPAddress IPSubnet(255, 255, 255, 0);
 //Define serial pins for GPS module
 HardwareSerial GPSSerial(1);
 
+//Syslog object
+WiFiUDP SyslogUDP;
+Syslog syslog(SyslogUDP, "255.255.255.255", 514, "FlyballETS", "FlyballETSApp", LOG_INFO, SYSLOG_PROTO_BSD);
+
 void setup()
 {
    EEPROM.begin(EEPROM_SIZE);
    Serial.begin(115200);
    SettingsManager.init();
-   Debug.init("255.255.255.255", "FlyballETS", "FlyballETSApp");
+   syslog.setSerialPrint(true);
    
    pinMode(iS1Pin, INPUT);
    pinMode(iS2Pin, INPUT);
@@ -218,16 +223,20 @@ void setup()
    strSerialData[0] = 0;
 
    //Setup AP
+   WiFi.config(IPGateway, IPGateway, IPSubnet);
+   if (!WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet)) {
+      syslog.logf_P(LOG_ERR, "[WiFi]: AP Config failed!");
+   }
    WiFi.mode(WIFI_MODE_AP);
    String strAPName = SettingsManager.getSetting("APName");
    String strAPPass = SettingsManager.getSetting("APPass");
    if (!WiFi.softAP(strAPName.c_str(), strAPPass.c_str()))
    {
-      Debug.DebugSend(LOG_ALERT, "Error initializing softAP!\r\n");
+      syslog.logf_P(LOG_ALERT, "Error initializing softAP!\r\n");
    }
    else
    {
-      Debug.DebugSend(LOG_INFO, "Wifi started successfully, AP name: %s!\r\n", strAPName.c_str());
+      syslog.logf_P("Wifi started successfully, AP name: %s!\r\n", strAPName.c_str());
    }
    WiFi.onEvent(WiFiEvent);
 
@@ -242,8 +251,7 @@ void setup()
    Simulator.init(iS1Pin, iS2Pin);
 #endif
 
-   Debug.DebugSend(LOG_INFO, "Ready on IP %s!\r\n", WiFi.softAPIP().toString().c_str());
-
+   syslog.logf_P("Ready on IP: %s", WiFi.softAPIP().toString().c_str());
    //Ota setup
    ArduinoOTA.setPassword("FlyballETS.1234");
    ArduinoOTA.setPort(3232);
@@ -255,22 +263,17 @@ void setup()
          type = "filesystem";
 
       // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
-      Serial.println("Start updating " + type);
+      syslog.logf_P(String("Start updating " + type).c_str());
    });
 
    ArduinoOTA.onEnd([]() {
-      Serial.println("\nEnd");
+      syslog.logf_P("End");
    });
    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-      Serial.printf("Progress: %u%%\r\n", (progress / (total / 100)));
+      syslog.logf_P("Progress: %u%%\r\n", (progress / (total / 100)));
    });
    ArduinoOTA.onError([](ota_error_t error) {
-      Serial.printf("Error[%u]: ", error);
-      if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-      else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-      else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-      else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-      else if (error == OTA_END_ERROR) Serial.println("End Failed");
+      syslog.logf_P(LOG_ERR, "Error[%u]: ", error);
    });
    ArduinoOTA.begin();
 
@@ -414,31 +417,31 @@ void loop()
       {
          //Race is finished, put final data on screen
          dtostrf(RaceHandler.GetDogTime(RaceHandler.iCurrentDog, -2), 7, 3, cDogTime);
-         Serialprint("D%i: %s|CR: %s\r\n", RaceHandler.iCurrentDog, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iCurrentDog, -2).c_str());
-         Serialprint("RT:%s\r\n", cElapsedRaceTime);
+         syslog.logf_P("D%i: %s|CR: %s\r\n", RaceHandler.iCurrentDog, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iCurrentDog, -2).c_str());
+         syslog.logf_P("RT:%s\r\n", cElapsedRaceTime);
       }
-      Serialprint("RS: %i\r\n", RaceHandler.RaceState);
+      syslog.logf_P("RS: %i\r\n", RaceHandler.RaceState);
    }
 
    if (RaceHandler.iCurrentDog != iCurrentDog)
    {
       dtostrf(RaceHandler.GetDogTime(RaceHandler.iPreviousDog, -2), 7, 3, cDogTime);
-      Serialprint("D%i: %s|CR: %s\r\n", RaceHandler.iPreviousDog, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
-      Serialprint("D: %i\r\n", RaceHandler.iCurrentDog);
-      Serialprint("RT:%s\r\n", cElapsedRaceTime);
+      syslog.logf_P("D%i: %s|CR: %s\r\n", RaceHandler.iPreviousDog, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
+      syslog.logf_P("D: %i\r\n", RaceHandler.iCurrentDog);
+      syslog.logf_P("RT:%s\r\n", cElapsedRaceTime);
    }
 
    //Enable (uncomment) the following if you want periodic status updates on the serial port
    if ((millis() - lLastSerialOutput) > 500)
    {
-      //Serialprint("%lu: ping! analog: %i ,voltage is: %i, this is %i%%\r\n", millis(), BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
-      //Serialprint("%lu: Elapsed time: %s\r\n", millis(), cElapsedRaceTime);
-      //Serialprint("Free heap: %d\r\n", system_get_free_heap_size());
+      //syslog.logf_P("%lu: ping! analog: %i ,voltage is: %i, this is %i%%\r\n", millis(), BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
+      //syslog.logf_P("%lu: Elapsed time: %s\r\n", millis(), cElapsedRaceTime);
+      //syslog.logf_P("Free heap: %d\r\n", system_get_free_heap_size());
       /*
       if (RaceHandler.RaceState == RaceHandler.RUNNING)
       {
          dtostrf(RaceHandler.GetDogTime(RaceHandler.iCurrentDog), 7, 3, cDogTime);
-         Serialprint("Dog %i: %ss\r\n", RaceHandler.iCurrentDog, cDogTime);
+         syslog.logf_P("Dog %i: %ss\r\n", RaceHandler.iCurrentDog, cDogTime);
       }
       */
       lLastSerialOutput = millis();
@@ -451,7 +454,7 @@ void loop()
    if (strSerialData.length() > 0
        && bSerialStringComplete)
    {
-      if (bDEBUG) Serialprint("cSer: '%s'\r\n", strSerialData.c_str());
+      if (bDEBUG) syslog.logf_P("cSer: '%s'\r\n", strSerialData.c_str());
 
       if (strSerialData == "DEBUG")
       {
@@ -468,7 +471,7 @@ void loop()
    //Handle side switch button
    if (digitalRead(iSwitchSideTriggerPin) == LOW)
    {
-      Serial.printf("Switching sides!\r\n");
+      syslog.logf_P("Switching sides!\r\n");
    }
 }
 
@@ -517,7 +520,7 @@ void StartStopRace()
       && RaceHandler.GetRaceTime() == 0)           //and timers are zero
    {
       //Then start the race
-      if (bDEBUG) Serialprint("%lu: START!\r\n", millis());
+      if (bDEBUG) syslog.logf_P("%lu: START!\r\n", millis());
       LightsController.InitiateStartSequence();
       RaceHandler.StartRace();
    }
@@ -545,11 +548,13 @@ void ResetRace()
 void WiFiEvent(WiFiEvent_t event) {
    switch (event) {
    case SYSTEM_EVENT_AP_START:
-      Serial.println("AP Started");
-      WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
+      syslog.logf_P("AP Started");
+      if (!WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet)) {
+         syslog.logf_P(LOG_ERR, "[WiFi]: AP Config failed!");
+      }
       break;
    case SYSTEM_EVENT_AP_STOP:
-      Serial.println("AP Stopped");
+      syslog.logf_P("AP Stopped");
       break;
 
    default:

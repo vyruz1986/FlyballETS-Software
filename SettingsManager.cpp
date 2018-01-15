@@ -3,13 +3,13 @@
 #include <EEPROM.h>
 #include <SPIFFS.h>
 #include <StreamString.h>
-#include "Debug.h"
 #include "config.h"
+#include "syslog.h"
 
 void SettingsManagerClass::loop()
 {
    if (_settings_save) {
-      Debug.DebugSend(LOG_DEBUG, "[SETTINGS] Saving\r\n");
+      syslog.logf_P(LOG_DEBUG, "[SETTINGS] Saving\r\n");
       EEPROM.commit();
       _settings_save = false;
    }

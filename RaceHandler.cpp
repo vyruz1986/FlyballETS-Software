@@ -21,6 +21,7 @@
 #include "RaceHandler.h"
 #include "global.h"
 #include "WebHandler.h"
+#include "syslog.h"
 
 /// <summary>
 ///   Initialises this object andsets all counters to 0.
@@ -66,7 +67,7 @@ void RaceHandlerClass::_ChangeDogState(_byDogStates byNewDogState)
    if (_byDogState != byNewDogState)
    {
       _byDogState = byNewDogState;
-      if(bDEBUG) Serialprint("DogState: %i\r\n", byNewDogState);
+      syslog.logf_P(LOG_DEBUG, "DogState: %i\r\n", byNewDogState);
    }
 }
 
@@ -82,7 +83,7 @@ void RaceHandlerClass::_ChangeDogNumber(uint8_t iNewDogNumber)
    {
       iPreviousDog = iCurrentDog;
       iCurrentDog = iNewDogNumber;
-      if(bDEBUG) Serialprint("Prev Dog: %i|ENT:%lu|EXIT:%lu|TOT:%lu\r\n", iPreviousDog, _lDogEnterTimes[iPreviousDog], _lDogExitTimes[iPreviousDog], _lDogTimes[iPreviousDog][_iDogRunCounters[iPreviousDog]]);
+      syslog.logf_P(LOG_DEBUG, "Prev Dog: %i|ENT:%lu|EXIT:%lu|TOT:%lu\r\n", iPreviousDog, _lDogEnterTimes[iPreviousDog], _lDogExitTimes[iPreviousDog], _lDogTimes[iPreviousDog][_iDogRunCounters[iPreviousDog]]);
 
    }
 }
@@ -104,7 +105,7 @@ void RaceHandlerClass::Main()
          while (!_QueueEmpty())
          {
             STriggerRecord STempRecord = _QueuePop();
-            if (bDEBUG) Serialprint("S%i|T:%li|St:%i\r\n", STempRecord.iSensorNumber, STempRecord.lTriggerTime - _lRaceStartTime, STempRecord.iSensorState);
+            syslog.logf_P(LOG_DEBUG, "S%i|T:%li|St:%i\r\n", STempRecord.iSensorNumber, STempRecord.lTriggerTime - _lRaceStartTime, STempRecord.iSensorState);
          }
       }
       return;
@@ -125,8 +126,8 @@ void RaceHandlerClass::Main()
          _bGatesClear = true;
       }
 
-      if (bDEBUG) Serialprint("S%i|T:%li|St:%i\r\n", STriggerRecord.iSensorNumber, STriggerRecord.lTriggerTime - _lRaceStartTime, STriggerRecord.iSensorState);
-      if (bDEBUG) Serialprint("bGatesClear: %i\r\n", _bGatesClear);
+      syslog.logf_P(LOG_DEBUG, "S%i|T:%li|St:%i\r\n", STriggerRecord.iSensorNumber, STriggerRecord.lTriggerTime - _lRaceStartTime, STriggerRecord.iSensorState);
+      syslog.logf_P(LOG_DEBUG, "bGatesClear: %i\r\n", _bGatesClear);
 
       //Calculate what our next dog will be
       if ((_bFault && _bRerunBusy)
@@ -162,7 +163,7 @@ void RaceHandlerClass::Main()
          {
             //Dog 0 is too early!
             SetDogFault(iCurrentDog, ON);
-            if (bDEBUG) Serialprint("F! D:%i!\r\n", iCurrentDog);
+            syslog.logf_P(LOG_DEBUG, "F! D:%i!\r\n", iCurrentDog);
             _lCrossingTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = STriggerRecord.lTriggerTime - _lPerfectCrossingTime;
             _lDogEnterTimes[iCurrentDog] = STriggerRecord.lTriggerTime;
          }
@@ -181,7 +182,7 @@ void RaceHandlerClass::Main()
 
             //Handle next dog
             _lDogEnterTimes[iNextDog] = STriggerRecord.lTriggerTime;
-            if (bDEBUG) Serialprint("F! D:%i!\r\n", iNextDog);
+            syslog.logf_P(LOG_DEBUG, "F! D:%i!\r\n", iNextDog);
          }
 
          //Normal race handling (no faults)
@@ -212,7 +213,7 @@ void RaceHandlerClass::Main()
             and thus passed through sensors unseen */
             //Set enter time for this dog to exit time of previous dog
             _lDogEnterTimes[iCurrentDog] = _lDogExitTimes[iPreviousDog];
-            if (bDEBUG) Serialprint("Invisible dog came back!\r\n");
+            syslog.logf_P(LOG_DEBUG, "Invisible dog came back!\r\n");
          }
 
          //Check if current dog has a fault
@@ -243,7 +244,7 @@ void RaceHandlerClass::Main()
                || (_bRerunBusy == true && _bFault == false))                //Or if the rerun sequence was started but no faults exist anymore
             {
                StopRace(STriggerRecord.lTriggerTime);
-               if (bDEBUG) Serialprint("Last Dog: %i|ENT:%lu|EXIT:%lu|TOT:%lu\r\n", iCurrentDog, _lDogEnterTimes[iCurrentDog], _lDogExitTimes[iCurrentDog], _lDogTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]]);
+               syslog.logf_P(LOG_DEBUG, "Last Dog: %i|ENT:%lu|EXIT:%lu|TOT:%lu\r\n", iCurrentDog, _lDogEnterTimes[iCurrentDog], _lDogExitTimes[iCurrentDog], _lDogTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]]);
             }
             else if ((iCurrentDog == 3 && _bFault == true && _bRerunBusy == false)  //If current dog is dog 4 and a fault exists, we have to initiate rerun sequence
                || _bRerunBusy == true)                                        //Or if rerun is busy (and faults still exist)
@@ -255,7 +256,7 @@ void RaceHandlerClass::Main()
                _lDogExitTimes[iNextDog] = 0;
                //Increase run counter for this dog
                _iDogRunCounters[iNextDog]++;
-               Serialprint("RR%i\r\n", iNextDog);
+               syslog.logf_P("RR%i\r\n", iNextDog);
             }
             else
             {
@@ -302,7 +303,7 @@ void RaceHandlerClass::Main()
          _bGatesClear = true;
          
          //Print the transition string up til now for debugging purposes
-         if (bDEBUG) Serialprint("Tstring: %s\r\n", _strTransition.c_str());
+         syslog.logf_P(LOG_DEBUG, "Tstring: %s\r\n", _strTransition.c_str());
          
          //Only check transition string when gates are clear
          //TODO: If transistion string is 3 or longer but actually more events are coming related to same transition, these are not considered.
@@ -326,7 +327,7 @@ void RaceHandlerClass::Main()
             {
                //Transistion string BbAa indicates small object has passed through sensors
                //Most likely dog spat ball
-               Serialprint("Spat ball detected?!\r\n");
+               syslog.logf_P("Spat ball detected?!\r\n");
                SetDogFault(iCurrentDog, ON);
 
             }
@@ -525,13 +526,13 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
    {
       LightsController.ToggleFaultLight(iDogNumber, LightsController.ON);
       _bFault = true;
-      Serialprint("D%iF1\r\n", iDogNumber);
+      syslog.logf_P("D%iF1\r\n", iDogNumber);
    }
    else
    {
       //If fault is false, turn off fault light for this dog
       LightsController.ToggleFaultLight(iDogNumber, LightsController.OFF);
-      Serialprint("D%iF0\r\n", iDogNumber);
+      syslog.logf_P("D%iF0\r\n", iDogNumber);
    }
 }
 
