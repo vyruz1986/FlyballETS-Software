@@ -328,6 +328,17 @@ LightsControllerClass::LightStates LightsControllerClass::CheckLightState(Lights
    }
 }
 
+/// <summary>
+///   Shows that a race is scheduled to start by lighting the white light
+/// </summary>
+void LightsControllerClass::ShowScheduledRace(unsigned long Duration)
+{
+   this->ResetLights();
+   //Set schedule for RED light
+   _lLightsOnSchedule[0] = millis(); //Turn on NOW
+   _lLightsOutSchedule[0] = millis() + Duration; //keep on for 1 second
+}
+
 #ifdef WS281x
 LightsControllerClass::SNeoPixelConfig LightsControllerClass::_GetNeoPixelConfig(LightsControllerClass::Lights byLight)
 {

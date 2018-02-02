@@ -24,10 +24,11 @@ class RaceHandlerClass
    enum RaceStates {
       STOPPED,
       STARTING,
-      RUNNING
+      RUNNING,
+      SCHEDULED
    };
-   RaceStates RaceState = STOPPED;
-   RaceStates PreviousRaceState = STOPPED;
+   RaceStates RaceState = RaceStates::STOPPED;
+   RaceStates PreviousRaceState = RaceStates::STOPPED;
 
    uint8_t iCurrentDog;
    uint8_t iPreviousDog;
@@ -35,6 +36,7 @@ class RaceHandlerClass
    
    void Main();
    void StartTimers();
+   void StartRace(unsigned long StartTime);
    void StartRace();
    void StopRace(unsigned long StopTime);
    void ResetRace();
@@ -65,6 +67,7 @@ class RaceHandlerClass
    boolean GetRunDirection();
 
 private:
+   unsigned long _lSchduledRaceStartTime;
    unsigned long _lRaceStartTime;
    unsigned long _lRaceEndTime;
    unsigned long _lRaceTime;

@@ -97,7 +97,7 @@ void RaceHandlerClass::_ChangeDogNumber(uint8_t iNewDogNumber)
 void RaceHandlerClass::Main()
 {
    //Don't handle anything if race is stopped
-   if (RaceState == STOPPED)
+   if (RaceState == RaceStates::STOPPED || RaceState == RaceStates::SCHEDULED)
    {
       //If we are debugging we should dump the remainder of the interrupt queue, even if the race is stopped
       if (bDEBUG)
@@ -359,7 +359,7 @@ void RaceHandlerClass::Main()
    }
 
    //Update racetime
-   if (RaceState == RUNNING)
+   if (RaceState == RaceStates::RUNNING)
    {
       if (micros() > _lRaceStartTime)
       {
@@ -392,6 +392,18 @@ void RaceHandlerClass::StartTimers()
 ///   Sets the status of the race to STARTING, should be called at same time when start light
 ///   sequence is called.
 /// </summary>
+/// <param name="StartTime">   The time in milliseconds at which the race should start. </param>
+void RaceHandlerClass::StartRace(unsigned long StartTime)
+{
+   _lSchduledRaceStartTime = StartTime;
+   LightsController.ShowScheduledRace(StartTime - millis());
+   RaceState = RaceStates::SCHEDULED;
+}
+
+/// <summary>
+///   Sets the status of the race to STARTING, should be called at same time when start light
+///   sequence is called.
+/// </summary>
 void RaceHandlerClass::StartRace()
 {
    _ChangeRaceState(STARTING);
@@ -407,7 +419,7 @@ void RaceHandlerClass::StartRace()
 /// <param name="StopTime">   The time in microseconds at which the race stopped. </param>
 void RaceHandlerClass::StopRace(unsigned long StopTime)
 {
-   if (RaceState == RUNNING)
+   if (RaceState == RaceStates::RUNNING)
    {
       //Race is running, so we have to record the EndTime
       _lRaceEndTime = StopTime;
@@ -424,7 +436,7 @@ void RaceHandlerClass::StopRace(unsigned long StopTime)
 /// </summary>
 void RaceHandlerClass::ResetRace()
 {
-   if (RaceState == STOPPED)
+   if (RaceState == RaceStates::STOPPED)
    {
       iCurrentDog = 0;
       iPreviousDog = 0;
@@ -440,6 +452,7 @@ void RaceHandlerClass::ResetRace()
       _iQueueWriteIndex = 0;
       _strTransition = "";
       _bGatesClear = true;
+      _lSchduledRaceStartTime = 0;
       
       for (auto& bFault : _bDogFaults)
       {
@@ -479,15 +492,15 @@ void RaceHandlerClass::ResetRace()
       {
          iCounter = 0;
       }
-   }
 
-   if (_iCurrentRaceId == NUM_HISTORIC_RACE_RECORDS)
-   {
-      _iCurrentRaceId = 0;
-   }
-   else
-   {
-      _iCurrentRaceId++;
+      if (_iCurrentRaceId == NUM_HISTORIC_RACE_RECORDS)
+      {
+         _iCurrentRaceId = 0;
+      }
+      else
+      {
+         _iCurrentRaceId++;
+      }
    }
 
    //Send updated racedata to any web clients
@@ -503,7 +516,7 @@ void RaceHandlerClass::ResetRace()
 void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
 {
    //Don't process any faults when race is not running
-   if (RaceState == STOPPED)
+   if (RaceState == RaceStates::STOPPED || RaceState == RaceStates::SCHEDULED)
    {
       return;
    }
@@ -542,7 +555,7 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
 /// </summary>
 void RaceHandlerClass::TriggerSensor1()
 {
-   if (RaceState == STOPPED)
+   if (RaceState == RaceStates::STOPPED || RaceState == RaceStates::SCHEDULED)
    {
       return;
    }
@@ -555,7 +568,7 @@ void RaceHandlerClass::TriggerSensor1()
 /// </summary>
 void RaceHandlerClass::TriggerSensor2()
 {
-   if (RaceState == STOPPED)
+   if (RaceState == RaceStates::STOPPED || RaceState == RaceStates::SCHEDULED)
    {
       return;
    }
@@ -644,7 +657,7 @@ unsigned long RaceHandlerClass::GetDogTimeMillis(uint8_t iDogNumber, int8_t iRun
       ulDogTimeMillis = _lDogTimes[iDogNumber][iRunNumber] / 1000;
    }
    //Then check if the requested dog is perhaps running (and coming back) so we can return the time so far
-   else if ((RaceState == RUNNING && iCurrentDog == iDogNumber && _byDogState == COMINGBACK)
+   else if ((RaceState == RaceStates::RUNNING && iCurrentDog == iDogNumber && _byDogState == COMINGBACK)
             && iRunNumber <= _iDogRunCounters[iDogNumber]) //And if requested run number is lower then number of times dog has run
    {
       ulDogTimeMillis = (micros() - _lDogEnterTimes[iDogNumber]) / 1000;
@@ -812,14 +825,17 @@ String RaceHandlerClass::GetRaceStateString()
    String strRaceState;
    switch (RaceState)
    {
-   case RaceHandlerClass::STOPPED:
+   case RaceStates::STOPPED:
       strRaceState = " STOP";
       break;
-   case RaceHandlerClass::STARTING:
+   case RaceStates::STARTING:
       strRaceState = " START";
       break;
-   case RaceHandlerClass::RUNNING:
+   case RaceStates::RUNNING:
       strRaceState = "RUNNING";
+      break;
+   case RaceStates::SCHEDULED:
+      strRaceState = "SCHEDULE";
       break;
    default:
       break;

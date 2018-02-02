@@ -117,7 +117,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
       if (request.containsKey("action")) {
          JsonObject& ActionResult = JsonResponseRoot.createNestedObject("ActionResult");
          String errorText;
-         bool result = _DoAction(request["action"], &errorText);
+         bool result = _DoAction(request, &errorText);
          ActionResult["success"] = result;
          ActionResult["error"] = errorText;
       }
@@ -259,8 +259,9 @@ void WebHandlerClass::SendLightsData(stLightsState LightStates)
    }
 }
 
-boolean WebHandlerClass::_DoAction(String action, String * ReturnError) {
-   if (action == "StartRace") {
+boolean WebHandlerClass::_DoAction(JsonObject& ActionRequest, String * ReturnError) {
+   String Action = ActionRequest["action"];
+   if (Action == "StartRace") {
       if (RaceHandler.RaceState != RaceHandler.STOPPED) {
          //ReturnError = String("Race was not stopped, stop it first!");
          return false;
@@ -277,7 +278,7 @@ boolean WebHandlerClass::_DoAction(String action, String * ReturnError) {
          return true;
       }
    }
-   else if (action == "StopRace")
+   else if (Action == "StopRace")
    {
       if (RaceHandler.RaceState == RaceHandler.STOPPED) {
          //ReturnError = "Race was already stopped!";
@@ -290,7 +291,7 @@ boolean WebHandlerClass::_DoAction(String action, String * ReturnError) {
          return true;
       }
    }
-   else if (action == "ResetRace")
+   else if (Action == "ResetRace")
    {
       if (RaceHandler.RaceState != RaceHandler.STOPPED) {
          //ReturnError = "Race was not stopped, first stop it before resetting!";
@@ -306,6 +307,21 @@ boolean WebHandlerClass::_DoAction(String action, String * ReturnError) {
          RaceHandler.ResetRace();
          return true;
       }
+   }
+   else if (Action == "ScheduleStartRace")  //ScheduleStartRace action is used to schedule a race start on 2 lanes. This command would typically be sent by the master to the slave
+   {
+      //Check if race is stopped. Instead of returning error if it isn't, we just stop and reset it.
+      if (RaceHandler.RaceState != RaceHandler.STOPPED) {
+         RaceHandler.StopRace(micros());
+         RaceHandler.ResetRace();
+         LightsController.ResetLights();
+      }
+
+      String StartTime = ActionRequest["startTime"];
+
+      unsigned long StartTimeMillis;
+      RaceHandler.StartRace(StartTimeMillis);
+      return true;
    }
 }
 

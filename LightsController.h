@@ -69,6 +69,7 @@ public:
    void ResetLights();
    void DeleteSchedules();
    void ToggleFaultLight(uint8_t iDogNumber, LightStates byLightState);
+   void ShowScheduledRace(unsigned long Duration);
 
    stLightsState GetLightsState();
    
