@@ -47,7 +47,8 @@ class LCDControllerClass
       RaceState,
       BattLevel,
       TeamTime,
-      TotalCrossTime
+      TotalCrossTime,
+      BoxDirection
    };
 
    void UpdateField(LCDFields lcdfieldField, String strNewValue);

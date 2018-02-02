@@ -546,7 +546,7 @@ void RaceHandlerClass::TriggerSensor1()
    {
       return;
    }
-   _QueuePush({ 1, micros(), digitalRead(_iS1Pin) });
+   _QueuePush({ _bRunDirectionInverted ? 2 : 1, micros(), digitalRead(_iS1Pin) });
 }
 
 /// <summary>
@@ -559,7 +559,7 @@ void RaceHandlerClass::TriggerSensor2()
    {
       return;
    }
-   _QueuePush({ 2, micros(), digitalRead(_iS2Pin) });
+   _QueuePush({ _bRunDirectionInverted ? 1 : 2, micros(), digitalRead(_iS2Pin) });
 }
 
 /// <summary>
@@ -814,11 +814,27 @@ String RaceHandlerClass::GetRaceStateString()
    return strRaceState;
 }
 
+/// <summary>
+///   Gets race data for the current race
+/// </summary>
+///
+/// <returns>
+///   The race data struct
+/// </returns>
 stRaceData RaceHandlerClass::GetRaceData()
 {
    return GetRaceData(_iCurrentRaceId);
 }
 
+/// <summary>
+///   Gets race data for given race ID
+/// </summary>
+
+/// <param name="iRaceId">The ID for the race you want the data for</param>
+///
+/// <returns>
+///  Race data struct
+/// </returns>
 stRaceData RaceHandlerClass::GetRaceData(uint iRaceId)
 {
    stRaceData RequestedRaceData;
@@ -850,6 +866,26 @@ stRaceData RaceHandlerClass::GetRaceData(uint iRaceId)
       RequestedRaceData = _HistoricRaceData[iRaceId];
    }
    return RequestedRaceData;
+}
+
+/// <summary>
+///   Toggles the direction the system expects dogs to run in
+/// </summary>
+void RaceHandlerClass::ToggleRunDirection()
+{
+   _bRunDirectionInverted = !_bRunDirectionInverted;
+}
+
+/// <summary>
+///   Returns the run direction
+/// </summary>
+/// <returns>
+///   false means normal direction (box to right)
+///   true means inverted direction (box to left)
+/// </returns>
+boolean RaceHandlerClass::GetRunDirection()
+{
+   return _bRunDirectionInverted;
 }
 
 /// <summary>

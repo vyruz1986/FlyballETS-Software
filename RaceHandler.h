@@ -60,6 +60,8 @@ class RaceHandlerClass
 
    stRaceData GetRaceData();
    stRaceData GetRaceData(uint iRaceId);
+   void ToggleRunDirection();
+   boolean GetRunDirection();
 
 private:
    unsigned long _lRaceStartTime;
@@ -70,6 +72,7 @@ private:
 
    uint8_t  _iS1Pin;
    uint8_t  _iS2Pin;
+   boolean _bRunDirectionInverted = false;
 
    struct STriggerRecord
    {
