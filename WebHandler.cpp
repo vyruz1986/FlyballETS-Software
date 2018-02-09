@@ -273,7 +273,6 @@ boolean WebHandlerClass::_DoAction(JsonObject& ActionRequest, String * ReturnErr
       }
       else
       {
-         LightsController.InitiateStartSequence();
          RaceHandler.StartRace();
          return true;
       }
@@ -319,8 +318,20 @@ boolean WebHandlerClass::_DoAction(JsonObject& ActionRequest, String * ReturnErr
 
       String StartTime = ActionRequest["startTime"];
 
-      unsigned long StartTimeMillis;
-      RaceHandler.StartRace(StartTimeMillis);
+      
+      unsigned long lStartEpochTime = StartTime.toInt();
+      long lMillisToStart = GPSHandler.GetMillisToEpochSecond(lStartEpochTime);
+
+      syslog.logf_P(LOG_DEBUG, "Received request to schedule race to start at %lu s which is in %ld ms", lStartEpochTime, lMillisToStart);
+
+      if (lMillisToStart < 0)
+      {
+         //ReturnError = "Requested starttime is in the past!";
+         syslog.logf_P(LOG_ERR, "Race schedule received for the past (%ld ms)!", lMillisToStart);
+         return false;
+      }
+
+      RaceHandler.StartRace(lMillisToStart + millis());
       return true;
    }
 }

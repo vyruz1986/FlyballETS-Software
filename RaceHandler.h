@@ -120,6 +120,7 @@ private:
    STriggerRecord _QueuePop();
    bool _QueueEmpty();
    void _AddToTransitionString(STriggerRecord _InterruptTrigger);
+   void _HandleScheduledRace();
 };
 
 extern RaceHandlerClass RaceHandler;

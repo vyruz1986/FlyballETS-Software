@@ -530,7 +530,6 @@ void StartStopRace()
    {
       //Then start the race
       if (bDEBUG) syslog.logf_P("%lu: START!\r\n", millis());
-      LightsController.InitiateStartSequence();
       RaceHandler.StartRace();
    }
    else //If race state is running or starting, we should stop it

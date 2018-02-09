@@ -22,6 +22,7 @@
 #include "global.h"
 #include "WebHandler.h"
 #include "syslog.h"
+#include "GPSHandler.h"
 
 /// <summary>
 ///   Initialises this object andsets all counters to 0.
@@ -96,6 +97,8 @@ void RaceHandlerClass::_ChangeDogNumber(uint8_t iNewDogNumber)
 /// </summary>
 void RaceHandlerClass::Main()
 {
+   //Handle scheduled race start
+   this->_HandleScheduledRace();
    //Don't handle anything if race is stopped
    if (RaceState == RaceStates::STOPPED || RaceState == RaceStates::SCHEDULED)
    {
@@ -396,6 +399,7 @@ void RaceHandlerClass::StartTimers()
 void RaceHandlerClass::StartRace(unsigned long StartTime)
 {
    _lSchduledRaceStartTime = StartTime;
+   syslog.logf_P(LOG_DEBUG, "Race scheduled to start at %lu ms", StartTime);
    LightsController.ShowScheduledRace(StartTime - millis());
    RaceState = RaceStates::SCHEDULED;
 }
@@ -406,11 +410,27 @@ void RaceHandlerClass::StartRace(unsigned long StartTime)
 /// </summary>
 void RaceHandlerClass::StartRace()
 {
+   LightsController.InitiateStartSequence();
    _ChangeRaceState(STARTING);
    _lRaceStartTime = micros() + 3000000;
    _lPerfectCrossingTime = _lRaceStartTime;
    _lDogEnterTimes[0] = _lRaceStartTime;
 }
+
+/// <summary>
+///   Handles scheduled race start (if any) and makes sure race is started at scheduled time.
+///   Should be called in main loop
+/// </summary>
+void RaceHandlerClass::_HandleScheduledRace()
+{
+   if (RaceState == RaceStates::SCHEDULED
+      && millis() >= _lSchduledRaceStartTime)
+   {
+      this->StartRace();
+      _lSchduledRaceStartTime = 0;
+   }
+}
+
 
 /// <summary>
 ///   Stops a race.
@@ -835,7 +855,7 @@ String RaceHandlerClass::GetRaceStateString()
       strRaceState = "RUNNING";
       break;
    case RaceStates::SCHEDULED:
-      strRaceState = "SCHEDULE";
+      strRaceState = "SCHED";
       break;
    default:
       break;
