@@ -74,6 +74,11 @@ void SettingsManagerClass::setDefaultSettings()
       setSetting("APPass", "FlyballETS.1234");
       saveSettings();
    }
+
+   if (!hasSetting("OperationMode")) {
+      setSetting("OperationMode", "master");
+      saveSettings();
+   }
 }
 
 SettingsManagerClass SettingsManager;

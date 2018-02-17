@@ -37,8 +37,8 @@ void GPSHandlerClass::loop()
          , _Tgps.date.month()
          , _Tgps.date.year());
       _FormatUTCTime();
-      syslog.logf_P(LOG_DEBUG, "UTC time: %s", _cUTCTime);
-      Serial.printf("EpochTime: %lu\r\n", this->GetEpochTime());
+      //syslog.logf_P(LOG_DEBUG, "UTC time: %s", _cUTCTime);
+      //Serial.printf("EpochTime: %lu\r\n", this->GetEpochTime());
       
    }
 }
