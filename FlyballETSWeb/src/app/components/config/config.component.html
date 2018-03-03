@@ -1,4 +1,4 @@
-<div style="position: relative;" *ngIf="secEtsDataService.isAuthenticated">
+<div style="position: relative;" *ngIf="isAuthenticated">
     <ngx-loading [show]="!secEtsDataService.isConnected" [config]="{ backdropBorderRadius: '14px' }"></ngx-loading>
     <div class="container" *ngIf="!sessionEnded">
       <div class="row">
@@ -6,7 +6,7 @@
           <div class="alert alert-danger text-center" *ngIf="!secEtsDataService.isConnected" role="alert">Connecting to FlyballETS, please wait...</div>
         </div>
       </div>
-      <div class="row" *ngIf="secEtsDataService.isAuthenticated">
+      <div class="row" *ngIf="isAuthenticated">
         <form (ngSubmit)="onSubmitConfig()" #configForm="ngForm">
           <ngx-loading [show]="submitted" [config]="{ backdropBorderRadius: '14px' }"></ngx-loading>
           <div class="form-group">
@@ -55,4 +55,4 @@
       <button type="button" class="btn btn-success" (click)="reconnect()" >Reconnect</button>
     </div>
   </div>
-  <app-login *ngIf="!secEtsDataService.isAuthenticated"></app-login>
+  <app-login *ngIf="!isAuthenticated"></app-login>

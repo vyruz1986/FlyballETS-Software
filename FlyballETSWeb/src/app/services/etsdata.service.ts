@@ -7,7 +7,6 @@ import { WebsocketDataRequest } from '../interfaces/websocket-data-request';
 @Injectable()
 export class EtsdataService {
    ETS_URL:string = "ws://"+ window.location.host +"/ws";
-   //ETS_URL:string = "ws://blablabla/ws";
    wsObservable:Observable<any>;
    wsObserver:Observer<any>;
    private ws;

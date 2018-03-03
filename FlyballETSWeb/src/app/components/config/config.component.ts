@@ -11,34 +11,57 @@ import { SecureEtsDataService } from '../../services/secure-ets-data.service';
 })
 export class ConfigComponent implements OnInit {
 
-   isConnected: boolean;
    sessionEnded: boolean;
-   submitted: boolean;
+   submitted: boolean = false;
+   isAuthenticated: boolean = false;
 
    configData = new ConfigData("","","");
 
-   constructor(public secEtsDataService:SecureEtsDataService) {//TODO why does making etsDataService private cause build to fail?
-      this.subscribeToDataService();
-   }
+  constructor(public secEtsDataService:SecureEtsDataService) {  //TODO why does making etsDataService private cause build to fail?
+    this.subscribeToAuth();
+    //this.setupDataService();
+  }
 
-   subscribeToDataService() {
-      this.secEtsDataService.dataStream.subscribe((data) => {
-         if(data.dataResult && data.dataResult.success && data.dataResult.configData) {
-            this.handleConfigData(data.dataResult.configData);
-         } else if (data.configResult) {
-            this.handleConfigResult(data.configResult);
-         }
-      });
-   }
+  subscribeToAuth(){
+   this.secEtsDataService.isAuthenticated.subscribe(
+      (authenticated:boolean) => {
+        this.isAuthenticated = authenticated;
+        if(authenticated){
+           this.secEtsDataService.initializeWebSocket();
+           this.setupDataService();
+
+           //TODO: This is not working for some reason. The config data is requested too soon, before the ws connection is established
+           setTimeout(this.requestConfigData(), 3000);
+           //this.requestConfigData();
+        } else {
+          this.secEtsDataService.dataStream.unsubscribe();
+        }
+      }
+    )
+  }
+
+  setupDataService(){
+    this.secEtsDataService.dataStream.subscribe(
+      (data) => {
+        console.log('SecDataSub:');
+        console.log(data);
+        if(data.dataResult && data.dataResult.success) {
+          this.handleConfigData(data.dataResult.configData);
+        }
+        if(data.authenticated === false){
+          this.secEtsDataService.setAuthenticated(false);
+        }
+      },
+      (err) => {
+         console.log(err);
+      },
+      () => {
+         console.log("disconnected");
+      }
+    );
+  }
    
    ngOnInit() {
-      this.submitted = false;
-      console.log("OnInit");
-      this.secEtsDataService.connectionStatus.subscribe((connected) => {
-         if(connected){
-            this.requestConfigData();
-         }
-      });
    }
 
    handleConfigData(newConfigData) {
@@ -72,7 +95,7 @@ export class ConfigComponent implements OnInit {
       };
       console.log(newConfigArray);
       this.submitted = true;
-      this.secEtsDataService.sendConfig(newConfigArray);
+      //this.secEtsDataService.sendConfig(newConfigArray);
       console.log("new config sent!");
     }
 }

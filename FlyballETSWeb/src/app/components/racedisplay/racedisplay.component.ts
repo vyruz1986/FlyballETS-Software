@@ -25,7 +25,7 @@ export class RacedisplayComponent implements OnInit {
   startDisabled: boolean;
   stopDisabled: boolean;
   resetDisabled: boolean;
-   constructor(public etsDataService:EtsdataService) {  //TODO why does making etsDataService private cause build to fail?
+  constructor(public etsDataService:EtsdataService) {  //TODO why does making etsDataService private cause build to fail?
       this.etsDataService.dataStream.subscribe(
          (data) => {
             if(data.RaceData) {
@@ -39,7 +39,6 @@ export class RacedisplayComponent implements OnInit {
             console.log("disconnected");
          }
       );
-      //this.HandleCurrentRaceData(this.etsDataService.dataStream.getValue());
   }
 
   ngOnInit() {
@@ -80,6 +79,12 @@ export class RacedisplayComponent implements OnInit {
         break;
       case 2:
         this.currentRace.raceStateFriendly = "Running";
+        break;
+      case 3:
+        this.currentRace.raceStateFriendly = "Scheduled";
+        break;
+      default:
+        this.currentRace.raceStateFriendly = "Unknown";
         break;
     }
     this.startDisabled = !(this.currentRace.raceState == 0 && this.currentRace.startTime == 0);

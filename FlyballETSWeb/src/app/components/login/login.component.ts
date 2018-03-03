@@ -18,11 +18,10 @@ export class LoginComponent implements OnInit {
    login(){
       this._authSerice.login(this.user).subscribe(         
          (data) => {
-            this._secEtsDataService.isAuthenticated = true;
-            this._secEtsDataService.enableRetry();
+            this._secEtsDataService.setAuthenticated(true);
          },
          (error) => {
-            this._secEtsDataService.isAuthenticated = false;
+            this._secEtsDataService.setAuthenticated(false);
          }
       );
    }

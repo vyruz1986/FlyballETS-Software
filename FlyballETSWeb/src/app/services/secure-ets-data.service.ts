@@ -1,65 +1,58 @@
 import { Injectable } from '@angular/core';
 import { ConfigArray } from '../interfaces/config-array';
-import { Subject, BehaviorSubject, Observer } from 'rxjs';
-import { Observable } from 'rxjs/Observable';
+import { Observable, Observer, Subject, BehaviorSubject } from 'rxjs';
 import { WebsocketDataRequest } from '../interfaces/websocket-data-request';
 
 @Injectable()
 export class SecureEtsDataService {
    ETS_URL:string = "ws://"+ window.location.host +"/wsa";
-   //ETS_URL:string = "ws://192.168.20.1/wsa";
-   //ETS_URL:string = "ws://blablabla/ws";
    wsObservable:Observable<any>;
    wsObserver:Observer<any>;
    private ws;
-   public dataStream:Subject<any>;
-   isAuthenticated:boolean;
-   connectionStatus:BehaviorSubject<boolean>;
+   public dataStream:BehaviorSubject<any>;
+   isConnected:boolean;
+   sessionEnded:boolean;
+   
+   private _isAuthenticated = new BehaviorSubject<boolean>(true);
+   public isAuthenticated: Observable<boolean> = this._isAuthenticated.asObservable();
+
+   public setAuthenticated(authenticated:boolean): void {
+     console.log('authenticated: ' + authenticated);
+     this._isAuthenticated.next(authenticated);
+   }
 
    constructor() {
-      this.isAuthenticated = true;
-      this.connectionStatus = new BehaviorSubject(false);
       this.initializeWebSocket();
-      console.log("constructor");
-      
    }
+
    initializeWebSocket() {
-      console.log("Reconnecting to ws");
+      console.log("Reconnecting to wsa");
       this.isConnected = false;
       this.wsObservable = Observable.create((observer) => {
-         if(!this.isAuthenticated){
-            console.log("Aborting");
-            observer.error();
-         }
          this.ws = new WebSocket(this.ETS_URL);
+         console.log('created wsa');
          this.ws.onopen = (e) => {
             this.isConnected = true;
+            console.log("Connected wsa!");
          };
 
          this.ws.onclose = (e) => {
             if (e.wasClean) {
-               observer.complete();
+              observer.complete();
             } else {
-               observer.error(e);
+              observer.error(e);
             }
             this.isConnected = false;
+            console.log('onClose');
          };
       
          this.ws.onerror = (e) => {
             observer.error(e);
-            console.log(e);
             this.isConnected = false;
+            console.log('onError');
          }
       
          this.ws.onmessage = (e) => {
-            let data = JSON.parse(e.data);
-            console.log(data);
-            if(data.success === false && data.authenticated === false)
-            {
-               console.log("received not authenticated error");
-               this.isAuthenticated = false;
-               observer.error(e);
-            }
             observer.next(JSON.parse(e.data));
          }
       
@@ -68,15 +61,14 @@ export class SecureEtsDataService {
             this.ws.close();
             this.isConnected = false;
          };
-      }).share().retryWhen((errors) => {errors.delay(2000)});
+      }).share();
+      console.log('observer created');
 
       this.wsObserver = {
          next: (data: Object) => {
             if (this.ws.readyState === WebSocket.OPEN) {
                console.log(data)
                this.ws.send(JSON.stringify(data));
-            } else {
-               console.log("Socket was not ready");
             }
          },
          error: (err) => {
@@ -91,35 +83,11 @@ export class SecureEtsDataService {
       this.dataStream = Subject.create(this.wsObserver, this.wsObservable);
    }
 
-   public set isConnected(value:boolean){
-      this.connectionStatus.next(value);
-   }
-   public get isConnected(){
-      return this.connectionStatus.value;
-   }
-
-   enableRetry(){
-      this.wsObservable.retry();
-      this.dataStream.retry();
-   }
-
-   disableRetry(){
-      console.log("disabling retries...");
-      this.wsObservable.retry(0);
-      this.dataStream.retry(0);
-
-   }
-
    sendConfig(config:ConfigArray) {
       this.dataStream.next(config);
    }
 
    getData(dataRequest:WebsocketDataRequest) {
-      return new Promise((resolve, reject) => {
-         if(this.isConnected && this.isAuthenticated){
-            this.dataStream.next(dataRequest);
-            resolve(true);
-         }
-      });
+      this.dataStream.next(dataRequest);
    }
 }
