@@ -30,7 +30,7 @@
           <ul class="list-group">
             <li *ngFor="let dog of currentRace.dogData" [ngClass]="{'list-group-item': true, 'active': dog.running}">
               Dog {{dog.dogNumber + 1}} 
-              <div class="form-check checkbox-slider--a checkbox-slider-danger d-inline">
+              <div class="form-check checkbox-slider--a checkbox-slider-danger checkbox-slider-md d-inline">
                 <label>
                   <input type="checkbox" [(ngModel)]="dog.fault"><span>Fault</span>
                 </label>
