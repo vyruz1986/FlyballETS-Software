@@ -29,12 +29,17 @@
         <h4>Dog details</h4>
           <ul class="list-group">
             <li *ngFor="let dog of currentRace.dogData" [ngClass]="{'list-group-item': true, 'active': dog.running}">
-              Dog {{dog.dogNumber + 1}} <span *ngIf="dog.fault" class="badge badge-danger">Fault!</span><br>
-              <span *ngFor="let dogTime of dog.timing; let i = index">
+              Dog {{dog.dogNumber + 1}} 
+              <div class="form-check checkbox-slider--a checkbox-slider-danger d-inline">
+                <label>
+                  <input type="checkbox" [(ngModel)]="dog.fault"><span>Fault</span>
+                </label>
+              </div>
+              <div *ngFor="let dogTime of dog.timing; let i = index">
                 <ng-container *ngIf="dogTime.crossingTime != 0 || dogTime.time != 0 || i == 0">
                   {{dogTime.time | date: 's.SSS'}} {{dogTime.crossingTime | crossingTime}}<br>
                 </ng-container>
-              </span>
+              </div>
             </li>
           </ul>
       </div>
