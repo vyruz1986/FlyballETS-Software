@@ -262,8 +262,9 @@ void WebHandlerClass::SendLightsData(stLightsState LightStates)
    }
 }
 
-boolean WebHandlerClass::_DoAction(String action, String * ReturnError) {
-   if (action == "StartRace") {
+boolean WebHandlerClass::_DoAction(JsonObject& ActionObj, String * ReturnError) {
+   String ActionType = ActionObj["actionType"];
+   if (ActionType == "StartRace") {
       if (RaceHandler.RaceState != RaceHandler.STOPPED) {
          //ReturnError = String("Race was not stopped, stop it first!");
          return false;
@@ -280,7 +281,7 @@ boolean WebHandlerClass::_DoAction(String action, String * ReturnError) {
          return true;
       }
    }
-   else if (action == "StopRace")
+   else if (ActionType == "StopRace")
    {
       if (RaceHandler.RaceState == RaceHandler.STOPPED) {
          //ReturnError = "Race was already stopped!";
@@ -293,7 +294,7 @@ boolean WebHandlerClass::_DoAction(String action, String * ReturnError) {
          return true;
       }
    }
-   else if (action == "ResetRace")
+   else if (ActionType == "ResetRace")
    {
       if (RaceHandler.RaceState != RaceHandler.STOPPED) {
          //ReturnError = "Race was not stopped, first stop it before resetting!";
@@ -309,6 +310,18 @@ boolean WebHandlerClass::_DoAction(String action, String * ReturnError) {
          RaceHandler.ResetRace();
          return true;
       }
+   }
+   else if (ActionType == "SetDogFault")
+   {
+      if (!ActionObj.containsKey("actionData"))
+      {
+         //ReturnError = "No actionData found!";
+         return false;
+      }
+      uint8_t iDogNum = ActionObj["actionData"]["dogNumber"];
+      boolean bFaultState = ActionObj["actionData"]["faultState"];
+      RaceHandler.SetDogFault(iDogNum, (bFaultState ? RaceHandler.ON : RaceHandler.OFF));
+      return true;
    }
 }
 
