@@ -78,7 +78,8 @@ private:
       volatile unsigned long lTriggerTime;
       volatile uint8_t iSensorState;
    };
-   STriggerRecord _STriggerQueue[10];
+#define TRIGGER_QUEUE_LENGTH 50
+   STriggerRecord _STriggerQueue[TRIGGER_QUEUE_LENGTH];
 
    volatile uint8_t _iQueueReadIndex;
    volatile uint8_t _iQueueWriteIndex;

@@ -878,7 +878,7 @@ void RaceHandlerClass::_QueuePush(RaceHandlerClass::STriggerRecord _InterruptTri
    _STriggerQueue[_iQueueWriteIndex] = _InterruptTrigger;
 
    //Write index has to be increased, check it we should wrap-around
-   if (_iQueueWriteIndex == 9)//(sizeof(_STriggerQueue) / sizeof(*_STriggerQueue) - 1))
+   if (_iQueueWriteIndex == TRIGGER_QUEUE_LENGTH - 1)//(sizeof(_STriggerQueue) / sizeof(*_STriggerQueue) - 1))
    {
       //Write index has reached end of array, start at 0 again
       _iQueueWriteIndex = 0;
@@ -903,7 +903,7 @@ RaceHandlerClass::STriggerRecord RaceHandlerClass::_QueuePop()
    STriggerRecord NextRecord = _STriggerQueue[_iQueueReadIndex];
 
    //Read index has to be increased, check it we should wrap-around
-   if (_iQueueReadIndex == 9)//(sizeof(_STriggerQueue) / sizeof(*_STriggerQueue) - 1))
+   if (_iQueueReadIndex == TRIGGER_QUEUE_LENGTH - 1)//(sizeof(_STriggerQueue) / sizeof(*_STriggerQueue) - 1))
    {
       //Write index has reached end of array, start at 0 again
       _iQueueReadIndex = 0;

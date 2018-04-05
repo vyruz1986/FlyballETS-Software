@@ -111,7 +111,10 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
          client->text("{\"error\":\"Invalid JSON received\"}");
          return;
       }
-      DynamicJsonBuffer jsonBufferResponse;
+
+      const size_t bufferSize = JSON_ARRAY_SIZE(50) + 50 * JSON_OBJECT_SIZE(3);
+      DynamicJsonBuffer jsonBufferResponse(bufferSize);
+      //DynamicJsonBuffer jsonBufferResponse;
       JsonObject& JsonResponseRoot = jsonBufferResponse.createObject();
 
       if (request.containsKey("action")) {
@@ -390,6 +393,19 @@ boolean WebHandlerClass::_GetData(String dataType, JsonObject& Data)
       Data["APPass"] = SettingsManager.getSetting("APPass");
       Data["UserPass"] = SettingsManager.getSetting("UserPass");
       Data["AdminPass"] = SettingsManager.getSetting("AdminPass");
+   }
+   else if (dataType == "triggerQueue")
+   {
+      JsonArray& triggerQueue = Data.createNestedArray("triggerQueue");
+      
+      for (auto& trigger : RaceHandler._STriggerQueue)
+      {
+         const size_t bufferSize = JSON_OBJECT_SIZE(3) + 50;
+         JsonObject& triggerObj = triggerQueue.createNestedObject();
+         triggerObj["sensorNum"] = trigger.iSensorNumber;
+         triggerObj["triggerTime"] = trigger.lTriggerTime - RaceHandler._lRaceStartTime;
+         triggerObj["state"] = trigger.iSensorState;
+      }
    }
    else
    {
