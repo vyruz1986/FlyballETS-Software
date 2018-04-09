@@ -252,6 +252,11 @@ void setup()
 #endif
 
    syslog.logf_P("Ready on IP: %s", WiFi.softAPIP().toString().c_str());
+   if (WiFi.softAPIP() != IPGateway)
+   {
+      syslog.logf_P(LOG_ERR, "I am not running on the correct IP (%s instead of %s), rebooting!", WiFi.softAPIP().toString().c_str(), IPGateway.toString().c_str());
+      ESP.restart();
+   }
    //Ota setup
    ArduinoOTA.setPassword("FlyballETS.1234");
    ArduinoOTA.setPort(3232);

@@ -68,11 +68,11 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60] PROGMEM
 void SimulatorClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
 {
    _iS1Pin = iS1Pin;
-   pinMode(_iS1Pin, OUTPUT);
-   digitalWrite(_iS1Pin, LOW);
+   //pinMode(_iS1Pin, OUTPUT);
+   //digitalWrite(_iS1Pin, LOW);
    _iS2Pin = iS2Pin;
-   pinMode(_iS2Pin, OUTPUT);
-   digitalWrite(_iS2Pin, LOW);
+   //pinMode(_iS2Pin, OUTPUT);
+   //digitalWrite(_iS2Pin, LOW);
    _iDataPos = 0;
    PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
 }
@@ -98,12 +98,11 @@ void SimulatorClass::Main()
       return;
    }
    
-   long lRaceElapsedTime = micros() - RaceHandler._lRaceStartTime;
    uint8_t iSimPin;
 
    //Simulate sensors
    if (RaceHandler.RaceState != RaceHandler.STOPPED
-      && PendingRecord.lTriggerTime <= lRaceElapsedTime)
+      && PendingRecord.lTriggerTime <= RaceHandler._lRaceTime)
    {
       if (RaceHandler._QueueEmpty())
       {
