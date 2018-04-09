@@ -289,7 +289,7 @@ boolean WebHandlerClass::_DoAction(JsonObject& ActionObj, String * ReturnError) 
       }
       else
       {
-         RaceHandler.StopRace(micros());
+         RaceHandler.StopRace();
          LightsController.DeleteSchedules();
          return true;
       }

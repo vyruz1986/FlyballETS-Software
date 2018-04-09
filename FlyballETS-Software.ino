@@ -531,7 +531,7 @@ void StartStopRace()
    }
    else //If race state is running or starting, we should stop it
    {
-      RaceHandler.StopRace(micros());
+      RaceHandler.StopRace();
       LightsController.DeleteSchedules();
    }
 }

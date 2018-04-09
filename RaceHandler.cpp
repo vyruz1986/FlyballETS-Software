@@ -117,7 +117,7 @@ void RaceHandlerClass::Main()
       STriggerRecord STriggerRecord = _QueuePop();
       //If the transition string is not empty and is was not updated for 2 seconds then we have to clear it.
       if (_strTransition.length() != 0
-         && (micros() - _lLastTransitionStringUpdate) > 2000000)
+         && (GET_MICROS - _lLastTransitionStringUpdate) > 2000000)
       {
          _strTransition = "";
       }
@@ -361,9 +361,9 @@ void RaceHandlerClass::Main()
    //Update racetime
    if (RaceState == RUNNING)
    {
-      if (micros() > _lRaceStartTime)
+      if (GET_MICROS > _lRaceStartTime)
       {
-         _lRaceTime = micros() - _lRaceStartTime;
+         _lRaceTime = GET_MICROS - _lRaceStartTime;
       }
    }
 
@@ -395,7 +395,7 @@ void RaceHandlerClass::StartTimers()
 void RaceHandlerClass::StartRace()
 {
    _ChangeRaceState(STARTING);
-   _lRaceStartTime = micros() + 3000000;
+   _lRaceStartTime = GET_MICROS + 3000000;
    _lPerfectCrossingTime = _lRaceStartTime;
    _lDogEnterTimes[0] = _lRaceStartTime;
 }
@@ -403,14 +403,21 @@ void RaceHandlerClass::StartRace()
 /// <summary>
 ///   Stops a race.
 /// </summary>
-///
+void RaceHandlerClass::StopRace()
+{
+   this->StopRace(GET_MICROS);
+}
+
+/// <summary>
+///   Stops a race.
+/// </summary>
 /// <param name="StopTime">   The time in microseconds at which the race stopped. </param>
-void RaceHandlerClass::StopRace(unsigned long StopTime)
+void RaceHandlerClass::StopRace(unsigned long lStopTime)
 {
    if (RaceState == RUNNING)
    {
       //Race is running, so we have to record the EndTime
-      _lRaceEndTime = StopTime;
+      _lRaceEndTime = lStopTime;
       _lRaceTime = _lRaceEndTime - _lRaceStartTime;
    }
    _ChangeRaceState(STOPPED);
@@ -546,7 +553,7 @@ void RaceHandlerClass::TriggerSensor1()
    {
       return;
    }
-   _QueuePush({ 1, micros(), digitalRead(_iS1Pin) });
+   _QueuePush({ 1, GET_MICROS, digitalRead(_iS1Pin) });
 }
 
 /// <summary>
@@ -559,7 +566,7 @@ void RaceHandlerClass::TriggerSensor2()
    {
       return;
    }
-   _QueuePush({ 2, micros(), digitalRead(_iS2Pin) });
+   _QueuePush({ 2, GET_MICROS, digitalRead(_iS2Pin) });
 }
 
 /// <summary>
@@ -647,7 +654,7 @@ unsigned long RaceHandlerClass::GetDogTimeMillis(uint8_t iDogNumber, int8_t iRun
    else if ((RaceState == RUNNING && iCurrentDog == iDogNumber && _byDogState == COMINGBACK)
             && iRunNumber <= _iDogRunCounters[iDogNumber]) //And if requested run number is lower then number of times dog has run
    {
-      ulDogTimeMillis = (micros() - _lDogEnterTimes[iDogNumber]) / 1000;
+      ulDogTimeMillis = (GET_MICROS - _lDogEnterTimes[iDogNumber]) / 1000;
    }
 
    //Fixes issue 7 (https://github.com/vyruz1986/FlyballETS-Software/issues/7)
@@ -844,6 +851,8 @@ stRaceData RaceHandlerClass::GetRaceData(uint iRaceId)
       RequestedRaceData.StartTime = _lRaceStartTime / 1000;
       RequestedRaceData.EndTime = _lRaceEndTime / 1000;
       RequestedRaceData.ElapsedTime = _lRaceTime / 1000;
+      //Serial.printf("Elapsed1: %lu - %lu = %lu\r\n", micros(), _lRaceStartTime, _lRaceTime);
+      //Serial.printf("Elapsed2: %lu - %lu = %lu\r\n", GET_MICROS, _lRaceStartTime, _lRaceTime);
       RequestedRaceData.TotalCrossingTime = this->GetTotalCrossingTimeMillis();
       RequestedRaceData.RaceState = RaceState;
       
@@ -952,7 +961,7 @@ void RaceHandlerClass::_AddToTransitionString(STriggerRecord _InterruptTrigger)
    //A indicates the handlers side, B indicates the boxes side
    //Uppercase indicates a high signal (dog broke beam), lowercase indicates a low signal (dog left beam)
 
-   _lLastTransitionStringUpdate = micros();
+   _lLastTransitionStringUpdate = GET_MICROS;
 
    char cTemp;
    switch (_InterruptTrigger.iSensorNumber)
