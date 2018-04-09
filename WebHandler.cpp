@@ -112,9 +112,9 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
          return;
       }
 
-      const size_t bufferSize = JSON_ARRAY_SIZE(50) + 50 * JSON_OBJECT_SIZE(3);
-      DynamicJsonBuffer jsonBufferResponse(bufferSize);
-      //DynamicJsonBuffer jsonBufferResponse;
+      //const size_t bufferSize = JSON_ARRAY_SIZE(50) + 50 * JSON_OBJECT_SIZE(3);
+      //DynamicJsonBuffer jsonBufferResponse(bufferSize);
+      DynamicJsonBuffer jsonBufferResponse;
       JsonObject& JsonResponseRoot = jsonBufferResponse.createObject();
 
       if (request.containsKey("action")) {
@@ -325,17 +325,15 @@ boolean WebHandlerClass::_DoAction(JsonObject& ActionObj, String * ReturnError) 
    }
 }
 
-void WebHandlerClass::_SendRaceData(uint iRaceId)
+boolean WebHandlerClass::_GetRaceDataJsonString(uint iRaceId, String &strJsonString)
 {
    DynamicJsonBuffer JsonBuffer;
    JsonObject& JsonRoot = JsonBuffer.createObject();
-   
    if (!JsonRoot.success())
    {
       syslog.logf_P(LOG_ERR, "Error parsing JSON!");
-      //wsSend_P(client->id(), PSTR("{\"message\": 3}"));
-      _ws->textAll("{\"error\": \"Error parsing JSON from RaceData!\"}");
-      return;
+      //strJsonString = "{\"error\": \"Error parsing JSON from RaceData!\"}";
+      return false;
    }
    else
    {
@@ -347,12 +345,12 @@ void WebHandlerClass::_SendRaceData(uint iRaceId)
       JsonRaceData["elapsedTime"] = RequestedRaceData.ElapsedTime;
       JsonRaceData["totalCrossingTime"] = RequestedRaceData.TotalCrossingTime;
       JsonRaceData["raceState"] = RequestedRaceData.RaceState;
-      
+
       JsonArray& JsonDogDataArray = JsonRaceData.createNestedArray("dogData");
       for (uint8_t i = 0; i < 4; i++)
       {
          JsonObject& JsonDogData = JsonDogDataArray.createNestedObject();
-         JsonDogData["dogNumber"]      = RequestedRaceData.DogData[i].DogNumber;
+         JsonDogData["dogNumber"] = RequestedRaceData.DogData[i].DogNumber;
          JsonArray& JsonDogDataTimingArray = JsonDogData.createNestedArray("timing");
          for (uint8_t i2 = 0; i2 < 4; i2++)
          {
@@ -360,14 +358,22 @@ void WebHandlerClass::_SendRaceData(uint iRaceId)
             DogTiming["time"] = RequestedRaceData.DogData[i].Timing[i2].Time;
             DogTiming["crossingTime"] = RequestedRaceData.DogData[i].Timing[i2].CrossingTime;
          }
-         JsonDogData["fault"]          = RequestedRaceData.DogData[i].Fault;
-         JsonDogData["running"]        = RequestedRaceData.DogData[i].Running;
+         JsonDogData["fault"] = RequestedRaceData.DogData[i].Fault;
+         JsonDogData["running"] = RequestedRaceData.DogData[i].Running;
       }
-      
-      String JsonString;
-      JsonRoot.printTo(JsonString);
-      //syslog.logf_P("json: %s\r\n", JsonString.c_str());
-      _ws->textAll(JsonString);
+
+      JsonRoot.printTo(strJsonString);
+   }
+
+   return true;
+}
+
+void WebHandlerClass::_SendRaceData(uint iRaceId)
+{
+   String strRaceDataJson;
+   if (_GetRaceDataJsonString(iRaceId, strRaceDataJson))
+   {
+      _ws->textAll(strRaceDataJson);
    }
 }
 
@@ -413,7 +419,6 @@ boolean WebHandlerClass::_GetData(String dataType, JsonObject& Data)
       
       for (auto& trigger : RaceHandler._STriggerQueue)
       {
-         const size_t bufferSize = JSON_OBJECT_SIZE(3) + 50;
          JsonObject& triggerObj = triggerQueue.createNestedObject();
          triggerObj["sensorNum"] = trigger.iSensorNumber;
          triggerObj["triggerTime"] = trigger.lTriggerTime - RaceHandler._lRaceStartTime;
