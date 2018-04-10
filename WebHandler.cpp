@@ -241,7 +241,8 @@ void WebHandlerClass::loop()
 
 void WebHandlerClass::SendLightsData(stLightsState LightStates)
 {
-   DynamicJsonBuffer JsonBuffer;
+   const size_t bufferSize = JSON_ARRAY_SIZE(5) + JSON_OBJECT_SIZE(1);
+   DynamicJsonBuffer JsonBuffer(bufferSize);
    JsonObject& JsonRoot = JsonBuffer.createObject();
 
    if (!JsonRoot.success())
@@ -258,7 +259,7 @@ void WebHandlerClass::SendLightsData(stLightsState LightStates)
       String JsonString;
       JsonRoot.printTo(JsonString);
       //syslog.logf_P("json: %s\r\n", JsonString.c_str());
-      _ws->textAll(JsonString);
+      _ws->textAll(JsonString.c_str());
    }
 }
 
@@ -327,7 +328,8 @@ boolean WebHandlerClass::_DoAction(JsonObject& ActionObj, String * ReturnError) 
 
 boolean WebHandlerClass::_GetRaceDataJsonString(uint iRaceId, String &strJsonString)
 {
-   DynamicJsonBuffer JsonBuffer;
+   const size_t bufferSize = 5 * JSON_ARRAY_SIZE(4) + JSON_OBJECT_SIZE(1) + 16 * JSON_OBJECT_SIZE(2) + 4 * JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(7);
+   DynamicJsonBuffer JsonBuffer(bufferSize);
    JsonObject& JsonRoot = JsonBuffer.createObject();
    if (!JsonRoot.success())
    {
@@ -373,7 +375,7 @@ void WebHandlerClass::_SendRaceData(uint iRaceId)
    String strRaceDataJson;
    if (_GetRaceDataJsonString(iRaceId, strRaceDataJson))
    {
-      _ws->textAll(strRaceDataJson);
+      _ws->textAll(strRaceDataJson.c_str());
    }
 }
 
@@ -445,7 +447,8 @@ stSystemData WebHandlerClass::_GetSystemData()
 
 void WebHandlerClass::_SendSystemData()
 {
-   DynamicJsonBuffer JsonBuffer;
+   const size_t bufferSize = JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(7);
+   DynamicJsonBuffer JsonBuffer(bufferSize);
    JsonObject& JsonRoot = JsonBuffer.createObject();
 
    JsonObject& JsonSystemData = JsonRoot.createNestedObject("SystemData");
@@ -460,7 +463,7 @@ void WebHandlerClass::_SendSystemData()
    String JsonString;
    JsonRoot.printTo(JsonString);
    //syslog.logf_P("json: %s\r\n", JsonString.c_str());
-   _ws->textAll(JsonString);
+   _ws->textAll(JsonString.c_str());
 }
 
 void WebHandlerClass::_onAuth(AsyncWebServerRequest *request)
