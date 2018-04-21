@@ -91,6 +91,9 @@
    #include <NeoPixelBus.h>
 #endif // WS281x
 
+#ifdef ESP32
+   #include <ESPmDNS.h>
+#endif
 uint8_t iS1Pin = 34;
 uint8_t iS2Pin = 33;
 uint8_t iCurrentDog;
@@ -166,6 +169,9 @@ HardwareSerial GPSSerial(1);
 //Syslog object
 WiFiUDP SyslogUDP;
 Syslog syslog(SyslogUDP, "255.255.255.255", 514, "FlyballETS", "FlyballETSApp", LOG_INFO, SYSLOG_PROTO_BSD);
+
+//Keep last reported OTA progress so we can send one syslog message for every % increment
+unsigned int uiLastProgress = 0;
 
 void setup()
 {
@@ -251,7 +257,12 @@ void setup()
    Simulator.init(iS1Pin, iS2Pin);
 #endif
 
-   syslog.logf_P("Ready on IP: %s", WiFi.softAPIP().toString().c_str());
+   syslog.logf_P("Ready on IP: %s, v%s", WiFi.softAPIP().toString().c_str(), APP_VER);
+   if (WiFi.softAPIP() != IPGateway)
+   {
+      syslog.logf_P(LOG_ERR, "I am not running on the correct IP (%s instead of %s), rebooting!", WiFi.softAPIP().toString().c_str(), IPGateway.toString().c_str());
+      ESP.restart();
+   }
    //Ota setup
    ArduinoOTA.setPassword("FlyballETS.1234");
    ArduinoOTA.setPort(3232);
@@ -267,19 +278,29 @@ void setup()
    });
 
    ArduinoOTA.onEnd([]() {
-      syslog.logf_P("End");
+      syslog.logf_P("[OTA]: End");
    });
    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-      syslog.logf_P("Progress: %u%%\r\n", (progress / (total / 100)));
+      unsigned int progressPercentage = (progress / (total / 100));
+      if (uiLastProgress != progressPercentage)
+      {
+         syslog.logf_P("[OTA]: Progress: %u%%\r\n", progressPercentage);
+         uiLastProgress = progressPercentage;
+      }
    });
    ArduinoOTA.onError([](ota_error_t error) {
-      syslog.logf_P(LOG_ERR, "Error[%u]: ", error);
+      syslog.logf_P(LOG_ERR, "[OTA]: Error[%u]: ", error);
    });
    ArduinoOTA.begin();
 
    //Initialize GPS Serial port and class
    GPSSerial.begin(9600, SERIAL_8N1, 39, 36);
    GPSHandler.init(&GPSSerial);
+
+#ifdef  ESP32
+   mdnsServerSetup();
+#endif //  ESP32
+
 }
 
 void loop()
@@ -535,7 +556,7 @@ void StartStopRace()
    }
    else //If race state is running or starting, we should stop it
    {
-      RaceHandler.StopRace(micros());
+      RaceHandler.StopRace();
       LightsController.DeleteSchedules();
    }
 }
@@ -570,3 +591,12 @@ void WiFiEvent(WiFiEvent_t event) {
       break;
    }
 }
+
+#ifdef ESP32
+void mdnsServerSetup()
+{
+   MDNS.addService("http", "tcp", 80);
+   MDNS.addServiceTxt("arduino", "tcp", "app_version", APP_VER);
+   MDNS.begin("FlyballETS");
+}
+#endif

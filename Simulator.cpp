@@ -13,50 +13,35 @@
 /// </summary>
 const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60] PROGMEM = {
    //See the end of this file for a collection of races
-   { 1, 796, 1 }
-   ,{ 2, 17748, 1 }
-   ,{ 2, 23276, 0 }
-   ,{ 2, 24332, 1 }
-   ,{ 1, 134032, 0 }
-   ,{ 2, 150208, 0 }
-   ,{ 1, 4383940, 1 }
-   ,{ 2, 4389808, 1 }
-   ,{ 2, 4525776, 0 }
-   ,{ 1, 4528556, 0 }
-   ,{ 2, 9092276, 1 }
-   ,{ 1, 9108100, 1 }
-   ,{ 2, 9228060, 0 }
-   ,{ 2, 9237604, 1 }
-   ,{ 1, 9354632, 0 }
-   ,{ 2, 9370068, 0 }  //Gates clear!
+   { 1,162901,1 },
+   { 2,190287,1 },
+   { 1,292299,0 },
+   { 1,308171,1 },
+   { 2,311576,0 },
+   { 1,315275,0 },
+   { 1,327828,1 },
+   { 1,331783,0 },
+   { 2,5216625,1 },
+   { 1,5233268,1 },
+   { 1,5240338,0 },
+   { 1,5242136,1 },
+   { 2,5362002,0 },
+   { 2,5367346,1 },
+   { 1,5468382,0 },
+   { 2,5488550,0 },
+   { 2,9910598,1 },
+   { 2,9915971,0 },
+   { 2,9919530,1 },
+   { 1,9923699,1 },
+   { 1,10092756,0 },
+   { 2,10112577,0 },
+   { 2,14495214,1 },
+   { 1,14509473,1 },
+   { 1,14511453,0 },
+   { 1,14515396,1 },
+   { 2,14627607,0 },
+   { 1,14641081,0 }
 
-                       //The next 2 records are 'bogus' signals that were picked up, shortly after the gate was cleared, not visible on 120fps video
-                       //Code has been implemented to filter these out.
-   ,{ 2, 9370240, 1 }
-   ,{ 2, 9373992, 0 }
-
-   ,{ 2, 14112436, 1 }
-   ,{ 1, 14127916, 1 }
-   ,{ 2, 14233032, 0 }
-   ,{ 1, 14250128, 0 }
-   ,{ 1, 14656284, 1 }
-   ,{ 2, 14670520, 1 }
-   ,{ 2, 14799688, 0 }
-   ,{ 2, 14800436, 1 }
-   ,{ 1, 14817364, 0 }
-   ,{ 2, 14840280, 0 }
-   ,{ 2, 20071076, 1 }
-   ,{ 1, 20091288, 1 }
-   ,{ 2, 20221648, 0 }
-   ,{ 1, 20249052, 0 }
-   ,{ 1, 25835668, 1 }
-   ,{ 2, 25849524, 1 }
-   ,{ 1, 25956512, 0 }
-   ,{ 2, 25975860, 0 }
-   ,{ 2, 30514448, 1 }
-   ,{ 1, 30531412, 1 }
-   ,{ 2, 30663400, 0 }
-   ,{ 1, 30682888, 0 }
 };
 
 /// <summary>
@@ -68,13 +53,14 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60] PROGMEM
 void SimulatorClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
 {
    _iS1Pin = iS1Pin;
-   pinMode(_iS1Pin, OUTPUT);
-   digitalWrite(_iS1Pin, LOW);
+   //pinMode(_iS1Pin, OUTPUT);
+   //digitalWrite(_iS1Pin, LOW);
    _iS2Pin = iS2Pin;
-   pinMode(_iS2Pin, OUTPUT);
-   digitalWrite(_iS2Pin, LOW);
+   //pinMode(_iS2Pin, OUTPUT);
+   //digitalWrite(_iS2Pin, LOW);
    _iDataPos = 0;
    PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
+   Serial.printf("Simulator started!\r\n");
 }
 
 /// <summary>
@@ -97,13 +83,9 @@ void SimulatorClass::Main()
       //Pending record doesn't contain valid data, this means we've reched the end of our queue
       return;
    }
-   
-   long lRaceElapsedTime = micros() - RaceHandler._lRaceStartTime;
-   uint8_t iSimPin;
-
    //Simulate sensors
    if (RaceHandler.RaceState != RaceHandler.STOPPED
-      && PendingRecord.lTriggerTime <= lRaceElapsedTime)
+      && PendingRecord.lTriggerTime <= (long) RaceHandler._lRaceTime)
    {
       if (RaceHandler._QueueEmpty())
       {
@@ -436,4 +418,36 @@ Race3 (GT Team 4):
    , { 1, 13728660, 0 }
    , { 2, 13745884, 0 }
    , { 2, 18070120, 1 }
+
+   //Faulty numbers on WebUI
+   {1,162901,1},
+   {2,190287,1},
+   {1,292299,0},
+   {1,308171,1},
+   {2,311576,0},
+   {1,315275,0},
+   {1,327828,1},
+   {1,331783,0},
+   {2,5216625,1},
+   {1,5233268,1},
+   {1,5240338,0},
+   {1,5242136,1},
+   {2,5362002,0},
+   {2,5367346,1},
+   {1,5468382,0},
+   {2,5488550,0},
+   {2,9910598,1},
+   {2,9915971,0},
+   {2,9919530,1},
+   {1,9923699,1},
+   {1,10092756,0},
+   {2,10112577,0},
+   {2,14495214,1},
+   {1,14509473,1},
+   {1,14511453,0},
+   {1,14515396,1},
+   {2,14627607,0},
+   {1,14641081,0}
+
 */
+

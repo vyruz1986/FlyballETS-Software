@@ -29,7 +29,7 @@ void GPSHandlerClass::loop()
    if (_Tgps.time.isUpdated())
    {
       _FormatUTCTime();
-      syslog.logf_P(LOG_DEBUG, "UTC time: %s", _cUTCTime);
+      //syslog.logf_P(LOG_DEBUG, "UTC time: %s", _cUTCTime);
    }
 }
 

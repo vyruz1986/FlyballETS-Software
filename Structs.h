@@ -24,6 +24,7 @@ struct stRaceData
    unsigned long ElapsedTime;
    uint8_t RaceState;
    stDogData DogData[4];
+   long TotalCrossingTime;
 };
 
 struct stSystemData

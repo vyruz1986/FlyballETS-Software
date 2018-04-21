@@ -20,3 +20,5 @@
 
 #define WS_TICKET_BUFFER_SIZE 5           //Number of websocket tickets kept in memory
 #define WS_TIMEOUT            1800000     // Timeout for secured websocket
+
+#define APP_VER "05.00.00"

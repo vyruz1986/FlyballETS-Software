@@ -4,6 +4,12 @@
 #ifndef _RACEHANDLER_h
 #define _RACEHANDLER_h
 
+#ifdef ESP32
+#define GET_MICROS esp_timer_get_time()
+#elif
+#define GET_MICROS micros()
+#endif
+
 #if defined(ARDUINO) && ARDUINO >= 100
 	#include "Arduino.h"
 #else
@@ -36,7 +42,8 @@ class RaceHandlerClass
    void Main();
    void StartTimers();
    void StartRace();
-   void StopRace(unsigned long StopTime);
+   void StopRace();
+   void StopRace(unsigned long lStopTime);
    void ResetRace();
    void TriggerSensor1();
    void TriggerSensor2();
@@ -54,6 +61,7 @@ class RaceHandlerClass
    String GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber = -1);
    unsigned long GetCrossingTimeMillis(uint8_t iDogNumber, int8_t iRunNumber = -1);
    String GetRerunInfo(uint8_t iDogNumber);
+   long GetTotalCrossingTimeMillis();
    double GetTotalCrossingTime();
 
    String GetRaceStateString();
@@ -80,7 +88,8 @@ private:
       volatile unsigned long lTriggerTime;
       volatile uint8_t iSensorState;
    };
-   STriggerRecord _STriggerQueue[10];
+#define TRIGGER_QUEUE_LENGTH 50
+   STriggerRecord _STriggerQueue[TRIGGER_QUEUE_LENGTH];
 
    volatile uint8_t _iQueueReadIndex;
    volatile uint8_t _iQueueWriteIndex;
