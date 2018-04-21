@@ -210,7 +210,7 @@ void WebHandlerClass::init(int webPort)
    _server->begin();
 
    _lLastRaceDataBroadcast = 0;
-   _lRaceDataBroadcastInterval = 500;
+   _lRaceDataBroadcastInterval = 200;
 
    _lLastSystemDataBroadcast = 0;
    _lSystemDataBroadcastInterval = 2000;
