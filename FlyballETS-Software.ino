@@ -493,6 +493,15 @@ void loop()
    if (digitalRead(iSwitchSideTriggerPin) == LOW)
    {
       syslog.logf_P("Switching sides!\r\n");
+      RaceHandler.ToggleRunDirection();
+      if (RaceHandler.GetRunDirection())
+      {
+         LCDController.UpdateField(LCDController.BoxDirection, "<--");
+      }
+      else
+      {
+         LCDController.UpdateField(LCDController.BoxDirection, "-->");
+      }
    }
 }
 
