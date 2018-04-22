@@ -238,11 +238,12 @@ void setup()
    String strAPPass = SettingsManager.getSetting("APPass");
    if (!WiFi.softAP(strAPName.c_str(), strAPPass.c_str()))
    {
-      syslog.logf_P(LOG_ALERT, "Error initializing softAP!\r\n");
+      syslog.logf_P(LOG_ALERT, "Error initializing softAP!");
    }
    else
    {
-      syslog.logf_P("Wifi started successfully, AP name: %s!\r\n", strAPName.c_str());
+      syslog.logf_P("Wifi started successfully, AP name: %s!", strAPName.c_str());
+     
    }
    WiFi.onEvent(WiFiEvent);
 
@@ -284,7 +285,7 @@ void setup()
       unsigned int progressPercentage = (progress / (total / 100));
       if (uiLastProgress != progressPercentage)
       {
-         syslog.logf_P("[OTA]: Progress: %u%%\r\n", progressPercentage);
+         syslog.logf_P("[OTA]: Progress: %u%%", progressPercentage);
          uiLastProgress = progressPercentage;
       }
    });
@@ -438,31 +439,31 @@ void loop()
       {
          //Race is finished, put final data on screen
          dtostrf(RaceHandler.GetDogTime(RaceHandler.iCurrentDog, -2), 7, 3, cDogTime);
-         syslog.logf_P("D%i: %s|CR: %s\r\n", RaceHandler.iCurrentDog, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iCurrentDog, -2).c_str());
-         syslog.logf_P("RT:%s\r\n", cElapsedRaceTime);
+         syslog.logf_P("D%i: %s|CR: %s", RaceHandler.iCurrentDog, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iCurrentDog, -2).c_str());
+         syslog.logf_P("RT:%s", cElapsedRaceTime);
       }
-      syslog.logf_P("RS: %i\r\n", RaceHandler.RaceState);
+      syslog.logf_P("RS: %i", RaceHandler.RaceState);
    }
 
    if (RaceHandler.iCurrentDog != iCurrentDog)
    {
       dtostrf(RaceHandler.GetDogTime(RaceHandler.iPreviousDog, -2), 7, 3, cDogTime);
-      syslog.logf_P("D%i: %s|CR: %s\r\n", RaceHandler.iPreviousDog, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
-      syslog.logf_P("D: %i\r\n", RaceHandler.iCurrentDog);
-      syslog.logf_P("RT:%s\r\n", cElapsedRaceTime);
+      syslog.logf_P("D%i: %s|CR: %s", RaceHandler.iPreviousDog, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
+      syslog.logf_P("D: %i", RaceHandler.iCurrentDog);
+      syslog.logf_P("RT:%s", cElapsedRaceTime);
    }
 
    //Enable (uncomment) the following if you want periodic status updates on the serial port
    if ((millis() - lLastSerialOutput) > 500)
    {
-      //syslog.logf_P("%lu: ping! analog: %i ,voltage is: %i, this is %i%%\r\n", millis(), BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
-      //syslog.logf_P("%lu: Elapsed time: %s\r\n", millis(), cElapsedRaceTime);
-      //syslog.logf_P("Free heap: %d\r\n", system_get_free_heap_size());
+      //syslog.logf_P("%lu: ping! analog: %i ,voltage is: %i, this is %i%%", millis(), BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
+      //syslog.logf_P("%lu: Elapsed time: %s", millis(), cElapsedRaceTime);
+      //syslog.logf_P("Free heap: %d", system_get_free_heap_size());
       /*
       if (RaceHandler.RaceState == RaceHandler.RUNNING)
       {
          dtostrf(RaceHandler.GetDogTime(RaceHandler.iCurrentDog), 7, 3, cDogTime);
-         syslog.logf_P("Dog %i: %ss\r\n", RaceHandler.iCurrentDog, cDogTime);
+         syslog.logf_P("Dog %i: %ss", RaceHandler.iCurrentDog, cDogTime);
       }
       */
       lLastSerialOutput = millis();
@@ -475,7 +476,7 @@ void loop()
    if (strSerialData.length() > 0
        && bSerialStringComplete)
    {
-      if (bDEBUG) syslog.logf_P("cSer: '%s'\r\n", strSerialData.c_str());
+      if (bDEBUG) syslog.logf_P("cSer: '%s'", strSerialData.c_str());
 
       if (strSerialData == "DEBUG")
       {
@@ -492,7 +493,7 @@ void loop()
    //Handle side switch button
    if (digitalRead(iSwitchSideTriggerPin) == LOW)
    {
-      syslog.logf_P("Switching sides!\r\n");
+      syslog.logf_P("Switching sides!");
       RaceHandler.ToggleRunDirection();
       if (RaceHandler.GetRunDirection())
       {
@@ -550,7 +551,7 @@ void StartStopRace()
       && RaceHandler.GetRaceTime() == 0)           //and timers are zero
    {
       //Then start the race
-      if (bDEBUG) syslog.logf_P("%lu: START!\r\n", millis());
+      if (bDEBUG) syslog.logf_P("%lu: START!", millis());
       LightsController.InitiateStartSequence();
       RaceHandler.StartRace();
    }

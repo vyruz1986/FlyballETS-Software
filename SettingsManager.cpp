@@ -9,7 +9,7 @@
 void SettingsManagerClass::loop()
 {
    if (_settings_save) {
-      syslog.logf_P(LOG_DEBUG, "[SETTINGS] Saving\r\n");
+      syslog.logf_P(LOG_DEBUG, "[SETTINGS] Saving");
       EEPROM.commit();
       _settings_save = false;
    }

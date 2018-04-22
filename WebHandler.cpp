@@ -194,7 +194,7 @@ void WebHandlerClass::init(int webPort)
    _server->addHandler(_wsa);
 
    _server->onNotFound([](AsyncWebServerRequest *request) {
-      syslog.logf_P(LOG_ERR, "Not found: %s!\r\n", request->url().c_str());
+      syslog.logf_P(LOG_ERR, "Not found: %s!", request->url().c_str());
       request->send(404);
    });
 
@@ -258,7 +258,7 @@ void WebHandlerClass::SendLightsData(stLightsState LightStates)
 
       String JsonString;
       JsonRoot.printTo(JsonString);
-      //syslog.logf_P("json: %s\r\n", JsonString.c_str());
+      //syslog.logf_P("json: %s", JsonString.c_str());
       _ws->textAll(JsonString.c_str());
    }
 }
@@ -391,7 +391,7 @@ boolean WebHandlerClass::_ProcessConfig(JsonArray& newConfig, String * ReturnErr
 
       if (value != SettingsManager.getSetting(key))
       {
-         syslog.logf_P(LOG_DEBUG, "[WEBHANDLER] Storing %s = %s\r\n", key.c_str(), value.c_str());
+         syslog.logf_P(LOG_DEBUG, "[WEBHANDLER] Storing %s = %s", key.c_str(), value.c_str());
          SettingsManager.setSetting(key, value);
          save = changed = true;
       }
@@ -462,7 +462,7 @@ void WebHandlerClass::_SendSystemData()
 
    String JsonString;
    JsonRoot.printTo(JsonString);
-   //syslog.logf_P("json: %s\r\n", JsonString.c_str());
+   //syslog.logf_P("json: %s", JsonString.c_str());
    _ws->textAll(JsonString.c_str());
 }
 
@@ -506,7 +506,7 @@ bool WebHandlerClass::_wsAuth(AsyncWebSocketClient * client) {
    //this new user will/could have the same IP as the previous user, and will be authenticated :(
 
    for (index = 0; index < WS_TICKET_BUFFER_SIZE; index++) {
-      syslog.logf_P("Checking ticket: %i, ip: %s, time: %lu\r\n", index, _ticket[index].ip.toString().c_str(), _ticket[index].timestamp);
+      syslog.logf_P("Checking ticket: %i, ip: %s, time: %lu", index, _ticket[index].ip.toString().c_str(), _ticket[index].timestamp);
       if ((_ticket[index].ip == ip) && (now - _ticket[index].timestamp < WS_TIMEOUT)) break;
    }
 
