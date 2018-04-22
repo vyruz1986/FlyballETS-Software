@@ -66,7 +66,7 @@ private:
       int iStartingPosition;
       int iFieldLength;
       String strText;
-   }_SlcdfieldFields[16];
+   }_SlcdfieldFields[17];
 
 };
 
