@@ -77,8 +77,8 @@
    -  3: free/RX
    -  5: free/LED/SS
    - 21: free/SCA
-   - 36/VP: GPS tx
-   - 39/VN: GPS rx
+   - 36/VP: GPS rx (ESP tx)
+   - 39/VN: GPS tx (ESP rx)
 */
 
 //Set simulate to true to enable simulator class (see Simulator.cpp/h)
