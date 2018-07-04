@@ -179,8 +179,8 @@ void setup()
    SettingsManager.init();
    syslog.setSerialPrint(true);
    
-   pinMode(iS1Pin, INPUT);
-   pinMode(iS2Pin, INPUT);
+   pinMode(iS1Pin, INPUT_PULLDOWN);
+   pinMode(iS2Pin, INPUT_PULLDOWN);
    
    //Set light data pin as output
    pinMode(iLightsDataPin, OUTPUT);
@@ -209,8 +209,10 @@ void setup()
    pinMode(SideSwitch.Pin, INPUT_PULLUP);
 
    //Set ISR's with wrapper functions
+#if !Simulate
    attachInterrupt(digitalPinToInterrupt(iS2Pin), Sensor2Wrapper, CHANGE);
    attachInterrupt(digitalPinToInterrupt(iS1Pin), Sensor1Wrapper, CHANGE);
+#endif
 
    //Initialize BatterySensor class with correct pin
    BatterySensor.init(iBatterySensorPin);
