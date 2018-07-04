@@ -111,7 +111,7 @@ uint16_t iBatteryVoltage = 0;
 //Initialise Lights stuff
 #ifdef WS281x
    uint8_t iLightsDataPin = 0;
-   NeoPixelBus<NeoRgbFeature, NeoWs2813Method> LightsStrip(5, iLightsDataPin);
+   NeoPixelBus<NeoRgbFeature, WS_METHOD> LightsStrip(5, iLightsDataPin);
 
 #else
    uint8_t iLightsClockPin = 8;

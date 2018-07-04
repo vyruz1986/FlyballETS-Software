@@ -36,7 +36,7 @@
 /// <param name="iClockPin">  Zero-based index of the clock pin. </param>
 /// <param name="iDataPin">   Zero-based index of the data pin. </param>
 #ifdef WS281x
-void LightsControllerClass::init(NeoPixelBus<NeoRgbFeature, NeoWs2813Method>* LightsStrip)
+void LightsControllerClass::init(NeoPixelBus<NeoRgbFeature, WS_METHOD>* LightsStrip)
 #else
 void LightsControllerClass::init(uint8_t iLatchPin, uint8_t iClockPin, uint8_t iDataPin)
 #endif // WS281x
