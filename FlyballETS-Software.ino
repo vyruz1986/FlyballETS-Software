@@ -124,8 +124,7 @@ uint8_t iLaserTriggerPin = 32;
 uint8_t iLaserOutputPin = 12;
 boolean bLaserState = false;
 
-uint8_t iSwitchSideTriggerPin = 22;
-
+stInputSignal SideSwitch = { 5, 0 , 500};
 
 //Set last serial output variable
 long lLastSerialOutput = 0;
@@ -207,7 +206,7 @@ void setup()
    //Initialize other I/O's
    pinMode(iLaserTriggerPin, INPUT_PULLUP);
    pinMode(iLaserOutputPin, OUTPUT);
-   pinMode(iSwitchSideTriggerPin, INPUT_PULLUP);
+   pinMode(SideSwitch.Pin, INPUT_PULLUP);
 
    //Set ISR's with wrapper functions
    attachInterrupt(digitalPinToInterrupt(iS2Pin), Sensor2Wrapper, CHANGE);
@@ -491,8 +490,10 @@ void loop()
    digitalWrite(iLaserOutputPin, !digitalRead(iLaserTriggerPin));
 
    //Handle side switch button
-   if (digitalRead(iSwitchSideTriggerPin) == LOW)
+   if (digitalRead(SideSwitch.Pin) == LOW
+      && millis() - SideSwitch.LastTriggerTime > SideSwitch.CoolDownTime)
    {
+      SideSwitch.LastTriggerTime = millis();
       syslog.logf_P("Switching sides!");
       RaceHandler.ToggleRunDirection();
       if (RaceHandler.GetRunDirection())
