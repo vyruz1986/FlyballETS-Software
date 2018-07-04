@@ -161,9 +161,13 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
          DataResult["success"] = result;
       }
 
-      String strJsonResponse;
-      JsonResponseRoot.printTo(strJsonResponse);
-      client->text(strJsonResponse);
+      size_t len = JsonResponseRoot.measureLength();
+      AsyncWebSocketMessageBuffer * wsBuffer = _ws->makeBuffer(len);
+      if (wsBuffer)
+      {
+         JsonResponseRoot.printTo((char *)wsBuffer->get(), len + 1);
+         client->text(wsBuffer);
+      }
    }
 }
 
@@ -210,7 +214,7 @@ void WebHandlerClass::init(int webPort)
    _server->begin();
 
    _lLastRaceDataBroadcast = 0;
-   _lRaceDataBroadcastInterval = 200;
+   _lRaceDataBroadcastInterval = 750;
 
    _lLastSystemDataBroadcast = 0;
    _lSystemDataBroadcastInterval = 2000;
@@ -256,10 +260,13 @@ void WebHandlerClass::SendLightsData(stLightsState LightStates)
       JsonArray& JsonLightsData = JsonRoot.createNestedArray("LightsData");
       JsonLightsData.copyFrom(LightStates.State);
 
-      String JsonString;
-      JsonRoot.printTo(JsonString);
-      //syslog.logf_P("json: %s", JsonString.c_str());
-      _ws->textAll(JsonString.c_str());
+      size_t len = JsonRoot.measureLength();
+      AsyncWebSocketMessageBuffer * wsBuffer = _ws->makeBuffer(len);
+      if (wsBuffer)
+      {
+         JsonRoot.printTo((char *)wsBuffer->get(), len + 1);
+         _ws->textAll(wsBuffer);
+      }
    }
 }
 
@@ -372,10 +379,46 @@ boolean WebHandlerClass::_GetRaceDataJsonString(uint iRaceId, String &strJsonStr
 
 void WebHandlerClass::_SendRaceData(uint iRaceId)
 {
-   String strRaceDataJson;
-   if (_GetRaceDataJsonString(iRaceId, strRaceDataJson))
+   const size_t bufferSize = 5 * JSON_ARRAY_SIZE(4) + JSON_OBJECT_SIZE(1) + 16 * JSON_OBJECT_SIZE(2) + 4 * JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(7);
+   DynamicJsonBuffer JsonBuffer(bufferSize);
+   JsonObject& JsonRoot = JsonBuffer.createObject();
+   if (!JsonRoot.success())
    {
-      _ws->textAll(strRaceDataJson.c_str());
+      syslog.logf_P(LOG_ERR, "Error parsing JSON!");
+   }
+   else
+   {
+      JsonObject& JsonRaceData = JsonRoot.createNestedObject("RaceData");
+      stRaceData RequestedRaceData = RaceHandler.GetRaceData();
+      JsonRaceData["id"] = RequestedRaceData.Id;
+      JsonRaceData["startTime"] = RequestedRaceData.StartTime;
+      JsonRaceData["endTime"] = RequestedRaceData.EndTime;
+      JsonRaceData["elapsedTime"] = RequestedRaceData.ElapsedTime;
+      JsonRaceData["totalCrossingTime"] = RequestedRaceData.TotalCrossingTime;
+      JsonRaceData["raceState"] = RequestedRaceData.RaceState;
+
+      JsonArray& JsonDogDataArray = JsonRaceData.createNestedArray("dogData");
+      for (uint8_t i = 0; i < 4; i++)
+      {
+         JsonObject& JsonDogData = JsonDogDataArray.createNestedObject();
+         JsonDogData["dogNumber"] = RequestedRaceData.DogData[i].DogNumber;
+         JsonArray& JsonDogDataTimingArray = JsonDogData.createNestedArray("timing");
+         for (uint8_t i2 = 0; i2 < 4; i2++)
+         {
+            JsonObject& DogTiming = JsonDogDataTimingArray.createNestedObject();
+            DogTiming["time"] = RequestedRaceData.DogData[i].Timing[i2].Time;
+            DogTiming["crossingTime"] = RequestedRaceData.DogData[i].Timing[i2].CrossingTime;
+         }
+         JsonDogData["fault"] = RequestedRaceData.DogData[i].Fault;
+         JsonDogData["running"] = RequestedRaceData.DogData[i].Running;
+      }
+      size_t len = JsonRoot.measureLength();
+      AsyncWebSocketMessageBuffer * wsBuffer = _ws->makeBuffer(len);
+      if (wsBuffer)
+      {
+         JsonRoot.printTo((char *)wsBuffer->get(), len + 1);
+         _ws->textAll(wsBuffer);
+      }
    }
 }
 
@@ -383,7 +426,7 @@ boolean WebHandlerClass::_ProcessConfig(JsonArray& newConfig, String * ReturnErr
 {
    bool save = false;
    bool changed = false;
-
+   Serial.printf("config is %i big\r\n", newConfig.size());
    for (unsigned int i = 0; i < newConfig.size(); i++)
    {
       String key = newConfig[i]["name"];
@@ -460,10 +503,13 @@ void WebHandlerClass::_SendSystemData()
    JsonSystemData["systemTimestamp"]   = _SystemData.UTCSystemTime;
    JsonSystemData["batteryPercentage"]   = _SystemData.BatteryPercentage;
 
-   String JsonString;
-   JsonRoot.printTo(JsonString);
-   //syslog.logf_P("json: %s", JsonString.c_str());
-   _ws->textAll(JsonString.c_str());
+   size_t len = JsonRoot.measureLength();
+   AsyncWebSocketMessageBuffer * wsBuffer = _ws->makeBuffer(len);
+   if (wsBuffer)
+   {
+      JsonRoot.printTo((char *)wsBuffer->get(), len + 1);
+      _ws->textAll(wsBuffer);
+   }
 }
 
 void WebHandlerClass::_onAuth(AsyncWebServerRequest *request)
