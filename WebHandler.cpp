@@ -31,7 +31,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
       {
          if (!_wsAuth(client))
          {
-            client->close();
+            client->close(401, "Unauthorized");
             return;
          }
       }
@@ -491,7 +491,11 @@ bool WebHandlerClass::_authenticate(AsyncWebServerRequest *request) {
    String password = SettingsManager.getSetting("AdminPass");
    char httpPassword[password.length() + 1];
    password.toCharArray(httpPassword, password.length() + 1);
-   return request->authenticate("Admin", httpPassword);
+   boolean bAuthResult = request->authenticate("Admin", httpPassword);
+   if (!bAuthResult) {
+      syslog.logf_P(LOG_ERR, "[WEBHANDLER] Admin user failed to login!");
+   }
+   return bAuthResult;
 }
 
 bool WebHandlerClass::_wsAuth(AsyncWebSocketClient * client) {
