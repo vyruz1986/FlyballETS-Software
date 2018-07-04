@@ -23,6 +23,7 @@ public:
    String getSetting(const String& key);
    
    bool setSetting(const String& key, String value);
+   bool setSetting(const String& key, bool value);
 
    void saveSettings();
    bool hasSetting(const String & key);

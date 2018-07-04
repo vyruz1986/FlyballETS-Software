@@ -18,7 +18,9 @@
 
 #include "StreamPrint.h"
 #include "LightsController.h"
+#include "LCDController.h"
 #include "RaceHandler.h"
+#include "SettingsManager.h"
 #include "global.h"
 #include "WebHandler.h"
 #include "syslog.h"
@@ -39,6 +41,10 @@ void RaceHandlerClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
    ResetRace();
 
    _iCurrentRaceId = 0;
+   Serial.printf("Run Direction from settings: %s", SettingsManager.getSetting("RunDirectionInverted").c_str());
+   if (SettingsManager.getSetting("RunDirectionInverted").equals("1")) {
+      ToggleRunDirection();
+   }
 }
 
 /// <summary>
@@ -898,6 +904,15 @@ stRaceData RaceHandlerClass::GetRaceData(uint iRaceId)
 void RaceHandlerClass::ToggleRunDirection()
 {
    _bRunDirectionInverted = !_bRunDirectionInverted;
+   SettingsManager.setSetting("RunDirectionInverted", _bRunDirectionInverted);
+   if (_bRunDirectionInverted)
+   {
+      LCDController.UpdateField(LCDController.BoxDirection, "<--");
+   }
+   else
+   {
+      LCDController.UpdateField(LCDController.BoxDirection, "-->");
+   }
 }
 
 /// <summary>

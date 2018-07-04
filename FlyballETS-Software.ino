@@ -498,14 +498,6 @@ void loop()
       SideSwitch.LastTriggerTime = millis();
       syslog.logf_P("Switching sides!");
       RaceHandler.ToggleRunDirection();
-      if (RaceHandler.GetRunDirection())
-      {
-         LCDController.UpdateField(LCDController.BoxDirection, "<--");
-      }
-      else
-      {
-         LCDController.UpdateField(LCDController.BoxDirection, "-->");
-      }
    }
 }
 
