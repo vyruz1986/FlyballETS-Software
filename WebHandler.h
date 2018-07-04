@@ -10,11 +10,11 @@
 #endif
 
 #include "SettingsManager.h"
-#include <Hash.h>
+//#include <Hash.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-#include <FS.h>
-#include <SPIFFS.h>
+//#include <FS.h>
+//#include <SPIFFS.h>
 #include <ArduinoJson.h>
 #include "RaceHandler.h"
 #include "Structs.h"
@@ -30,7 +30,8 @@ protected:
    AsyncWebSocket *_ws;
    AsyncWebSocket *_wsa;
    void _WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len);
-   boolean _DoAction(JsonObject& ActionRequest, String * ReturnError);
+   boolean _DoAction(JsonObject& ActionObj, String * ReturnError);
+   boolean _GetRaceDataJsonString(uint iRaceId, String &strJsonString);
    void _SendRaceData(uint iRaceId = RaceHandler._iCurrentRaceId);
 
    boolean _ProcessConfig(JsonArray& newConfig, String * ReturnError);

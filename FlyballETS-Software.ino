@@ -77,8 +77,8 @@
    -  3: free/RX
    -  5: free/LED/SS
    - 21: free/SCA
-   - 36/VP: GPS tx
-   - 39/VN: GPS rx
+   - 36/VP: GPS rx (ESP tx)
+   - 39/VN: GPS tx (ESP rx)
 */
 
 //Set simulate to true to enable simulator class (see Simulator.cpp/h)
@@ -91,6 +91,9 @@
    #include <NeoPixelBus.h>
 #endif // WS281x
 
+#ifdef ESP32
+   #include <ESPmDNS.h>
+#endif
 uint8_t iS1Pin = 34;
 uint8_t iS2Pin = 33;
 uint8_t iCurrentDog;
@@ -108,7 +111,7 @@ uint16_t iBatteryVoltage = 0;
 //Initialise Lights stuff
 #ifdef WS281x
    uint8_t iLightsDataPin = 0;
-   NeoPixelBus<NeoRgbFeature, NeoWs2813Method> LightsStrip(5, iLightsDataPin);
+   NeoPixelBus<NeoRgbFeature, WS_METHOD> LightsStrip(5, iLightsDataPin);
 
 #else
    uint8_t iLightsClockPin = 8;
@@ -121,8 +124,7 @@ uint8_t iLaserTriggerPin = 32;
 uint8_t iLaserOutputPin = 12;
 boolean bLaserState = false;
 
-uint8_t iSwitchSideTriggerPin = 22;
-
+stInputSignal SideSwitch = { 5, 0 , 500};
 
 //Set last serial output variable
 long lLastSerialOutput = 0;
@@ -167,6 +169,9 @@ HardwareSerial GPSSerial(1);
 WiFiUDP SyslogUDP;
 Syslog syslog(SyslogUDP, "255.255.255.255", 514, "FlyballETS", "FlyballETSApp", LOG_INFO, SYSLOG_PROTO_BSD);
 
+//Keep last reported OTA progress so we can send one syslog message for every % increment
+unsigned int uiLastProgress = 0;
+
 void setup()
 {
    EEPROM.begin(EEPROM_SIZE);
@@ -174,8 +179,8 @@ void setup()
    SettingsManager.init();
    syslog.setSerialPrint(true);
    
-   pinMode(iS1Pin, INPUT);
-   pinMode(iS2Pin, INPUT);
+   pinMode(iS1Pin, INPUT_PULLDOWN);
+   pinMode(iS2Pin, INPUT_PULLDOWN);
    
    //Set light data pin as output
    pinMode(iLightsDataPin, OUTPUT);
@@ -201,11 +206,13 @@ void setup()
    //Initialize other I/O's
    pinMode(iLaserTriggerPin, INPUT_PULLUP);
    pinMode(iLaserOutputPin, OUTPUT);
-   pinMode(iSwitchSideTriggerPin, INPUT_PULLUP);
+   pinMode(SideSwitch.Pin, INPUT_PULLUP);
 
    //Set ISR's with wrapper functions
+#if !Simulate
    attachInterrupt(digitalPinToInterrupt(iS2Pin), Sensor2Wrapper, CHANGE);
    attachInterrupt(digitalPinToInterrupt(iS1Pin), Sensor1Wrapper, CHANGE);
+#endif
 
    //Initialize BatterySensor class with correct pin
    BatterySensor.init(iBatterySensorPin);
@@ -232,11 +239,12 @@ void setup()
    String strAPPass = SettingsManager.getSetting("APPass");
    if (!WiFi.softAP(strAPName.c_str(), strAPPass.c_str()))
    {
-      syslog.logf_P(LOG_ALERT, "Error initializing softAP!\r\n");
+      syslog.logf_P(LOG_ALERT, "Error initializing softAP!");
    }
    else
    {
-      syslog.logf_P("Wifi started successfully, AP name: %s!\r\n", strAPName.c_str());
+      syslog.logf_P("Wifi started successfully, AP name: %s!", strAPName.c_str());
+     
    }
    WiFi.onEvent(WiFiEvent);
 
@@ -251,7 +259,12 @@ void setup()
    Simulator.init(iS1Pin, iS2Pin);
 #endif
 
-   syslog.logf_P("Ready on IP: %s", WiFi.softAPIP().toString().c_str());
+   syslog.logf_P("Ready on IP: %s, v%s", WiFi.softAPIP().toString().c_str(), APP_VER);
+   if (WiFi.softAPIP() != IPGateway)
+   {
+      syslog.logf_P(LOG_ERR, "I am not running on the correct IP (%s instead of %s), rebooting!", WiFi.softAPIP().toString().c_str(), IPGateway.toString().c_str());
+      ESP.restart();
+   }
    //Ota setup
    ArduinoOTA.setPassword("FlyballETS.1234");
    ArduinoOTA.setPort(3232);
@@ -267,19 +280,29 @@ void setup()
    });
 
    ArduinoOTA.onEnd([]() {
-      syslog.logf_P("End");
+      syslog.logf_P("[OTA]: End");
    });
    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-      syslog.logf_P("Progress: %u%%\r\n", (progress / (total / 100)));
+      unsigned int progressPercentage = (progress / (total / 100));
+      if (uiLastProgress != progressPercentage)
+      {
+         syslog.logf_P("[OTA]: Progress: %u%%", progressPercentage);
+         uiLastProgress = progressPercentage;
+      }
    });
    ArduinoOTA.onError([](ota_error_t error) {
-      syslog.logf_P(LOG_ERR, "Error[%u]: ", error);
+      syslog.logf_P(LOG_ERR, "[OTA]: Error[%u]: ", error);
    });
    ArduinoOTA.begin();
 
    //Initialize GPS Serial port and class
    GPSSerial.begin(9600, SERIAL_8N1, 39, 36);
    GPSHandler.init(&GPSSerial);
+
+#ifdef  ESP32
+   mdnsServerSetup();
+#endif //  ESP32
+
 }
 
 void loop()
@@ -417,31 +440,31 @@ void loop()
       {
          //Race is finished, put final data on screen
          dtostrf(RaceHandler.GetDogTime(RaceHandler.iCurrentDog, -2), 7, 3, cDogTime);
-         syslog.logf_P("D%i: %s|CR: %s\r\n", RaceHandler.iCurrentDog, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iCurrentDog, -2).c_str());
-         syslog.logf_P("RT:%s\r\n", cElapsedRaceTime);
+         syslog.logf_P("D%i: %s|CR: %s", RaceHandler.iCurrentDog, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iCurrentDog, -2).c_str());
+         syslog.logf_P("RT:%s", cElapsedRaceTime);
       }
-      syslog.logf_P("RS: %i\r\n", RaceHandler.RaceState);
+      syslog.logf_P("RS: %i", RaceHandler.RaceState);
    }
 
    if (RaceHandler.iCurrentDog != iCurrentDog)
    {
       dtostrf(RaceHandler.GetDogTime(RaceHandler.iPreviousDog, -2), 7, 3, cDogTime);
-      syslog.logf_P("D%i: %s|CR: %s\r\n", RaceHandler.iPreviousDog, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
-      syslog.logf_P("D: %i\r\n", RaceHandler.iCurrentDog);
-      syslog.logf_P("RT:%s\r\n", cElapsedRaceTime);
+      syslog.logf_P("D%i: %s|CR: %s", RaceHandler.iPreviousDog, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
+      syslog.logf_P("D: %i", RaceHandler.iCurrentDog);
+      syslog.logf_P("RT:%s", cElapsedRaceTime);
    }
 
    //Enable (uncomment) the following if you want periodic status updates on the serial port
    if ((millis() - lLastSerialOutput) > 500)
    {
-      //syslog.logf_P("%lu: ping! analog: %i ,voltage is: %i, this is %i%%\r\n", millis(), BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
-      //syslog.logf_P("%lu: Elapsed time: %s\r\n", millis(), cElapsedRaceTime);
-      //syslog.logf_P("Free heap: %d\r\n", system_get_free_heap_size());
+      //syslog.logf_P("%lu: ping! analog: %i ,voltage is: %i, this is %i%%", millis(), BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
+      //syslog.logf_P("%lu: Elapsed time: %s", millis(), cElapsedRaceTime);
+      //syslog.logf_P("Free heap: %d", system_get_free_heap_size());
       /*
       if (RaceHandler.RaceState == RaceHandler.RUNNING)
       {
          dtostrf(RaceHandler.GetDogTime(RaceHandler.iCurrentDog), 7, 3, cDogTime);
-         syslog.logf_P("Dog %i: %ss\r\n", RaceHandler.iCurrentDog, cDogTime);
+         syslog.logf_P("Dog %i: %ss", RaceHandler.iCurrentDog, cDogTime);
       }
       */
       lLastSerialOutput = millis();
@@ -454,7 +477,7 @@ void loop()
    if (strSerialData.length() > 0
        && bSerialStringComplete)
    {
-      if (bDEBUG) syslog.logf_P("cSer: '%s'\r\n", strSerialData.c_str());
+      if (bDEBUG) syslog.logf_P("cSer: '%s'", strSerialData.c_str());
 
       if (strSerialData == "DEBUG")
       {
@@ -469,18 +492,12 @@ void loop()
    digitalWrite(iLaserOutputPin, !digitalRead(iLaserTriggerPin));
 
    //Handle side switch button
-   if (digitalRead(iSwitchSideTriggerPin) == LOW)
+   if (digitalRead(SideSwitch.Pin) == LOW
+      && millis() - SideSwitch.LastTriggerTime > SideSwitch.CoolDownTime)
    {
-      syslog.logf_P("Switching sides!\r\n");
+      SideSwitch.LastTriggerTime = millis();
+      syslog.logf_P("Switching sides!");
       RaceHandler.ToggleRunDirection();
-      if (RaceHandler.GetRunDirection())
-      {
-         LCDController.UpdateField(LCDController.BoxDirection, "<--");
-      }
-      else
-      {
-         LCDController.UpdateField(LCDController.BoxDirection, "-->");
-      }
    }
 }
 
@@ -534,7 +551,7 @@ void StartStopRace()
    }
    else //If race state is running or starting, we should stop it
    {
-      RaceHandler.StopRace(micros());
+      RaceHandler.StopRace();
       LightsController.DeleteSchedules();
    }
 }
@@ -569,3 +586,12 @@ void WiFiEvent(WiFiEvent_t event) {
       break;
    }
 }
+
+#ifdef ESP32
+void mdnsServerSetup()
+{
+   MDNS.addService("http", "tcp", 80);
+   MDNS.addServiceTxt("arduino", "tcp", "app_version", APP_VER);
+   MDNS.begin("FlyballETS");
+}
+#endif

@@ -13,51 +13,35 @@
 /// </summary>
 const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60] PROGMEM = {
    //See the end of this file for a collection of races
-   { 1,   -29236, 1 }
-   ,{ 2,  -13724, 1 }
-   ,{ 1,  101080, 0 }
-   ,{ 2,  118704, 0 }
-   ,{ 2, 4431492, 1 }
-   ,{ 2, 4433344, 0 }
-   ,{ 2, 4437024, 1 }
-   ,{ 1, 4444444, 1 }
-   ,{ 1, 4448220, 0 }
-   ,{ 1, 4451816, 1 }
-   ,{ 2, 4555588, 0 }
-   ,{ 1, 4571884, 0 }
-   ,{ 1, 4764900, 1 }
-   ,{ 2, 4783296, 1 }
-   ,{ 1, 4891888, 0 }
-   ,{ 2, 4907432, 0 }
-   ,{ 2, 9345748, 1 }
-   ,{ 1, 9366044, 1 }
-   ,{ 2, 9487728, 0 }
-   ,{ 1, 9505208, 0 }
-   ,{ 1, 9611220, 1 }
-   ,{ 2, 9634504, 1 }
-   ,{ 1, 9750116, 0 }
-   ,{ 2, 9766092, 0 }
-   ,{ 2, 14489980, 1 }
-   ,{ 1, 14506052, 1 }
-   ,{ 2, 14614192, 0 }
-   ,{ 1, 14635252, 0 }
-   ,{ 1, 15158440, 1 }
-   ,{ 2, 15186624, 1 }
-   ,{ 1, 15329176, 0 }
-   ,{ 2, 15348496, 0 }
-   ,{ 2, 20337320, 1 }
-   ,{ 1, 20354000, 1 }
-   ,{ 2, 20479384, 0 }
-   ,{ 1, 20496216, 0 }
+   { 1,162901,1 },
+   { 2,190287,1 },
+   { 1,292299,0 },
+   { 1,308171,1 },
+   { 2,311576,0 },
+   { 1,315275,0 },
+   { 1,327828,1 },
+   { 1,331783,0 },
+   { 2,5216625,1 },
+   { 1,5233268,1 },
+   { 1,5240338,0 },
+   { 1,5242136,1 },
+   { 2,5362002,0 },
+   { 2,5367346,1 },
+   { 1,5468382,0 },
+   { 2,5488550,0 },
+   { 2,9910598,1 },
+   { 2,9915971,0 },
+   { 2,9919530,1 },
+   { 1,9923699,1 },
+   { 1,10092756,0 },
+   { 2,10112577,0 },
+   { 2,14495214,1 },
+   { 1,14509473,1 },
+   { 1,14511453,0 },
+   { 1,14515396,1 },
+   { 2,14627607,0 },
+   { 1,14641081,0 }
 
-   ,{ 1, 25158440, 1 }
-   ,{ 2, 25186624, 1 }
-   ,{ 1, 25329176, 0 }
-   ,{ 2, 25348496, 0 }
-   ,{ 2, 30337320, 1 }
-   ,{ 1, 30354000, 1 }
-   ,{ 2, 30479384, 0 }
-   ,{ 1, 30496216, 0 }
 };
 
 /// <summary>
@@ -69,13 +53,14 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60] PROGMEM
 void SimulatorClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
 {
    _iS1Pin = iS1Pin;
-   pinMode(_iS1Pin, OUTPUT);
-   digitalWrite(_iS1Pin, LOW);
+   //pinMode(_iS1Pin, OUTPUT);
+   //digitalWrite(_iS1Pin, LOW);
    _iS2Pin = iS2Pin;
-   pinMode(_iS2Pin, OUTPUT);
-   digitalWrite(_iS2Pin, LOW);
+   //pinMode(_iS2Pin, OUTPUT);
+   //digitalWrite(_iS2Pin, LOW);
    _iDataPos = 0;
    PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
+   Serial.printf("Simulator started!\r\n");
 }
 
 /// <summary>
@@ -98,13 +83,9 @@ void SimulatorClass::Main()
       //Pending record doesn't contain valid data, this means we've reched the end of our queue
       return;
    }
-   
-   long lRaceElapsedTime = micros() - RaceHandler._lRaceStartTime;
-   uint8_t iSimPin;
-
    //Simulate sensors
    if (RaceHandler.RaceState != RaceHandler.STOPPED
-      && PendingRecord.lTriggerTime <= lRaceElapsedTime)
+      && PendingRecord.lTriggerTime <= (long) RaceHandler._lRaceTime)
    {
       if (RaceHandler._QueueEmpty())
       {
@@ -437,4 +418,36 @@ Race3 (GT Team 4):
    , { 1, 13728660, 0 }
    , { 2, 13745884, 0 }
    , { 2, 18070120, 1 }
+
+   //Faulty numbers on WebUI
+   {1,162901,1},
+   {2,190287,1},
+   {1,292299,0},
+   {1,308171,1},
+   {2,311576,0},
+   {1,315275,0},
+   {1,327828,1},
+   {1,331783,0},
+   {2,5216625,1},
+   {1,5233268,1},
+   {1,5240338,0},
+   {1,5242136,1},
+   {2,5362002,0},
+   {2,5367346,1},
+   {1,5468382,0},
+   {2,5488550,0},
+   {2,9910598,1},
+   {2,9915971,0},
+   {2,9919530,1},
+   {1,9923699,1},
+   {1,10092756,0},
+   {2,10112577,0},
+   {2,14495214,1},
+   {1,14509473,1},
+   {1,14511453,0},
+   {1,14515396,1},
+   {2,14627607,0},
+   {1,14641081,0}
+
 */
+

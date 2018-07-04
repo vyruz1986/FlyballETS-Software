@@ -18,7 +18,9 @@
 
 #include "StreamPrint.h"
 #include "LightsController.h"
+#include "LCDController.h"
 #include "RaceHandler.h"
+#include "SettingsManager.h"
 #include "global.h"
 #include "WebHandler.h"
 #include "syslog.h"
@@ -40,6 +42,10 @@ void RaceHandlerClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
    ResetRace();
 
    _iCurrentRaceId = 0;
+   Serial.printf("Run Direction from settings: %s", SettingsManager.getSetting("RunDirectionInverted").c_str());
+   if (SettingsManager.getSetting("RunDirectionInverted").equals("1")) {
+      ToggleRunDirection();
+   }
 }
 
 /// <summary>
@@ -68,7 +74,7 @@ void RaceHandlerClass::_ChangeDogState(_byDogStates byNewDogState)
    if (_byDogState != byNewDogState)
    {
       _byDogState = byNewDogState;
-      syslog.logf_P(LOG_DEBUG, "DogState: %i\r\n", byNewDogState);
+      syslog.logf_P(LOG_DEBUG, "DogState: %i", byNewDogState);
    }
 }
 
@@ -84,7 +90,7 @@ void RaceHandlerClass::_ChangeDogNumber(uint8_t iNewDogNumber)
    {
       iPreviousDog = iCurrentDog;
       iCurrentDog = iNewDogNumber;
-      syslog.logf_P(LOG_DEBUG, "Prev Dog: %i|ENT:%lu|EXIT:%lu|TOT:%lu\r\n", iPreviousDog, _lDogEnterTimes[iPreviousDog], _lDogExitTimes[iPreviousDog], _lDogTimes[iPreviousDog][_iDogRunCounters[iPreviousDog]]);
+      syslog.logf_P(LOG_DEBUG, "Prev Dog: %i|ENT:%lu|EXIT:%lu|TOT:%lu", iPreviousDog, _lDogEnterTimes[iPreviousDog], _lDogExitTimes[iPreviousDog], _lDogTimes[iPreviousDog][_iDogRunCounters[iPreviousDog]]);
 
    }
 }
@@ -108,7 +114,7 @@ void RaceHandlerClass::Main()
          while (!_QueueEmpty())
          {
             STriggerRecord STempRecord = _QueuePop();
-            syslog.logf_P(LOG_DEBUG, "S%i|T:%li|St:%i\r\n", STempRecord.iSensorNumber, STempRecord.lTriggerTime - _lRaceStartTime, STempRecord.iSensorState);
+            syslog.logf_P(LOG_DEBUG, "S%i|T:%li|St:%i", STempRecord.iSensorNumber, STempRecord.lTriggerTime - _lRaceStartTime, STempRecord.iSensorState);
          }
       }
       return;
@@ -120,7 +126,7 @@ void RaceHandlerClass::Main()
       STriggerRecord STriggerRecord = _QueuePop();
       //If the transition string is not empty and is was not updated for 2 seconds then we have to clear it.
       if (_strTransition.length() != 0
-         && (micros() - _lLastTransitionStringUpdate) > 2000000)
+         && (GET_MICROS - _lLastTransitionStringUpdate) > 2000000)
       {
          _strTransition = "";
       }
@@ -129,8 +135,8 @@ void RaceHandlerClass::Main()
          _bGatesClear = true;
       }
 
-      syslog.logf_P(LOG_DEBUG, "S%i|T:%li|St:%i\r\n", STriggerRecord.iSensorNumber, STriggerRecord.lTriggerTime - _lRaceStartTime, STriggerRecord.iSensorState);
-      syslog.logf_P(LOG_DEBUG, "bGatesClear: %i\r\n", _bGatesClear);
+      syslog.logf_P(LOG_DEBUG, "S%i|T:%li|St:%i", STriggerRecord.iSensorNumber, STriggerRecord.lTriggerTime - _lRaceStartTime, STriggerRecord.iSensorState);
+      syslog.logf_P(LOG_DEBUG, "bGatesClear: %i", _bGatesClear);
 
       //Calculate what our next dog will be
       if ((_bFault && _bRerunBusy)
@@ -166,7 +172,7 @@ void RaceHandlerClass::Main()
          {
             //Dog 0 is too early!
             SetDogFault(iCurrentDog, ON);
-            syslog.logf_P(LOG_DEBUG, "F! D:%i!\r\n", iCurrentDog);
+            syslog.logf_P(LOG_DEBUG, "F! D:%i!", iCurrentDog);
             _lCrossingTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = STriggerRecord.lTriggerTime - _lPerfectCrossingTime;
             _lDogEnterTimes[iCurrentDog] = STriggerRecord.lTriggerTime;
          }
@@ -185,7 +191,7 @@ void RaceHandlerClass::Main()
 
             //Handle next dog
             _lDogEnterTimes[iNextDog] = STriggerRecord.lTriggerTime;
-            syslog.logf_P(LOG_DEBUG, "F! D:%i!\r\n", iNextDog);
+            syslog.logf_P(LOG_DEBUG, "F! D:%i!", iNextDog);
          }
 
          //Normal race handling (no faults)
@@ -216,7 +222,7 @@ void RaceHandlerClass::Main()
             and thus passed through sensors unseen */
             //Set enter time for this dog to exit time of previous dog
             _lDogEnterTimes[iCurrentDog] = _lDogExitTimes[iPreviousDog];
-            syslog.logf_P(LOG_DEBUG, "Invisible dog came back!\r\n");
+            syslog.logf_P(LOG_DEBUG, "Invisible dog came back!");
          }
 
          //Check if current dog has a fault
@@ -247,7 +253,7 @@ void RaceHandlerClass::Main()
                || (_bRerunBusy == true && _bFault == false))                //Or if the rerun sequence was started but no faults exist anymore
             {
                StopRace(STriggerRecord.lTriggerTime);
-               syslog.logf_P(LOG_DEBUG, "Last Dog: %i|ENT:%lu|EXIT:%lu|TOT:%lu\r\n", iCurrentDog, _lDogEnterTimes[iCurrentDog], _lDogExitTimes[iCurrentDog], _lDogTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]]);
+               syslog.logf_P(LOG_DEBUG, "Last Dog: %i|ENT:%lu|EXIT:%lu|TOT:%lu", iCurrentDog, _lDogEnterTimes[iCurrentDog], _lDogExitTimes[iCurrentDog], _lDogTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]]);
             }
             else if ((iCurrentDog == 3 && _bFault == true && _bRerunBusy == false)  //If current dog is dog 4 and a fault exists, we have to initiate rerun sequence
                || _bRerunBusy == true)                                        //Or if rerun is busy (and faults still exist)
@@ -259,7 +265,7 @@ void RaceHandlerClass::Main()
                _lDogExitTimes[iNextDog] = 0;
                //Increase run counter for this dog
                _iDogRunCounters[iNextDog]++;
-               syslog.logf_P("RR%i\r\n", iNextDog);
+               syslog.logf_P("RR%i", iNextDog);
             }
             else
             {
@@ -306,7 +312,7 @@ void RaceHandlerClass::Main()
          _bGatesClear = true;
          
          //Print the transition string up til now for debugging purposes
-         syslog.logf_P(LOG_DEBUG, "Tstring: %s\r\n", _strTransition.c_str());
+         syslog.logf_P(LOG_DEBUG, "Tstring: %s", _strTransition.c_str());
          
          //Only check transition string when gates are clear
          //TODO: If transistion string is 3 or longer but actually more events are coming related to same transition, these are not considered.
@@ -330,7 +336,7 @@ void RaceHandlerClass::Main()
             {
                //Transistion string BbAa indicates small object has passed through sensors
                //Most likely dog spat ball
-               syslog.logf_P("Spat ball detected?!\r\n");
+               syslog.logf_P("Spat ball detected?!");
                SetDogFault(iCurrentDog, ON);
 
             }
@@ -364,9 +370,9 @@ void RaceHandlerClass::Main()
    //Update racetime
    if (RaceState == RaceStates::RUNNING)
    {
-      if (micros() > _lRaceStartTime)
+      if (GET_MICROS > _lRaceStartTime)
       {
-         _lRaceTime = micros() - _lRaceStartTime;
+         _lRaceTime = GET_MICROS - _lRaceStartTime;
       }
    }
 
@@ -412,7 +418,7 @@ void RaceHandlerClass::StartRace()
 {
    LightsController.InitiateStartSequence();
    _ChangeRaceState(STARTING);
-   _lRaceStartTime = micros() + 3000000;
+   _lRaceStartTime = GET_MICROS + 3000000;
    _lPerfectCrossingTime = _lRaceStartTime;
    _lDogEnterTimes[0] = _lRaceStartTime;
 }
@@ -435,14 +441,21 @@ void RaceHandlerClass::_HandleScheduledRace()
 /// <summary>
 ///   Stops a race.
 /// </summary>
-///
+void RaceHandlerClass::StopRace()
+{
+   this->StopRace(GET_MICROS);
+}
+
+/// <summary>
+///   Stops a race.
+/// </summary>
 /// <param name="StopTime">   The time in microseconds at which the race stopped. </param>
-void RaceHandlerClass::StopRace(unsigned long StopTime)
+void RaceHandlerClass::StopRace(unsigned long lStopTime)
 {
    if (RaceState == RaceStates::RUNNING)
    {
       //Race is running, so we have to record the EndTime
-      _lRaceEndTime = StopTime;
+      _lRaceEndTime = lStopTime;
       _lRaceTime = _lRaceEndTime - _lRaceStartTime;
    }
    _ChangeRaceState(STOPPED);
@@ -559,13 +572,13 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
    {
       LightsController.ToggleFaultLight(iDogNumber, LightsController.ON);
       _bFault = true;
-      syslog.logf_P("D%iF1\r\n", iDogNumber);
+      syslog.logf_P("D%iF1", iDogNumber);
    }
    else
    {
       //If fault is false, turn off fault light for this dog
       LightsController.ToggleFaultLight(iDogNumber, LightsController.OFF);
-      syslog.logf_P("D%iF0\r\n", iDogNumber);
+      syslog.logf_P("D%iF0", iDogNumber);
    }
 }
 
@@ -579,7 +592,7 @@ void RaceHandlerClass::TriggerSensor1()
    {
       return;
    }
-   _QueuePush({ _bRunDirectionInverted ? 2 : 1, micros(), digitalRead(_iS1Pin) });
+   _QueuePush({ _bRunDirectionInverted ? 2 : 1, GET_MICROS, digitalRead(_iS1Pin) });
 }
 
 /// <summary>
@@ -592,7 +605,7 @@ void RaceHandlerClass::TriggerSensor2()
    {
       return;
    }
-   _QueuePush({ _bRunDirectionInverted ? 1 : 2, micros(), digitalRead(_iS2Pin) });
+   _QueuePush({ _bRunDirectionInverted ? 1 : 2, GET_MICROS, digitalRead(_iS2Pin) });
 }
 
 /// <summary>
@@ -680,7 +693,7 @@ unsigned long RaceHandlerClass::GetDogTimeMillis(uint8_t iDogNumber, int8_t iRun
    else if ((RaceState == RaceStates::RUNNING && iCurrentDog == iDogNumber && _byDogState == COMINGBACK)
             && iRunNumber <= _iDogRunCounters[iDogNumber]) //And if requested run number is lower then number of times dog has run
    {
-      ulDogTimeMillis = (micros() - _lDogEnterTimes[iDogNumber]) / 1000;
+      ulDogTimeMillis = (GET_MICROS - _lDogEnterTimes[iDogNumber]) / 1000;
    }
 
    //Fixes issue 7 (https://github.com/vyruz1986/FlyballETS-Software/issues/7)
@@ -896,6 +909,8 @@ stRaceData RaceHandlerClass::GetRaceData(uint iRaceId)
       RequestedRaceData.StartTime = _lRaceStartTime / 1000;
       RequestedRaceData.EndTime = _lRaceEndTime / 1000;
       RequestedRaceData.ElapsedTime = _lRaceTime / 1000;
+      //Serial.printf("Elapsed1: %lu - %lu = %lu\r\n", micros(), _lRaceStartTime, _lRaceTime);
+      //Serial.printf("Elapsed2: %lu - %lu = %lu\r\n", GET_MICROS, _lRaceStartTime, _lRaceTime);
       RequestedRaceData.TotalCrossingTime = this->GetTotalCrossingTimeMillis();
       RequestedRaceData.RaceState = RaceState;
       
@@ -925,6 +940,15 @@ stRaceData RaceHandlerClass::GetRaceData(uint iRaceId)
 void RaceHandlerClass::ToggleRunDirection()
 {
    _bRunDirectionInverted = !_bRunDirectionInverted;
+   SettingsManager.setSetting("RunDirectionInverted", _bRunDirectionInverted);
+   if (_bRunDirectionInverted)
+   {
+      LCDController.UpdateField(LCDController.BoxDirection, "<--");
+   }
+   else
+   {
+      LCDController.UpdateField(LCDController.BoxDirection, "-->");
+   }
 }
 
 /// <summary>
@@ -950,7 +974,7 @@ void RaceHandlerClass::_QueuePush(RaceHandlerClass::STriggerRecord _InterruptTri
    _STriggerQueue[_iQueueWriteIndex] = _InterruptTrigger;
 
    //Write index has to be increased, check it we should wrap-around
-   if (_iQueueWriteIndex == 9)//(sizeof(_STriggerQueue) / sizeof(*_STriggerQueue) - 1))
+   if (_iQueueWriteIndex == TRIGGER_QUEUE_LENGTH - 1)//(sizeof(_STriggerQueue) / sizeof(*_STriggerQueue) - 1))
    {
       //Write index has reached end of array, start at 0 again
       _iQueueWriteIndex = 0;
@@ -975,7 +999,7 @@ RaceHandlerClass::STriggerRecord RaceHandlerClass::_QueuePop()
    STriggerRecord NextRecord = _STriggerQueue[_iQueueReadIndex];
 
    //Read index has to be increased, check it we should wrap-around
-   if (_iQueueReadIndex == 9)//(sizeof(_STriggerQueue) / sizeof(*_STriggerQueue) - 1))
+   if (_iQueueReadIndex == TRIGGER_QUEUE_LENGTH - 1)//(sizeof(_STriggerQueue) / sizeof(*_STriggerQueue) - 1))
    {
       //Write index has reached end of array, start at 0 again
       _iQueueReadIndex = 0;
@@ -1024,7 +1048,7 @@ void RaceHandlerClass::_AddToTransitionString(STriggerRecord _InterruptTrigger)
    //A indicates the handlers side, B indicates the boxes side
    //Uppercase indicates a high signal (dog broke beam), lowercase indicates a low signal (dog left beam)
 
-   _lLastTransitionStringUpdate = micros();
+   _lLastTransitionStringUpdate = GET_MICROS;
 
    char cTemp;
    switch (_InterruptTrigger.iSensorNumber)

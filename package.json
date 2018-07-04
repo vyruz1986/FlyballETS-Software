@@ -1,9 +1,9 @@
 {
-  "name": "esp8266-filesystem-builder",
-  "version": "0.2.0",
-  "description": "Gulp based build system for ESP8266 file system files",
+  "name": "esp32-filesystem-builder",
+  "version": "0.1.0",
+  "description": "Gulp based build system for ESP32 file system files",
   "main": "gulpfile.js",
-  "author": "Xose Pérez <xose.perez@gmail.com>",
+  "author": "Alex Goris - Based on work of: Xose Pérez <xose.perez@gmail.com>",
   "license": "GPL-3.0",
   "devDependencies": {
     "del": "^3.0.0",

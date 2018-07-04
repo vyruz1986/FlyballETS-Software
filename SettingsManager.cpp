@@ -9,7 +9,8 @@
 void SettingsManagerClass::loop()
 {
    if (_settings_save) {
-      syslog.logf_P(LOG_DEBUG, "[SETTINGS] Saving\r\n");
+      syslog.logf_P(LOG_DEBUG, "[SETTINGS] Saving");
+      Serial.printf("Writing settings\r\n");
       EEPROM.commit();
       _settings_save = false;
    }
@@ -45,12 +46,20 @@ String SettingsManagerClass::getSetting(const String& key)
 //template<typename T> bool SettingsManagerClass::setSetting(const String& key, T value)
 bool SettingsManagerClass::setSetting(const String& key, String value)
 {
+   saveSettings();
+   return Embedis::set(key, String(value));
+}
+
+bool SettingsManagerClass::setSetting(const String& key, bool value)
+{
+   saveSettings();
    return Embedis::set(key, String(value));
 }
 
 void SettingsManagerClass::saveSettings()
 {
    _settings_save = true;
+   Serial.printf("Saving settings\r\n");
 }
 
 bool SettingsManagerClass::hasSetting(const String& key)
@@ -72,6 +81,11 @@ void SettingsManagerClass::setDefaultSettings()
 
    if (!hasSetting("APPass")) {
       setSetting("APPass", "FlyballETS.1234");
+      saveSettings();
+   }
+
+   if (!hasSetting("RunDirectionInverted")) {
+      setSetting("RunDirectionInverted", false);
       saveSettings();
    }
 

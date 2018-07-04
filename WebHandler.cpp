@@ -31,7 +31,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
       {
          if (!_wsAuth(client))
          {
-            client->close();
+            client->close(401, "Unauthorized");
             return;
          }
       }
@@ -111,6 +111,9 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
          client->text("{\"error\":\"Invalid JSON received\"}");
          return;
       }
+
+      //const size_t bufferSize = JSON_ARRAY_SIZE(50) + 50 * JSON_OBJECT_SIZE(3);
+      //DynamicJsonBuffer jsonBufferResponse(bufferSize);
       DynamicJsonBuffer jsonBufferResponse;
       JsonObject& JsonResponseRoot = jsonBufferResponse.createObject();
 
@@ -158,9 +161,13 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
          DataResult["success"] = result;
       }
 
-      String strJsonResponse;
-      JsonResponseRoot.printTo(strJsonResponse);
-      client->text(strJsonResponse);
+      size_t len = JsonResponseRoot.measureLength();
+      AsyncWebSocketMessageBuffer * wsBuffer = _ws->makeBuffer(len);
+      if (wsBuffer)
+      {
+         JsonResponseRoot.printTo((char *)wsBuffer->get(), len + 1);
+         client->text(wsBuffer);
+      }
    }
 }
 
@@ -191,7 +198,7 @@ void WebHandlerClass::init(int webPort)
    _server->addHandler(_wsa);
 
    _server->onNotFound([](AsyncWebServerRequest *request) {
-      syslog.logf_P(LOG_ERR, "Not found: %s!\r\n", request->url().c_str());
+      syslog.logf_P(LOG_ERR, "Not found: %s!", request->url().c_str());
       request->send(404);
    });
 
@@ -207,7 +214,7 @@ void WebHandlerClass::init(int webPort)
    _server->begin();
 
    _lLastRaceDataBroadcast = 0;
-   _lRaceDataBroadcastInterval = 500;
+   _lRaceDataBroadcastInterval = 750;
 
    _lLastSystemDataBroadcast = 0;
    _lSystemDataBroadcastInterval = 2000;
@@ -238,7 +245,8 @@ void WebHandlerClass::loop()
 
 void WebHandlerClass::SendLightsData(stLightsState LightStates)
 {
-   DynamicJsonBuffer JsonBuffer;
+   const size_t bufferSize = JSON_ARRAY_SIZE(5) + JSON_OBJECT_SIZE(1);
+   DynamicJsonBuffer JsonBuffer(bufferSize);
    JsonObject& JsonRoot = JsonBuffer.createObject();
 
    if (!JsonRoot.success())
@@ -252,16 +260,19 @@ void WebHandlerClass::SendLightsData(stLightsState LightStates)
       JsonArray& JsonLightsData = JsonRoot.createNestedArray("LightsData");
       JsonLightsData.copyFrom(LightStates.State);
 
-      String JsonString;
-      JsonRoot.printTo(JsonString);
-      //syslog.logf_P("json: %s\r\n", JsonString.c_str());
-      _ws->textAll(JsonString);
+      size_t len = JsonRoot.measureLength();
+      AsyncWebSocketMessageBuffer * wsBuffer = _ws->makeBuffer(len);
+      if (wsBuffer)
+      {
+         JsonRoot.printTo((char *)wsBuffer->get(), len + 1);
+         _ws->textAll(wsBuffer);
+      }
    }
 }
 
-boolean WebHandlerClass::_DoAction(JsonObject& ActionRequest, String * ReturnError) {
-   String Action = ActionRequest["action"];
-   if (Action == "StartRace") {
+boolean WebHandlerClass::_DoAction(JsonObject& ActionObj, String * ReturnError) {
+   String ActionType = ActionObj["actionType"];
+   if (ActionType == "StartRace") {
       if (RaceHandler.RaceState != RaceHandler.STOPPED) {
          //ReturnError = String("Race was not stopped, stop it first!");
          return false;
@@ -277,7 +288,7 @@ boolean WebHandlerClass::_DoAction(JsonObject& ActionRequest, String * ReturnErr
          return true;
       }
    }
-   else if (Action == "StopRace")
+   else if (ActionType == "StopRace")
    {
       if (RaceHandler.RaceState == RaceHandler.STOPPED) {
          //ReturnError = "Race was already stopped!";
@@ -285,12 +296,12 @@ boolean WebHandlerClass::_DoAction(JsonObject& ActionRequest, String * ReturnErr
       }
       else
       {
-         RaceHandler.StopRace(micros());
+         RaceHandler.StopRace();
          LightsController.DeleteSchedules();
          return true;
       }
    }
-   else if (Action == "ResetRace")
+   else if (ActionType == "ResetRace")
    {
       if (RaceHandler.RaceState != RaceHandler.STOPPED) {
          //ReturnError = "Race was not stopped, first stop it before resetting!";
@@ -306,6 +317,18 @@ boolean WebHandlerClass::_DoAction(JsonObject& ActionRequest, String * ReturnErr
          RaceHandler.ResetRace();
          return true;
       }
+   }
+   else if (ActionType == "SetDogFault")
+   {
+      if (!ActionObj.containsKey("actionData"))
+      {
+         //ReturnError = "No actionData found!";
+         return false;
+      }
+      uint8_t iDogNum = ActionObj["actionData"]["dogNumber"];
+      boolean bFaultState = ActionObj["actionData"]["faultState"];
+      RaceHandler.SetDogFault(iDogNum, (bFaultState ? RaceHandler.ON : RaceHandler.OFF));
+      return true;
    }
    else if (Action == "ScheduleStartRace")  //ScheduleStartRace action is used to schedule a race start on 2 lanes. This command would typically be sent by the master to the slave
    {
@@ -336,17 +359,16 @@ boolean WebHandlerClass::_DoAction(JsonObject& ActionRequest, String * ReturnErr
    }
 }
 
-void WebHandlerClass::_SendRaceData(uint iRaceId)
+boolean WebHandlerClass::_GetRaceDataJsonString(uint iRaceId, String &strJsonString)
 {
-   DynamicJsonBuffer JsonBuffer;
+   const size_t bufferSize = 5 * JSON_ARRAY_SIZE(4) + JSON_OBJECT_SIZE(1) + 16 * JSON_OBJECT_SIZE(2) + 4 * JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(7);
+   DynamicJsonBuffer JsonBuffer(bufferSize);
    JsonObject& JsonRoot = JsonBuffer.createObject();
-   
    if (!JsonRoot.success())
    {
       syslog.logf_P(LOG_ERR, "Error parsing JSON!");
-      //wsSend_P(client->id(), PSTR("{\"message\": 3}"));
-      _ws->textAll("{\"error\": \"Error parsing JSON from RaceData!\"}");
-      return;
+      //strJsonString = "{\"error\": \"Error parsing JSON from RaceData!\"}";
+      return false;
    }
    else
    {
@@ -358,12 +380,12 @@ void WebHandlerClass::_SendRaceData(uint iRaceId)
       JsonRaceData["elapsedTime"] = RequestedRaceData.ElapsedTime;
       JsonRaceData["totalCrossingTime"] = RequestedRaceData.TotalCrossingTime;
       JsonRaceData["raceState"] = RequestedRaceData.RaceState;
-      
+
       JsonArray& JsonDogDataArray = JsonRaceData.createNestedArray("dogData");
       for (uint8_t i = 0; i < 4; i++)
       {
          JsonObject& JsonDogData = JsonDogDataArray.createNestedObject();
-         JsonDogData["dogNumber"]      = RequestedRaceData.DogData[i].DogNumber;
+         JsonDogData["dogNumber"] = RequestedRaceData.DogData[i].DogNumber;
          JsonArray& JsonDogDataTimingArray = JsonDogData.createNestedArray("timing");
          for (uint8_t i2 = 0; i2 < 4; i2++)
          {
@@ -371,14 +393,58 @@ void WebHandlerClass::_SendRaceData(uint iRaceId)
             DogTiming["time"] = RequestedRaceData.DogData[i].Timing[i2].Time;
             DogTiming["crossingTime"] = RequestedRaceData.DogData[i].Timing[i2].CrossingTime;
          }
-         JsonDogData["fault"]          = RequestedRaceData.DogData[i].Fault;
-         JsonDogData["running"]        = RequestedRaceData.DogData[i].Running;
+         JsonDogData["fault"] = RequestedRaceData.DogData[i].Fault;
+         JsonDogData["running"] = RequestedRaceData.DogData[i].Running;
       }
-      
-      String JsonString;
-      JsonRoot.printTo(JsonString);
-      //syslog.logf_P("json: %s\r\n", JsonString.c_str());
-      _ws->textAll(JsonString);
+
+      JsonRoot.printTo(strJsonString);
+   }
+
+   return true;
+}
+
+void WebHandlerClass::_SendRaceData(uint iRaceId)
+{
+   const size_t bufferSize = 5 * JSON_ARRAY_SIZE(4) + JSON_OBJECT_SIZE(1) + 16 * JSON_OBJECT_SIZE(2) + 4 * JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(7);
+   DynamicJsonBuffer JsonBuffer(bufferSize);
+   JsonObject& JsonRoot = JsonBuffer.createObject();
+   if (!JsonRoot.success())
+   {
+      syslog.logf_P(LOG_ERR, "Error parsing JSON!");
+   }
+   else
+   {
+      JsonObject& JsonRaceData = JsonRoot.createNestedObject("RaceData");
+      stRaceData RequestedRaceData = RaceHandler.GetRaceData();
+      JsonRaceData["id"] = RequestedRaceData.Id;
+      JsonRaceData["startTime"] = RequestedRaceData.StartTime;
+      JsonRaceData["endTime"] = RequestedRaceData.EndTime;
+      JsonRaceData["elapsedTime"] = RequestedRaceData.ElapsedTime;
+      JsonRaceData["totalCrossingTime"] = RequestedRaceData.TotalCrossingTime;
+      JsonRaceData["raceState"] = RequestedRaceData.RaceState;
+
+      JsonArray& JsonDogDataArray = JsonRaceData.createNestedArray("dogData");
+      for (uint8_t i = 0; i < 4; i++)
+      {
+         JsonObject& JsonDogData = JsonDogDataArray.createNestedObject();
+         JsonDogData["dogNumber"] = RequestedRaceData.DogData[i].DogNumber;
+         JsonArray& JsonDogDataTimingArray = JsonDogData.createNestedArray("timing");
+         for (uint8_t i2 = 0; i2 < 4; i2++)
+         {
+            JsonObject& DogTiming = JsonDogDataTimingArray.createNestedObject();
+            DogTiming["time"] = RequestedRaceData.DogData[i].Timing[i2].Time;
+            DogTiming["crossingTime"] = RequestedRaceData.DogData[i].Timing[i2].CrossingTime;
+         }
+         JsonDogData["fault"] = RequestedRaceData.DogData[i].Fault;
+         JsonDogData["running"] = RequestedRaceData.DogData[i].Running;
+      }
+      size_t len = JsonRoot.measureLength();
+      AsyncWebSocketMessageBuffer * wsBuffer = _ws->makeBuffer(len);
+      if (wsBuffer)
+      {
+         JsonRoot.printTo((char *)wsBuffer->get(), len + 1);
+         _ws->textAll(wsBuffer);
+      }
    }
 }
 
@@ -386,7 +452,7 @@ boolean WebHandlerClass::_ProcessConfig(JsonArray& newConfig, String * ReturnErr
 {
    bool save = false;
    bool changed = false;
-
+   Serial.printf("config is %i big\r\n", newConfig.size());
    for (unsigned int i = 0; i < newConfig.size(); i++)
    {
       String key = newConfig[i]["name"];
@@ -394,7 +460,7 @@ boolean WebHandlerClass::_ProcessConfig(JsonArray& newConfig, String * ReturnErr
 
       if (value != SettingsManager.getSetting(key))
       {
-         syslog.logf_P(LOG_DEBUG, "[WEBHANDLER] Storing %s = %s\r\n", key.c_str(), value.c_str());
+         syslog.logf_P(LOG_DEBUG, "[WEBHANDLER] Storing %s = %s", key.c_str(), value.c_str());
          SettingsManager.setSetting(key, value);
          save = changed = true;
       }
@@ -418,6 +484,18 @@ boolean WebHandlerClass::_GetData(String dataType, JsonObject& Data)
       Data["UserPass"] = SettingsManager.getSetting("UserPass");
       Data["AdminPass"] = SettingsManager.getSetting("AdminPass");
    }
+   else if (dataType == "triggerQueue")
+   {
+      JsonArray& triggerQueue = Data.createNestedArray("triggerQueue");
+      
+      for (auto& trigger : RaceHandler._STriggerQueue)
+      {
+         JsonObject& triggerObj = triggerQueue.createNestedObject();
+         triggerObj["sensorNum"] = trigger.iSensorNumber;
+         triggerObj["triggerTime"] = trigger.lTriggerTime - RaceHandler._lRaceStartTime;
+         triggerObj["state"] = trigger.iSensorState;
+      }
+   }
    else
    {
       Data["error"] = "Unknown datatype (" + dataType + ") requested!";
@@ -438,7 +516,8 @@ stSystemData WebHandlerClass::_GetSystemData()
 
 void WebHandlerClass::_SendSystemData()
 {
-   DynamicJsonBuffer JsonBuffer;
+   const size_t bufferSize = JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(7);
+   DynamicJsonBuffer JsonBuffer(bufferSize);
    JsonObject& JsonRoot = JsonBuffer.createObject();
 
    JsonObject& JsonSystemData = JsonRoot.createNestedObject("SystemData");
@@ -450,10 +529,13 @@ void WebHandlerClass::_SendSystemData()
    JsonSystemData["systemTimestamp"]   = _SystemData.UTCSystemTime;
    JsonSystemData["batteryPercentage"]   = _SystemData.BatteryPercentage;
 
-   String JsonString;
-   JsonRoot.printTo(JsonString);
-   //syslog.logf_P("json: %s\r\n", JsonString.c_str());
-   _ws->textAll(JsonString);
+   size_t len = JsonRoot.measureLength();
+   AsyncWebSocketMessageBuffer * wsBuffer = _ws->makeBuffer(len);
+   if (wsBuffer)
+   {
+      JsonRoot.printTo((char *)wsBuffer->get(), len + 1);
+      _ws->textAll(wsBuffer);
+   }
 }
 
 void WebHandlerClass::_onAuth(AsyncWebServerRequest *request)
@@ -481,7 +563,11 @@ bool WebHandlerClass::_authenticate(AsyncWebServerRequest *request) {
    String password = SettingsManager.getSetting("AdminPass");
    char httpPassword[password.length() + 1];
    password.toCharArray(httpPassword, password.length() + 1);
-   return request->authenticate("Admin", httpPassword);
+   boolean bAuthResult = request->authenticate("Admin", httpPassword);
+   if (!bAuthResult) {
+      syslog.logf_P(LOG_ERR, "[WEBHANDLER] Admin user failed to login!");
+   }
+   return bAuthResult;
 }
 
 bool WebHandlerClass::_wsAuth(AsyncWebSocketClient * client) {
@@ -496,7 +582,7 @@ bool WebHandlerClass::_wsAuth(AsyncWebSocketClient * client) {
    //this new user will/could have the same IP as the previous user, and will be authenticated :(
 
    for (index = 0; index < WS_TICKET_BUFFER_SIZE; index++) {
-      syslog.logf_P("Checking ticket: %i, ip: %s, time: %lu\r\n", index, _ticket[index].ip.toString().c_str(), _ticket[index].timestamp);
+      syslog.logf_P("Checking ticket: %i, ip: %s, time: %lu", index, _ticket[index].ip.toString().c_str(), _ticket[index].timestamp);
       if ((_ticket[index].ip == ip) && (now - _ticket[index].timestamp < WS_TIMEOUT)) break;
    }
 

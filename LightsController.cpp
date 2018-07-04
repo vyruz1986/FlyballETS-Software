@@ -36,7 +36,7 @@
 /// <param name="iClockPin">  Zero-based index of the clock pin. </param>
 /// <param name="iDataPin">   Zero-based index of the data pin. </param>
 #ifdef WS281x
-void LightsControllerClass::init(NeoPixelBus<NeoRgbFeature, NeoWs2813Method>* LightsStrip)
+void LightsControllerClass::init(NeoPixelBus<NeoRgbFeature, WS_METHOD>* LightsStrip)
 #else
 void LightsControllerClass::init(uint8_t iLatchPin, uint8_t iClockPin, uint8_t iDataPin)
 #endif // WS281x
@@ -100,7 +100,7 @@ void LightsControllerClass::Main()
 
    if (_byCurrentLightsState != _byNewLightsState)
    {
-      if (bDEBUG) syslog.logf_P(LOG_DEBUG, "%lu: New light states: %i\r\n", millis(), _byNewLightsState);
+      if (bDEBUG) syslog.logf_P(LOG_DEBUG, "%lu: New light states: %i", millis(), _byNewLightsState);
       _byCurrentLightsState = _byNewLightsState;
 #ifndef WS281x
       digitalWrite(_iLatchPin, LOW);
@@ -160,7 +160,7 @@ void LightsControllerClass::HandleStartSequence()
          && RaceHandler.RaceState == RaceHandler.STARTING)
       {
          RaceHandler.StartTimers();
-         syslog.logf_P(LOG_DEBUG, "%lu: GREEN light is ON!\r\n", millis());
+         syslog.logf_P(LOG_DEBUG, "%lu: GREEN light is ON!", millis());
       }
       if (!bStartSequenceBusy)
       {
@@ -272,7 +272,7 @@ void LightsControllerClass::ToggleFaultLight(uint8_t DogNumber, LightStates byLi
       _lLightsOutSchedule[0] = millis() + 1000; //keep on for 1 second
    }
    ToggleLightState(byLight, byLightState);
-   syslog.logf_P(LOG_DEBUG, "Fault light for dog %i: %i\r\n", DogNumber, byLightState);
+   syslog.logf_P(LOG_DEBUG, "Fault light for dog %i: %i", DogNumber, byLightState);
 }
 
 stLightsState LightsControllerClass::GetLightsState()
