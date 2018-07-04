@@ -330,7 +330,7 @@ boolean WebHandlerClass::_DoAction(JsonObject& ActionObj, String * ReturnError) 
       RaceHandler.SetDogFault(iDogNum, (bFaultState ? RaceHandler.ON : RaceHandler.OFF));
       return true;
    }
-   else if (Action == "ScheduleStartRace")  //ScheduleStartRace action is used to schedule a race start on 2 lanes. This command would typically be sent by the master to the slave
+   else if (ActionType == "ScheduleStartRace")  //ScheduleStartRace action is used to schedule a race start on 2 lanes. This command would typically be sent by the master to the slave
    {
       //Check if race is stopped. Instead of returning error if it isn't, we just stop and reset it.
       if (RaceHandler.RaceState != RaceHandler.STOPPED) {
@@ -339,7 +339,7 @@ boolean WebHandlerClass::_DoAction(JsonObject& ActionObj, String * ReturnError) 
          LightsController.ResetLights();
       }
 
-      String StartTime = ActionRequest["startTime"];
+      String StartTime = ActionObj["startTime"];
 
       
       unsigned long lStartEpochTime = StartTime.toInt();

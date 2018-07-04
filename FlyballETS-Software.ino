@@ -239,7 +239,7 @@ void setup()
    String strAPPass = SettingsManager.getSetting("APPass");
    if (!WiFi.softAP(strAPName.c_str(), strAPPass.c_str()))
    {
-      syslog.logf_P(LOG_ALERT, "Error initializing softAP!");
+      syslog.logf_P(LOG_ALERT, "Error initializing softAP with name %s!", strAPName.c_str());
    }
    else
    {

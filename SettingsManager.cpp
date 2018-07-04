@@ -27,7 +27,6 @@ void SettingsManagerClass::init()
       [](size_t pos, char value) { EEPROM.write(pos, value); },
       []() {}
    );
-
    setDefaultSettings();
 }
 
@@ -40,17 +39,12 @@ String SettingsManagerClass::getSetting(const String& key, String defaultValue)
 
 String SettingsManagerClass::getSetting(const String& key)
 {
-   return getSetting(key, "");
+   String strReturnValue = getSetting(key, "");
+   return strReturnValue;
 }
 
 //template<typename T> bool SettingsManagerClass::setSetting(const String& key, T value)
 bool SettingsManagerClass::setSetting(const String& key, String value)
-{
-   saveSettings();
-   return Embedis::set(key, String(value));
-}
-
-bool SettingsManagerClass::setSetting(const String& key, bool value)
 {
    saveSettings();
    return Embedis::set(key, String(value));
@@ -85,7 +79,7 @@ void SettingsManagerClass::setDefaultSettings()
    }
 
    if (!hasSetting("RunDirectionInverted")) {
-      setSetting("RunDirectionInverted", false);
+      setSetting("RunDirectionInverted", String("0"));
       saveSettings();
    }
 
