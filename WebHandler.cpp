@@ -470,6 +470,8 @@ boolean WebHandlerClass::_ProcessConfig(JsonArray& newConfig, String * ReturnErr
    if (save)
    {
       SettingsManager.saveSettings();
+      //Schedule system reboot to activate new settings in 5s
+      ScheduleReboot(millis() + 5000);
    }
 
    return true;
@@ -611,7 +613,5 @@ void WebHandlerClass::_onHome(AsyncWebServerRequest *request) {
    }
 
 }
-
-
 
 WebHandlerClass WebHandler;

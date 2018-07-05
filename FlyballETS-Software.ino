@@ -167,6 +167,8 @@ Syslog syslog(SyslogUDP, "255.255.255.255", 514, "FlyballETS", "FlyballETSApp", 
 //Keep last reported OTA progress so we can send one syslog message for every % increment
 unsigned int uiLastProgress = 0;
 
+unsigned long ulScheduledRebootTS = 0;
+
 void setup()
 {
    EEPROM.begin(EEPROM_SIZE);
@@ -480,6 +482,12 @@ void loop()
       syslog.logf_P("Switching sides!");
       RaceHandler.ToggleRunDirection();
    }
+
+   //Handle schedule reboot (if any)
+   if (ulScheduledRebootTS > 0
+      && millis() > ulScheduledRebootTS) {
+      ESP.restart();
+   }
 }
 
 void serialEvent()
@@ -559,3 +567,10 @@ void mdnsServerSetup()
    MDNS.begin("FlyballETS");
 }
 #endif
+
+
+void ScheduleReboot(unsigned long ulRebootTs) {
+   if (ulRebootTs > millis()) {
+      ulScheduledRebootTS = ulRebootTs;
+   }
+}
