@@ -79,12 +79,12 @@ void SettingsManagerClass::setDefaultSettings()
    }
 
    if (!hasSetting("RunDirectionInverted")) {
-      setSetting("RunDirectionInverted", String("0"));
+      setSetting("RunDirectionInverted", "0");
       saveSettings();
    }
 
    if (!hasSetting("OperationMode")) {
-      setSetting("OperationMode", "master");
+      setSetting("OperationMode", "0");
       saveSettings();
    }
 }

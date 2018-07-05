@@ -32,6 +32,7 @@
 #include "LightsController.h"
 #include "BatterySensor.h"
 #include "global.h"
+#include "enums.h"
 #include <LiquidCrystal.h>
 #include <WiFi.h>
 #include <WiFiMulti.h>
@@ -155,12 +156,6 @@ LiquidCrystal lcd2(iLCDRSPin, iLCDE2Pin, iLCDData4Pin, iLCDData5Pin, iLCDData6Pi
 String strSerialData;
 byte bySerialIndex = 0;
 boolean bSerialStringComplete = false;
-   
-//Wifi stuff
-//WiFiMulti wm;
-IPAddress IPGateway(192, 168, 20, 1);
-IPAddress IPNetwork(192, 168, 20, 0);
-IPAddress IPSubnet(255, 255, 255, 0);
 
 //Define serial pins for GPS module
 HardwareSerial GPSSerial(1);
@@ -175,8 +170,15 @@ unsigned int uiLastProgress = 0;
 void setup()
 {
    EEPROM.begin(EEPROM_SIZE);
+   //Configure serial interface
    Serial.begin(115200);
+   strSerialData[0] = 0;
+
+   //init SettingsManager
    SettingsManager.init();
+   //SettingsManager.setSetting("OperationMode", "1");
+   //SettingsManager.setSetting("APName", "FlyballETS2");
+
    syslog.setSerialPrint(true);
    
    pinMode(iS1Pin, INPUT_PULLDOWN);
@@ -226,27 +228,9 @@ void setup()
 
    //Initialize LCDController class with lcd1 and lcd2 objects
    LCDController.init(&lcd, &lcd2);
-   
-   strSerialData[0] = 0;
 
-   //Setup AP
-   WiFi.config(IPGateway, IPGateway, IPSubnet);
-   if (!WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet)) {
-      syslog.logf_P(LOG_ERR, "[WiFi]: AP Config failed!");
-   }
-   WiFi.mode(WIFI_MODE_AP);
-   String strAPName = SettingsManager.getSetting("APName");
-   String strAPPass = SettingsManager.getSetting("APPass");
-   if (!WiFi.softAP(strAPName.c_str(), strAPPass.c_str()))
-   {
-      syslog.logf_P(LOG_ALERT, "Error initializing softAP with name %s!", strAPName.c_str());
-   }
-   else
-   {
-      syslog.logf_P("Wifi started successfully, AP name: %s!", strAPName.c_str());
-     
-   }
-   WiFi.onEvent(WiFiEvent);
+   //Init Wifi setup 
+   SetupWiFi();
 
    //configure webserver
    WebHandler.init(80);
@@ -259,12 +243,6 @@ void setup()
    Simulator.init(iS1Pin, iS2Pin);
 #endif
 
-   syslog.logf_P("Ready on IP: %s, v%s", WiFi.softAPIP().toString().c_str(), APP_VER);
-   if (WiFi.softAPIP() != IPGateway)
-   {
-      syslog.logf_P(LOG_ERR, "I am not running on the correct IP (%s instead of %s), rebooting!", WiFi.softAPIP().toString().c_str(), IPGateway.toString().c_str());
-      ESP.restart();
-   }
    //Ota setup
    ArduinoOTA.setPassword("FlyballETS.1234");
    ArduinoOTA.setPort(3232);
@@ -303,6 +281,7 @@ void setup()
    mdnsServerSetup();
 #endif //  ESP32
 
+   syslog.logf_P("Ready, version %s", APP_VER);
 }
 
 void loop()
@@ -333,6 +312,8 @@ void loop()
 
    //Handle GPS
    GPSHandler.loop();
+
+   WiFiLoop();
    
 #if Simulate
    //Run simulator
@@ -568,23 +549,6 @@ void ResetRace()
    lLastRCPress[1] = millis();
    LightsController.ResetLights();
    RaceHandler.ResetRace();
-}
-
-void WiFiEvent(WiFiEvent_t event) {
-   switch (event) {
-   case SYSTEM_EVENT_AP_START:
-      syslog.logf_P("AP Started");
-      if (!WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet)) {
-         syslog.logf_P(LOG_ERR, "[WiFi]: AP Config failed!");
-      }
-      break;
-   case SYSTEM_EVENT_AP_STOP:
-      syslog.logf_P("AP Stopped");
-      break;
-
-   default:
-      break;
-   }
 }
 
 #ifdef ESP32
