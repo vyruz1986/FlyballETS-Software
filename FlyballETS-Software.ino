@@ -22,6 +22,7 @@
 // You should have received a copy of the GNU General Public License along with this program.If not,
 // see <http://www.gnu.org/licenses/> 
 #include "SystemManager.h"
+#include "SlaveHandler.h"
 #include "GPSHandler.h"
 #include "SettingsManager.h"
 #include "Structs.h"
@@ -239,7 +240,9 @@ void setup()
    //Initialize RaceHandler class with S1 and S2 pins
    RaceHandler.init(iS1Pin, iS2Pin);
 
+   SlaveHandler.init();
    SystemManager.init();
+
    //Initialize simulatorclass pins if applicable
 #if Simulate
    Simulator.init(iS1Pin, iS2Pin);
@@ -316,6 +319,9 @@ void loop()
    GPSHandler.loop();
 
    WiFiLoop();
+
+   SlaveHandler.loop();
+
    SystemManager.loop();
    
 #if Simulate

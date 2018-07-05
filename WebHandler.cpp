@@ -12,6 +12,7 @@
 #include "SettingsManager.h"
 #include "GPSHandler.h"
 #include "BatterySensor.h"
+#include "SlaveHandler.h"
 #include "SystemManager.h"
 #include <rom/rtc.h>
 #include "static\index.html.gz.h"
@@ -121,7 +122,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
       if (request.containsKey("action")) {
          JsonObject& ActionResult = JsonResponseRoot.createNestedObject("ActionResult");
          String errorText;
-         bool result = _DoAction(request["action"], &errorText);
+         bool result = _DoAction(request["action"], &errorText, client);
          ActionResult["success"] = result;
          ActionResult["error"] = errorText;
       }
@@ -271,7 +272,7 @@ void WebHandlerClass::SendLightsData(stLightsState LightStates)
    }
 }
 
-boolean WebHandlerClass::_DoAction(JsonObject& ActionObj, String * ReturnError) {
+boolean WebHandlerClass::_DoAction(JsonObject& ActionObj, String * ReturnError, AsyncWebSocketClient * Client) {
    String ActionType = ActionObj["actionType"];
    if (ActionType == "StartRace") {
       if (RaceHandler.RaceState != RaceHandler.STOPPED) {
@@ -357,6 +358,10 @@ boolean WebHandlerClass::_DoAction(JsonObject& ActionObj, String * ReturnError) 
 
       RaceHandler.StartRace(lMillisToStart + millis());
       return true;
+   }
+   else if (ActionType == "AnnounceSlave")
+   {
+      SlaveHandler.setSlaveIp(Client->remoteIP());
    }
 }
 
