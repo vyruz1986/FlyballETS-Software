@@ -9,16 +9,24 @@
 #include "WProgram.h"
 #endif
 
+#define CONNECT_RETRY 1000
+
 class SlaveHandlerClass
 {
 protected:
-   IPAddress _SlaveIP;
-   bool _bSlaveConnected;
+   IPAddress _RemoteIP;
+   bool _bConnected;
+   bool _bIAmSlave;
+   bool _bSlaveConfigured;
+   unsigned long _ulLastConnectAttempt;
+
+   void _ConnectRemote();
+
 
 public:
    void init();
    void loop();
-   void setSlaveIp(IPAddress ipSlaveIP);
+   void setRemoteIp(IPAddress ipSlaveIP);
    void removeSlave();
    bool slavePresent();
 };

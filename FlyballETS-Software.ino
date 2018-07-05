@@ -37,7 +37,6 @@
 #include "enums.h"
 #include <LiquidCrystal.h>
 #include <WiFi.h>
-#include <WiFiMulti.h>
 #include <ESPmDNS.h>
 #include <ArduinoOTA.h>
 #include <EEPROM.h>

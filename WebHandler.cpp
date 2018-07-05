@@ -361,7 +361,7 @@ boolean WebHandlerClass::_DoAction(JsonObject& ActionObj, String * ReturnError, 
    }
    else if (ActionType == "AnnounceSlave")
    {
-      SlaveHandler.setSlaveIp(Client->remoteIP());
+      SlaveHandler.setRemoteIp(Client->remoteIP());
    }
 }
 
