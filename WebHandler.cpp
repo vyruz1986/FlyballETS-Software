@@ -12,6 +12,7 @@
 #include "SettingsManager.h"
 #include "GPSHandler.h"
 #include "BatterySensor.h"
+#include "SystemManager.h"
 #include <rom/rtc.h>
 #include "static\index.html.gz.h"
 
@@ -464,14 +465,13 @@ boolean WebHandlerClass::_ProcessConfig(JsonArray& newConfig, String * ReturnErr
          SettingsManager.setSetting(key, value);
          save = changed = true;
       }
-      
    }
 
    if (save)
    {
       SettingsManager.saveSettings();
       //Schedule system reboot to activate new settings in 5s
-      ScheduleReboot(millis() + 5000);
+      SystemManager.scheduleReboot(millis() + 5000);
    }
 
    return true;
