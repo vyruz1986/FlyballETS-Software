@@ -8,7 +8,7 @@
 #else
 #include "WProgram.h"
 #endif
-
+#include <WebSocketsClient.h>
 #define CONNECT_RETRY 1000
 
 class SlaveHandlerClass
@@ -18,10 +18,12 @@ protected:
    bool _bConnected;
    bool _bIAmSlave;
    bool _bSlaveConfigured;
+   bool _bWSConnectionStarted;
    unsigned long _ulLastConnectAttempt;
+   WebSocketsClient _wsClient;
 
    void _ConnectRemote();
-
+   void _WsEvent(WStype_t type, uint8_t * payload, size_t length);
 
 public:
    void init();
