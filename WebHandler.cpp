@@ -120,7 +120,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
       if (request.containsKey("action")) {
          JsonObject& ActionResult = JsonResponseRoot.createNestedObject("ActionResult");
          String errorText;
-         bool result = _DoAction(request, &errorText);
+         bool result = _DoAction(request["action"], &errorText);
          ActionResult["success"] = result;
          ActionResult["error"] = errorText;
       }
