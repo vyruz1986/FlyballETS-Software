@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { ConfigArray } from '../interfaces/config-array';
 import { Observable, Observer, Subject, BehaviorSubject } from 'rxjs';
+import { share } from 'rxjs/operators';
 import { WebsocketDataRequest } from '../interfaces/websocket-data-request';
 
 @Injectable()
@@ -61,7 +62,7 @@ export class SecureEtsDataService {
             this.ws.close();
             this.isConnected = false;
          };
-      }).share();
+      }).pipe(share());
       console.log('observer created');
 
       this.wsObserver = {

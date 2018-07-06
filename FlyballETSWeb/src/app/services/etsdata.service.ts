@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, Observer, Subject, BehaviorSubject } from 'rxjs';
+import { share, retry } from 'rxjs/operators';
 import { WebsocketAction } from '../interfaces/websocketaction';
 import { ConfigArray } from '../interfaces/config-array';
 import { WebsocketDataRequest } from '../interfaces/websocket-data-request';
@@ -49,7 +50,7 @@ export class EtsdataService {
             this.ws.close();
             this.isConnected = false;
          };
-      }).share().retry();
+      }).pipe(share(), retry());
 
       this.wsObserver = {
          next: (data: Object) => {
