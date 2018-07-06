@@ -49,7 +49,7 @@
       </div>
     </div>
   </div>  
-  <div *ngIf="!isConnected && sessionEnded" class="container">
+  <div *ngIf="!secEtsDataService.isConnected && sessionEnded" class="container">
     <div class="alert alert-success text-center" role="alert">
       Session ended.<br>
       <button type="button" class="btn btn-success" (click)="reconnect()" >Reconnect</button>

@@ -28,10 +28,10 @@ export class ConfigComponent implements OnInit {
         this.isAuthenticated = authenticated;
         if(authenticated){
            this.secEtsDataService.initializeWebSocket();
-           this.setupDataService();
+           this.setupDataService()
 
            //TODO: This is not working for some reason. The config data is requested too soon, before the ws connection is established
-           setTimeout(this.requestConfigData(), 3000);
+           //setTimeout(this.requestConfigData(), 3000);
            //this.requestConfigData();
         } else {
           this.secEtsDataService.dataStream.unsubscribe();

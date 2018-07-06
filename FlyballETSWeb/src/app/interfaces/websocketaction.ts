@@ -1,3 +1,4 @@
 export interface WebsocketAction {
-   action: string
+   actionType: string,
+   actionData?: any
 }

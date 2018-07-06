@@ -47,7 +47,7 @@ export class RacedisplayComponent implements OnInit {
   startRace() {
      console.log('starting race');
      let StartAction:WebsocketAction = {
-       action: "StartRace"
+      actionType: "StartRace"
       };
      this.etsDataService.sendAction(StartAction);
   }
@@ -55,14 +55,26 @@ export class RacedisplayComponent implements OnInit {
   stopRace() {
     console.log('stopping race');
     let StopAction:WebsocketAction = {
-      action: "StopRace"
+      actionType: "StopRace"
      };
     this.etsDataService.sendAction(StopAction);
   }
   resetRace() {
     console.log('resetting race');
     let StopAction:WebsocketAction = {
-      action: "ResetRace"
+      actionType: "ResetRace"
+     };
+    this.etsDataService.sendAction(StopAction);
+  }
+
+  setDogFault(dogNum: number, faultState: boolean) {
+    console.log('Setting fault for dog %i to value: %o', dogNum, faultState);
+    let StopAction:WebsocketAction = {
+      actionType: "SetDogFault",
+      actionData: {
+        dogNumber: dogNum,
+        faultState: faultState
+      }
      };
     this.etsDataService.sendAction(StopAction);
   }

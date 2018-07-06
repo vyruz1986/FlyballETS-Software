@@ -71,7 +71,7 @@ export class EtsdataService {
    }
 
    sendAction(action:WebsocketAction) {
-      this.dataStream.next(action);
+      this.dataStream.next({action: action});
    }
 
    sendConfig(config:ConfigArray) {

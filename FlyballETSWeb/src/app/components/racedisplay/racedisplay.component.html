@@ -32,7 +32,7 @@
               Dog {{dog.dogNumber + 1}} 
               <div class="form-check checkbox-slider--a checkbox-slider-danger checkbox-slider-md d-inline">
                 <label>
-                  <input type="checkbox" [(ngModel)]="dog.fault"><span>Fault</span>
+                  <input type="checkbox" [(ngModel)]="dog.fault" (click)="setDogFault(dog.dogNumber, !dog.fault)"><span>Fault</span>
                 </label>
               </div>
               <div *ngFor="let dogTime of dog.timing; let i = index">
