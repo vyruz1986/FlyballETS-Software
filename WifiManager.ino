@@ -57,16 +57,10 @@ void SetupWiFi() {
 void WiFiLoop() {
    if (millis() - ulLastWifiCheck > WIFI_CHECK_INTERVAL) {
       ulLastWifiCheck = millis();
-      if (WiFi.getMode() == WIFI_MODE_APSTA) {
-         if (WiFi.status() != WL_CONNECTED) {
-            syslog.logf_P(LOG_WARNING, "[WiFi]: Connecting to AP...");
-         }
-      }
    }
 }
 
 void WiFiEvent(WiFiEvent_t event) {
-   
    switch (event) {
    case SYSTEM_EVENT_AP_START:
       syslog.logf_P("[WiFi]: AP Started with name %s, IP: %s", WiFi.SSID().c_str(), WiFi.softAPIP().toString().c_str());
@@ -86,6 +80,16 @@ void WiFiEvent(WiFiEvent_t event) {
    case SYSTEM_EVENT_STA_GOT_IP:
       syslog.logf_P("[WiFi]: STA got IP %s", WiFi.localIP().toString().c_str());
       break;
+
+   case SYSTEM_EVENT_STA_DISCONNECTED:
+   {
+      syslog.logf_P(LOG_ERR, "[WiFi]: Disconnected from AP!");
+      String strAPName = SettingsManager.getSetting("APName");
+      String strAPPass = SettingsManager.getSetting("APPass");
+      WiFi.begin(strAPName.c_str(), strAPPass.c_str());
+      syslog.logf_P(LOG_WARNING, "[WiFi]: Connecting to AP...");
+      break;
+   }
 
    default:
       Serial.printf("Wifi event %i\r\n", event);
