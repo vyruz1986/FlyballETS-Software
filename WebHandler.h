@@ -52,6 +52,7 @@ protected:
    unsigned long _lSystemDataBroadcastInterval;
    stSystemData _SystemData;
    char _last_modified[50];
+   boolean _bSlavePresent;
    
    typedef struct
    {

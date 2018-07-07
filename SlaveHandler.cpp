@@ -12,6 +12,8 @@ void SlaveHandlerClass::init()
    this->_bConnected = false;
    this->_bIAmSlave = false;
    this->_bWSConnectionStarted = false;
+   this->_bSlaveAnnounced = false;
+   this->_bSlaveConfigured = false;
    if (SettingsManager.getSetting("OperationMode").toInt() == SystemModes::SLAVE) {
       this->_bIAmSlave = true;
       this->_RemoteIP = IPAddress(192, 168, 20, 1);
@@ -28,40 +30,46 @@ void SlaveHandlerClass::loop()
 {
    if (millis() - this->_ulLastConnectCheck > CONNECT_CHECK) {
       this->_ulLastConnectCheck = millis();
+      //Serial.printf("C: %i, CN: %i, CS: %i, S: %i, SC: %i\r\n", _bConnected, _ConnectionNeeded(), _bWSConnectionStarted, _bIAmSlave, _bSlaveConfigured);
       if (!_bConnected
-         && WiFi.status() == WL_CONNECTED
-         && !this->_RemoteIP.toString().equals("0.0.0.0")
+         && this->_ConnectionNeeded()
          && !_bWSConnectionStarted)
       {
-         this->_ulLastConnectCheck = millis();
          this->_ConnectRemote();
       }
 
+      if (this->_bConnected && !this->_ConnectionNeeded()) {
+         this->_WsCloseConnection();
+      }
+
       //FIXME: This connection test is not working...
-      if (_bConnected) {
-         Serial.printf("[WSc] Testing connection...\r\n");
+      if (this->_ConnectionNeeded() && _bConnected) {
+         //Serial.printf("[WSc] Testing connection...\r\n");
          String ping = "ping";
          bool bPingResult = _wsClient.sendPing(ping);
          if (!bPingResult) {
             //Connection broken
             this->_SetDisconnected();
          }
-         Serial.printf("[WSc] Result %i\r\n", bPingResult);
+         //Serial.printf("[WSc] Result %i\r\n", bPingResult);
       }
    }
-
-   this->_wsClient.loop();
+   if (this->_bConnected || this->_ConnectionNeeded()) {
+      this->_wsClient.loop();
+   }
 }
 
-void SlaveHandlerClass::setRemoteIp(IPAddress ipSlaveIP)
+void SlaveHandlerClass::configureSlave(IPAddress ipSlaveIP)
 {
    this->_RemoteIP = ipSlaveIP;
+   this->_bSlaveConfigured = true;
    this->_bWSConnectionStarted = false;
 }
 
 void SlaveHandlerClass::removeSlave()
 {
    this->_RemoteIP = IPAddress(0, 0, 0, 0);
+   this->_bSlaveConfigured = false;
    this->_bWSConnectionStarted = false;
 }
 
@@ -93,7 +101,7 @@ void SlaveHandlerClass::_WsEvent(WStype_t type, uint8_t * payload, size_t length
       //this->_wsClient.sendTXT("Connected");
       break;
    case WStype_TEXT:
-      Serial.printf("[WSc] get text: %s\n", payload);
+      Serial.printf("[WSc] got text: %s\n", payload);
 
       // send message to server
       // webSocket.sendTXT("message here");
@@ -115,11 +123,57 @@ void SlaveHandlerClass::_SetDisconnected()
 
 void SlaveHandlerClass::_AnnounceSlaveIfApplicable()
 {
-   if (!_bIAmSlave) {
+   if (!_bIAmSlave || _bSlaveAnnounced) {
       return;
    }
-   String strJson = String("{\"actionType\": \"AnnounceSlave\"}");
+   String strJson = String("{\"action\": {\"actionType\": \"AnnounceSlave\"}}");
    this->_wsClient.sendTXT(strJson);
+   this->_bSlaveAnnounced = true;
+
+   //If we are slave and we have announced ourselves as such, we can close the connection
+   this->_WsCloseConnection();
+}
+
+void SlaveHandlerClass::_WsCloseConnection()
+{
+   this->_wsClient.disconnect();
+   this->_bConnected = false;
+}
+
+bool SlaveHandlerClass::_ConnectionNeeded()
+{
+   if (WiFi.status() != WL_CONNECTED) {
+      return false;
+   }
+   if (_bIAmSlave) {
+      return (!_bSlaveAnnounced);
+   }
+   else {
+      return (_bSlaveConfigured);
+   }
+   return false;
+}
+
+void SlaveHandlerClass::resetConnection()
+{
+   this->_bSlaveAnnounced = false;
+}
+
+bool SlaveHandlerClass::sendToSlave(String strMessage)
+{
+   if (_bIAmSlave) {
+      return false;
+   }
+   bool bResult = true;
+
+   if (_bConnected) {
+      _wsClient.sendTXT(strMessage);
+   }
+   else {
+      bResult = false;
+   }
+
+   return bResult;
 }
 
 SlaveHandlerClass SlaveHandler;

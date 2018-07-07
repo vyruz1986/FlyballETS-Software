@@ -126,8 +126,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
          ActionResult["success"] = result;
          ActionResult["error"] = errorText;
       }
-
-      if (request.containsKey("config")) {
+      else if (request.containsKey("config")) {
          JsonObject& ConfigResult = JsonResponseRoot.createNestedObject("configResult");
          String errorText;
          JsonArray& config = request["config"];
@@ -145,8 +144,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
          ConfigResult["success"] = result;
          ConfigResult["error"] = errorText;
       }
-
-      if (request.containsKey("getData")) {
+      else if (request.containsKey("getData")) {
          String dataName = request["getData"];
          JsonObject& DataResult = JsonResponseRoot.createNestedObject("dataResult");
          JsonObject& DataObject = DataResult.createNestedObject(dataName + "Data");
@@ -161,6 +159,10 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
             result = _GetData(dataName, DataObject);
          }
          DataResult["success"] = result;
+      } 
+      else {
+         syslog.logf_P(LOG_ERR, "Got valid JSON but unknown message!");
+         JsonResponseRoot["error"] = "Got valid JSON but unknown message!";
       }
 
       size_t len = JsonResponseRoot.measureLength();
@@ -176,6 +178,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
 void WebHandlerClass::init(int webPort)
 {
    snprintf_P(_last_modified, sizeof(_last_modified), PSTR("%s %s GMT"), __DATE__, __TIME__);
+   _bSlavePresent = false;
    _server = new AsyncWebServer(webPort);
    _ws = new AsyncWebSocket("/ws");
    _wsa = new AsyncWebSocket("/wsa");
@@ -286,7 +289,32 @@ boolean WebHandlerClass::_DoAction(JsonObject& ActionObj, String * ReturnError, 
       }
       else
       {
-         RaceHandler.StartRace();
+         if (_bSlavePresent) {
+            unsigned long ulStartTime = GPSHandler.GetEpochTime() + 2;
+
+            const size_t bufferSize = 2 * JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(2);
+            DynamicJsonBuffer jsonBuffer(bufferSize);
+
+            JsonObject& root = jsonBuffer.createObject();
+
+            JsonObject& action = root.createNestedObject("action");
+            action["actionType"] = "ScheduleStartRace";
+            JsonObject& action_actionData = action.createNestedObject("actionData");
+            action_actionData["startTime"] = ulStartTime;
+
+            String strScheduleStartMessage;
+            root.printTo(strScheduleStartMessage);
+            SlaveHandler.sendToSlave(strScheduleStartMessage);
+
+            long lMillisToStart = GPSHandler.GetMillisToEpochSecond(ulStartTime);
+            if (lMillisToStart < 0) {
+               return false;
+            }
+            RaceHandler.StartRace(lMillisToStart + millis());
+         }
+         else {
+            RaceHandler.StartRace();
+         }
          return true;
       }
    }
@@ -341,10 +369,10 @@ boolean WebHandlerClass::_DoAction(JsonObject& ActionObj, String * ReturnError, 
          LightsController.ResetLights();
       }
 
-      String StartTime = ActionObj["startTime"];
+      String StartTime = ActionObj["actionData"]["startTime"];
 
-      
       unsigned long lStartEpochTime = StartTime.toInt();
+      Serial.printf("StartTime S: %s, UL: %lu\r\n",StartTime.c_str() , lStartEpochTime);
       long lMillisToStart = GPSHandler.GetMillisToEpochSecond(lStartEpochTime);
 
       syslog.logf_P(LOG_DEBUG, "Received request to schedule race to start at %lu s which is in %ld ms", lStartEpochTime, lMillisToStart);
@@ -361,7 +389,9 @@ boolean WebHandlerClass::_DoAction(JsonObject& ActionObj, String * ReturnError, 
    }
    else if (ActionType == "AnnounceSlave")
    {
-      SlaveHandler.setRemoteIp(Client->remoteIP());
+      syslog.logf_P("We have a slave with IP %s", Client->remoteIP().toString().c_str());
+      SlaveHandler.configureSlave(Client->remoteIP());
+      _bSlavePresent = true;
    }
 }
 

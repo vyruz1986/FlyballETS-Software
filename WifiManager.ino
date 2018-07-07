@@ -13,8 +13,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.If not, see <http://www.gnu.org/licenses/>
 
+#include "SlaveHandler.h"
+
 //Wifi stuff
-//WiFiMulti wm;
 IPAddress IPGateway;
 IPAddress IPNetwork;
 IPAddress IPSubnet;
@@ -79,6 +80,7 @@ void WiFiEvent(WiFiEvent_t event) {
 
    case SYSTEM_EVENT_STA_GOT_IP:
       syslog.logf_P("[WiFi]: STA got IP %s", WiFi.localIP().toString().c_str());
+      SlaveHandler.resetConnection();
       break;
 
    case SYSTEM_EVENT_STA_DISCONNECTED:

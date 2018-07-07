@@ -19,6 +19,7 @@ protected:
    bool _bIAmSlave;
    bool _bSlaveConfigured;
    bool _bWSConnectionStarted;
+   bool _bSlaveAnnounced;
    unsigned long _ulLastConnectCheck;
    WebSocketsClient _wsClient;
 
@@ -26,13 +27,17 @@ protected:
    void _WsEvent(WStype_t type, uint8_t * payload, size_t length);
    void _SetDisconnected();
    void _AnnounceSlaveIfApplicable();
+   void _WsCloseConnection();
+   bool _ConnectionNeeded();
 
 public:
    void init();
    void loop();
-   void setRemoteIp(IPAddress ipSlaveIP);
+   void configureSlave(IPAddress ipSlaveIP);
    void removeSlave();
    bool slavePresent();
+   void resetConnection();
+   bool sendToSlave(String strMessage);
 };
 
 extern SlaveHandlerClass SlaveHandler;
