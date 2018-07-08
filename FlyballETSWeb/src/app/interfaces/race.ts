@@ -8,7 +8,7 @@ export interface DogData{
    , fault: boolean
    , running: boolean
 }
-export interface Race {
+export interface RaceData {
    id: Number,
    startTime: Number,
    endTime: Number,
@@ -17,4 +17,8 @@ export interface Race {
    raceState: RaceState,
    raceStateFriendly: String,
    dogData: Array<DogData>
+}
+
+export interface RaceDataArray {
+  Array<RaceData>
 }

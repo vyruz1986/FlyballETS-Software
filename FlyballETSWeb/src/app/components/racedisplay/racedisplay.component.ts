@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 
-import { Race } from '../../interfaces/race';
+import { RaceData, RaceDataArray } from '../../interfaces/race';
 import { WebsocketAction } from '../../interfaces/websocketaction';
 import { EtsdataService } from '../../services/etsdata.service';
 
@@ -11,7 +11,8 @@ import { EtsdataService } from '../../services/etsdata.service';
 })
 export class RacedisplayComponent implements OnInit {
 
-  currentRace:Race = {
+  
+  currentRace:RaceDataArray = [{
     id: 0,
     startTime: 0,
     endTime: 0,
@@ -20,7 +21,7 @@ export class RacedisplayComponent implements OnInit {
     raceState: 0,
     raceStateFriendly: "Stopped",
     dogData: []
-  };
+  }];
 
   startDisabled: boolean;
   stopDisabled: boolean;
@@ -79,10 +80,10 @@ export class RacedisplayComponent implements OnInit {
     this.etsDataService.sendAction(StopAction);
   }
 
-  HandleCurrentRaceData(raceData:Race) {
+  HandleCurrentRaceData(raceData:RaceDataArray) {
     this.currentRace =  raceData;
     
-    switch(this.currentRace.raceState) {
+    switch(this.currentRace[0].raceState) {
       case 0:
         this.currentRace.raceStateFriendly = "Stopped";
         break;
