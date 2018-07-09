@@ -3,9 +3,12 @@
 // 
 
 #include <WebSocketsClient.h>
+#include <ArduinoJson.h>
 #include "SlaveHandler.h"
 #include "SettingsManager.h"
 #include "enums.h"
+#include "global.h"
+#include "syslog.h"
 
 void SlaveHandlerClass::init()
 {
@@ -25,6 +28,8 @@ void SlaveHandlerClass::init()
       , std::placeholders::_3));
 
    this->_wsClient.setReconnectInterval(CONNECT_CHECK);
+
+   DynamicJsonBuffer _jsonRaceDataBuffer(bsRaceData);
 }
 void SlaveHandlerClass::loop()
 {
@@ -91,6 +96,7 @@ void SlaveHandlerClass::_WsEvent(WStype_t type, uint8_t * payload, size_t length
    case WStype_DISCONNECTED:
       this->_SetDisconnected();
       break;
+
    case WStype_CONNECTED:
       this->_bConnected = true;
       this->_bWSConnectionStarted = false;
@@ -100,12 +106,24 @@ void SlaveHandlerClass::_WsEvent(WStype_t type, uint8_t * payload, size_t length
       // send message to server when Connected
       //this->_wsClient.sendTXT("Connected");
       break;
-   case WStype_TEXT:
-      Serial.printf("[WSc] got text: %s\n", payload);
 
-      // send message to server
-      // webSocket.sendTXT("message here");
+   case WStype_TEXT:
+   {
+      Serial.printf("[WSc] got text: %s\n", payload);
+      DynamicJsonBuffer jsonBufferRequest;
+      JsonObject& request = jsonBufferRequest.parseObject(payload);
+      if (!request.success()) {
+         syslog.logf_P(LOG_ERR, "Error parsing JSON!");
+      }
+      if (request.containsKey("RaceData")) {
+         JsonObject& _jsonRaceData = _jsonRaceDataBuffer.parseObject(payload);
+      }
+      else if (request.containsKey("SystemData")) {
+
+      }
       break;
+   }
+
    case WStype_BIN:
       Serial.printf("[WSc] get binary length: %u\n", length);
 
@@ -174,6 +192,11 @@ bool SlaveHandlerClass::sendToSlave(String strMessage)
    }
 
    return bResult;
+}
+
+JsonObject* SlaveHandlerClass::getSlaveRaceData()
+{
+   return _jsonRaceData;
 }
 
 SlaveHandlerClass SlaveHandler;

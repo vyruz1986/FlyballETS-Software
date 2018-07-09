@@ -14,6 +14,7 @@
 #include "BatterySensor.h"
 #include "SlaveHandler.h"
 #include "SystemManager.h"
+#include "global.h"
 #include <rom/rtc.h>
 #include "static\index.html.gz.h"
 
@@ -328,6 +329,9 @@ boolean WebHandlerClass::_DoAction(JsonObject& ActionObj, String * ReturnError, 
       {
          RaceHandler.StopRace();
          LightsController.DeleteSchedules();
+         if (_bSlavePresent) {
+            SlaveHandler.sendToSlave("{ \"action\": {\"actionType\": \"StopRace\"}}");
+         }
          return true;
       }
    }
@@ -345,6 +349,9 @@ boolean WebHandlerClass::_DoAction(JsonObject& ActionObj, String * ReturnError, 
       {
          LightsController.ResetLights();
          RaceHandler.ResetRace();
+         if (_bSlavePresent) {
+            SlaveHandler.sendToSlave("{ \"action\": {\"actionType\": \"ResetRace\"}}");
+         }
          return true;
       }
    }
@@ -441,46 +448,53 @@ boolean WebHandlerClass::_GetRaceDataJsonString(uint iRaceId, String &strJsonStr
 
 void WebHandlerClass::_SendRaceData(uint iRaceId)
 {
-   const size_t bufferSize = 5 * JSON_ARRAY_SIZE(4) + JSON_OBJECT_SIZE(1) + 16 * JSON_OBJECT_SIZE(2) + 4 * JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(7);
-   DynamicJsonBuffer JsonBuffer(bufferSize);
+   //const size_t bufferSize = 5 * JSON_ARRAY_SIZE(4) + JSON_OBJECT_SIZE(1) + 16 * JSON_OBJECT_SIZE(2) + 4 * JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(7);
+   DynamicJsonBuffer JsonBuffer(bsRaceDataArray);
    JsonObject& JsonRoot = JsonBuffer.createObject();
-   if (!JsonRoot.success())
-   {
-      syslog.logf_P(LOG_ERR, "Error parsing JSON!");
-   }
-   else
-   {
-      JsonObject& JsonRaceData = JsonRoot.createNestedObject("RaceData");
-      stRaceData RequestedRaceData = RaceHandler.GetRaceData();
-      JsonRaceData["id"] = RequestedRaceData.Id;
-      JsonRaceData["startTime"] = RequestedRaceData.StartTime;
-      JsonRaceData["endTime"] = RequestedRaceData.EndTime;
-      JsonRaceData["elapsedTime"] = RequestedRaceData.ElapsedTime;
-      JsonRaceData["totalCrossingTime"] = RequestedRaceData.TotalCrossingTime;
-      JsonRaceData["raceState"] = RequestedRaceData.RaceState;
+   JsonArray& jsonRaceData = JsonRoot.createNestedArray("RaceData");
 
-      JsonArray& JsonDogDataArray = JsonRaceData.createNestedArray("dogData");
-      for (uint8_t i = 0; i < 4; i++)
+   DynamicJsonBuffer jsonMasterRaceDataBuffer(bsRaceData);
+   JsonObject& jsonMasterRaceData = jsonMasterRaceDataBuffer.createObject();
+
+   DynamicJsonBuffer jsonSlaveRaceDataBuffer(bsRaceData);
+   JsonObject& jsonSlaveRaceData = jsonSlaveRaceDataBuffer.createObject();
+      
+   stRaceData RequestedRaceData = RaceHandler.GetRaceData();
+   jsonMasterRaceData["id"] = RequestedRaceData.Id;
+   jsonMasterRaceData["startTime"] = RequestedRaceData.StartTime;
+   jsonMasterRaceData["endTime"] = RequestedRaceData.EndTime;
+   jsonMasterRaceData["elapsedTime"] = RequestedRaceData.ElapsedTime;
+   jsonMasterRaceData["totalCrossingTime"] = RequestedRaceData.TotalCrossingTime;
+   jsonMasterRaceData["raceState"] = RequestedRaceData.RaceState;
+
+   JsonArray& JsonDogDataArray = jsonMasterRaceData.createNestedArray("dogData");
+   for (uint8_t i = 0; i < 4; i++)
+   {
+      JsonObject& JsonDogData = JsonDogDataArray.createNestedObject();
+      JsonDogData["dogNumber"] = RequestedRaceData.DogData[i].DogNumber;
+      JsonArray& JsonDogDataTimingArray = JsonDogData.createNestedArray("timing");
+      for (uint8_t i2 = 0; i2 < 4; i2++)
       {
-         JsonObject& JsonDogData = JsonDogDataArray.createNestedObject();
-         JsonDogData["dogNumber"] = RequestedRaceData.DogData[i].DogNumber;
-         JsonArray& JsonDogDataTimingArray = JsonDogData.createNestedArray("timing");
-         for (uint8_t i2 = 0; i2 < 4; i2++)
-         {
-            JsonObject& DogTiming = JsonDogDataTimingArray.createNestedObject();
-            DogTiming["time"] = RequestedRaceData.DogData[i].Timing[i2].Time;
-            DogTiming["crossingTime"] = RequestedRaceData.DogData[i].Timing[i2].CrossingTime;
-         }
-         JsonDogData["fault"] = RequestedRaceData.DogData[i].Fault;
-         JsonDogData["running"] = RequestedRaceData.DogData[i].Running;
+         JsonObject& DogTiming = JsonDogDataTimingArray.createNestedObject();
+         DogTiming["time"] = RequestedRaceData.DogData[i].Timing[i2].Time;
+         DogTiming["crossingTime"] = RequestedRaceData.DogData[i].Timing[i2].CrossingTime;
       }
-      size_t len = JsonRoot.measureLength();
-      AsyncWebSocketMessageBuffer * wsBuffer = _ws->makeBuffer(len);
-      if (wsBuffer)
-      {
-         JsonRoot.printTo((char *)wsBuffer->get(), len + 1);
-         _ws->textAll(wsBuffer);
-      }
+      JsonDogData["fault"] = RequestedRaceData.DogData[i].Fault;
+      JsonDogData["running"] = RequestedRaceData.DogData[i].Running;
+   }
+
+   jsonRaceData.add(jsonMasterRaceData);
+
+   if (_bSlavePresent) {
+      jsonRaceData.add(SlaveHandler.getSlaveRaceData());
+   }
+
+   size_t len = JsonRoot.measureLength();
+   AsyncWebSocketMessageBuffer * wsBuffer = _ws->makeBuffer(len);
+   if (wsBuffer)
+   {
+      JsonRoot.printTo((char *)wsBuffer->get(), len + 1);
+      _ws->textAll(wsBuffer);
    }
 }
 
