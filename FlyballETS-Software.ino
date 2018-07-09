@@ -466,12 +466,8 @@ void loop()
    if (strSerialData.length() > 0
        && bSerialStringComplete)
    {
-      if (bDEBUG) syslog.logf_P("cSer: '%s'", strSerialData.c_str());
+      syslog.logf_P(LOG_DEBUG,"cSer: '%s'", strSerialData.c_str());
 
-      if (strSerialData == "DEBUG")
-      {
-         bDEBUG = !bDEBUG;
-      }
 
       strSerialData = "";
       bSerialStringComplete = false;
@@ -535,7 +531,7 @@ void StartStopRace()
       && RaceHandler.GetRaceTime() == 0)           //and timers are zero
    {
       //Then start the race
-      if (bDEBUG) syslog.logf_P("%lu: START!\r\n", millis());
+      syslog.logf_P(LOG_DEBUG, "%lu: START!\r\n", millis());
       RaceHandler.StartRace();
    }
    else //If race state is running or starting, we should stop it

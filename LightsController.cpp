@@ -100,7 +100,7 @@ void LightsControllerClass::Main()
 
    if (_byCurrentLightsState != _byNewLightsState)
    {
-      if (bDEBUG) syslog.logf_P(LOG_DEBUG, "%lu: New light states: %i", millis(), _byNewLightsState);
+      syslog.logf_P(LOG_DEBUG, "%lu: New light states: %i", millis(), _byNewLightsState);
       _byCurrentLightsState = _byNewLightsState;
 #ifndef WS281x
       digitalWrite(_iLatchPin, LOW);

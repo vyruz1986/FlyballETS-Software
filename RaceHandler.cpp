@@ -109,13 +109,10 @@ void RaceHandlerClass::Main()
    if (RaceState == RaceStates::STOPPED || RaceState == RaceStates::SCHEDULED)
    {
       //If we are debugging we should dump the remainder of the interrupt queue, even if the race is stopped
-      if (bDEBUG)
+      while (!_QueueEmpty())
       {
-         while (!_QueueEmpty())
-         {
-            STriggerRecord STempRecord = _QueuePop();
-            syslog.logf_P(LOG_DEBUG, "S%i|T:%li|St:%i", STempRecord.iSensorNumber, STempRecord.lTriggerTime - _lRaceStartTime, STempRecord.iSensorState);
-         }
+         STriggerRecord STempRecord = _QueuePop();
+         syslog.logf_P(LOG_DEBUG, "S%i|T:%li|St:%i", STempRecord.iSensorNumber, STempRecord.lTriggerTime - _lRaceStartTime, STempRecord.iSensorState);
       }
       return;
    }
