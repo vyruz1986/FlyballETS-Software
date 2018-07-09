@@ -1,0 +1,22 @@
+msc {
+  c [label="Client/user", linecolor="#008800", textbgcolor="#CCFFCC", arclinecolor="#008800"],
+  a [label="Master", linecolor="#FF0000", textbgcolor="#FFCCCC", arclinecolor="#FF0000"],
+  b [label="Slave", linecolor="#0000FF", textbgcolor="#CCCCFF", arclinecolor="#0000FF"];
+
+  b -> a [label="Websocket connect"];
+  b -> a [label="AnnounceSlave"];
+  a box a [label="Save slave IP", linecolor="black", textbgcolor="white"];
+  b -> a [label="Websocket close"];
+  a note b [label="Master will connect as client to slave, in order to use the existing push mechanism of slave", linecolor="black", textbgcolor="white"];
+  a -> b [label="Websocket connect"];
+  b -> a [label="ping (every 2000ms)"];
+  a -> b [label="pong (every 2000ms)"];
+  c -> a [label="StartRace"];
+  a -> b [label="ScheduleRace"];
+  b -> a [label="ScheduleRace OK"];
+  a box b [label="Race started", linecolor="black", textbgcolor="white"];
+  b -> a [label="RaceData"];
+  b -> a [label="RaceEvents"];
+  a -> c [label="RaceData (x2)"];
+  a -> c [label="RaceEvents (x2)"];
+}
