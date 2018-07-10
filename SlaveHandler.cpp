@@ -28,8 +28,6 @@ void SlaveHandlerClass::init()
       , std::placeholders::_3));
 
    this->_wsClient.setReconnectInterval(CONNECT_CHECK);
-
-   DynamicJsonBuffer _jsonRaceDataBuffer(bsRaceData);
 }
 void SlaveHandlerClass::loop()
 {
@@ -116,7 +114,8 @@ void SlaveHandlerClass::_WsEvent(WStype_t type, uint8_t * payload, size_t length
          syslog.logf_P(LOG_ERR, "Error parsing JSON!");
       }
       if (request.containsKey("RaceData")) {
-         JsonObject& _jsonRaceData = _jsonRaceDataBuffer.parseObject(payload);
+         request["RaceData"][0].printTo(_strJsonRaceData);
+         Serial.printf("got racedata from slave: %s\r\n", _strJsonRaceData.c_str());
       }
       else if (request.containsKey("SystemData")) {
 
@@ -194,9 +193,10 @@ bool SlaveHandlerClass::sendToSlave(String strMessage)
    return bResult;
 }
 
-JsonObject* SlaveHandlerClass::getSlaveRaceData()
+String& SlaveHandlerClass::getSlaveRaceData()
 {
-   return _jsonRaceData;
+   Serial.printf("Slave is returning racedata: %s\r\n", _strJsonRaceData.c_str());
+   return _strJsonRaceData;
 }
 
 SlaveHandlerClass SlaveHandler;

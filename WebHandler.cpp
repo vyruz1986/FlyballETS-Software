@@ -457,7 +457,6 @@ void WebHandlerClass::_SendRaceData(uint iRaceId)
    JsonObject& jsonMasterRaceData = jsonMasterRaceDataBuffer.createObject();
 
    DynamicJsonBuffer jsonSlaveRaceDataBuffer(bsRaceData);
-   JsonObject& jsonSlaveRaceData = jsonSlaveRaceDataBuffer.createObject();
       
    stRaceData RequestedRaceData = RaceHandler.GetRaceData();
    jsonMasterRaceData["id"] = RequestedRaceData.Id;
@@ -486,7 +485,16 @@ void WebHandlerClass::_SendRaceData(uint iRaceId)
    jsonRaceData.add(jsonMasterRaceData);
 
    if (_bSlavePresent) {
-      jsonRaceData.add(SlaveHandler.getSlaveRaceData());
+      String& strJsonSlaveRaceData = SlaveHandler.getSlaveRaceData();
+      Serial.printf("Slave racedata: %s\r\n", strJsonSlaveRaceData.c_str());
+
+      JsonObject& jsonSlaveRaceData = jsonSlaveRaceDataBuffer.parseObject(strJsonSlaveRaceData);
+      if (jsonSlaveRaceData.success()) {
+         jsonRaceData.add(jsonSlaveRaceData);
+      }
+      else {
+         Serial.printf("Error parsing json data from slave...\r\n");
+      }
    }
 
    size_t len = JsonRoot.measureLength();

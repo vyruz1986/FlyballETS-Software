@@ -30,8 +30,10 @@ protected:
    void _AnnounceSlaveIfApplicable();
    void _WsCloseConnection();
    bool _ConnectionNeeded();
-   DynamicJsonBuffer _jsonRaceDataBuffer;
-   JsonObject* _jsonRaceData;
+   //DynamicJsonBuffer _jsonRaceDataBuffer;
+   //DynamicJsonBuffer _jsonRaceDataBuffer(bsRaceData);
+   //JsonObject& _jsonRaceData;
+   String _strJsonRaceData;
 
 public:
    void init();
@@ -41,7 +43,7 @@ public:
    bool slavePresent();
    void resetConnection();
    bool sendToSlave(String strMessage);
-   JsonObject* getSlaveRaceData();
+   String& getSlaveRaceData();
 };
 
 extern SlaveHandlerClass SlaveHandler;
