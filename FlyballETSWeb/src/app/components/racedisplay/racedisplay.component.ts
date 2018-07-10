@@ -1,36 +1,34 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 
-import { RaceData, RaceDataArray } from '../../interfaces/race';
+import { RaceData } from '../../interfaces/race';
 import { WebsocketAction } from '../../interfaces/websocketaction';
 import { EtsdataService } from '../../services/etsdata.service';
+import { RaceState } from '../../class/race-state';
+import { RaceCommandEnum } from '../../enums/race-state.enum';
+import { LightStates } from '../../interfaces/light-states';
 
 @Component({
-  selector: 'app-racedisplay',
-  templateUrl: './racedisplay.component.html',
-  styleUrls: ['./racedisplay.component.css']
+   selector: 'app-racedisplay',
+   templateUrl: './racedisplay.component.html',
+   styleUrls: ['./racedisplay.component.css']
 })
 export class RacedisplayComponent implements OnInit {
 
-  
-  currentRace:RaceDataArray = [{
-    id: 0,
-    startTime: 0,
-    endTime: 0,
-    elapsedTime: 0,
-    totalCrossingTime: 0,
-    raceState: 0,
-    raceStateFriendly: "Stopped",
-    dogData: []
-  }];
+   currentRaces:RaceData[] = [];
 
-  startDisabled: boolean;
-  stopDisabled: boolean;
-  resetDisabled: boolean;
-  constructor(public etsDataService:EtsdataService) {  //TODO why does making etsDataService private cause build to fail?
+   raceStates: RaceState = {RaceStates: [], StartTimes: []};
+
+   lightStates: LightStates[] = [{State: [0, 0, 0, 0, 0]}];
+   
+   constructor(public etsDataService:EtsdataService) {  //TODO why does making etsDataService private cause build to fail?
       this.etsDataService.dataStream.subscribe(
          (data) => {
+            console.log(data);
             if(data.RaceData) {
                this.HandleCurrentRaceData(data.RaceData);
+            } else if(data.LightsData) {
+               console.log(data.LightsData);
+               this.lightStates[0].State = data.LightsData;
             }
          },
          (err) => {
@@ -40,70 +38,75 @@ export class RacedisplayComponent implements OnInit {
             console.log("disconnected");
          }
       );
-  }
+   }
 
-  ngOnInit() {
-  }
+   ngOnInit() {
+   }
 
-  startRace() {
-     console.log('starting race');
-     let StartAction:WebsocketAction = {
+   onRaceCommand(raceCommand: RaceCommandEnum){
+      let action:WebsocketAction = { actionType: "" };
+      switch(raceCommand) {
+         case RaceCommandEnum.CMD_START:
+            action.actionType = "StartRace";
+            break;
+         case RaceCommandEnum.CMD_STOP:
+            action.actionType = "StopRace";
+            break;
+         case RaceCommandEnum.CMD_RESET:
+            action.actionType = "ResetRace";
+            break;
+      }
+      this.etsDataService.sendAction(action);
+   }
+
+   startRace() {
+      console.log('starting race');
+      let StartAction:WebsocketAction = {
       actionType: "StartRace"
       };
-     this.etsDataService.sendAction(StartAction);
-  }
+      this.etsDataService.sendAction(StartAction);
+   }
 
-  stopRace() {
-    console.log('stopping race');
-    let StopAction:WebsocketAction = {
+   stopRace() {
+      console.log('stopping race');
+      let StopAction:WebsocketAction = {
       actionType: "StopRace"
-     };
-    this.etsDataService.sendAction(StopAction);
-  }
-  resetRace() {
-    console.log('resetting race');
-    let StopAction:WebsocketAction = {
+      };
+      this.etsDataService.sendAction(StopAction);
+   }
+   resetRace() {
+      console.log('resetting race');
+      let StopAction:WebsocketAction = {
       actionType: "ResetRace"
-     };
-    this.etsDataService.sendAction(StopAction);
-  }
+      };
+      this.etsDataService.sendAction(StopAction);
+   }
 
-  setDogFault(dogNum: number, faultState: boolean) {
-    console.log('Setting fault for dog %i to value: %o', dogNum, faultState);
-    let StopAction:WebsocketAction = {
+   onSetDogFault(dogFault: {raceNum: number, dogNum: number, fault: boolean}) {
+      console.log('Setting fault for race %i, dog %i to value: %o',dogFault.raceNum, dogFault.dogNum, dogFault.fault);
+      let StopAction:WebsocketAction = {
       actionType: "SetDogFault",
       actionData: {
-        dogNumber: dogNum,
-        faultState: faultState
+         dogNumber: dogFault.dogNum,
+         faultState: dogFault.fault
       }
-     };
-    this.etsDataService.sendAction(StopAction);
-  }
+      };
+      this.etsDataService.sendAction(StopAction);
+   }
 
-  HandleCurrentRaceData(raceData:RaceDataArray) {
-    this.currentRace =  raceData;
-    
-    switch(this.currentRace[0].raceState) {
-      case 0:
-        this.currentRace.raceStateFriendly = "Stopped";
-        break;
-      case 1:
-        this.currentRace.raceStateFriendly = "Starting";
-        break;
-      case 2:
-        this.currentRace.raceStateFriendly = "Running";
-        break;
-      case 3:
-        this.currentRace.raceStateFriendly = "Scheduled";
-        break;
-      default:
-        this.currentRace.raceStateFriendly = "Unknown";
-        break;
-    }
-    this.startDisabled = !(this.currentRace.raceState == 0 && this.currentRace.startTime == 0);
-    this.stopDisabled = (this.currentRace.raceState == 0);
-    this.resetDisabled = !(this.currentRace.raceState == 0 && this.currentRace.startTime != 0);
-  }
+   HandleCurrentRaceData(raceData:RaceData[]) {
+      this.currentRaces = [];
+      raceData.forEach(element => {
+         if(typeof element == "object") {
+            this.currentRaces.push(element);
+         }
+      });
+      this.raceStates = {RaceStates: [], StartTimes: []};
+      this.currentRaces.forEach(element => {
+         this.raceStates.RaceStates.push(element.raceState);
+         this.raceStates.StartTimes.push(element.startTime);
+      });
+   }
 
   reconnect() {
   }

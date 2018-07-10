@@ -1,24 +1,20 @@
-import { RaceState } from '../enums/race-enums.enum';
+import { RaceStateEnum } from '../enums/race-state.enum';
 export interface DogTimingData{
-   time: Number, crossingTime: Number
+   time: number, crossingTime: number
 }
 export interface DogData{
-   dogNumber: Number
+   dogNumber: number
    , timing:Array<DogTimingData>
    , fault: boolean
    , running: boolean
 }
 export interface RaceData {
-   id: Number,
-   startTime: Number,
-   endTime: Number,
-   elapsedTime: Number,
-   totalCrossingTime: Number,
-   raceState: RaceState,
+   id: number,
+   startTime: number,
+   endTime: number,
+   elapsedTime: number,
+   totalCrossingTime: number,
+   raceState: RaceStateEnum,
    raceStateFriendly: String,
    dogData: Array<DogData>
-}
-
-export interface RaceDataArray {
-  Array<RaceData>
 }
