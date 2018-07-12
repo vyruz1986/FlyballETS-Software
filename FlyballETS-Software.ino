@@ -168,6 +168,12 @@ Syslog syslog(SyslogUDP, "255.255.255.255", 514, "FlyballETS", "FlyballETSApp", 
 //Keep last reported OTA progress so we can send one syslog message for every % increment
 unsigned int uiLastProgress = 0;
 
+
+//ESP32 multi core magic :)
+#ifdef ESP32
+TaskHandle_t Task0;
+#endif
+
 void setup()
 {
    EEPROM.begin(EEPROM_SIZE);
@@ -239,7 +245,6 @@ void setup()
    //Initialize RaceHandler class with S1 and S2 pins
    RaceHandler.init(iS1Pin, iS2Pin);
 
-   SlaveHandler.init();
    SystemManager.init();
 
    //Initialize simulatorclass pins if applicable
@@ -283,6 +288,15 @@ void setup()
 
 #ifdef  ESP32
    mdnsServerSetup();
+
+   xTaskCreatePinnedToCore(
+      Core0Loop,
+      "Task0",
+      8192,
+      NULL,
+      1,
+      &Task0,
+      0);
 #endif //  ESP32
 
    syslog.logf_P("Ready, version %s", APP_VER);
@@ -318,8 +332,6 @@ void loop()
    GPSHandler.loop();
 
    WiFiLoop();
-
-   SlaveHandler.loop();
 
    SystemManager.loop();
    
@@ -563,3 +575,12 @@ void mdnsServerSetup()
    MDNS.begin("FlyballETS");
 }
 #endif
+
+void Core0Loop(void * parameter) {
+   SlaveHandler.init();
+   for (;;) {
+      SlaveHandler.loop();
+      yield();
+      vTaskDelay(10);
+   }
+}
