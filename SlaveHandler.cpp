@@ -28,12 +28,13 @@ void SlaveHandlerClass::init()
       , std::placeholders::_3));
 
    this->_wsClient.setReconnectInterval(CONNECT_CHECK);
+   syslog.logf_P("SlaveHandler initialized!");
 }
 void SlaveHandlerClass::loop()
 {
    if (millis() - this->_ulLastConnectCheck > CONNECT_CHECK) {
       this->_ulLastConnectCheck = millis();
-      //Serial.printf("C: %i, CN: %i, CS: %i, S: %i, SC: %i\r\n", _bConnected, _ConnectionNeeded(), _bWSConnectionStarted, _bIAmSlave, _bSlaveConfigured);
+      Serial.printf("C: %i, CN: %i, CS: %i, S: %i, SC: %i\r\n", _bConnected, _ConnectionNeeded(), _bWSConnectionStarted, _bIAmSlave, _bSlaveConfigured);
       if (!_bConnected
          && this->_ConnectionNeeded()
          && !_bWSConnectionStarted)
@@ -46,6 +47,7 @@ void SlaveHandlerClass::loop()
       }
 
       //FIXME: This connection test is not working...
+      /*
       if (this->_ConnectionNeeded() && _bConnected) {
          //Serial.printf("[WSc] Testing connection...\r\n");
          String ping = "ping";
@@ -56,6 +58,7 @@ void SlaveHandlerClass::loop()
          }
          //Serial.printf("[WSc] Result %i\r\n", bPingResult);
       }
+      */
    }
    if (this->_bConnected || this->_ConnectionNeeded()) {
       this->_wsClient.loop();
@@ -108,17 +111,19 @@ void SlaveHandlerClass::_WsEvent(WStype_t type, uint8_t * payload, size_t length
    case WStype_TEXT:
    {
       Serial.printf("[WSc] got text: %s\n", payload);
-      DynamicJsonBuffer jsonBufferRequest;
-      JsonObject& request = jsonBufferRequest.parseObject(payload);
-      if (!request.success()) {
-         syslog.logf_P(LOG_ERR, "Error parsing JSON!");
-      }
-      if (request.containsKey("RaceData")) {
-         request["RaceData"][0].printTo(_strJsonRaceData);
+      //StaticJsonDocument<bsRaceDataArray> jsonRequestDoc;
+      DynamicJsonDocument jsonRequestDoc;
+      JsonObject request = jsonRequestDoc.to<JsonObject>();
+      DeserializationError error = deserializeJson(jsonRequestDoc, payload);
+      if (error) {
+         syslog.logf_P(LOG_ERR, "Error parsing JSON: %s!", error.c_str());
+      } else if (request.containsKey("RaceData")) {
+         JsonObject jsonSlaveRaceData = request["RaceData"][0].as<JsonObject>();
+         serializeJson(jsonSlaveRaceData, _strJsonRaceData);
          Serial.printf("got racedata from slave: %s\r\n", _strJsonRaceData.c_str());
       }
       else if (request.containsKey("SystemData")) {
-
+         Serial.printf("Got SystemData!\r\n");
       }
       break;
    }

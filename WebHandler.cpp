@@ -26,8 +26,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
 
    if (type == WS_EVT_CONNECT)
    {
-      syslog.logf_P("ws[%s][%u] connect\n", server->url(), client->id());
-      //client->printf("Hello Client %u :)", client->id());
+      syslog.logf_P("Client %i connected to %s!", client->id(), server->url());
 
       //Should we check authentication?
       if (isAdmin)
@@ -106,10 +105,12 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
       }
 
       // Parse JSON input
-      DynamicJsonBuffer jsonBufferRequest;
-      JsonObject& request = jsonBufferRequest.parseObject(msg);
-      if (!request.success()) {
-         syslog.logf_P(LOG_ERR, "Error parsing JSON!");
+      //DynamicJsonBuffer jsonBufferRequest;
+      DynamicJsonDocument jsonRequestDoc;
+      DeserializationError error = deserializeJson(jsonRequestDoc, msg);
+      JsonObject request = jsonRequestDoc.as<JsonObject>();
+      if (error) {
+         syslog.logf_P(LOG_ERR, "Error parsing JSON: %s", error.c_str());
          //wsSend_P(client->id(), PSTR("{\"message\": 3}"));
          client->text("{\"error\":\"Invalid JSON received\"}");
          return;
@@ -117,20 +118,20 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
 
       //const size_t bufferSize = JSON_ARRAY_SIZE(50) + 50 * JSON_OBJECT_SIZE(3);
       //DynamicJsonBuffer jsonBufferResponse(bufferSize);
-      DynamicJsonBuffer jsonBufferResponse;
-      JsonObject& JsonResponseRoot = jsonBufferResponse.createObject();
+      DynamicJsonDocument jsonResponseDoc;
+      JsonObject JsonResponseRoot = jsonResponseDoc.to<JsonObject>();
 
       if (request.containsKey("action")) {
-         JsonObject& ActionResult = JsonResponseRoot.createNestedObject("ActionResult");
+         JsonObject ActionResult = JsonResponseRoot.createNestedObject("ActionResult");
          String errorText;
-         bool result = _DoAction(request["action"], &errorText, client);
+         bool result = _DoAction(request["action"].as<JsonObject>(), &errorText, client);
          ActionResult["success"] = result;
          ActionResult["error"] = errorText;
       }
       else if (request.containsKey("config")) {
-         JsonObject& ConfigResult = JsonResponseRoot.createNestedObject("configResult");
+         JsonObject ConfigResult = JsonResponseRoot.createNestedObject("configResult");
          String errorText;
-         JsonArray& config = request["config"];
+         JsonArray config = request["config"].as<JsonArray>();
          //We allow setting config only over admin websocket
          bool result;
          if (isAdmin)
@@ -147,8 +148,8 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
       }
       else if (request.containsKey("getData")) {
          String dataName = request["getData"];
-         JsonObject& DataResult = JsonResponseRoot.createNestedObject("dataResult");
-         JsonObject& DataObject = DataResult.createNestedObject(dataName + "Data");
+         JsonObject DataResult = JsonResponseRoot.createNestedObject("dataResult");
+         JsonObject DataObject = DataResult.createNestedObject(dataName + "Data");
          bool result;
          if (dataName == "config" && !isAdmin)
          {
@@ -166,11 +167,12 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
          JsonResponseRoot["error"] = "Got valid JSON but unknown message!";
       }
 
-      size_t len = JsonResponseRoot.measureLength();
+      size_t len = measureJson(jsonResponseDoc);
       AsyncWebSocketMessageBuffer * wsBuffer = _ws->makeBuffer(len);
       if (wsBuffer)
       {
-         JsonResponseRoot.printTo((char *)wsBuffer->get(), len + 1);
+         serializeJson(jsonResponseDoc, (char *)wsBuffer->get(), len + 1);
+         //JsonResponseRoot.printTo((char *)wsBuffer->get(), len + 1);
          client->text(wsBuffer);
       }
    }
@@ -252,31 +254,23 @@ void WebHandlerClass::loop()
 void WebHandlerClass::SendLightsData(stLightsState LightStates)
 {
    const size_t bufferSize = JSON_ARRAY_SIZE(5) + JSON_OBJECT_SIZE(1);
-   DynamicJsonBuffer JsonBuffer(bufferSize);
-   JsonObject& JsonRoot = JsonBuffer.createObject();
+   //StaticJsonDocument<bufferSize> JsonDoc;
+   DynamicJsonDocument JsonDoc;
+   JsonObject JsonRoot = JsonDoc.to<JsonObject>();
 
-   if (!JsonRoot.success())
-   {
-      syslog.logf_P(LOG_ERR, "Error creating JSON object!");
-      _ws->textAll("{\"error\": \"Error creating JSON object!\"}");
-      return;
-   }
-   else
-   {
-      JsonArray& JsonLightsData = JsonRoot.createNestedArray("LightsData");
-      JsonLightsData.copyFrom(LightStates.State);
+   JsonArray JsonLightsData = JsonRoot.createNestedArray("LightsData");
+   JsonLightsData.copyFrom(LightStates.State);
 
-      size_t len = JsonRoot.measureLength();
-      AsyncWebSocketMessageBuffer * wsBuffer = _ws->makeBuffer(len);
-      if (wsBuffer)
-      {
-         JsonRoot.printTo((char *)wsBuffer->get(), len + 1);
-         _ws->textAll(wsBuffer);
-      }
+   size_t len = measureJson(JsonDoc);
+   AsyncWebSocketMessageBuffer * wsBuffer = _ws->makeBuffer(len);
+   if (wsBuffer)
+   {
+      serializeJson(JsonDoc,(char *)wsBuffer->get(), len + 1);
+      _ws->textAll(wsBuffer);
    }
 }
 
-boolean WebHandlerClass::_DoAction(JsonObject& ActionObj, String * ReturnError, AsyncWebSocketClient * Client) {
+boolean WebHandlerClass::_DoAction(JsonObject ActionObj, String * ReturnError, AsyncWebSocketClient * Client) {
    String ActionType = ActionObj["actionType"];
    if (ActionType == "StartRace") {
       if (RaceHandler.RaceState != RaceHandler.STOPPED) {
@@ -294,17 +288,18 @@ boolean WebHandlerClass::_DoAction(JsonObject& ActionObj, String * ReturnError, 
             unsigned long ulStartTime = GPSHandler.GetEpochTime() + 2;
 
             const size_t bufferSize = 2 * JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(2);
-            DynamicJsonBuffer jsonBuffer(bufferSize);
+            //StaticJsonDocument<bufferSize> jsonDoc;
+            DynamicJsonDocument jsonDoc;
 
-            JsonObject& root = jsonBuffer.createObject();
+            JsonObject root = jsonDoc.to<JsonObject>();
 
-            JsonObject& action = root.createNestedObject("action");
+            JsonObject action = root.createNestedObject("action");
             action["actionType"] = "ScheduleStartRace";
-            JsonObject& action_actionData = action.createNestedObject("actionData");
+            JsonObject action_actionData = action.createNestedObject("actionData");
             action_actionData["startTime"] = ulStartTime;
 
             String strScheduleStartMessage;
-            root.printTo(strScheduleStartMessage);
+            serializeJson(root, strScheduleStartMessage);
             SlaveHandler.sendToSlave(strScheduleStartMessage);
 
             long lMillisToStart = GPSHandler.GetMillisToEpochSecond(ulStartTime);
@@ -404,60 +399,57 @@ boolean WebHandlerClass::_DoAction(JsonObject& ActionObj, String * ReturnError, 
 
 boolean WebHandlerClass::_GetRaceDataJsonString(uint iRaceId, String &strJsonString)
 {
-   const size_t bufferSize = 5 * JSON_ARRAY_SIZE(4) + JSON_OBJECT_SIZE(1) + 16 * JSON_OBJECT_SIZE(2) + 4 * JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(7);
-   DynamicJsonBuffer JsonBuffer(bufferSize);
-   JsonObject& JsonRoot = JsonBuffer.createObject();
-   if (!JsonRoot.success())
-   {
-      syslog.logf_P(LOG_ERR, "Error parsing JSON!");
-      //strJsonString = "{\"error\": \"Error parsing JSON from RaceData!\"}";
-      return false;
-   }
-   else
-   {
-      JsonObject& JsonRaceData = JsonRoot.createNestedObject("RaceData");
-      stRaceData RequestedRaceData = RaceHandler.GetRaceData();
-      JsonRaceData["id"] = RequestedRaceData.Id;
-      JsonRaceData["startTime"] = RequestedRaceData.StartTime;
-      JsonRaceData["endTime"] = RequestedRaceData.EndTime;
-      JsonRaceData["elapsedTime"] = RequestedRaceData.ElapsedTime;
-      JsonRaceData["totalCrossingTime"] = RequestedRaceData.TotalCrossingTime;
-      JsonRaceData["raceState"] = RequestedRaceData.RaceState;
+   //StaticJsonDocument<bsRaceData> JsonDoc;
+   DynamicJsonDocument JsonDoc;
+   JsonObject JsonRoot = JsonDoc.to<JsonObject>();
+   JsonObject JsonRaceData = JsonRoot.createNestedObject("RaceData");
+   stRaceData RequestedRaceData = RaceHandler.GetRaceData();
+   JsonRaceData["id"] = RequestedRaceData.Id;
+   JsonRaceData["startTime"] = RequestedRaceData.StartTime;
+   JsonRaceData["endTime"] = RequestedRaceData.EndTime;
+   JsonRaceData["elapsedTime"] = RequestedRaceData.ElapsedTime;
+   JsonRaceData["totalCrossingTime"] = RequestedRaceData.TotalCrossingTime;
+   JsonRaceData["raceState"] = RequestedRaceData.RaceState;
 
-      JsonArray& JsonDogDataArray = JsonRaceData.createNestedArray("dogData");
-      for (uint8_t i = 0; i < 4; i++)
+   JsonArray JsonDogDataArray = JsonRaceData.createNestedArray("dogData");
+   for (uint8_t i = 0; i < 4; i++)
+   {
+      JsonObject JsonDogData = JsonDogDataArray.createNestedObject();
+      JsonDogData["dogNumber"] = RequestedRaceData.DogData[i].DogNumber;
+      JsonArray JsonDogDataTimingArray = JsonDogData.createNestedArray("timing");
+      for (uint8_t i2 = 0; i2 < 4; i2++)
       {
-         JsonObject& JsonDogData = JsonDogDataArray.createNestedObject();
-         JsonDogData["dogNumber"] = RequestedRaceData.DogData[i].DogNumber;
-         JsonArray& JsonDogDataTimingArray = JsonDogData.createNestedArray("timing");
-         for (uint8_t i2 = 0; i2 < 4; i2++)
-         {
-            JsonObject& DogTiming = JsonDogDataTimingArray.createNestedObject();
-            DogTiming["time"] = RequestedRaceData.DogData[i].Timing[i2].Time;
-            DogTiming["crossingTime"] = RequestedRaceData.DogData[i].Timing[i2].CrossingTime;
-         }
-         JsonDogData["fault"] = RequestedRaceData.DogData[i].Fault;
-         JsonDogData["running"] = RequestedRaceData.DogData[i].Running;
+         JsonObject DogTiming = JsonDogDataTimingArray.createNestedObject();
+         DogTiming["time"] = RequestedRaceData.DogData[i].Timing[i2].Time;
+         DogTiming["crossingTime"] = RequestedRaceData.DogData[i].Timing[i2].CrossingTime;
       }
-
-      JsonRoot.printTo(strJsonString);
+      JsonDogData["fault"] = RequestedRaceData.DogData[i].Fault;
+      JsonDogData["running"] = RequestedRaceData.DogData[i].Running;
    }
+
+   serializeJson(JsonRaceData, strJsonString);
 
    return true;
 }
 
 void WebHandlerClass::_SendRaceData(uint iRaceId)
 {
-   //const size_t bufferSize = 5 * JSON_ARRAY_SIZE(4) + JSON_OBJECT_SIZE(1) + 16 * JSON_OBJECT_SIZE(2) + 4 * JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(7);
-   DynamicJsonBuffer JsonBuffer(bsRaceDataArray);
-   JsonObject& JsonRoot = JsonBuffer.createObject();
-   JsonArray& jsonRaceData = JsonRoot.createNestedArray("RaceData");
+   if (_ws->count() < 1) {
+      return;
+   }
+   //StaticJsonDocument<bsRaceDataArray> JsonDoc;
+   DynamicJsonDocument JsonDoc;
+   JsonObject JsonRoot = JsonDoc.to<JsonObject>();
+   JsonArray jsonRaceData = JsonRoot.createNestedArray("RaceData");
 
-   DynamicJsonBuffer jsonMasterRaceDataBuffer(bsRaceData);
-   JsonObject& jsonMasterRaceData = jsonMasterRaceDataBuffer.createObject();
+   //StaticJsonDocument<bsRaceData> jsonMasterRaceDataDoc;
+   DynamicJsonDocument jsonMasterRaceDataDoc;
+   JsonObject jsonMasterRaceData = jsonMasterRaceDataDoc.to<JsonObject>();
 
-   DynamicJsonBuffer jsonSlaveRaceDataBuffer(bsRaceData);
-      
+   //StaticJsonDocument<bsRaceData> jsonSlaveRaceDataDoc;
+   DynamicJsonDocument jsonSlaveRaceDataDoc;
+   JsonObject jsonSlaveRaceData = jsonSlaveRaceDataDoc.to<JsonObject>();
+
    stRaceData RequestedRaceData = RaceHandler.GetRaceData();
    jsonMasterRaceData["id"] = RequestedRaceData.Id;
    jsonMasterRaceData["startTime"] = RequestedRaceData.StartTime;
@@ -466,15 +458,15 @@ void WebHandlerClass::_SendRaceData(uint iRaceId)
    jsonMasterRaceData["totalCrossingTime"] = RequestedRaceData.TotalCrossingTime;
    jsonMasterRaceData["raceState"] = RequestedRaceData.RaceState;
 
-   JsonArray& JsonDogDataArray = jsonMasterRaceData.createNestedArray("dogData");
+   JsonArray JsonDogDataArray = jsonMasterRaceData.createNestedArray("dogData");
    for (uint8_t i = 0; i < 4; i++)
    {
-      JsonObject& JsonDogData = JsonDogDataArray.createNestedObject();
+      JsonObject JsonDogData = JsonDogDataArray.createNestedObject();
       JsonDogData["dogNumber"] = RequestedRaceData.DogData[i].DogNumber;
-      JsonArray& JsonDogDataTimingArray = JsonDogData.createNestedArray("timing");
+      JsonArray JsonDogDataTimingArray = JsonDogData.createNestedArray("timing");
       for (uint8_t i2 = 0; i2 < 4; i2++)
       {
-         JsonObject& DogTiming = JsonDogDataTimingArray.createNestedObject();
+         JsonObject DogTiming = JsonDogDataTimingArray.createNestedObject();
          DogTiming["time"] = RequestedRaceData.DogData[i].Timing[i2].Time;
          DogTiming["crossingTime"] = RequestedRaceData.DogData[i].Timing[i2].CrossingTime;
       }
@@ -488,25 +480,25 @@ void WebHandlerClass::_SendRaceData(uint iRaceId)
       String& strJsonSlaveRaceData = SlaveHandler.getSlaveRaceData();
       Serial.printf("Slave racedata: %s\r\n", strJsonSlaveRaceData.c_str());
 
-      JsonObject& jsonSlaveRaceData = jsonSlaveRaceDataBuffer.parseObject(strJsonSlaveRaceData);
-      if (jsonSlaveRaceData.success()) {
-         jsonRaceData.add(jsonSlaveRaceData);
+      DeserializationError error = deserializeJson(jsonSlaveRaceDataDoc, strJsonSlaveRaceData);
+      if (error) {
+         Serial.printf("Error parsing json data from slave: %s\r\n", error.c_str()); 
       }
       else {
-         Serial.printf("Error parsing json data from slave...\r\n");
+         jsonRaceData.add(jsonSlaveRaceData);
       }
    }
 
-   size_t len = JsonRoot.measureLength();
+   size_t len = measureJson(JsonDoc);
    AsyncWebSocketMessageBuffer * wsBuffer = _ws->makeBuffer(len);
    if (wsBuffer)
    {
-      JsonRoot.printTo((char *)wsBuffer->get(), len + 1);
+      serializeJson(JsonDoc, (char *)wsBuffer->get(), len + 1);
       _ws->textAll(wsBuffer);
    }
 }
 
-boolean WebHandlerClass::_ProcessConfig(JsonArray& newConfig, String * ReturnError)
+boolean WebHandlerClass::_ProcessConfig(JsonArray newConfig, String * ReturnError)
 {
    bool save = false;
    bool changed = false;
@@ -534,7 +526,7 @@ boolean WebHandlerClass::_ProcessConfig(JsonArray& newConfig, String * ReturnErr
    return true;
 }
 
-boolean WebHandlerClass::_GetData(String dataType, JsonObject& Data)
+boolean WebHandlerClass::_GetData(String dataType, JsonObject Data)
 {
    if (dataType == "config")
    {
@@ -545,11 +537,11 @@ boolean WebHandlerClass::_GetData(String dataType, JsonObject& Data)
    }
    else if (dataType == "triggerQueue")
    {
-      JsonArray& triggerQueue = Data.createNestedArray("triggerQueue");
+      JsonArray triggerQueue = Data.createNestedArray("triggerQueue");
       
       for (auto& trigger : RaceHandler._STriggerQueue)
       {
-         JsonObject& triggerObj = triggerQueue.createNestedObject();
+         JsonObject triggerObj = triggerQueue.createNestedObject();
          triggerObj["sensorNum"] = trigger.iSensorNumber;
          triggerObj["triggerTime"] = trigger.lTriggerTime - RaceHandler._lRaceStartTime;
          triggerObj["state"] = trigger.iSensorState;
@@ -575,11 +567,14 @@ stSystemData WebHandlerClass::_GetSystemData()
 
 void WebHandlerClass::_SendSystemData()
 {
-   const size_t bufferSize = JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(7);
-   DynamicJsonBuffer JsonBuffer(bufferSize);
-   JsonObject& JsonRoot = JsonBuffer.createObject();
-
-   JsonObject& JsonSystemData = JsonRoot.createNestedObject("SystemData");
+   if (_ws->count() < 1) {
+      //return;
+   }
+   const size_t bufferSize = JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(7) + 170;
+   StaticJsonDocument<bufferSize> JsonDoc;
+   JsonObject JsonRoot = JsonDoc.to<JsonObject>();
+   
+   JsonObject JsonSystemData = JsonRoot.createNestedObject("SystemData");
    JsonSystemData["uptime"]            = _SystemData.Uptime;
    JsonSystemData["freeHeap"]          = _SystemData.FreeHeap;
    JsonSystemData["CPU0ResetReason"]   = (int)_SystemData.CPU0ResetReason;
@@ -587,12 +582,12 @@ void WebHandlerClass::_SendSystemData()
    JsonSystemData["numClients"]        = _SystemData.NumClients;
    JsonSystemData["systemTimestamp"]   = _SystemData.UTCSystemTime;
    JsonSystemData["batteryPercentage"]   = _SystemData.BatteryPercentage;
-
-   size_t len = JsonRoot.measureLength();
+   
+   size_t len = measureJson(JsonDoc);
    AsyncWebSocketMessageBuffer * wsBuffer = _ws->makeBuffer(len);
    if (wsBuffer)
    {
-      JsonRoot.printTo((char *)wsBuffer->get(), len + 1);
+      serializeJson(JsonDoc, (char *)wsBuffer->get(), len + 1);
       _ws->textAll(wsBuffer);
    }
 }

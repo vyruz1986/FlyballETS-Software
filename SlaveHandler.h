@@ -9,7 +9,7 @@
 #include "WProgram.h"
 #endif
 #include <WebSocketsClient.h>
-#include <ArduinoJson.h>
+#include "global.h"
 #define CONNECT_CHECK 1000
 
 class SlaveHandlerClass
@@ -31,8 +31,8 @@ protected:
    void _WsCloseConnection();
    bool _ConnectionNeeded();
    //DynamicJsonBuffer _jsonRaceDataBuffer;
-   //DynamicJsonBuffer _jsonRaceDataBuffer(bsRaceData);
-   //JsonObject& _jsonRaceData;
+   //DynamicJsonBuffer _jsonRaceDataBuffer;
+   //JsonObject _jsonRaceData;
    String _strJsonRaceData;
 
 public:
