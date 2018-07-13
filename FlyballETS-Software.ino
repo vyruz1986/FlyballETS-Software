@@ -340,62 +340,9 @@ void loop()
    Simulator.Main();
 #endif
    
-   //Race start/stop button (remote D0 output) or serial command
-   if ((digitalRead(iRC0Pin) == HIGH
-      && (millis() - lLastRCPress[0] > 2000))
-      || (bSerialStringComplete
-         && (strSerialData == "START"
-            || strSerialData == "STOP")))
-   {
-      StartStopRace();
-   }
+   HandleSerialMessages();
 
-   //Race reset button (remote D1 output)
-   if (digitalRead(iRC1Pin) == HIGH
-      && (millis() - lLastRCPress[1] > 2000)
-      || (bSerialStringComplete && strSerialData == "RESET"))
-   {
-      ResetRace();
-   }
-
-   //Dog0 fault RC button
-   if (digitalRead(iRC2Pin) == HIGH
-      && (millis() - lLastRCPress[2] > 2000)
-      || (bSerialStringComplete && strSerialData == "D0F"))
-   {
-      lLastRCPress[2] = millis();
-      //Toggle fault for dog
-      RaceHandler.SetDogFault(0);
-   }
-
-   //Dog1 fault RC button
-   if (digitalRead(iRC3Pin) == HIGH
-      && (millis() - lLastRCPress[3] > 2000)
-      || (bSerialStringComplete && strSerialData == "D1F"))
-   {
-      lLastRCPress[3] = millis();
-      //Toggle fault for dog
-      RaceHandler.SetDogFault(1);
-   }
-   //Dog2 fault RC button
-   if (digitalRead(iRC4Pin) == HIGH
-      && (millis() - lLastRCPress[4] > 2000)
-      || (bSerialStringComplete && strSerialData == "D2F"))
-   {
-      lLastRCPress[4] = millis();
-      //Toggle fault for dog
-      RaceHandler.SetDogFault(2);
-   }
-
-   //Dog3 fault RC button
-   if (digitalRead(iRC5Pin) == HIGH
-      && (millis() - lLastRCPress[5] > 2000)
-      || (bSerialStringComplete && strSerialData == "D3F"))
-   {
-      lLastRCPress[5] = millis();
-      //Toggle fault for dog
-      RaceHandler.SetDogFault(3);
-   }
+   HandleRemoteControl();
 
    //Update LCD Display fields
    //Update team time to display
@@ -473,17 +420,6 @@ void loop()
    //Cleanup variables used for checking if something changed
    iCurrentDog = RaceHandler.iCurrentDog;
    iCurrentRaceState = RaceHandler.RaceState;
-
-   //Check if we have serial data which we should handle
-   if (strSerialData.length() > 0
-       && bSerialStringComplete)
-   {
-      syslog.logf_P(LOG_DEBUG,"cSer: '%s'", strSerialData.c_str());
-
-
-      strSerialData = "";
-      bSerialStringComplete = false;
-   }
    
    //Handle laser output
    digitalWrite(iLaserOutputPin, !digitalRead(iLaserTriggerPin));
@@ -506,6 +442,16 @@ void serialEvent()
    {
       char cInChar = Serial.read(); // Read a character
 	   //Check if buffer contains complete serial message, terminated by newline (\n)
+      if (cInChar == '\r') {
+         if (Serial.available() > 0) {
+            //More data, so probably \r\n
+            cInChar = Serial.read();
+         }
+         else {
+            //We only got \r, treat it as newline
+            cInChar = '\n';
+         }
+      }
       if (cInChar == '\n')
       {
 		   //Serial message in buffer is complete, null terminate it and store it for further handling
@@ -538,6 +484,7 @@ void Sensor1Wrapper()
 /// </summary>
 void StartStopRace()
 {
+   Serial.printf("StartStopRace called\r\n");
    lLastRCPress[0] = millis();
    if (RaceHandler.RaceState == RaceHandler.STOPPED //If race is stopped
       && RaceHandler.GetRaceTime() == 0)           //and timers are zero
@@ -582,5 +529,106 @@ void Core0Loop(void * parameter) {
       SlaveHandler.loop();
       yield();
       vTaskDelay(10);
+   }
+}
+
+void HandleSerialMessages() {
+   //Race start/stop by serial command
+   if (bSerialStringComplete
+      && (strSerialData.equals("START") || strSerialData.equals("STOP")))
+   {
+      StartStopRace();
+   }
+   else if (bSerialStringComplete) {
+      Serial.printf("Serial string was complete, it contains %s, which is not equal to START or STOP\r\n", strSerialData.c_str());
+   }
+
+   if (bSerialStringComplete && strSerialData == "RESET")
+   {
+      ResetRace();
+   }
+
+   if (bSerialStringComplete && strSerialData == "D0F")
+   {
+      RaceHandler.SetDogFault(0);
+   }
+
+   if (bSerialStringComplete && strSerialData == "D1F")
+   {
+      RaceHandler.SetDogFault(1);
+   }
+
+   if (bSerialStringComplete && strSerialData == "D2F")
+   {
+      RaceHandler.SetDogFault(2);
+   }
+
+   if (bSerialStringComplete && strSerialData == "D3F")
+   {
+      RaceHandler.SetDogFault(3);
+   }
+
+   //Make sure this stays last in the function!
+   if (strSerialData.length() > 0
+      && bSerialStringComplete)
+   {
+      syslog.logf_P(LOG_DEBUG, "cSer: '%s'", strSerialData.c_str());
+
+
+      strSerialData = "";
+      bSerialStringComplete = false;
+   }
+}
+
+void HandleRemoteControl() {
+   //Race start/stop button (remote D0 output)
+   if (digitalRead(iRC0Pin) == HIGH
+      && (millis() - lLastRCPress[0] > 2000))
+   {
+      lLastRCPress[0] = millis();
+      StartStopRace();
+   }
+
+   //Race reset button (remote D1 output)
+   if (digitalRead(iRC1Pin) == HIGH
+      && (millis() - lLastRCPress[1] > 2000))
+   {
+      lLastRCPress[1] = millis();
+      ResetRace();
+   }
+
+   //Dog0 fault RC button
+   if (digitalRead(iRC2Pin) == HIGH
+      && (millis() - lLastRCPress[2] > 2000))
+   {
+      lLastRCPress[2] = millis();
+      //Toggle fault for dog
+      RaceHandler.SetDogFault(0);
+   }
+
+   //Dog1 fault RC button
+   if (digitalRead(iRC3Pin) == HIGH
+      && (millis() - lLastRCPress[3] > 2000))
+   {
+      lLastRCPress[3] = millis();
+      //Toggle fault for dog
+      RaceHandler.SetDogFault(1);
+   }
+   //Dog2 fault RC button
+   if (digitalRead(iRC4Pin) == HIGH
+      && (millis() - lLastRCPress[4] > 2000))
+   {
+      lLastRCPress[4] = millis();
+      //Toggle fault for dog
+      RaceHandler.SetDogFault(2);
+   }
+
+   //Dog3 fault RC button
+   if (digitalRead(iRC5Pin) == HIGH
+      && (millis() - lLastRCPress[5] > 2000))
+   {
+      lLastRCPress[5] = millis();
+      //Toggle fault for dog
+      RaceHandler.SetDogFault(3);
    }
 }
