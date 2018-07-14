@@ -30,9 +30,6 @@ protected:
    void _AnnounceSlaveIfApplicable();
    void _WsCloseConnection();
    bool _ConnectionNeeded();
-   //DynamicJsonBuffer _jsonRaceDataBuffer;
-   //DynamicJsonBuffer _jsonRaceDataBuffer;
-   //JsonObject _jsonRaceData;
    String _strJsonRaceData;
 
 public:

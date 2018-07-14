@@ -121,6 +121,7 @@ void SlaveHandlerClass::_WsEvent(WStype_t type, uint8_t * payload, size_t length
       } else if (request.containsKey("RaceData")) {
          JsonObject jsonSlaveRaceData = request["RaceData"][0].as<JsonObject>();
          serializeJson(jsonSlaveRaceData, _strJsonRaceData);
+         _strJsonRaceData = "";
          Serial.printf("got racedata from slave: %s\r\n", _strJsonRaceData.c_str());
       }
       else if (request.containsKey("SystemData")) {
@@ -154,6 +155,7 @@ void SlaveHandlerClass::_AnnounceSlaveIfApplicable()
    this->_bSlaveAnnounced = true;
 
    //If we are slave and we have announced ourselves as such, we can close the connection
+   Serial.printf("[WSc] Announed slave, disconnecting...\r\n");
    this->_WsCloseConnection();
 }
 
