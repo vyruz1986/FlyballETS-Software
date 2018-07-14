@@ -10,7 +10,7 @@ import { LightStates } from '../../interfaces/light-states';
 @Component({
    selector: 'app-racedisplay',
    templateUrl: './racedisplay.component.html',
-   styleUrls: ['./racedisplay.component.css']
+   styleUrls: ['./racedisplay.component.scss']
 })
 export class RacedisplayComponent implements OnInit {
 

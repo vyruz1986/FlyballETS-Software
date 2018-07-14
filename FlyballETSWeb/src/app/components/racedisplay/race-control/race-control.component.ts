@@ -5,7 +5,7 @@ import { RaceStateEnum, RaceCommandEnum } from '../../../enums/race-state.enum';
 @Component({
    selector: 'app-race-control',
    templateUrl: './race-control.component.html',
-   styleUrls: ['./race-control.component.css']
+   styleUrls: ['./race-control.component.scss']
 })
 export class RaceControlComponent implements OnChanges, OnInit {
    @Input() raceStates: RaceState;

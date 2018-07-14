@@ -5,7 +5,7 @@ import { EtsdataService } from '../../services/etsdata.service';
 @Component({
   selector: 'app-system-data',
   templateUrl: './system-data.component.html',
-  styleUrls: ['./system-data.component.css']
+  styleUrls: ['./system-data.component.scss']
 })
 export class SystemDataComponent implements OnInit {
 

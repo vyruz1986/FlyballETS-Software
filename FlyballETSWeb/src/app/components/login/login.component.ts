@@ -6,7 +6,7 @@ import { SecureEtsDataService } from '../../services/secure-ets-data.service';
 @Component({
    selector: 'app-login',
    templateUrl: './login.component.html',
-   styleUrls: ['./login.component.css'],
+   styleUrls: ['./login.component.scss'],
    providers: [AuthService]
 })
 export class LoginComponent implements OnInit {

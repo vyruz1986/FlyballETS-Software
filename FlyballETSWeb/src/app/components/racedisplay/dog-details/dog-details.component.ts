@@ -5,7 +5,7 @@ import { WebsocketAction } from '../../../interfaces/websocketaction';
 @Component({
    selector: 'app-dog-details',
    templateUrl: './dog-details.component.html',
-   styleUrls: ['./dog-details.component.css']
+   styleUrls: ['./dog-details.component.scss']
 })
 export class DogDetailsComponent implements OnInit {
    @Input() dogData:Array<DogData> = [];

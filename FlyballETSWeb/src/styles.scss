@@ -78,3 +78,7 @@ div.teamTime > span {
 .ng-invalid:not(form)  {
   border-left: 5px solid #a94442; /* red */
 }
+
+@import '~bootstrap/scss/bootstrap-reboot';
+@import '~bootstrap/scss/bootstrap-grid';
+@import "~titatoggle/scss/_titatoggle.scss";
