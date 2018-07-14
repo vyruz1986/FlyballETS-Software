@@ -22,6 +22,7 @@ protected:
    bool _bWSConnectionStarted;
    bool _bSlaveAnnounced;
    unsigned long _ulLastConnectCheck;
+   unsigned long _ulLastSystemDataReceived;
    WebSocketsClient _wsClient;
 
    void _ConnectRemote();
@@ -30,6 +31,7 @@ protected:
    void _AnnounceSlaveIfApplicable();
    void _WsCloseConnection();
    bool _ConnectionNeeded();
+   void _TestConnection();
    String _strJsonRaceData;
 
 public:

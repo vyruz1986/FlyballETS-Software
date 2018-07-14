@@ -45,20 +45,6 @@ void SlaveHandlerClass::loop()
       if (this->_bConnected && !this->_ConnectionNeeded()) {
          this->_WsCloseConnection();
       }
-
-      //FIXME: This connection test is not working...
-      /*
-      if (this->_ConnectionNeeded() && _bConnected) {
-         //Serial.printf("[WSc] Testing connection...\r\n");
-         String ping = "ping";
-         bool bPingResult = _wsClient.sendPing(ping);
-         if (!bPingResult) {
-            //Connection broken
-            this->_SetDisconnected();
-         }
-         //Serial.printf("[WSc] Result %i\r\n", bPingResult);
-      }
-      */
    }
    if (this->_bConnected || this->_ConnectionNeeded()) {
       this->_wsClient.loop();
@@ -120,12 +106,13 @@ void SlaveHandlerClass::_WsEvent(WStype_t type, uint8_t * payload, size_t length
          syslog.logf_P(LOG_ERR, "Error parsing JSON: %s!", error.c_str());
       } else if (request.containsKey("RaceData")) {
          JsonObject jsonSlaveRaceData = request["RaceData"][0].as<JsonObject>();
-         serializeJson(jsonSlaveRaceData, _strJsonRaceData);
          _strJsonRaceData = "";
+         serializeJson(jsonSlaveRaceData, _strJsonRaceData);
          Serial.printf("got racedata from slave: %s\r\n", _strJsonRaceData.c_str());
       }
       else if (request.containsKey("SystemData")) {
          Serial.printf("Got SystemData!\r\n");
+         _ulLastSystemDataReceived = millis();
       }
       break;
    }
@@ -205,6 +192,22 @@ String& SlaveHandlerClass::getSlaveRaceData()
 {
    Serial.printf("Slave is returning racedata: %s\r\n", _strJsonRaceData.c_str());
    return _strJsonRaceData;
+}
+
+void SlaveHandlerClass::_TestConnection()
+{
+   //FIXME: This connection test is not working...
+   if (this->_ConnectionNeeded() && _bConnected) {
+      //Serial.printf("[WSc] Testing connection...\r\n");
+      String ping = "ping";
+      //bool bPingResult = _wsClient.sendPing(ping);
+      if (millis() - _ulLastSystemDataReceived > 3000) {
+         //No systemdata received in last 3s, assume connection problem
+         Serial.printf("[WSc] Connection broken, reconnecting...\r\n");
+         this->_SetDisconnected();
+      }
+      //Serial.printf("[WSc] Result %i\r\n", bPingResult);
+   }
 }
 
 SlaveHandlerClass SlaveHandler;
