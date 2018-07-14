@@ -37,7 +37,8 @@ void GPSHandlerClass::loop()
          , _Tgps.date.month()
          , _Tgps.date.year());
       _FormatUTCTime();
-      //syslog.logf_P(LOG_DEBUG, "UTC time: %s", _cUTCTime);
+      long lAge = (_Tgps.time.centisecond() * 10) - (_Tgps.time.age());
+      //syslog.logf_P(LOG_DEBUG, "UTC time: %s + %ld ms", _cUTCTime, lAge);
    }
 }
 
