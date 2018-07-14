@@ -70,6 +70,7 @@ void SlaveHandlerClass::configureSlave(IPAddress ipSlaveIP)
    this->_RemoteIP = ipSlaveIP;
    this->_bSlaveConfigured = true;
    this->_bWSConnectionStarted = false;
+   this->_SetDisconnected();
 }
 
 void SlaveHandlerClass::removeSlave()
