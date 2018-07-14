@@ -82,11 +82,11 @@ void WiFiEvent(WiFiEvent_t event) {
 
    case SYSTEM_EVENT_STA_GOT_IP:
       syslog.logf_P("[WiFi]: STA got IP %s", WiFi.localIP().toString().c_str());
-      SlaveHandler.resetConnection();
       break;
 
    case SYSTEM_EVENT_STA_DISCONNECTED:
    {
+      SlaveHandler.resetConnection();
       syslog.logf_P(LOG_ERR, "[WiFi]: Disconnected from AP!");
       String strAPName = SettingsManager.getSetting("APName");
       String strAPPass = SettingsManager.getSetting("APPass");
