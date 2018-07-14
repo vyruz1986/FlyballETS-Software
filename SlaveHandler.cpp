@@ -210,5 +210,10 @@ void SlaveHandlerClass::_TestConnection()
    }
 }
 
+bool SlaveHandlerClass::GetConnectionStatus()
+{
+   return _bConnected;
+}
+
 SlaveHandlerClass SlaveHandler;
 

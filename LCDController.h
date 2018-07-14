@@ -48,7 +48,8 @@ class LCDControllerClass
       BattLevel,
       TeamTime,
       TotalCrossTime,
-      BoxDirection
+      BoxDirection,
+      MasterSlaveConnection
    };
 
    void UpdateField(LCDFields lcdfieldField, String strNewValue);

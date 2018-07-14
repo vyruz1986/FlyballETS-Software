@@ -181,7 +181,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
 void WebHandlerClass::init(int webPort)
 {
    snprintf_P(_last_modified, sizeof(_last_modified), PSTR("%s %s GMT"), __DATE__, __TIME__);
-   _bSlavePresent = false;
+   _SlaveStatus.Configured = false;
    _server = new AsyncWebServer(webPort);
    _ws = new AsyncWebSocket("/ws");
    _wsa = new AsyncWebSocket("/wsa");
@@ -663,7 +663,11 @@ void WebHandlerClass::_onHome(AsyncWebServerRequest *request) {
       response->addHeader("Last-Modified", _last_modified);
       request->send(response);
    }
+}
 
+bool WebHandlerClass::MasterConnected()
+{
+   return false;
 }
 
 WebHandlerClass WebHandler;

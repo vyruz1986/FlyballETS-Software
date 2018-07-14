@@ -42,6 +42,7 @@ public:
    bool slavePresent();
    void resetConnection();
    bool sendToSlave(String strMessage);
+   bool GetConnectionStatus();
    String& getSlaveRaceData();
 };
 

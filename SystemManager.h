@@ -13,11 +13,13 @@ class SystemManagerClass
 {
 protected:
    unsigned long _ulScheduledRebootTS;
+   uint8_t _iOpMode;
 
 public:
    void init();
    void loop();
    void scheduleReboot(unsigned long ulRebootTs);
+   bool CheckMasterSlaveConnection();
 };
 
 extern SystemManagerClass SystemManager;

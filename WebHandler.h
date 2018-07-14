@@ -52,6 +52,13 @@ protected:
    unsigned long _lSystemDataBroadcastInterval;
    stSystemData _SystemData;
    char _last_modified[50];
+
+   typedef struct
+   {
+      bool Configured;
+      IPAddress ip;
+   } stSlaveStatus;
+   stSlaveStatus _SlaveStatus;
    boolean _bSlavePresent;
    
    typedef struct
@@ -65,6 +72,7 @@ public:
    void init(int webPort);
    void loop();
    void SendLightsData(stLightsState LightStates);
+   bool MasterConnected();
 };
 
 extern WebHandlerClass WebHandler;
