@@ -59,29 +59,6 @@ export class RacedisplayComponent implements OnInit {
       this.etsDataService.sendAction(action);
    }
 
-   startRace() {
-      console.log('starting race');
-      let StartAction:WebsocketAction = {
-      actionType: "StartRace"
-      };
-      this.etsDataService.sendAction(StartAction);
-   }
-
-   stopRace() {
-      console.log('stopping race');
-      let StopAction:WebsocketAction = {
-      actionType: "StopRace"
-      };
-      this.etsDataService.sendAction(StopAction);
-   }
-   resetRace() {
-      console.log('resetting race');
-      let StopAction:WebsocketAction = {
-      actionType: "ResetRace"
-      };
-      this.etsDataService.sendAction(StopAction);
-   }
-
    onSetDogFault(dogFault: {raceNum: number, dogNum: number, fault: boolean}) {
       console.log('Setting fault for race %i, dog %i to value: %o',dogFault.raceNum, dogFault.dogNum, dogFault.fault);
       let StopAction:WebsocketAction = {
