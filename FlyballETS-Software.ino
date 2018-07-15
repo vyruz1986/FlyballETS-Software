@@ -344,43 +344,7 @@ void loop()
 
    HandleRemoteControl();
 
-   //Update LCD Display fields
-   //Update team time to display
-   dtostrf(RaceHandler.GetRaceTime(), 7, 3, cElapsedRaceTime);
-   LCDController.UpdateField(LCDController.TeamTime, cElapsedRaceTime);
-
-   //Update battery percentage to display
-   iBatteryVoltage = BatterySensor.GetBatteryVoltage();
-   uint16_t iBatteryPercentage = BatterySensor.GetBatteryPercentage();
-   LCDController.UpdateField(LCDController.BattLevel, String(iBatteryPercentage));
-
-   //Update total crossing time
-   dtostrf(RaceHandler.GetTotalCrossingTime(), 7, 3, cTotalCrossingTime);
-   LCDController.UpdateField(LCDController.TotalCrossTime, cTotalCrossingTime);
-
-   //Update race status to display
-   LCDController.UpdateField(LCDController.RaceState, RaceHandler.GetRaceStateString());
-   
-   //Handle individual dog info
-   dtostrf(RaceHandler.GetDogTime(0), 7, 3, cDogTime);
-   LCDController.UpdateField(LCDController.D1Time, cDogTime);
-   LCDController.UpdateField(LCDController.D1CrossTime, RaceHandler.GetCrossingTime(0));
-   LCDController.UpdateField(LCDController.D1RerunInfo, RaceHandler.GetRerunInfo(0));
-
-   dtostrf(RaceHandler.GetDogTime(1), 7, 3, cDogTime);
-   LCDController.UpdateField(LCDController.D2Time, cDogTime);
-   LCDController.UpdateField(LCDController.D2CrossTime, RaceHandler.GetCrossingTime(1));
-   LCDController.UpdateField(LCDController.D2RerunInfo, RaceHandler.GetRerunInfo(1));
-
-   dtostrf(RaceHandler.GetDogTime(2), 7, 3, cDogTime);
-   LCDController.UpdateField(LCDController.D3Time, cDogTime);
-   LCDController.UpdateField(LCDController.D3CrossTime, RaceHandler.GetCrossingTime(2));
-   LCDController.UpdateField(LCDController.D3RerunInfo, RaceHandler.GetRerunInfo(2));
-
-   dtostrf(RaceHandler.GetDogTime(3), 7, 3, cDogTime);
-   LCDController.UpdateField(LCDController.D4Time, cDogTime);
-   LCDController.UpdateField(LCDController.D4CrossTime, RaceHandler.GetCrossingTime(3));
-   LCDController.UpdateField(LCDController.D4RerunInfo, RaceHandler.GetRerunInfo(3));
+   HandleLCDUpdates();
    
    if (iCurrentRaceState != RaceHandler.RaceState)
    {
@@ -631,4 +595,47 @@ void HandleRemoteControl() {
       //Toggle fault for dog
       RaceHandler.SetDogFault(3);
    }
+}
+
+void HandleLCDUpdates() {
+   //Update LCD Display fields
+   //Update team time to display
+   dtostrf(RaceHandler.GetRaceTime(), 7, 3, cElapsedRaceTime);
+   LCDController.UpdateField(LCDController.TeamTime, cElapsedRaceTime);
+
+   //Update battery percentage to display
+   iBatteryVoltage = BatterySensor.GetBatteryVoltage();
+   uint16_t iBatteryPercentage = BatterySensor.GetBatteryPercentage();
+   LCDController.UpdateField(LCDController.BattLevel, String(iBatteryPercentage));
+
+   //Update total crossing time
+   dtostrf(RaceHandler.GetTotalCrossingTime(), 7, 3, cTotalCrossingTime);
+   LCDController.UpdateField(LCDController.TotalCrossTime, cTotalCrossingTime);
+
+   //Update race status to display
+   LCDController.UpdateField(LCDController.RaceState, RaceHandler.GetRaceStateString());
+
+   //Handle individual dog info
+   dtostrf(RaceHandler.GetDogTime(0), 7, 3, cDogTime);
+   LCDController.UpdateField(LCDController.D1Time, cDogTime);
+   LCDController.UpdateField(LCDController.D1CrossTime, RaceHandler.GetCrossingTime(0));
+   LCDController.UpdateField(LCDController.D1RerunInfo, RaceHandler.GetRerunInfo(0));
+
+   dtostrf(RaceHandler.GetDogTime(1), 7, 3, cDogTime);
+   LCDController.UpdateField(LCDController.D2Time, cDogTime);
+   LCDController.UpdateField(LCDController.D2CrossTime, RaceHandler.GetCrossingTime(1));
+   LCDController.UpdateField(LCDController.D2RerunInfo, RaceHandler.GetRerunInfo(1));
+
+   dtostrf(RaceHandler.GetDogTime(2), 7, 3, cDogTime);
+   LCDController.UpdateField(LCDController.D3Time, cDogTime);
+   LCDController.UpdateField(LCDController.D3CrossTime, RaceHandler.GetCrossingTime(2));
+   LCDController.UpdateField(LCDController.D3RerunInfo, RaceHandler.GetRerunInfo(2));
+
+   dtostrf(RaceHandler.GetDogTime(3), 7, 3, cDogTime);
+   LCDController.UpdateField(LCDController.D4Time, cDogTime);
+   LCDController.UpdateField(LCDController.D4CrossTime, RaceHandler.GetCrossingTime(3));
+   LCDController.UpdateField(LCDController.D4RerunInfo, RaceHandler.GetRerunInfo(3));
+
+   bool bMasterSlaveConnectionStatus = SystemManager.CheckMasterSlaveConnection();
+   LCDController.UpdateField(LCDController.MasterSlaveConnection, bMasterSlaveConnectionStatus ? "1" : "0");
 }

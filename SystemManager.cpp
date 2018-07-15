@@ -1,5 +1,6 @@
 #include "SystemManager.h"
 #include "SettingsManager.h"
+#include "SlaveHandler.h"
 #include "enums.h"
 
 void SystemManagerClass::init()
@@ -28,7 +29,7 @@ bool SystemManagerClass::CheckMasterSlaveConnection()
       return SlaveHandler.GetConnectionStatus();
    }
    else {
-
+      return WebHandler.MasterConnected();
    }
 }
 

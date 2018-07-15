@@ -181,7 +181,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
 void WebHandlerClass::init(int webPort)
 {
    snprintf_P(_last_modified, sizeof(_last_modified), PSTR("%s %s GMT"), __DATE__, __TIME__);
-   _SlaveStatus.Configured = false;
+   _bSlavePresent = false;
    _server = new AsyncWebServer(webPort);
    _ws = new AsyncWebSocket("/ws");
    _wsa = new AsyncWebSocket("/wsa");
@@ -249,6 +249,8 @@ void WebHandlerClass::loop()
       _SendSystemData();
       _lLastSystemDataBroadcast = millis();
    }
+
+   _CheckMasterStatus();
 }
 
 void WebHandlerClass::SendLightsData(stLightsState LightStates)
@@ -394,6 +396,9 @@ boolean WebHandlerClass::_DoAction(JsonObject ActionObj, String * ReturnError, A
       syslog.logf_P("We have a slave with IP %s", Client->remoteIP().toString().c_str());
       SlaveHandler.configureSlave(Client->remoteIP());
       _bSlavePresent = true;
+      _MasterStatus.ip = Client->remoteIP();
+      _MasterStatus.client = _ws->client(Client->id());
+      return true;
    }
 }
 
@@ -667,7 +672,25 @@ void WebHandlerClass::_onHome(AsyncWebServerRequest *request) {
 
 bool WebHandlerClass::MasterConnected()
 {
-   return false;
+   return _bSlavePresent;
+}
+
+void WebHandlerClass::_CheckMasterStatus()
+{
+   if (millis() - _MasterStatus.LastCheck > 1200) {
+      Serial.printf("Checking slave, if any...\r\n");
+      _MasterStatus.LastCheck = millis();
+      Serial.printf("Slave AWS Status: %i\r\n", _MasterStatus.client->status());
+      if (_MasterStatus.client->status() != WS_CONNECTED) {
+         _bSlavePresent = false;
+      }
+      else if (millis() - _MasterStatus.LastReply > 3600) {
+         _bSlavePresent = false;
+      }
+      else {
+         _MasterStatus.client->ping();
+      }
+   }
 }
 
 WebHandlerClass WebHandler;

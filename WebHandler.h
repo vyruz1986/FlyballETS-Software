@@ -45,6 +45,7 @@ protected:
    bool _wsAuth(AsyncWebSocketClient * client);
 
    void _onHome(AsyncWebServerRequest * request);
+   void _CheckMasterStatus();
 
    unsigned long _lLastRaceDataBroadcast;
    unsigned long _lRaceDataBroadcastInterval;
@@ -52,14 +53,17 @@ protected:
    unsigned long _lSystemDataBroadcastInterval;
    stSystemData _SystemData;
    char _last_modified[50];
+   bool _bSlavePresent;
 
    typedef struct
    {
       bool Configured;
       IPAddress ip;
-   } stSlaveStatus;
-   stSlaveStatus _SlaveStatus;
-   boolean _bSlavePresent;
+      AsyncWebSocketClient * client;
+      unsigned long LastCheck;
+      unsigned long LastReply;
+   } stMasterStatus;
+   stMasterStatus _MasterStatus;
    
    typedef struct
    {
