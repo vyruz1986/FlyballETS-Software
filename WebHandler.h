@@ -32,20 +32,21 @@ protected:
    void _WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len);
    boolean _DoAction(JsonObject ActionObj, String * ReturnError, AsyncWebSocketClient * Client);
    boolean _GetRaceDataJsonString(uint iRaceId, String &strJsonString);
-   void _SendRaceData(uint iRaceId = RaceHandler._iCurrentRaceId);
+   void _SendRaceData(uint iRaceId = RaceHandler._iCurrentRaceId, int8_t iClientId = -1);
 
    boolean _ProcessConfig(JsonArray newConfig, String * ReturnError);
 
    boolean _GetData(String dataType, JsonObject ReturnError);
 
    stSystemData _GetSystemData();
-   void _SendSystemData();
+   void _SendSystemData(int8_t iClientId = -1);
    void _onAuth(AsyncWebServerRequest * request);
    bool _authenticate(AsyncWebServerRequest * request);
    bool _wsAuth(AsyncWebSocketClient * client);
 
    void _onHome(AsyncWebServerRequest * request);
    void _CheckMasterStatus();
+   void _DisconnectMaster();
 
    unsigned long _lLastRaceDataBroadcast;
    unsigned long _lRaceDataBroadcastInterval;
@@ -60,6 +61,7 @@ protected:
       bool Configured;
       IPAddress ip;
       AsyncWebSocketClient * client;
+      uint8_t ClientID;
       unsigned long LastCheck;
       unsigned long LastReply;
    } stMasterStatus;
@@ -71,6 +73,9 @@ protected:
       unsigned long timestamp = 0;
    } ws_ticket_t;
    ws_ticket_t _ticket[WS_TICKET_BUFFER_SIZE];
+
+   boolean _bIsConsumerArray[10];
+   uint8_t _iNumOfConsumers;
 
 public:
    void init(int webPort);

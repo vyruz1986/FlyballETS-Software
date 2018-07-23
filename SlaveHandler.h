@@ -21,18 +21,32 @@ protected:
    bool _bSlaveConfigured;
    bool _bWSConnectionStarted;
    bool _bSlaveAnnounced;
+   bool _bConsumerAnnounced;
    unsigned long _ulLastConnectCheck;
    unsigned long _ulLastSystemDataReceived;
    WebSocketsClient _wsClient;
+
+   typedef struct
+   {
+      unsigned long LastCheck;
+      unsigned long LastReply;
+   } stSlaveStatus;
+   stSlaveStatus _SlaveStatus;
 
    void _ConnectRemote();
    void _WsEvent(WStype_t type, uint8_t * payload, size_t length);
    void _SetDisconnected();
    void _AnnounceSlaveIfApplicable();
+   void _AnnounceConsumerIfApplicable();
    void _WsCloseConnection();
    bool _ConnectionNeeded();
    void _TestConnection();
    String _strJsonRaceData;
+   DynamicJsonDocument _jdocClientInput;
+   JsonObject _jsonClientInput;
+   DynamicJsonDocument _jdocRaceData;
+   JsonObject _jsonRaceData;
+
 
 public:
    void init();
@@ -44,6 +58,8 @@ public:
    bool sendToSlave(String strMessage);
    bool GetConnectionStatus();
    String& getSlaveRaceData();
+   JsonObject getSlaveRaceData1();
+   char * getSlaveRaceData2();
 };
 
 extern SlaveHandlerClass SlaveHandler;

@@ -42,7 +42,6 @@ void RaceHandlerClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
    ResetRace();
 
    _iCurrentRaceId = 0;
-   Serial.printf("Run Direction from settings: %s", SettingsManager.getSetting("RunDirectionInverted").c_str());
    if (SettingsManager.getSetting("RunDirectionInverted").equals("1")) {
       ToggleRunDirection();
    }

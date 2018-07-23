@@ -1,6 +1,7 @@
 #include "SystemManager.h"
 #include "SettingsManager.h"
 #include "SlaveHandler.h"
+#include "WebHandler.h"
 #include "enums.h"
 
 void SystemManagerClass::init()

@@ -26,6 +26,15 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
 
    if (type == WS_EVT_CONNECT)
    {
+      if (client->remoteIP().toString().equals("192.168.20.1")) {
+         //This client is the master!
+         _MasterStatus.client = _ws->client(client->id());
+         _MasterStatus.ClientID = client->id();
+         _MasterStatus.ip = client->remoteIP();
+         _MasterStatus.Configured = true;
+         _MasterStatus.LastReply = millis();
+         //_MasterStatus.LastCheck = millis();
+      }
       syslog.logf_P("Client %i connected to %s!", client->id(), server->url());
 
       //Should we check authentication?
@@ -38,25 +47,33 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
          }
       }
 
-      //TODO: Would be nicer if we only send this to the specific client who just connected instead of all clients
-      _SendRaceData();  //Make sure we always broadcast racedata when new client connects
-      client->ping();
+      //client->ping();
    }
    else if (type == WS_EVT_DISCONNECT) {
-      syslog.logf_P("ws[%s][%u] disconnect: %u\n", server->url(), client->id());
+      if (client->id() == _MasterStatus.ClientID) {
+         Serial.printf("[WEBHANDLER] Disconnecting master due to disconnect event from ws\r\n");
+         _DisconnectMaster();
+      }
+      _bIsConsumerArray[client->id()] = false;
+      _iNumOfConsumers--;
+      syslog.logf_P("[WEBHANDLER] Client %u disconnected!\n", client->id());
    }
    else if (type == WS_EVT_ERROR) {
-      syslog.logf_P("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
+      syslog.logf_P("[WEBHANDLER] ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
    }
    else if (type == WS_EVT_PONG) {
-      syslog.logf_P("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len) ? (char*)data : "");
+      if (client->id() == _MasterStatus.ClientID) {
+         _MasterStatus.LastReply = millis();
+         Serial.printf("[WEBHANDLER] Pong received from master (%lu)!\r\n", millis());
+      }
+      syslog.logf_P("[WEBHANDLER] ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len) ? (char*)data : "");
    }
    else if (type == WS_EVT_DATA) {
       AwsFrameInfo * info = (AwsFrameInfo*)arg;
       String msg = "";
       if (info->final && info->index == 0 && info->len == len) {
          //the whole message is in a single frame and we got all of it's data
-         syslog.logf_P("ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT) ? "text" : "binary", info->len);
+         syslog.logf_P("[WEBHANDLER] ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT) ? "text" : "binary", info->len);
 
          if (info->opcode == WS_TEXT) {
             for (size_t i = 0; i < info->len; i++) {
@@ -76,11 +93,11 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
          //message is comprised of multiple frames or the frame is split into multiple packets
          if (info->index == 0) {
             if (info->num == 0)
-               syslog.logf_P("ws[%s][%u] %s-message start\n", server->url(), client->id(), (info->message_opcode == WS_TEXT) ? "text" : "binary");
-            syslog.logf_P("ws[%s][%u] frame[%u] start[%llu]\n", server->url(), client->id(), info->num, info->len);
+               syslog.logf_P("[WEBHANDLER] ws[%s][%u] %s-message start\n", server->url(), client->id(), (info->message_opcode == WS_TEXT) ? "text" : "binary");
+            syslog.logf_P("[WEBHANDLER] ws[%s][%u] frame[%u] start[%llu]\n", server->url(), client->id(), info->num, info->len);
          }
 
-         syslog.logf_P("ws[%s][%u] frame[%u] %s[%llu - %llu]: ", server->url(), client->id(), info->num, (info->message_opcode == WS_TEXT) ? "text" : "binary", info->index, info->index + len);
+         syslog.logf_P("[WEBHANDLER] ws[%s][%u] frame[%u] %s[%llu - %llu]: ", server->url(), client->id(), info->num, (info->message_opcode == WS_TEXT) ? "text" : "binary", info->index, info->index + len);
 
          if (info->opcode == WS_TEXT) {
             for (size_t i = 0; i < info->len; i++) {
@@ -97,9 +114,9 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
          syslog.logf_P("%s\n", msg.c_str());
 
          if ((info->index + len) == info->len) {
-            syslog.logf_P("ws[%s][%u] frame[%u] end[%llu]\n", server->url(), client->id(), info->num, info->len);
+            syslog.logf_P("[WEBHANDLER] ws[%s][%u] frame[%u] end[%llu]\n", server->url(), client->id(), info->num, info->len);
             if (info->final) {
-               syslog.logf_P("ws[%s][%u] %s-message end\n", server->url(), client->id(), (info->message_opcode == WS_TEXT) ? "text" : "binary");
+               syslog.logf_P("[WEBHANDLER] ws[%s][%u] %s-message end\n", server->url(), client->id(), (info->message_opcode == WS_TEXT) ? "text" : "binary");
             }
          }
       }
@@ -110,7 +127,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
       DeserializationError error = deserializeJson(jsonRequestDoc, msg);
       JsonObject request = jsonRequestDoc.as<JsonObject>();
       if (error) {
-         syslog.logf_P(LOG_ERR, "Error parsing JSON: %s", error.c_str());
+         syslog.logf_P(LOG_ERR, "[WEBHANDLER] Error parsing JSON: %s", error.c_str());
          //wsSend_P(client->id(), PSTR("{\"message\": 3}"));
          client->text("{\"error\":\"Invalid JSON received\"}");
          return;
@@ -172,7 +189,6 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
       if (wsBuffer)
       {
          serializeJson(jsonResponseDoc, (char *)wsBuffer->get(), len + 1);
-         //JsonResponseRoot.printTo((char *)wsBuffer->get(), len + 1);
          client->text(wsBuffer);
       }
    }
@@ -229,6 +245,12 @@ void WebHandlerClass::init(int webPort)
 
    _SystemData.CPU0ResetReason = rtc_get_reset_reason(0);
    _SystemData.CPU1ResetReason = rtc_get_reset_reason(1);
+
+   for (boolean &bIsConsumer : _bIsConsumerArray) {
+      bIsConsumer = false;
+   }
+
+   _iNumOfConsumers = 0;
 }
 
 void WebHandlerClass::loop()
@@ -245,9 +267,11 @@ void WebHandlerClass::loop()
    }
    if (millis() - _lLastSystemDataBroadcast > _lSystemDataBroadcastInterval)
    {
+      _lLastSystemDataBroadcast = millis();
       _GetSystemData();
       _SendSystemData();
-      _lLastSystemDataBroadcast = millis();
+      
+      Serial.printf("[WEBHANDLER] Have %i clients\r\n", _ws->count());
    }
 
    _CheckMasterStatus();
@@ -379,12 +403,12 @@ boolean WebHandlerClass::_DoAction(JsonObject ActionObj, String * ReturnError, A
       Serial.printf("StartTime S: %s, UL: %lu\r\n",StartTime.c_str() , lStartEpochTime);
       long lMillisToStart = GPSHandler.GetMillisToEpochSecond(lStartEpochTime);
 
-      syslog.logf_P(LOG_DEBUG, "Received request to schedule race to start at %lu s which is in %ld ms", lStartEpochTime, lMillisToStart);
+      syslog.logf_P(LOG_DEBUG, "[WEBHANDLER] Received request to schedule race to start at %lu s which is in %ld ms", lStartEpochTime, lMillisToStart);
 
       if (lMillisToStart < 0)
       {
          //ReturnError = "Requested starttime is in the past!";
-         syslog.logf_P(LOG_ERR, "Race schedule received for the past (%ld ms)!", lMillisToStart);
+         syslog.logf_P(LOG_ERR, "[WEBHANDLER] Race schedule received for the past (%ld ms)!", lMillisToStart);
          return false;
       }
 
@@ -393,11 +417,20 @@ boolean WebHandlerClass::_DoAction(JsonObject ActionObj, String * ReturnError, A
    }
    else if (ActionType == "AnnounceSlave")
    {
-      syslog.logf_P("We have a slave with IP %s", Client->remoteIP().toString().c_str());
+      syslog.logf_P("[WEBHANDLER] We have a slave with IP %s", Client->remoteIP().toString().c_str());
       SlaveHandler.configureSlave(Client->remoteIP());
       _bSlavePresent = true;
-      _MasterStatus.ip = Client->remoteIP();
-      _MasterStatus.client = _ws->client(Client->id());
+      return true;
+   }
+
+   else if (ActionType == "AnnounceConsumer")
+   {
+      syslog.logf_P("[WEBHANDLER] We have a consumer with IP %s", Client->remoteIP().toString().c_str());
+      if (!_bIsConsumerArray[Client->id()]) {
+         _iNumOfConsumers++;
+      }
+      _bIsConsumerArray[Client->id()] = true;
+      _SendRaceData(RaceHandler._iCurrentRaceId, Client->id());
       return true;
    }
 }
@@ -437,9 +470,9 @@ boolean WebHandlerClass::_GetRaceDataJsonString(uint iRaceId, String &strJsonStr
    return true;
 }
 
-void WebHandlerClass::_SendRaceData(uint iRaceId)
+void WebHandlerClass::_SendRaceData(uint iRaceId, int8_t iClientId)
 {
-   if (_ws->count() < 1) {
+   if (_iNumOfConsumers < 1) {
       return;
    }
    //StaticJsonDocument<bsRaceDataArray> JsonDoc;
@@ -480,27 +513,56 @@ void WebHandlerClass::_SendRaceData(uint iRaceId)
    }
 
    jsonRaceData.add(jsonMasterRaceData);
+   Serial.printf("[WEBHANDLER]: Collected own racedata, length: %i\r\n", measureJson(jsonRaceData));
 
    if (_bSlavePresent) {
-      String& strJsonSlaveRaceData = SlaveHandler.getSlaveRaceData();
-      Serial.printf("Slave racedata: %s\r\n", strJsonSlaveRaceData.c_str());
+      Serial.printf("[WEBHANDLER]: Requesting slave racedata...\r\n");
+#define USE_STRING
+      
+#ifdef USE_STRING
+      /*String& strJsonSlaveRaceData = SlaveHandler.getSlaveRaceData();
+      Serial.printf("Slave racedata: %s\r\n", strJsonSlaveRaceData.c_str());*/
+      const char * strJsonSlaveRaceData = SlaveHandler.getSlaveRaceData2();
 
       DeserializationError error = deserializeJson(jsonSlaveRaceDataDoc, strJsonSlaveRaceData);
       if (error) {
-         Serial.printf("Error parsing json data from slave: %s\r\n", error.c_str()); 
+         Serial.printf("[WEBHANDLER] Error parsing json data from slave: %s\r\n", error.c_str());
       }
-      else {
+      jsonSlaveRaceData = jsonMasterRaceDataDoc.as<JsonObject>();
+#else
+      JsonObject jsonSlaveRaceData = SlaveHandler.getSlaveRaceData1();
+
+#endif // USE_STRING
+      
+      
+      String strJsonRaceDataTest;
+      serializeJson(jsonSlaveRaceData, strJsonRaceDataTest);
+      Serial.printf("[WEBHANDLER] Got json slave racedata: %s, length: %i\r\n", strJsonRaceDataTest.c_str(), measureJson(jsonSlaveRaceData));
+
+      if (measureJson(jsonSlaveRaceData) > 2) {
          jsonRaceData.add(jsonSlaveRaceData);
       }
+      else {
+         syslog.logf_P(LOG_ERR, "[WEBHANDLER] Got invalid slave racedata (length: %i)", measureJson(jsonSlaveRaceData));
+      }
    }
-
    size_t len = measureJson(JsonDoc);
    AsyncWebSocketMessageBuffer * wsBuffer = _ws->makeBuffer(len);
    if (wsBuffer)
    {
       serializeJson(JsonDoc, (char *)wsBuffer->get(), len + 1);
-      _ws->textAll(wsBuffer);
-   }
+      if (iClientId == -1) {
+         for (uint8_t i = 0; i < _ws->count(); i++) {
+            if (_bIsConsumerArray[i]) {
+               _ws->client(i)->text(wsBuffer);
+            }
+         }
+      }
+      else {
+         _ws->client(iClientId)->text(wsBuffer);
+      }
+      
+   }   
 }
 
 boolean WebHandlerClass::_ProcessConfig(JsonArray newConfig, String * ReturnError)
@@ -570,10 +632,10 @@ stSystemData WebHandlerClass::_GetSystemData()
    _SystemData.BatteryPercentage = BatterySensor.GetBatteryPercentage();
 }
 
-void WebHandlerClass::_SendSystemData()
+void WebHandlerClass::_SendSystemData(int8_t iClientId)
 {
-   if (_ws->count() < 1) {
-      //return;
+   if (_iNumOfConsumers == 0) {
+      return;
    }
    const size_t bufferSize = JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(7) + 170;
    StaticJsonDocument<bufferSize> JsonDoc;
@@ -593,8 +655,18 @@ void WebHandlerClass::_SendSystemData()
    if (wsBuffer)
    {
       serializeJson(JsonDoc, (char *)wsBuffer->get(), len + 1);
-      _ws->textAll(wsBuffer);
+      if (iClientId == -1) {
+         for (uint8_t i = 0; i < _ws->count(); i++) {
+            if (_bIsConsumerArray[i]) {
+               _ws->client(i)->text(wsBuffer);
+            }
+         }
+      }
+      else {
+         _ws->client(iClientId)->text(wsBuffer);
+      }
    }
+   Serial.printf("Sent sysdata at %lu\r\n", millis());
 }
 
 void WebHandlerClass::_onAuth(AsyncWebServerRequest *request)
@@ -677,20 +749,33 @@ bool WebHandlerClass::MasterConnected()
 
 void WebHandlerClass::_CheckMasterStatus()
 {
+   if (!_MasterStatus.Configured) {
+      return;
+   }
    if (millis() - _MasterStatus.LastCheck > 1200) {
       Serial.printf("Checking slave, if any...\r\n");
       _MasterStatus.LastCheck = millis();
-      Serial.printf("Slave AWS Status: %i\r\n", _MasterStatus.client->status());
+      Serial.printf("Slave wsClient->Status: %i\r\n", _MasterStatus.client->status());
       if (_MasterStatus.client->status() != WS_CONNECTED) {
-         _bSlavePresent = false;
+         Serial.printf("[WEBHANDLER] ws client status says master is disconnected (actual status: %i)\r\n", _MasterStatus.client->status());
+         _DisconnectMaster();
       }
       else if (millis() - _MasterStatus.LastReply > 3600) {
-         _bSlavePresent = false;
+         Serial.printf("[WEBHANDLER] Disconnecting master due to timeout (last pong: %lu, now: %lu)\r\n", _MasterStatus.LastReply, millis());
+         _DisconnectMaster();
       }
       else {
+         Serial.printf("[WEBHANDLER] I am pinging the master at %lu\r\n", millis());
          _MasterStatus.client->ping();
       }
    }
+}
+
+void WebHandlerClass::_DisconnectMaster()
+{
+   _MasterStatus.Configured = false;
+   _ws->client(_MasterStatus.ClientID)->close();
+   syslog.logf_P("[WEBHANDLER] Master disconnected!");
 }
 
 WebHandlerClass WebHandler;

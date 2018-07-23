@@ -16,6 +16,7 @@ void SlaveHandlerClass::init()
    this->_bIAmSlave = false;
    this->_bWSConnectionStarted = false;
    this->_bSlaveAnnounced = false;
+   this->_bConsumerAnnounced = false;
    this->_bSlaveConfigured = false;
    if (SettingsManager.getSetting("OperationMode").toInt() == SystemModes::SLAVE) {
       this->_bIAmSlave = true;
@@ -29,12 +30,14 @@ void SlaveHandlerClass::init()
 
    this->_wsClient.setReconnectInterval(CONNECT_CHECK);
    syslog.logf_P("SlaveHandler initialized!");
+
+   _jsonRaceData = _jdocRaceData.to<JsonObject>();
 }
 void SlaveHandlerClass::loop()
 {
    if (millis() - this->_ulLastConnectCheck > CONNECT_CHECK) {
       this->_ulLastConnectCheck = millis();
-      Serial.printf("C: %i, CN: %i, CS: %i, S: %i, SC: %i\r\n", _bConnected, _ConnectionNeeded(), _bWSConnectionStarted, _bIAmSlave, _bSlaveConfigured);
+      Serial.printf("[SLAVEHANDLER] C: %i, CN: %i, CS: %i, S: %i, SC: %i, JsonRDLength: %i\r\n", _bConnected, _ConnectionNeeded(), _bWSConnectionStarted, _bIAmSlave, _bSlaveConfigured, measureJson(_jsonRaceData));
       if (!_bConnected
          && this->_ConnectionNeeded()
          && !_bWSConnectionStarted)
@@ -46,9 +49,13 @@ void SlaveHandlerClass::loop()
          this->_WsCloseConnection();
       }
    }
+
    if (this->_bConnected || this->_ConnectionNeeded()) {
+      //Serial.print(".");
       this->_wsClient.loop();
    }
+
+   _TestConnection();
 }
 
 void SlaveHandlerClass::configureSlave(IPAddress ipSlaveIP)
@@ -89,7 +96,9 @@ void SlaveHandlerClass::_WsEvent(WStype_t type, uint8_t * payload, size_t length
       this->_bConnected = true;
       this->_bWSConnectionStarted = false;
       this->_AnnounceSlaveIfApplicable();
+      this->_AnnounceConsumerIfApplicable();
       Serial.printf("[WSc] Connected to url: %s\n", payload);
+      _SlaveStatus.LastReply = millis();
 
       // send message to server when Connected
       //this->_wsClient.sendTXT("Connected");
@@ -98,19 +107,24 @@ void SlaveHandlerClass::_WsEvent(WStype_t type, uint8_t * payload, size_t length
    case WStype_TEXT:
    {
       Serial.printf("[WSc] got text: %s\n", payload);
-      //StaticJsonDocument<bsRaceDataArray> jsonRequestDoc;
-      DynamicJsonDocument jsonRequestDoc;
-      JsonObject request = jsonRequestDoc.to<JsonObject>();
-      DeserializationError error = deserializeJson(jsonRequestDoc, payload);
+      _SlaveStatus.LastReply = millis();
+      DeserializationError error = deserializeJson(_jdocClientInput, (const char *)payload);
       if (error) {
          syslog.logf_P(LOG_ERR, "Error parsing JSON: %s!", error.c_str());
-      } else if (request.containsKey("RaceData")) {
-         JsonObject jsonSlaveRaceData = request["RaceData"][0].as<JsonObject>();
-         _strJsonRaceData = "";
-         serializeJson(jsonSlaveRaceData, _strJsonRaceData);
-         Serial.printf("got racedata from slave: %s\r\n", _strJsonRaceData.c_str());
+         return;
       }
-      else if (request.containsKey("SystemData")) {
+      _jsonClientInput = _jdocClientInput.as<JsonObject>();
+
+      if (_jsonClientInput.containsKey("RaceData")) {
+         _jsonRaceData = _jdocRaceData.to<JsonObject>();
+         _jsonRaceData = _jsonClientInput["RaceData"][0];
+         
+         _strJsonRaceData = "";
+         serializeJson(_jsonRaceData, _strJsonRaceData);
+         Serial.printf("got racedata from slave: %s\r\n", _strJsonRaceData.c_str());
+
+      }
+      else if (_jsonClientInput.containsKey("SystemData")) {
          Serial.printf("Got SystemData!\r\n");
          _ulLastSystemDataReceived = millis();
       }
@@ -146,6 +160,19 @@ void SlaveHandlerClass::_AnnounceSlaveIfApplicable()
    this->_WsCloseConnection();
 }
 
+void SlaveHandlerClass::_AnnounceConsumerIfApplicable()
+{
+   if (_bIAmSlave || _bConsumerAnnounced) {
+      return;
+   }
+   String strJson = String("{\"action\": {\"actionType\": \"AnnounceConsumer\"}}");
+   this->_wsClient.sendTXT(strJson);
+   this->_bConsumerAnnounced = true;
+
+   //If we are slave and we have announced ourselves as such, we can close the connection
+   Serial.printf("[WSc] Announed Consumer!\r\n");
+}
+
 void SlaveHandlerClass::_WsCloseConnection()
 {
    this->_wsClient.disconnect();
@@ -154,7 +181,9 @@ void SlaveHandlerClass::_WsCloseConnection()
 
 bool SlaveHandlerClass::_ConnectionNeeded()
 {
-   if (WiFi.status() != WL_CONNECTED) {
+   //Serial.printf("Wifi Status: %u, Wifi.localIP: %s\r\n", WiFi.status(), WiFi.localIP().toString().c_str());
+   if (WiFi.status() != WL_CONNECTED
+       || (_bIAmSlave && WiFi.localIP().toString().equals("0.0.0.0"))) {
       return false;
    }
    if (_bIAmSlave) {
@@ -169,6 +198,7 @@ bool SlaveHandlerClass::_ConnectionNeeded()
 void SlaveHandlerClass::resetConnection()
 {
    this->_bSlaveAnnounced = false;
+   this->_bConsumerAnnounced = false;
 }
 
 bool SlaveHandlerClass::sendToSlave(String strMessage)
@@ -190,23 +220,39 @@ bool SlaveHandlerClass::sendToSlave(String strMessage)
 
 String& SlaveHandlerClass::getSlaveRaceData()
 {
-   Serial.printf("Slave is returning racedata: %s\r\n", _strJsonRaceData.c_str());
+   Serial.printf("[SLAVEHANDLER] Slave is returning racedata: %s\r\n", _strJsonRaceData.c_str());
    return _strJsonRaceData;
+}
+
+JsonObject SlaveHandlerClass::getSlaveRaceData1()
+{
+   String strJsonRaceData;
+   serializeJson(_jdocRaceData, strJsonRaceData);
+   Serial.printf("[SLAVEHANDLER] Returning slave racedata: %s\r\n\r\n", strJsonRaceData.c_str());
+   return _jsonRaceData;
+}
+
+char * SlaveHandlerClass::getSlaveRaceData2()
+{
+   char strJsonRaceData[2000];
+   serializeJson(_jsonRaceData, strJsonRaceData);
+   Serial.printf("[SLAVEHANDLER] Returning slave racedata: %s\r\n\r\n", strJsonRaceData);
+   return strJsonRaceData;
 }
 
 void SlaveHandlerClass::_TestConnection()
 {
    //FIXME: This connection test is not working...
    if (this->_ConnectionNeeded() && _bConnected) {
-      //Serial.printf("[WSc] Testing connection...\r\n");
-      String ping = "ping";
-      //bool bPingResult = _wsClient.sendPing(ping);
-      if (millis() - _ulLastSystemDataReceived > 3000) {
-         //No systemdata received in last 3s, assume connection problem
+      if (millis() - _SlaveStatus.LastCheck > 1200) {
+         _SlaveStatus.LastCheck = millis();
+         Serial.printf("[WSc] Testing connection at %lu...\r\n", millis());
+      }
+      if (millis() - _SlaveStatus.LastReply > 6000) {
          Serial.printf("[WSc] Connection broken, reconnecting...\r\n");
+         _wsClient.disconnect();
          this->_SetDisconnected();
       }
-      //Serial.printf("[WSc] Result %i\r\n", bPingResult);
    }
 }
 

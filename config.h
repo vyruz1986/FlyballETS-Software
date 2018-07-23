@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.If not, see <http://www.gnu.org/licenses/>
 
-#define Simulate false                     // Set to true to enable race simulation (see Simulator.h/.cpp)
+#define Simulate true                     // Set to true to enable race simulation (see Simulator.h/.cpp)
 
 #define WS281x                            //Comment out this line if you want to use the v1 setup which used a 74HC595 shift register to control lights
 #define WS_METHOD NeoWs2813Method
