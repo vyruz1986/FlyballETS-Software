@@ -25,6 +25,7 @@ export class EtsdataService {
          this.ws.onopen = (e) => {
             this.isConnected = true;
             console.log("Connected!");
+            this.sendAction({actionType: "AnnounceConsumer"});
          };
 
          this.ws.onclose = (e) => {
