@@ -87,7 +87,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
                msg += buff;
             }
          }
-         syslog.logf_P("%s\n", msg.c_str());
+         syslog.logf_P("[WEBHANDLER] %s\n", msg.c_str());
       }
       else {
          //message is comprised of multiple frames or the frame is split into multiple packets
@@ -291,8 +291,12 @@ void WebHandlerClass::SendLightsData(stLightsState LightStates)
    AsyncWebSocketMessageBuffer * wsBuffer = _ws->makeBuffer(len);
    if (wsBuffer)
    {
-      serializeJson(JsonDoc,(char *)wsBuffer->get(), len + 1);
-      _ws->textAll(wsBuffer);
+      serializeJson(JsonDoc, (char *)wsBuffer->get(), len + 1);
+      for (uint8_t i = 0; i < _ws->count(); i++) {
+         if (_bIsConsumerArray[i]) {
+            _ws->text(i, (char*)wsBuffer);
+         }
+      }
    }
 }
 
@@ -546,6 +550,8 @@ void WebHandlerClass::_SendRaceData(uint iRaceId, int8_t iClientId)
          syslog.logf_P(LOG_ERR, "[WEBHANDLER] Got invalid slave racedata (length: %i)", measureJson(jsonSlaveRaceData));
       }
    }
+
+   /*
    size_t len = measureJson(JsonDoc);
    AsyncWebSocketMessageBuffer * wsBuffer = _ws->makeBuffer(len);
    if (wsBuffer)
@@ -554,15 +560,27 @@ void WebHandlerClass::_SendRaceData(uint iRaceId, int8_t iClientId)
       if (iClientId == -1) {
          for (uint8_t i = 0; i < _ws->count(); i++) {
             if (_bIsConsumerArray[i]) {
-               _ws->client(i)->text(wsBuffer);
+               _ws->text(i, (char*)wsBuffer);
             }
          }
       }
       else {
-         _ws->client(iClientId)->text(wsBuffer);
+         _ws->text(iClientId, wsBuffer);
       }
-      
-   }   
+   } 
+   */
+   String strJsonRaceData;
+   serializeJson(JsonDoc, strJsonRaceData);
+   if (iClientId == -1) {
+      for (uint8_t i = 0; i < _ws->count(); i++) {
+         if (_bIsConsumerArray[i]) {
+            _ws->text(i, strJsonRaceData);
+         }
+      }
+   }
+   else {
+      _ws->text(iClientId, strJsonRaceData);
+   }
 }
 
 boolean WebHandlerClass::_ProcessConfig(JsonArray newConfig, String * ReturnError)
@@ -650,6 +668,7 @@ void WebHandlerClass::_SendSystemData(int8_t iClientId)
    JsonSystemData["systemTimestamp"]   = _SystemData.UTCSystemTime;
    JsonSystemData["batteryPercentage"]   = _SystemData.BatteryPercentage;
    
+   /*
    size_t len = measureJson(JsonDoc);
    AsyncWebSocketMessageBuffer * wsBuffer = _ws->makeBuffer(len);
    if (wsBuffer)
@@ -658,15 +677,27 @@ void WebHandlerClass::_SendSystemData(int8_t iClientId)
       if (iClientId == -1) {
          for (uint8_t i = 0; i < _ws->count(); i++) {
             if (_bIsConsumerArray[i]) {
-               _ws->client(i)->text(wsBuffer);
+               _ws->text(i, (char *)wsBuffer);
             }
          }
       }
       else {
-         _ws->client(iClientId)->text(wsBuffer);
+         _ws->text(iClientId, (char *)wsBuffer);
+      }
+   }*/
+   String strJsonSystemData;
+   serializeJson(JsonDoc, strJsonSystemData);
+   if (iClientId == -1) {
+      for (uint8_t i = 0; i < _ws->count(); i++) {
+         if (_bIsConsumerArray[i]) {
+            _ws->text(i, strJsonSystemData);
+         }
       }
    }
-   Serial.printf("Sent sysdata at %lu\r\n", millis());
+   else {
+      _ws->text(iClientId, strJsonSystemData);
+   }
+   Serial.printf("[WEBHANDLER] Sent sysdata at %lu\r\n", millis());
 }
 
 void WebHandlerClass::_onAuth(AsyncWebServerRequest *request)
@@ -774,7 +805,7 @@ void WebHandlerClass::_CheckMasterStatus()
 void WebHandlerClass::_DisconnectMaster()
 {
    _MasterStatus.Configured = false;
-   _ws->client(_MasterStatus.ClientID)->close();
+   _ws->close(_MasterStatus.ClientID);
    syslog.logf_P("[WEBHANDLER] Master disconnected!");
 }
 
