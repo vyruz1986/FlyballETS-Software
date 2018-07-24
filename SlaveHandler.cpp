@@ -82,7 +82,7 @@ void SlaveHandlerClass::_ConnectRemote()
 {
    this->_wsClient.begin(this->_RemoteIP.toString(), 80, "/ws");
    this->_bWSConnectionStarted = true;
-   Serial.printf("[WSc] Initiated connection...\r\n");
+   Serial.printf("[WSc] Initiated connection to %s\r\n", this->_RemoteIP.toString().c_str());
 }
 
 void SlaveHandlerClass::_WsEvent(WStype_t type, uint8_t * payload, size_t length)
@@ -90,6 +90,9 @@ void SlaveHandlerClass::_WsEvent(WStype_t type, uint8_t * payload, size_t length
    switch (type) {
    case WStype_DISCONNECTED:
       this->_SetDisconnected();
+      if (!_bIAmSlave) {
+         this->_bConsumerAnnounced = false;
+      }
       break;
 
    case WStype_CONNECTED:
@@ -134,8 +137,6 @@ void SlaveHandlerClass::_WsEvent(WStype_t type, uint8_t * payload, size_t length
    case WStype_BIN:
       Serial.printf("[WSc] get binary length: %u\n", length);
 
-      // send data to server
-      // webSocket.sendBIN(payload, length);
       break;
    }
 }
@@ -169,7 +170,6 @@ void SlaveHandlerClass::_AnnounceConsumerIfApplicable()
    this->_wsClient.sendTXT(strJson);
    this->_bConsumerAnnounced = true;
 
-   //If we are slave and we have announced ourselves as such, we can close the connection
    Serial.printf("[WSc] Announed Consumer!\r\n");
 }
 
@@ -190,7 +190,7 @@ bool SlaveHandlerClass::_ConnectionNeeded()
       return (!_bSlaveAnnounced);
    }
    else {
-      return (_bSlaveConfigured);
+      return (_bSlaveConfigured || !_bConsumerAnnounced);
    }
    return false;
 }
