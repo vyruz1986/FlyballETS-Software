@@ -491,8 +491,8 @@ void Core0Loop(void * parameter) {
    SlaveHandler.init();
    for (;;) {
       SlaveHandler.loop();
-      yield();
-      vTaskDelay(10);
+      //yield();
+      vTaskDelay(5);
    }
 }
 

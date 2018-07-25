@@ -54,8 +54,12 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
          Serial.printf("[WEBHANDLER] Disconnecting master due to disconnect event from ws\r\n");
          _DisconnectMaster();
       }
-      _bIsConsumerArray[client->id()] = false;
-      _iNumOfConsumers--;
+      if (_bIsConsumerArray[client->id()]) {
+         _iNumOfConsumers--;
+         _bIsConsumerArray[client->id()] = false;
+      }
+      
+      
       syslog.logf_P("[WEBHANDLER] Client %u disconnected!\n", client->id());
    }
    else if (type == WS_EVT_ERROR) {
@@ -271,7 +275,7 @@ void WebHandlerClass::loop()
       _GetSystemData();
       _SendSystemData();
       
-      Serial.printf("[WEBHANDLER] Have %i clients\r\n", _ws->count());
+      Serial.printf("[WEBHANDLER] Have %i clients, %i consumers\r\n", _ws->count(), _iNumOfConsumers);
    }
 
    _CheckMasterStatus();
@@ -429,7 +433,7 @@ boolean WebHandlerClass::_DoAction(JsonObject ActionObj, String * ReturnError, A
 
    else if (ActionType == "AnnounceConsumer")
    {
-      syslog.logf_P("[WEBHANDLER] We have a consumer with IP %s", Client->remoteIP().toString().c_str());
+      syslog.logf_P("[WEBHANDLER] We have a consumer with ID %i and IP %s", Client->id(), Client->remoteIP().toString().c_str());
       if (!_bIsConsumerArray[Client->id()]) {
          _iNumOfConsumers++;
       }
@@ -476,7 +480,7 @@ boolean WebHandlerClass::_GetRaceDataJsonString(uint iRaceId, String &strJsonStr
 
 void WebHandlerClass::_SendRaceData(uint iRaceId, int8_t iClientId)
 {
-   if (_iNumOfConsumers < 1) {
+   if (_iNumOfConsumers == 0) {
       return;
    }
    //StaticJsonDocument<bsRaceDataArray> JsonDoc;
@@ -524,11 +528,12 @@ void WebHandlerClass::_SendRaceData(uint iRaceId, int8_t iClientId)
 #define USE_STRING
       
 #ifdef USE_STRING
-      /*String& strJsonSlaveRaceData = SlaveHandler.getSlaveRaceData();
-      Serial.printf("Slave racedata: %s\r\n", strJsonSlaveRaceData.c_str());*/
-      const char * strJsonSlaveRaceData = SlaveHandler.getSlaveRaceData2();
-
+      String strJsonSlaveRaceData = SlaveHandler.getSlaveRaceData();
+      Serial.printf("Slave racedata: %s\r\n", strJsonSlaveRaceData.c_str());
       DeserializationError error = deserializeJson(jsonSlaveRaceDataDoc, strJsonSlaveRaceData);
+      //char * strJsonSlaveRaceData = SlaveHandler.getSlaveRaceData2();
+      //Serial.printf("[WEBHANDLER] Slave racedata: %s, length: %i\r\n", strJsonSlaveRaceData, strlen(strJsonSlaveRaceData));
+      //DeserializationError error = deserializeJson(jsonSlaveRaceDataDoc, strJsonSlaveRaceData, strlen(strJsonSlaveRaceData));
       if (error) {
          Serial.printf("[WEBHANDLER] Error parsing json data from slave: %s\r\n", error.c_str());
       }
@@ -571,14 +576,24 @@ void WebHandlerClass::_SendRaceData(uint iRaceId, int8_t iClientId)
    */
    String strJsonRaceData;
    serializeJson(JsonDoc, strJsonRaceData);
+   Serial.printf("[WEBHANDLER] Request for client %i\r\n", iClientId);
    if (iClientId == -1) {
-      for (uint8_t i = 0; i < _ws->count(); i++) {
-         if (_bIsConsumerArray[i]) {
-            _ws->text(i, strJsonRaceData);
+
+      uint8_t iId = 0;
+      for (auto &isConsumer : _bIsConsumerArray) {
+         if (isConsumer) {
+            Serial.printf("[WEBHANDLER] Getting client obj for id %i\r\n", iId);
+            AsyncWebSocketClient * client = _ws->client(iId);
+            if (client && client->status() == WS_CONNECTED) {
+               Serial.printf("[WEBHANDLER] Sending to client %i\r\n", iId);
+               client->text(strJsonRaceData);
+            }
          }
+         iId++;
       }
    }
    else {
+      Serial.printf("[WEBHANDLER] Sending to client %i\r\n", iClientId);
       _ws->text(iClientId, strJsonRaceData);
    }
 }

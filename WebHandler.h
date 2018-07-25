@@ -74,7 +74,7 @@ protected:
    } ws_ticket_t;
    ws_ticket_t _ticket[WS_TICKET_BUFFER_SIZE];
 
-   boolean _bIsConsumerArray[10];
+   boolean _bIsConsumerArray[255];
    uint8_t _iNumOfConsumers;
 
 public:

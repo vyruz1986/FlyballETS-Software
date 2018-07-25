@@ -124,7 +124,7 @@ void SlaveHandlerClass::_WsEvent(WStype_t type, uint8_t * payload, size_t length
          
          _strJsonRaceData = "";
          serializeJson(_jsonRaceData, _strJsonRaceData);
-         Serial.printf("got racedata from slave: %s\r\n", _strJsonRaceData.c_str());
+         Serial.printf("[SLAVEHANDLER] got racedata from slave: %s\r\n", _strJsonRaceData.c_str());
 
       }
       else if (_jsonClientInput.containsKey("SystemData")) {
@@ -218,7 +218,7 @@ bool SlaveHandlerClass::sendToSlave(String strMessage)
    return bResult;
 }
 
-String& SlaveHandlerClass::getSlaveRaceData()
+String SlaveHandlerClass::getSlaveRaceData()
 {
    Serial.printf("[SLAVEHANDLER] Slave is returning racedata: %s\r\n", _strJsonRaceData.c_str());
    return _strJsonRaceData;
@@ -234,8 +234,8 @@ JsonObject SlaveHandlerClass::getSlaveRaceData1()
 
 char * SlaveHandlerClass::getSlaveRaceData2()
 {
-   char strJsonRaceData[2000];
-   serializeJson(_jsonRaceData, strJsonRaceData);
+   char * strJsonRaceData;
+   serializeJson(_jsonRaceData, strJsonRaceData, measureJson(_jsonRaceData));
    Serial.printf("[SLAVEHANDLER] Returning slave racedata: %s\r\n\r\n", strJsonRaceData);
    return strJsonRaceData;
 }

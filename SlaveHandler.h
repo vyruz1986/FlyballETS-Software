@@ -57,7 +57,7 @@ public:
    void resetConnection();
    bool sendToSlave(String strMessage);
    bool GetConnectionStatus();
-   String& getSlaveRaceData();
+   String getSlaveRaceData();
    JsonObject getSlaveRaceData1();
    char * getSlaveRaceData2();
 };
