@@ -230,23 +230,23 @@ void setup()
    strSerialData[0] = 0;
 
    //Setup AP
-   WiFi.config(IPGateway, IPGateway, IPSubnet);
-   if (!WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet)) {
-      syslog.logf_P(LOG_ERR, "[WiFi]: AP Config failed!");
-   }
+   WiFi.onEvent(WiFiEvent);
    WiFi.mode(WIFI_MODE_AP);
+   //SettingsManager.setSetting("APName", "FlyballETS");
+   //SettingsManager.setSetting("APPass", "FlyballETS.1234");
    String strAPName = SettingsManager.getSetting("APName");
    String strAPPass = SettingsManager.getSetting("APPass");
+   
    if (!WiFi.softAP(strAPName.c_str(), strAPPass.c_str()))
    {
       syslog.logf_P(LOG_ALERT, "Error initializing softAP!");
    }
    else
    {
-      syslog.logf_P("Wifi started successfully, AP name: %s!", strAPName.c_str());
+      syslog.logf_P("Wifi started successfully, AP name: %s, pass: %s!", strAPName.c_str(), strAPPass.c_str());
      
    }
-   WiFi.onEvent(WiFiEvent);
+   WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
 
    //configure webserver
    WebHandler.init(80);
@@ -259,12 +259,6 @@ void setup()
    Simulator.init(iS1Pin, iS2Pin);
 #endif
 
-   syslog.logf_P("Ready on IP: %s, v%s", WiFi.softAPIP().toString().c_str(), APP_VER);
-   if (WiFi.softAPIP() != IPGateway)
-   {
-      syslog.logf_P(LOG_ERR, "I am not running on the correct IP (%s instead of %s), rebooting!", WiFi.softAPIP().toString().c_str(), IPGateway.toString().c_str());
-      ESP.restart();
-   }
    //Ota setup
    ArduinoOTA.setPassword("FlyballETS.1234");
    ArduinoOTA.setPort(3232);
@@ -572,12 +566,19 @@ void ResetRace()
 }
 
 void WiFiEvent(WiFiEvent_t event) {
+   Serial.printf("Wifi event %i\r\n", event);
    switch (event) {
    case SYSTEM_EVENT_AP_START:
       syslog.logf_P("AP Started");
-      if (!WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet)) {
-         syslog.logf_P(LOG_ERR, "[WiFi]: AP Config failed!");
+      WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
+
+      if (WiFi.softAPIP() != IPGateway)
+      {
+         syslog.logf_P(LOG_ERR, "I am not running on the correct IP (%s instead of %s), rebooting!", WiFi.softAPIP().toString().c_str(), IPGateway.toString().c_str());
+         ESP.restart();
       }
+
+      syslog.logf_P("Ready on IP: %s, v%s", WiFi.softAPIP().toString().c_str(), APP_VER);
       break;
    case SYSTEM_EVENT_AP_STOP:
       syslog.logf_P("AP Stopped");
