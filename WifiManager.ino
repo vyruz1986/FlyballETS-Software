@@ -20,6 +20,7 @@ IPAddress IPGateway;
 IPAddress IPNetwork;
 IPAddress IPSubnet;
 String strAPName;
+String strSTAName;
 
 unsigned long ulLastWifiCheck = 0;
 #define WIFI_CHECK_INTERVAL 500
@@ -29,28 +30,28 @@ void SetupWiFi() {
    uint8_t iOpMode = SettingsManager.getSetting("OperationMode").toInt();
    strAPName = SettingsManager.getSetting("APName");
    String strAPPass = SettingsManager.getSetting("APPass");
-   syslog.logf_P("[WiFi]: Starting in mode %i", iOpMode);
+   syslog.logf_P("[WiFi] Starting in mode %i", iOpMode);
+   Serial.printf("[WiFi] Name: %s, pass: %s\r\n", strAPName.c_str(), strAPPass.c_str());
    if (iOpMode == SystemModes::MASTER) {
       WiFi.mode(WIFI_MODE_AP);
       IPGateway = IPAddress(192, 168, 20, 1);
       IPNetwork = IPAddress(192, 168, 20, 0);
       IPSubnet = IPAddress(255, 255, 255, 0);
-      WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
       if (!WiFi.softAP(strAPName.c_str(), strAPPass.c_str())) {
          syslog.logf_P(LOG_ALERT, "[WiFi]: Error initializing softAP with name %s!", strAPName.c_str());
       }
    }
    else if (iOpMode == SystemModes::SLAVE) {
+      strSTAName = strAPName;
       strAPName += "_SLV";
       WiFi.mode(WIFI_MODE_APSTA);
       IPGateway = IPAddress(192, 168, 4, 1);
       IPNetwork = IPAddress(192, 168, 4, 0);
       IPSubnet = IPAddress(255, 255, 255, 0);
-      WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
       if(!WiFi.softAP(strAPName.c_str(), strAPPass.c_str())) {
          syslog.logf_P(LOG_ALERT, "[WiFi]: Error initializing softAP with name %s!", strAPName.c_str());
       }
-      WiFi.begin(strAPName.c_str(), strAPPass.c_str());
+      WiFi.begin(strSTAName.c_str(), strAPPass.c_str());
    }
    else {
       syslog.logf_P(LOG_ERR, "[WiFi]: Got unknown mode, no idea how I should start...");
@@ -66,6 +67,7 @@ void WiFiLoop() {
 void WiFiEvent(WiFiEvent_t event) {
    switch (event) {
    case SYSTEM_EVENT_AP_START:
+      WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
       syslog.logf_P("[WiFi]: AP Started with name %s, IP: %s", strAPName.c_str(), WiFi.softAPIP().toString().c_str());
       if (!WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet)) {
          syslog.logf_P(LOG_ERR, "[WiFi]: AP Config failed!");

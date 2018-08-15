@@ -182,17 +182,16 @@ void SlaveHandlerClass::_WsCloseConnection()
 bool SlaveHandlerClass::_ConnectionNeeded()
 {
    //Serial.printf("Wifi Status: %u, Wifi.localIP: %s\r\n", WiFi.status(), WiFi.localIP().toString().c_str());
-   if (WiFi.status() != WL_CONNECTED
-       || (_bIAmSlave && WiFi.localIP().toString().equals("0.0.0.0"))) {
-      return false;
-   }
    if (_bIAmSlave) {
+      if (WiFi.status() != WL_CONNECTED
+         || (_bIAmSlave && WiFi.localIP().toString().equals("0.0.0.0"))) {
+         return false;
+      }
       return (!_bSlaveAnnounced);
    }
    else {
       return (_bSlaveConfigured || !_bConsumerAnnounced);
    }
-   return false;
 }
 
 void SlaveHandlerClass::resetConnection()
