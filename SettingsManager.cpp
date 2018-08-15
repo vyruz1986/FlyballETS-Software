@@ -50,12 +50,6 @@ bool SettingsManagerClass::setSetting(const String& key, String value)
    return Embedis::set(key, String(value));
 }
 
-bool SettingsManagerClass::setSetting(const String& key, bool value)
-{
-   saveSettings();
-   return Embedis::set(key, String(value));
-}
-
 void SettingsManagerClass::saveSettings()
 {
    _settings_save = true;
@@ -85,7 +79,7 @@ void SettingsManagerClass::setDefaultSettings()
    }
 
    if (!hasSetting("RunDirectionInverted")) {
-      setSetting("RunDirectionInverted", false);
+      setSetting("RunDirectionInverted", String("0"));
       saveSettings();
    }
 }

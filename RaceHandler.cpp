@@ -904,7 +904,7 @@ stRaceData RaceHandlerClass::GetRaceData(uint iRaceId)
 void RaceHandlerClass::ToggleRunDirection()
 {
    _bRunDirectionInverted = !_bRunDirectionInverted;
-   SettingsManager.setSetting("RunDirectionInverted", _bRunDirectionInverted);
+   SettingsManager.setSetting("RunDirectionInverted", String(_bRunDirectionInverted));
    if (_bRunDirectionInverted)
    {
       LCDController.UpdateField(LCDController.BoxDirection, "<--");
