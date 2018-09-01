@@ -28,7 +28,7 @@ void SlaveHandlerClass::init()
       , std::placeholders::_2
       , std::placeholders::_3));
 
-   this->_wsClient.setReconnectInterval(CONNECT_CHECK);
+   //this->_wsClient.setReconnectInterval(CONNECT_CHECK);
    syslog.logf_P("SlaveHandler initialized!");
 
    _jsonRaceData = _jdocRaceData.to<JsonObject>();
@@ -37,7 +37,7 @@ void SlaveHandlerClass::loop()
 {
    if (millis() - this->_ulLastConnectCheck > CONNECT_CHECK) {
       this->_ulLastConnectCheck = millis();
-      Serial.printf("[SLAVEHANDLER] C: %i, CN: %i, CS: %i, S: %i, SC: %i, JsonRDLength: %i\r\n", _bConnected, _ConnectionNeeded(), _bWSConnectionStarted, _bIAmSlave, _bSlaveConfigured, measureJson(_jsonRaceData));
+      Serial.printf("[SLAVEHANDLER] C: %i, CN: %i, CS: %i, S: %i, SC: %i, strRDLength: %i\r\n", _bConnected, _ConnectionNeeded(), _bWSConnectionStarted, _bIAmSlave, _bSlaveConfigured, _strJsonRaceData.length());
       if (!_bConnected
          && this->_ConnectionNeeded()
          && !_bWSConnectionStarted)
@@ -109,7 +109,7 @@ void SlaveHandlerClass::_WsEvent(WStype_t type, uint8_t * payload, size_t length
 
    case WStype_TEXT:
    {
-      Serial.printf("[WSc] got text: %s\n", payload);
+      Serial.printf("[WSc] At %lu I got text: %s\n", millis(), payload);
       _SlaveStatus.LastReply = millis();
       DeserializationError error = deserializeJson(_jdocClientInput, (const char *)payload);
       if (error) {
@@ -249,7 +249,7 @@ void SlaveHandlerClass::_TestConnection()
          Serial.printf("[WSc] Testing connection at %lu...\r\n", millis());
       }
       if (millis() - _SlaveStatus.LastReply > 6000) {
-         Serial.printf("[WSc] Connection broken, reconnecting...\r\n");
+         Serial.printf("[WSc] Connection broken at %lu, reconnecting...\r\n", millis());
          _wsClient.disconnect();
          this->_SetDisconnected();
       }
