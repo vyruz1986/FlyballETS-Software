@@ -576,7 +576,7 @@ void WebHandlerClass::_SendRaceData(uint iRaceId, int8_t iClientId)
    */
    String strJsonRaceData;
    serializeJson(JsonDoc, strJsonRaceData);
-   Serial.printf("[WEBHANDLER] Request for client %i\r\n", iClientId);
+   Serial.printf("[WEBHANDLER] Sending back RD array: %s\r\n", strJsonRaceData.c_str());
    if (iClientId == -1) {
 
       uint8_t iId = 0;
@@ -683,33 +683,26 @@ void WebHandlerClass::_SendSystemData(int8_t iClientId)
    JsonSystemData["systemTimestamp"]   = _SystemData.UTCSystemTime;
    JsonSystemData["batteryPercentage"]   = _SystemData.BatteryPercentage;
    
-   /*
-   size_t len = measureJson(JsonDoc);
-   AsyncWebSocketMessageBuffer * wsBuffer = _ws->makeBuffer(len);
-   if (wsBuffer)
-   {
-      serializeJson(JsonDoc, (char *)wsBuffer->get(), len + 1);
-      if (iClientId == -1) {
-         for (uint8_t i = 0; i < _ws->count(); i++) {
-            if (_bIsConsumerArray[i]) {
-               _ws->text(i, (char *)wsBuffer);
-            }
-         }
-      }
-      else {
-         _ws->text(iClientId, (char *)wsBuffer);
-      }
-   }*/
    String strJsonSystemData;
    serializeJson(JsonDoc, strJsonSystemData);
+  
    if (iClientId == -1) {
-      for (uint8_t i = 0; i < _ws->count(); i++) {
-         if (_bIsConsumerArray[i]) {
-            _ws->text(i, strJsonSystemData);
+
+      uint8_t iId = 0;
+      for (auto &isConsumer : _bIsConsumerArray) {
+         if (isConsumer) {
+            Serial.printf("[WEBHANDLER] Getting client obj for id %i\r\n", iId);
+            AsyncWebSocketClient * client = _ws->client(iId);
+            if (client && client->status() == WS_CONNECTED) {
+               Serial.printf("[WEBHANDLER] Sending to client %i\r\n", iId);
+               client->text(strJsonSystemData);
+            }
          }
+         iId++;
       }
    }
    else {
+      Serial.printf("[WEBHANDLER] Sending to client %i\r\n", iClientId);
       _ws->text(iClientId, strJsonSystemData);
    }
    Serial.printf("[WEBHANDLER] Sent sysdata at %lu\r\n", millis());
