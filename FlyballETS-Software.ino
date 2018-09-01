@@ -183,8 +183,8 @@ void setup()
 
    //init SettingsManager
    SettingsManager.init();
-   //SettingsManager.setSetting("OperationMode", "1");
-   //SettingsManager.setSetting("APName", "FlyballETS2");
+   //SettingsManager.setSetting("OperationMode", "0");
+   //SettingsManager.setSetting("APName", "FlyballETS");
 
    syslog.setSerialPrint(true);
    
@@ -367,8 +367,9 @@ void loop()
    }
 
    //Enable (uncomment) the following if you want periodic status updates on the serial port
-   if ((millis() - lLastSerialOutput) > 500)
+   if ((millis() - lLastSerialOutput) > 5000)
    {
+      lLastSerialOutput = millis();
       //syslog.logf_P("%lu: ping! analog: %i ,voltage is: %i, this is %i%%", millis(), BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
       //syslog.logf_P("%lu: Elapsed time: %s", millis(), cElapsedRaceTime);
       //syslog.logf_P("Free heap: %d", system_get_free_heap_size());
@@ -379,7 +380,7 @@ void loop()
          syslog.logf_P("Dog %i: %ss", RaceHandler.iCurrentDog, cDogTime);
       }
       */
-      lLastSerialOutput = millis();
+      Serial.printf("GPS Time: %s\r\n", GPSHandler.GetUTCTimestamp());
    }
    //Cleanup variables used for checking if something changed
    iCurrentDog = RaceHandler.iCurrentDog;
