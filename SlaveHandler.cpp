@@ -8,7 +8,7 @@
 #include "SettingsManager.h"
 #include "enums.h"
 #include "global.h"
-#include "syslog.h"
+#include "SyslogHelper.h"
 
 void SlaveHandlerClass::init()
 {

@@ -25,7 +25,7 @@
 #include "WebHandler.h"
 //#include <Adafruit_NeoPixel.h>
 #include <NeoPixelBus.h>
-#include "syslog.h"
+#include "SyslogHelper.h"
 
 /// <summary>
 ///   Initialises this object. This function needs to be passed the pin numbers for the shift

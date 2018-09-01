@@ -19,7 +19,7 @@
 #include "RaceHandler.h"
 #include "Structs.h"
 #include "LightsController.h"
-#include "syslog.h"
+#include "SyslogHelper.h"
 
 
 class WebHandlerClass

@@ -4,7 +4,7 @@
 #include <SPIFFS.h>
 #include <StreamString.h>
 #include "config.h"
-#include "syslog.h"
+#include "SyslogHelper.h"
 
 void SettingsManagerClass::loop()
 {

@@ -43,7 +43,7 @@
 //#include <avr/pgmspace.h>
 #include <WiFiUdp.h>
 #include <Syslog.h>
-#include "syslog.h"
+#include "SyslogHelper.h"
 
 /*List of pins and the ones used (Lolin32 board):
    - 34: S1 (handler side) photoelectric sensor

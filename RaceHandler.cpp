@@ -23,7 +23,7 @@
 #include "SettingsManager.h"
 #include "global.h"
 #include "WebHandler.h"
-#include "syslog.h"
+#include "SyslogHelper.h"
 #include "GPSHandler.h"
 
 /// <summary>
