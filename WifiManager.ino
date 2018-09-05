@@ -17,7 +17,6 @@
 
 //Wifi stuff
 IPAddress IPGateway;
-IPAddress IPNetwork;
 IPAddress IPSubnet;
 String strAPName;
 String strSTAName;
@@ -33,22 +32,20 @@ void SetupWiFi() {
    syslog.logf_P("[WiFi] Starting in mode %i", iOpMode);
    Serial.printf("[WiFi] Name: %s, pass: %s\r\n", strAPName.c_str(), strAPPass.c_str());
    if (iOpMode == SystemModes::MASTER) {
-      WiFi.mode(WIFI_MODE_AP);
       IPGateway = IPAddress(192, 168, 20, 1);
-      IPNetwork = IPAddress(192, 168, 20, 0);
       IPSubnet = IPAddress(255, 255, 255, 0);
-      if (!WiFi.softAP(strAPName.c_str(), strAPPass.c_str())) {
+      if (!WiFi.mode(WIFI_MODE_AP)
+         || !WiFi.softAP(strAPName.c_str(), strAPPass.c_str())) {
          syslog.logf_P(LOG_ALERT, "[WiFi]: Error initializing softAP with name %s!", strAPName.c_str());
       }
    }
    else if (iOpMode == SystemModes::SLAVE) {
       strSTAName = strAPName;
       strAPName += "_SLV";
-      WiFi.mode(WIFI_MODE_APSTA);
       IPGateway = IPAddress(192, 168, 4, 1);
-      IPNetwork = IPAddress(192, 168, 4, 0);
       IPSubnet = IPAddress(255, 255, 255, 0);
-      if(!WiFi.softAP(strAPName.c_str(), strAPPass.c_str())) {
+      if(!WiFi.mode(WIFI_MODE_APSTA)
+         || !WiFi.softAP(strAPName.c_str(), strAPPass.c_str())) {
          syslog.logf_P(LOG_ALERT, "[WiFi]: Error initializing softAP with name %s!", strAPName.c_str());
       }
       WiFi.begin(strSTAName.c_str(), strAPPass.c_str());
@@ -67,10 +64,12 @@ void WiFiLoop() {
 void WiFiEvent(WiFiEvent_t event) {
    switch (event) {
    case SYSTEM_EVENT_AP_START:
-      WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
-      syslog.logf_P("[WiFi]: AP Started with name %s, IP: %s", strAPName.c_str(), WiFi.softAPIP().toString().c_str());
+      syslog.logf_P("[WiFi] Trying to configure IP: %s, SM: %s", IPGateway.toString().c_str(), IPSubnet.toString().c_str());
       if (!WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet)) {
          syslog.logf_P(LOG_ERR, "[WiFi]: AP Config failed!");
+      }
+      else {
+         syslog.logf_P("[WiFi]: AP Started with name %s, IP: %s", strAPName.c_str(), WiFi.softAPIP().toString().c_str());
       }
       if (WiFi.softAPIP() != IPGateway)
       {
@@ -89,11 +88,17 @@ void WiFiEvent(WiFiEvent_t event) {
    case SYSTEM_EVENT_STA_DISCONNECTED:
    {
       SlaveHandler.resetConnection();
-      syslog.logf_P(LOG_ERR, "[WiFi]: Disconnected from AP!");
+      syslog.logf_P("[WiFi] Disconnected from AP (event %i)", SYSTEM_EVENT_STA_DISCONNECTED);
       String strAPName = SettingsManager.getSetting("APName");
       String strAPPass = SettingsManager.getSetting("APPass");
       WiFi.begin(strAPName.c_str(), strAPPass.c_str());
       syslog.logf_P(LOG_WARNING, "[WiFi]: Connecting to AP...");
+      break;
+   }
+
+   case SYSTEM_EVENT_STA_CONNECTED:
+   {
+      syslog.logf_P("[WiFi] Connected to AP %s (event %i)", WiFi.SSID().c_str(), SYSTEM_EVENT_STA_CONNECTED);
       break;
    }
 
