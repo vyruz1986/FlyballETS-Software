@@ -1,26 +1,26 @@
 // file:	FlyballETS-Software.ino summary: FlyballETS-Software v1, by Alex Goris
-// 
+//
 // Flyball ETS (Electronic Training System) is an open source project which is designed to help
 // teams who practice flyball (a dog sport). Read all about the project, including extensive
 // information on how to build your own copy of Flyball ETS, on the following link: https://
 // sparkydevices.wordpress.com/tag/flyball-ets/
-// 
+//
 // This part of the project (FlyballETS-Software) contains the Arduino source code for the Arduino
 // Pro Mini which controls all components in the Flyball ETS These sources are originally
 // distributed from: https://github.com/vyruz1986/FlyballETS-Software.
-// 
+//
 // Copyright (C) 2018 Alex Goris
 // This file is part of FlyballETS-Software
 // FlyballETS-Software is free software : you can redistribute it and / or modify it under the terms of
 // the GNU General Public License as published by the Free Software Foundation, either version 3 of
 // the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 // without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License along with this program.If not,
-// see <http://www.gnu.org/licenses/> 
+// see <http://www.gnu.org/licenses/>
 #include "GPSHandler.h"
 #include "SettingsManager.h"
 #include "Structs.h"
@@ -83,16 +83,16 @@
 
 //Set simulate to true to enable simulator class (see Simulator.cpp/h)
 #if Simulate
-   #include "Simulator.h"
+#include "Simulator.h"
 #endif
 
 #ifdef WS281x
-   //#include <Adafruit_NeoPixel.h>
-   #include <NeoPixelBus.h>
+//#include <Adafruit_NeoPixel.h>
+#include <NeoPixelBus.h>
 #endif // WS281x
 
 #ifdef ESP32
-   #include <ESPmDNS.h>
+#include <ESPmDNS.h>
 #endif
 uint8_t iS1Pin = 34;
 uint8_t iS2Pin = 33;
@@ -110,13 +110,13 @@ uint16_t iBatteryVoltage = 0;
 
 //Initialise Lights stuff
 #ifdef WS281x
-   uint8_t iLightsDataPin = 0;
-   NeoPixelBus<NeoRgbFeature, WS_METHOD> LightsStrip(5, iLightsDataPin);
+uint8_t iLightsDataPin = 0;
+NeoPixelBus<NeoRgbFeature, WS_METHOD> LightsStrip(5, iLightsDataPin);
 
 #else
-   uint8_t iLightsClockPin = 8;
-   uint8_t iLightsDataPin = 9;
-   uint8_t iLightsLatchPin = 21;
+uint8_t iLightsClockPin = 8;
+uint8_t iLightsDataPin = 9;
+uint8_t iLightsLatchPin = 21;
 #endif // WS281x
 
 //Other IO's
@@ -124,7 +124,7 @@ uint8_t iLaserTriggerPin = 32;
 uint8_t iLaserOutputPin = 12;
 boolean bLaserState = false;
 
-stInputSignal SideSwitch = { 5, 0 , 500};
+stInputSignal SideSwitch = {5, 0, 500};
 
 //Set last serial output variable
 long lLastSerialOutput = 0;
@@ -139,7 +139,6 @@ int iRC5Pin = 4;
 //Array to hold last time button presses
 unsigned long lLastRCPress[6] = {0, 0, 0, 0, 0, 0};
 
-
 uint8_t iLCDData4Pin = 13;
 uint8_t iLCDData5Pin = 26;
 uint8_t iLCDData6Pin = 14;
@@ -149,13 +148,13 @@ uint8_t iLCDE2Pin = 15;
 uint8_t iLCDRSPin = 25;
 
 LiquidCrystal lcd(iLCDRSPin, iLCDE1Pin, iLCDData4Pin, iLCDData5Pin, iLCDData6Pin, iLCDData7Pin);  //declare two LCD's, this will be line 1&2
-LiquidCrystal lcd2(iLCDRSPin, iLCDE2Pin, iLCDData4Pin, iLCDData5Pin, iLCDData6Pin, iLCDData7Pin);  //declare two LCD's, this will be line 1&2
+LiquidCrystal lcd2(iLCDRSPin, iLCDE2Pin, iLCDData4Pin, iLCDData5Pin, iLCDData6Pin, iLCDData7Pin); //declare two LCD's, this will be line 1&2
 
 //String for serial comms storage
 String strSerialData;
 byte bySerialIndex = 0;
 boolean bSerialStringComplete = false;
-   
+
 //Wifi stuff
 //WiFiMulti wm;
 IPAddress IPGateway(192, 168, 20, 1);
@@ -178,13 +177,13 @@ void setup()
    Serial.begin(115200);
    SettingsManager.init();
    syslog.setSerialPrint(true);
-   
+
    pinMode(iS1Pin, INPUT_PULLDOWN);
    pinMode(iS2Pin, INPUT_PULLDOWN);
-   
+
    //Set light data pin as output
    pinMode(iLightsDataPin, OUTPUT);
-   
+
    //initialize pins for remote control
    pinMode(iRC0Pin, INPUT_PULLDOWN);
    pinMode(iRC1Pin, INPUT_PULLDOWN);
@@ -192,7 +191,7 @@ void setup()
    pinMode(iRC3Pin, INPUT_PULLDOWN);
    pinMode(iRC4Pin, INPUT_PULLDOWN);
    pinMode(iRC5Pin, INPUT_PULLDOWN);
-   
+
    //LCD pins as output
    pinMode(iLCDData4Pin, OUTPUT);
    pinMode(iLCDData5Pin, OUTPUT);
@@ -201,7 +200,6 @@ void setup()
    pinMode(iLCDE1Pin, OUTPUT);
    pinMode(iLCDE2Pin, OUTPUT);
    pinMode(iLCDRSPin, OUTPUT);
-   
 
    //Initialize other I/O's
    pinMode(iLaserTriggerPin, INPUT_PULLUP);
@@ -216,7 +214,7 @@ void setup()
 
    //Initialize BatterySensor class with correct pin
    BatterySensor.init(iBatterySensorPin);
-   
+
    //Initialize LightsController class with shift register pins
 #ifdef WS281x
    LightsController.init(&LightsStrip);
@@ -226,7 +224,7 @@ void setup()
 
    //Initialize LCDController class with lcd1 and lcd2 objects
    LCDController.init(&lcd, &lcd2);
-   
+
    strSerialData[0] = 0;
 
    //Setup AP
@@ -236,7 +234,7 @@ void setup()
    //SettingsManager.setSetting("APPass", "FlyballETS.1234");
    String strAPName = SettingsManager.getSetting("APName");
    String strAPPass = SettingsManager.getSetting("APPass");
-   
+
    if (!WiFi.softAP(strAPName.c_str(), strAPPass.c_str()))
    {
       syslog.logf_P(LOG_ALERT, "Error initializing softAP!");
@@ -244,7 +242,6 @@ void setup()
    else
    {
       syslog.logf_P("Wifi started successfully, AP name: %s, pass: %s!", strAPName.c_str(), strAPPass.c_str());
-     
    }
    WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
 
@@ -293,10 +290,9 @@ void setup()
    GPSSerial.begin(9600, SERIAL_8N1, 39, 36);
    GPSHandler.init(&GPSSerial);
 
-#ifdef  ESP32
+#ifdef ESP32
    mdnsServerSetup();
 #endif //  ESP32
-
 }
 
 void loop()
@@ -309,13 +305,13 @@ void loop()
 
    //Check for serial events
    serialEvent();
-   
+
    //Handle Race main processing
    RaceHandler.Main();
-   
+
    //Handle battery sensor main processing
    BatterySensor.CheckBatteryVoltage();
-   
+
    //Handle LCD processing
    LCDController.Main();
 
@@ -327,34 +323,26 @@ void loop()
 
    //Handle GPS
    GPSHandler.loop();
-   
+
 #if Simulate
    //Run simulator
    Simulator.Main();
 #endif
-   
+
    //Race start/stop button (remote D0 output) or serial command
-   if ((digitalRead(iRC0Pin) == HIGH
-      && (millis() - lLastRCPress[0] > 2000))
-      || (bSerialStringComplete
-         && (strSerialData == "START"
-            || strSerialData == "STOP")))
+   if ((digitalRead(iRC0Pin) == HIGH && (millis() - lLastRCPress[0] > 2000)) || (bSerialStringComplete && (strSerialData == "START" || strSerialData == "STOP")))
    {
       StartStopRace();
    }
 
    //Race reset button (remote D1 output)
-   if (digitalRead(iRC1Pin) == HIGH
-      && (millis() - lLastRCPress[1] > 2000)
-      || (bSerialStringComplete && strSerialData == "RESET"))
+   if (digitalRead(iRC1Pin) == HIGH && (millis() - lLastRCPress[1] > 2000) || (bSerialStringComplete && strSerialData == "RESET"))
    {
       ResetRace();
    }
 
    //Dog0 fault RC button
-   if (digitalRead(iRC2Pin) == HIGH
-      && (millis() - lLastRCPress[2] > 2000)
-      || (bSerialStringComplete && strSerialData == "D0F"))
+   if (digitalRead(iRC2Pin) == HIGH && (millis() - lLastRCPress[2] > 2000) || (bSerialStringComplete && strSerialData == "D0F"))
    {
       lLastRCPress[2] = millis();
       //Toggle fault for dog
@@ -362,18 +350,14 @@ void loop()
    }
 
    //Dog1 fault RC button
-   if (digitalRead(iRC3Pin) == HIGH
-      && (millis() - lLastRCPress[3] > 2000)
-      || (bSerialStringComplete && strSerialData == "D1F"))
+   if (digitalRead(iRC3Pin) == HIGH && (millis() - lLastRCPress[3] > 2000) || (bSerialStringComplete && strSerialData == "D1F"))
    {
       lLastRCPress[3] = millis();
       //Toggle fault for dog
       RaceHandler.SetDogFault(1);
    }
    //Dog2 fault RC button
-   if (digitalRead(iRC4Pin) == HIGH
-      && (millis() - lLastRCPress[4] > 2000)
-      || (bSerialStringComplete && strSerialData == "D2F"))
+   if (digitalRead(iRC4Pin) == HIGH && (millis() - lLastRCPress[4] > 2000) || (bSerialStringComplete && strSerialData == "D2F"))
    {
       lLastRCPress[4] = millis();
       //Toggle fault for dog
@@ -381,9 +365,7 @@ void loop()
    }
 
    //Dog3 fault RC button
-   if (digitalRead(iRC5Pin) == HIGH
-      && (millis() - lLastRCPress[5] > 2000)
-      || (bSerialStringComplete && strSerialData == "D3F"))
+   if (digitalRead(iRC5Pin) == HIGH && (millis() - lLastRCPress[5] > 2000) || (bSerialStringComplete && strSerialData == "D3F"))
    {
       lLastRCPress[5] = millis();
       //Toggle fault for dog
@@ -406,7 +388,7 @@ void loop()
 
    //Update race status to display
    LCDController.UpdateField(LCDController.RaceState, RaceHandler.GetRaceStateString());
-   
+
    //Handle individual dog info
    dtostrf(RaceHandler.GetDogTime(0), 7, 3, cDogTime);
    LCDController.UpdateField(LCDController.D1Time, cDogTime);
@@ -427,7 +409,7 @@ void loop()
    LCDController.UpdateField(LCDController.D4Time, cDogTime);
    LCDController.UpdateField(LCDController.D4CrossTime, RaceHandler.GetCrossingTime(3));
    LCDController.UpdateField(LCDController.D4RerunInfo, RaceHandler.GetRerunInfo(3));
-   
+
    if (iCurrentRaceState != RaceHandler.RaceState)
    {
       if (RaceHandler.RaceState == RaceHandler.STOPPED)
@@ -468,10 +450,10 @@ void loop()
    iCurrentRaceState = RaceHandler.RaceState;
 
    //Check if we have serial data which we should handle
-   if (strSerialData.length() > 0
-       && bSerialStringComplete)
+   if (strSerialData.length() > 0 && bSerialStringComplete)
    {
-      if (bDEBUG) syslog.logf_P("cSer: '%s'", strSerialData.c_str());
+      if (bDEBUG)
+         syslog.logf_P("cSer: '%s'", strSerialData.c_str());
 
       if (strSerialData == "DEBUG")
       {
@@ -481,13 +463,12 @@ void loop()
       strSerialData = "";
       bSerialStringComplete = false;
    }
-   
+
    //Handle laser output
    digitalWrite(iLaserOutputPin, !digitalRead(iLaserTriggerPin));
 
    //Handle side switch button
-   if (digitalRead(SideSwitch.Pin) == LOW
-      && millis() - SideSwitch.LastTriggerTime > SideSwitch.CoolDownTime)
+   if (digitalRead(SideSwitch.Pin) == LOW && millis() - SideSwitch.LastTriggerTime > SideSwitch.CoolDownTime)
    {
       SideSwitch.LastTriggerTime = millis();
       syslog.logf_P("Switching sides!");
@@ -502,10 +483,10 @@ void serialEvent()
    while (Serial.available() > 0)
    {
       char cInChar = Serial.read(); // Read a character
-	   //Check if buffer contains complete serial message, terminated by newline (\n)
+                                    //Check if buffer contains complete serial message, terminated by newline (\n)
       if (cInChar == '\n')
       {
-		   //Serial message in buffer is complete, null terminate it and store it for further handling
+         //Serial message in buffer is complete, null terminate it and store it for further handling
          bSerialStringComplete = true;
          strSerialData += '\0'; // Null terminate the string
          break;
@@ -537,10 +518,11 @@ void StartStopRace()
 {
    lLastRCPress[0] = millis();
    if (RaceHandler.RaceState == RaceHandler.STOPPED //If race is stopped
-      && RaceHandler.GetRaceTime() == 0)           //and timers are zero
+       && RaceHandler.GetRaceTime() == 0)           //and timers are zero
    {
       //Then start the race
-      if (bDEBUG) syslog.logf_P("%lu: START!", millis());
+      if (bDEBUG)
+         syslog.logf_P("%lu: START!", millis());
       LightsController.InitiateStartSequence();
       RaceHandler.StartRace();
    }
@@ -556,7 +538,7 @@ void StartStopRace()
 /// </summary>
 void ResetRace()
 {
-   if (RaceHandler.RaceState != RaceHandler.STOPPED)   //Only allow reset when race is stopped first
+   if (RaceHandler.RaceState != RaceHandler.STOPPED) //Only allow reset when race is stopped first
    {
       return;
    }
@@ -565,9 +547,11 @@ void ResetRace()
    RaceHandler.ResetRace();
 }
 
-void WiFiEvent(WiFiEvent_t event) {
+void WiFiEvent(WiFiEvent_t event)
+{
    Serial.printf("Wifi event %i\r\n", event);
-   switch (event) {
+   switch (event)
+   {
    case SYSTEM_EVENT_AP_START:
       syslog.logf_P("AP Started");
       WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
