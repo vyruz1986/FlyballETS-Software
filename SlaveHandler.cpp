@@ -38,6 +38,7 @@ void SlaveHandlerClass::loop()
    if (millis() - this->_ulLastConnectCheck > CONNECT_CHECK) {
       this->_ulLastConnectCheck = millis();
       Serial.printf("[SLAVEHANDLER] C: %i, CN: %i, CS: %i, S: %i, SC: %i, strRDLength: %i\r\n", _bConnected, _ConnectionNeeded(), _bWSConnectionStarted, _bIAmSlave, _bSlaveConfigured, _strJsonRaceData.length());
+      Serial.printf("Wifi Status: %u, Wifi.localIP: %s\r\n", WiFi.status(), WiFi.localIP().toString().c_str());
       if (!_bConnected
          && this->_ConnectionNeeded()
          && !_bWSConnectionStarted)
@@ -68,7 +69,7 @@ void SlaveHandlerClass::configureSlave(IPAddress ipSlaveIP)
 
 void SlaveHandlerClass::removeSlave()
 {
-   this->_RemoteIP = IPAddress(0, 0, 0, 0);
+   //this->_RemoteIP = IPAddress(0, 0, 0, 0);
    this->_bSlaveConfigured = false;
    this->_bWSConnectionStarted = false;
 }
@@ -181,7 +182,6 @@ void SlaveHandlerClass::_WsCloseConnection()
 
 bool SlaveHandlerClass::_ConnectionNeeded()
 {
-   //Serial.printf("Wifi Status: %u, Wifi.localIP: %s\r\n", WiFi.status(), WiFi.localIP().toString().c_str());
    if (_bIAmSlave) {
       if (WiFi.status() != WL_CONNECTED
          || (_bIAmSlave && WiFi.localIP().toString().equals("0.0.0.0"))) {
@@ -241,11 +241,13 @@ char * SlaveHandlerClass::getSlaveRaceData2()
 
 void SlaveHandlerClass::_TestConnection()
 {
-   //FIXME: This connection test is not working...
+   //TODO: This connection test is not working...
    if (this->_ConnectionNeeded() && _bConnected) {
       if (millis() - _SlaveStatus.LastCheck > 1200) {
          _SlaveStatus.LastCheck = millis();
          Serial.printf("[WSc] Testing connection at %lu...\r\n", millis());
+         bool bCheckResult = _wsClient.sendPing();
+         Serial.printf("[WSc] Test result: %i\r\n", bCheckResult);
       }
       if (millis() - _SlaveStatus.LastReply > 6000) {
          Serial.printf("[WSc] Connection broken at %lu, reconnecting...\r\n", millis());

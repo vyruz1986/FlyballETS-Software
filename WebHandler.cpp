@@ -537,7 +537,7 @@ void WebHandlerClass::_SendRaceData(uint iRaceId, int8_t iClientId)
       if (error) {
          Serial.printf("[WEBHANDLER] Error parsing json data from slave: %s\r\n", error.c_str());
       }
-      jsonSlaveRaceData = jsonMasterRaceDataDoc.as<JsonObject>();
+      jsonSlaveRaceData = jsonSlaveRaceDataDoc.as<JsonObject>();
 #else
       JsonObject jsonSlaveRaceData = SlaveHandler.getSlaveRaceData1();
 
