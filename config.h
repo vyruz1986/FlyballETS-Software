@@ -1,4 +1,4 @@
-// Copyright (C) 2018 Alex Goris
+// Copyright (C) 2019 Alex Goris
 // This file is part of FlyballETS-Software
 // FlyballETS-Software is free software : you can redistribute it and / or modify
 // it under the terms of the GNU General Public License as published by
@@ -22,4 +22,4 @@
 #define WS_TICKET_BUFFER_SIZE 5           //Number of websocket tickets kept in memory
 #define WS_TIMEOUT            1800000     // Timeout for secured websocket
 
-#define APP_VER "05.00.00"
+#define APP_VER "5.0.0"

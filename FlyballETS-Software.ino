@@ -1,24 +1,24 @@
 // file:	FlyballETS-Software.ino summary: FlyballETS-Software v1, by Alex Goris
-// 
+//
 // Flyball ETS (Electronic Training System) is an open source project which is designed to help
 // teams who practice flyball (a dog sport). Read all about the project, including extensive
 // information on how to build your own copy of Flyball ETS, on the following link: https://
 // sparkydevices.wordpress.com/tag/flyball-ets/
-// 
+//
 // This part of the project (FlyballETS-Software) contains the Arduino source code for the Arduino
 // Pro Mini which controls all components in the Flyball ETS These sources are originally
 // distributed from: https://github.com/vyruz1986/FlyballETS-Software.
-// 
-// Copyright (C) 2018 Alex Goris
+//
+// Copyright (C) 2019 Alex Goris
 // This file is part of FlyballETS-Software
 // FlyballETS-Software is free software : you can redistribute it and / or modify it under the terms of
 // the GNU General Public License as published by the Free Software Foundation, either version 3 of
 // the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 // without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License along with this program.If not,
 // see <http://www.gnu.org/licenses/> 
 #include "SystemManager.h"
@@ -85,16 +85,16 @@
 
 //Set simulate to true to enable simulator class (see Simulator.cpp/h)
 #if Simulate
-   #include "Simulator.h"
+#include "Simulator.h"
 #endif
 
 #ifdef WS281x
-   //#include <Adafruit_NeoPixel.h>
-   #include <NeoPixelBus.h>
+//#include <Adafruit_NeoPixel.h>
+#include <NeoPixelBus.h>
 #endif // WS281x
 
 #ifdef ESP32
-   #include <ESPmDNS.h>
+#include <ESPmDNS.h>
 #endif
 uint8_t iS1Pin = 34;
 uint8_t iS2Pin = 33;
@@ -112,13 +112,13 @@ uint16_t iBatteryVoltage = 0;
 
 //Initialise Lights stuff
 #ifdef WS281x
-   uint8_t iLightsDataPin = 0;
-   NeoPixelBus<NeoRgbFeature, WS_METHOD> LightsStrip(5, iLightsDataPin);
+uint8_t iLightsDataPin = 0;
+NeoPixelBus<NeoRgbFeature, WS_METHOD> LightsStrip(5, iLightsDataPin);
 
 #else
-   uint8_t iLightsClockPin = 8;
-   uint8_t iLightsDataPin = 9;
-   uint8_t iLightsLatchPin = 21;
+uint8_t iLightsClockPin = 8;
+uint8_t iLightsDataPin = 9;
+uint8_t iLightsLatchPin = 21;
 #endif // WS281x
 
 //Other IO's
@@ -126,7 +126,7 @@ uint8_t iLaserTriggerPin = 32;
 uint8_t iLaserOutputPin = 12;
 boolean bLaserState = false;
 
-stInputSignal SideSwitch = { 5, 0 , 500};
+stInputSignal SideSwitch = {5, 0, 500};
 
 //Set last serial output variable
 long lLastSerialOutput = 0;
@@ -141,7 +141,6 @@ int iRC5Pin = 4;
 //Array to hold last time button presses
 unsigned long lLastRCPress[6] = {0, 0, 0, 0, 0, 0};
 
-
 uint8_t iLCDData4Pin = 13;
 uint8_t iLCDData5Pin = 26;
 uint8_t iLCDData6Pin = 14;
@@ -151,7 +150,7 @@ uint8_t iLCDE2Pin = 15;
 uint8_t iLCDRSPin = 25;
 
 LiquidCrystal lcd(iLCDRSPin, iLCDE1Pin, iLCDData4Pin, iLCDData5Pin, iLCDData6Pin, iLCDData7Pin);  //declare two LCD's, this will be line 1&2
-LiquidCrystal lcd2(iLCDRSPin, iLCDE2Pin, iLCDData4Pin, iLCDData5Pin, iLCDData6Pin, iLCDData7Pin);  //declare two LCD's, this will be line 1&2
+LiquidCrystal lcd2(iLCDRSPin, iLCDE2Pin, iLCDData4Pin, iLCDData5Pin, iLCDData6Pin, iLCDData7Pin); //declare two LCD's, this will be line 1&2
 
 //String for serial comms storage
 String strSerialData;
@@ -187,13 +186,13 @@ void setup()
    //SettingsManager.setSetting("APName", "FlyballETS");
 
    syslog.setSerialPrint(true);
-   
+
    pinMode(iS1Pin, INPUT_PULLDOWN);
    pinMode(iS2Pin, INPUT_PULLDOWN);
-   
+
    //Set light data pin as output
    pinMode(iLightsDataPin, OUTPUT);
-   
+
    //initialize pins for remote control
    pinMode(iRC0Pin, INPUT_PULLDOWN);
    pinMode(iRC1Pin, INPUT_PULLDOWN);
@@ -201,7 +200,7 @@ void setup()
    pinMode(iRC3Pin, INPUT_PULLDOWN);
    pinMode(iRC4Pin, INPUT_PULLDOWN);
    pinMode(iRC5Pin, INPUT_PULLDOWN);
-   
+
    //LCD pins as output
    pinMode(iLCDData4Pin, OUTPUT);
    pinMode(iLCDData5Pin, OUTPUT);
@@ -210,7 +209,6 @@ void setup()
    pinMode(iLCDE1Pin, OUTPUT);
    pinMode(iLCDE2Pin, OUTPUT);
    pinMode(iLCDRSPin, OUTPUT);
-   
 
    //Initialize other I/O's
    pinMode(iLaserTriggerPin, INPUT_PULLUP);
@@ -225,7 +223,7 @@ void setup()
 
    //Initialize BatterySensor class with correct pin
    BatterySensor.init(iBatterySensorPin);
-   
+
    //Initialize LightsController class with shift register pins
 #ifdef WS281x
    LightsController.init(&LightsStrip);
@@ -286,7 +284,7 @@ void setup()
    GPSSerial.begin(9600, SERIAL_8N1, 39, 36);
    GPSHandler.init(&GPSSerial);
 
-#ifdef  ESP32
+#ifdef ESP32
    mdnsServerSetup();
 
    xTaskCreatePinnedToCore(
@@ -312,13 +310,13 @@ void loop()
 
    //Check for serial events
    serialEvent();
-   
+
    //Handle Race main processing
    RaceHandler.Main();
-   
+
    //Handle battery sensor main processing
    BatterySensor.CheckBatteryVoltage();
-   
+
    //Handle LCD processing
    LCDController.Main();
 
@@ -390,8 +388,7 @@ void loop()
    digitalWrite(iLaserOutputPin, !digitalRead(iLaserTriggerPin));
 
    //Handle side switch button
-   if (digitalRead(SideSwitch.Pin) == LOW
-      && millis() - SideSwitch.LastTriggerTime > SideSwitch.CoolDownTime)
+   if (digitalRead(SideSwitch.Pin) == LOW && millis() - SideSwitch.LastTriggerTime > SideSwitch.CoolDownTime)
    {
       SideSwitch.LastTriggerTime = millis();
       syslog.logf_P("Switching sides!");
@@ -419,7 +416,7 @@ void serialEvent()
       }
       if (cInChar == '\n')
       {
-		   //Serial message in buffer is complete, null terminate it and store it for further handling
+         //Serial message in buffer is complete, null terminate it and store it for further handling
          bSerialStringComplete = true;
          strSerialData += '\0'; // Null terminate the string
          break;
@@ -452,7 +449,7 @@ void StartStopRace()
    Serial.printf("StartStopRace called\r\n");
    lLastRCPress[0] = millis();
    if (RaceHandler.RaceState == RaceHandler.STOPPED //If race is stopped
-      && RaceHandler.GetRaceTime() == 0)           //and timers are zero
+       && RaceHandler.GetRaceTime() == 0)           //and timers are zero
    {
       //Then start the race
       syslog.logf_P(LOG_DEBUG, "%lu: START!\r\n", millis());
@@ -470,7 +467,7 @@ void StartStopRace()
 /// </summary>
 void ResetRace()
 {
-   if (RaceHandler.RaceState != RaceHandler.STOPPED)   //Only allow reset when race is stopped first
+   if (RaceHandler.RaceState != RaceHandler.STOPPED) //Only allow reset when race is stopped first
    {
       return;
    }
