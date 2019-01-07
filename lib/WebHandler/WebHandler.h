@@ -11,7 +11,7 @@
 
 #include "SettingsManager.h"
 //#include <Hash.h>
-#include <AsyncTCP.h>
+//#include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 //#include <FS.h>
 //#include <SPIFFS.h>
@@ -19,8 +19,6 @@
 #include "RaceHandler.h"
 #include "Structs.h"
 #include "LightsController.h"
-#include "syslog.h"
-
 
 class WebHandlerClass
 {
@@ -38,7 +36,7 @@ protected:
 
    boolean _GetData(String dataType, JsonObject& ReturnError);
 
-   stSystemData _GetSystemData();
+   void _GetSystemData();
    void _SendSystemData();
    void _onAuth(AsyncWebServerRequest * request);
    bool _authenticate(AsyncWebServerRequest * request);

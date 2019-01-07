@@ -12,5 +12,20 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.If not, see <http://www.gnu.org/licenses/>
-#include "global.h"
-bool bDEBUG = true;
+
+#ifndef GLOBALVAR_H
+#define GLOBALVAR_H
+
+#define Simulate false                     // Set to true to enable race simulation (see Simulator.h/.cpp)
+
+#define WS281x                            //Comment out this line if you want to use the v1 setup which used a 74HC595 shift register to control lights
+#define WS_METHOD NeoWs2813Method
+#define EEPROM_SIZE           4096        // EEPROM size in bytes
+
+#define WS_TICKET_BUFFER_SIZE 5           //Number of websocket tickets kept in memory
+#define WS_TIMEOUT            1800000     // Timeout for secured websocket
+
+#define APP_VER "5.0.0"
+
+
+#endif

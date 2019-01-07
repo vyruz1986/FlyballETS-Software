@@ -2,9 +2,10 @@
 #include "Embedis.h"
 #include <EEPROM.h>
 #include <SPIFFS.h>
-#include <StreamString.h>
 #include "config.h"
-#include "syslog.h"
+#include <Syslog.h>
+extern Syslog syslog;
+
 
 void SettingsManagerClass::loop()
 {

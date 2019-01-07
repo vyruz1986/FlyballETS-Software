@@ -13,7 +13,9 @@
 #include "GPSHandler.h"
 #include "BatterySensor.h"
 #include <rom/rtc.h>
-#include "static\index.html.gz.h"
+#include "..\..\src\static\index.html.gz.h"
+#include <Syslog.h>
+extern Syslog syslog;
 
 void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t * data, size_t len)
 {
@@ -41,7 +43,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
       client->ping();
    }
    else if (type == WS_EVT_DISCONNECT) {
-      syslog.logf_P("ws[%s][%u] disconnect: %u\n", server->url(), client->id());
+      syslog.logf_P("ws[%s][%u] disconnect: %zu\n", server->url(), client->id());
    }
    else if (type == WS_EVT_ERROR) {
       syslog.logf_P("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
@@ -331,6 +333,11 @@ boolean WebHandlerClass::_DoAction(JsonObject& ActionObj, String * ReturnError) 
       RaceHandler.SetDogFault(iDogNum, (bFaultState ? RaceHandler.ON : RaceHandler.OFF));
       return true;
    }
+   else
+   {
+      //ReturnError = "Unknown action received!";
+      return false;
+   }
 }
 
 boolean WebHandlerClass::_GetRaceDataJsonString(uint iRaceId, String &strJsonString)
@@ -479,7 +486,7 @@ boolean WebHandlerClass::_GetData(String dataType, JsonObject& Data)
    return true;
 }  
 
-stSystemData WebHandlerClass::_GetSystemData()
+void WebHandlerClass::_GetSystemData()
 {
    _SystemData.FreeHeap = esp_get_free_heap_size();
    _SystemData.Uptime = millis();

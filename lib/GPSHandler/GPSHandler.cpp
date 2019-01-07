@@ -4,7 +4,8 @@
 
 #include "GPSHandler.h"
 #include <TinyGPS++.h>
-#include "syslog.h"
+#include <Syslog.h>
+extern Syslog syslog;
 
 void GPSHandlerClass::_HandleSerialPort()
 {

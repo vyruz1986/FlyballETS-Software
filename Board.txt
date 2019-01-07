@@ -1,4 +1,0 @@
- # local project board.txt overrides
-  network.password=FlyballETS.1234
-  network.auth_upload=yes
-  network.port=3232

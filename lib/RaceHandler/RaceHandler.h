@@ -1,5 +1,4 @@
 // RaceHandler.h
-#include "StreamPrint.h"
 #include "Structs.h"
 #ifndef _RACEHANDLER_h
 #define _RACEHANDLER_h
@@ -86,7 +85,7 @@ private:
    {
       volatile uint8_t iSensorNumber;
       volatile unsigned long lTriggerTime;
-      volatile uint8_t iSensorState;
+      volatile int iSensorState;
    };
 #define TRIGGER_QUEUE_LENGTH 50
    STriggerRecord _STriggerQueue[TRIGGER_QUEUE_LENGTH];

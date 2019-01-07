@@ -16,14 +16,15 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.If not, see <http://www.gnu.org/licenses/>
 
-#include "StreamPrint.h"
 #include "LightsController.h"
 #include "LCDController.h"
 #include "RaceHandler.h"
 #include "SettingsManager.h"
-#include "global.h"
+#include "config.h"
 #include "WebHandler.h"
-#include "syslog.h"
+
+#include <Syslog.h>
+extern Syslog syslog;
 
 /// <summary>
 ///   Initialises this object andsets all counters to 0.
@@ -105,14 +106,10 @@ void RaceHandlerClass::Main()
    //Don't handle anything if race is stopped
    if (RaceState == STOPPED)
    {
-      //If we are debugging we should dump the remainder of the interrupt queue, even if the race is stopped
-      if (bDEBUG)
+      while (!_QueueEmpty())
       {
-         while (!_QueueEmpty())
-         {
-            STriggerRecord STempRecord = _QueuePop();
-            syslog.logf_P(LOG_DEBUG, "S%i|T:%li|St:%i", STempRecord.iSensorNumber, STempRecord.lTriggerTime - _lRaceStartTime, STempRecord.iSensorState);
-         }
+         STriggerRecord STempRecord = _QueuePop();
+         syslog.logf_P(LOG_DEBUG, "S%i|T:%li|St:%i", STempRecord.iSensorNumber, STempRecord.lTriggerTime - _lRaceStartTime, STempRecord.iSensorState);
       }
       return;
    }
@@ -1023,6 +1020,10 @@ void RaceHandlerClass::_AddToTransitionString(STriggerRecord _InterruptTrigger)
 
       case 2:
          cTemp = 'B';
+         break;
+      default:
+         cTemp = 'X';
+         break;
    }
    
    //We assumged the signal was high, if it is not we should make the character lowercase

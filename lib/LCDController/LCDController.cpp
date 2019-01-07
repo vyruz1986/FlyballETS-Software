@@ -18,7 +18,9 @@
 
 #include "LCDController.h"
 #include <LiquidCrystal.h>
-#include "syslog.h"
+
+#include <Syslog.h>
+extern Syslog syslog;
 
 /// <summary>
 ///   Initialises this object.

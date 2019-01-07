@@ -16,16 +16,16 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.If not, see <http://www.gnu.org/licenses/>
 
-#include "StreamPrint.h"
 #include "LightsController.h"
 #include "RaceHandler.h"
-#include "global.h"
 #include "config.h"
 #include "Structs.h"
 #include "WebHandler.h"
 //#include <Adafruit_NeoPixel.h>
 #include <NeoPixelBus.h>
-#include "syslog.h"
+
+#include <Syslog.h>
+extern Syslog syslog;
 
 /// <summary>
 ///   Initialises this object. This function needs to be passed the pin numbers for the shift
@@ -100,7 +100,7 @@ void LightsControllerClass::Main()
 
    if (_byCurrentLightsState != _byNewLightsState)
    {
-      if (bDEBUG) syslog.logf_P(LOG_DEBUG, "%lu: New light states: %i", millis(), _byNewLightsState);
+      syslog.logf_P(LOG_DEBUG, "%lu: New light states: %i", millis(), _byNewLightsState);
       _byCurrentLightsState = _byNewLightsState;
 #ifndef WS281x
       digitalWrite(_iLatchPin, LOW);

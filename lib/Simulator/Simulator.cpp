@@ -3,7 +3,7 @@
 // summary:	Implements the simulator class. Since this class is memory intensive, it should only be
 // included if actual simulation is wished. 
 #include "Simulator.h"
-#include "global.h"
+#include "config.h"
 #include "RaceHandler.h"
 #include "PROGMEM_readAnything.h"
 //#include <avr/pgmspace.h>

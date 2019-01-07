@@ -16,16 +16,13 @@
 
 #ifndef _LIGHTSCONTROLLER_h
 #define _LIGHTSCONTROLLER_h
+#include "Arduino.h"
 
-#if defined(ARDUINO) && ARDUINO >= 100
-	#include "Arduino.h"
-#else
-	#include "WProgram.h"
-#endif
+#include <NeoPixelBus.h>
 #include "config.h"
 #include "Structs.h"
 #ifdef WS281x
-#include <NeoPixelBus.h>
+
 #endif // WS281x
 
 class LightsControllerClass
@@ -87,7 +84,7 @@ private:
 #endif // WS281x
 
    //This byte contains the combined states of all ligths at any given time
-   byte _byCurrentLightsState = 256;
+   byte _byCurrentLightsState = 255;
    byte _byNewLightsState = 0;
 
    bool _bStartSequenceStarted = 0;

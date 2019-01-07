@@ -21,27 +21,32 @@
 //
 // You should have received a copy of the GNU General Public License along with this program.If not,
 // see <http://www.gnu.org/licenses/>
-#include "GPSHandler.h"
-#include "SettingsManager.h"
-#include "Structs.h"
-#include "WebHandler.h"
-#include "config.h"
-#include "StreamPrint.h"
-#include "LCDController.h"
-#include "RaceHandler.h"
-#include "LightsController.h"
-#include "BatterySensor.h"
-#include "global.h"
+#include "Arduino.h"
+
+//Public libs
 #include <LiquidCrystal.h>
 #include <WiFi.h>
 #include <WiFiMulti.h>
 #include <ESPmDNS.h>
 #include <ArduinoOTA.h>
 #include <EEPROM.h>
-//#include <avr/pgmspace.h>
-#include <WiFiUdp.h>
 #include <Syslog.h>
-#include "syslog.h"
+#include <WiFiUdp.h>
+
+//Private libs
+#include <GPSHandler.h>
+#include <SettingsManager.h>
+#include <WebHandler.h>
+#include <LCDController.h>
+#include <RaceHandler.h>
+#include <LightsController.h>
+#include <BatterySensor.h>
+#include <Syslog.h>
+
+//Includes
+#include "Structs.h"
+#include "config.h"
+//#include "SyslogHelper.h"
 
 /*List of pins and the ones used (Lolin32 board):
    - 34: S1 (handler side) photoelectric sensor
@@ -164,15 +169,24 @@ IPAddress IPSubnet(255, 255, 255, 0);
 //Define serial pins for GPS module
 HardwareSerial GPSSerial(1);
 
-//Syslog object
-WiFiUDP SyslogUDP;
-Syslog syslog(SyslogUDP, "255.255.255.255", 514, "FlyballETS", "FlyballETSApp", LOG_INFO, SYSLOG_PROTO_BSD);
-
 //Keep last reported OTA progress so we can send one syslog message for every % increment
 unsigned int uiLastProgress = 0;
 
+WiFiUDP SyslogUDP;
+extern Syslog syslog;
+
+//Function prototypes
+void Sensor1Wrapper();
+void Sensor2Wrapper();
+void WiFiEvent(WiFiEvent_t event);
+void ResetRace();
+void mdnsServerSetup();
+void StartStopRace();
+void serialEvent();
+
 void setup()
 {
+   syslog = Syslog(SyslogUDP, "255.255.255.255", 514, "FlyballETS", "FlyballETSApp", LOG_INFO, SYSLOG_PROTO_BSD);
    EEPROM.begin(EEPROM_SIZE);
    Serial.begin(115200);
    SettingsManager.init();
@@ -336,13 +350,13 @@ void loop()
    }
 
    //Race reset button (remote D1 output)
-   if (digitalRead(iRC1Pin) == HIGH && (millis() - lLastRCPress[1] > 2000) || (bSerialStringComplete && strSerialData == "RESET"))
+   if ((digitalRead(iRC1Pin) == HIGH && (millis() - lLastRCPress[1] > 2000)) || (bSerialStringComplete && strSerialData == "RESET"))
    {
       ResetRace();
    }
 
    //Dog0 fault RC button
-   if (digitalRead(iRC2Pin) == HIGH && (millis() - lLastRCPress[2] > 2000) || (bSerialStringComplete && strSerialData == "D0F"))
+   if ((digitalRead(iRC2Pin) == HIGH && (millis() - lLastRCPress[2] > 2000)) || (bSerialStringComplete && strSerialData == "D0F"))
    {
       lLastRCPress[2] = millis();
       //Toggle fault for dog
@@ -350,14 +364,14 @@ void loop()
    }
 
    //Dog1 fault RC button
-   if (digitalRead(iRC3Pin) == HIGH && (millis() - lLastRCPress[3] > 2000) || (bSerialStringComplete && strSerialData == "D1F"))
+   if ((digitalRead(iRC3Pin) == HIGH && (millis() - lLastRCPress[3] > 2000)) || (bSerialStringComplete && strSerialData == "D1F"))
    {
       lLastRCPress[3] = millis();
       //Toggle fault for dog
       RaceHandler.SetDogFault(1);
    }
    //Dog2 fault RC button
-   if (digitalRead(iRC4Pin) == HIGH && (millis() - lLastRCPress[4] > 2000) || (bSerialStringComplete && strSerialData == "D2F"))
+   if ((digitalRead(iRC4Pin) == HIGH && (millis() - lLastRCPress[4] > 2000)) || (bSerialStringComplete && strSerialData == "D2F"))
    {
       lLastRCPress[4] = millis();
       //Toggle fault for dog
@@ -365,7 +379,7 @@ void loop()
    }
 
    //Dog3 fault RC button
-   if (digitalRead(iRC5Pin) == HIGH && (millis() - lLastRCPress[5] > 2000) || (bSerialStringComplete && strSerialData == "D3F"))
+   if ((digitalRead(iRC5Pin) == HIGH && (millis() - lLastRCPress[5] > 2000)) || (bSerialStringComplete && strSerialData == "D3F"))
    {
       lLastRCPress[5] = millis();
       //Toggle fault for dog
@@ -452,14 +466,7 @@ void loop()
    //Check if we have serial data which we should handle
    if (strSerialData.length() > 0 && bSerialStringComplete)
    {
-      if (bDEBUG)
-         syslog.logf_P("cSer: '%s'", strSerialData.c_str());
-
-      if (strSerialData == "DEBUG")
-      {
-         bDEBUG = !bDEBUG;
-      }
-
+      syslog.logf_P(LOG_DEBUG, "cSer: '%s'", strSerialData.c_str());
       strSerialData = "";
       bSerialStringComplete = false;
    }
@@ -521,8 +528,7 @@ void StartStopRace()
        && RaceHandler.GetRaceTime() == 0)           //and timers are zero
    {
       //Then start the race
-      if (bDEBUG)
-         syslog.logf_P("%lu: START!", millis());
+      syslog.logf_P(LOG_DEBUG, "%lu: START!", millis());
       LightsController.InitiateStartSequence();
       RaceHandler.StartRace();
    }
