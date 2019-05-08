@@ -23,9 +23,7 @@
 #include "config.h"
 #include "Structs.h"
 #include "WebHandler.h"
-//#include <Adafruit_NeoPixel.h>
 #include <NeoPixelBus.h>
-#include "syslog.h"
 
 /// <summary>
 ///   Initialises this object. This function needs to be passed the pin numbers for the shift
@@ -100,7 +98,7 @@ void LightsControllerClass::Main()
 
    if (_byCurrentLightsState != _byNewLightsState)
    {
-      if (bDEBUG) syslog.logf_P(LOG_DEBUG, "%lu: New light states: %i", millis(), _byNewLightsState);
+      if (bDEBUG) ESP_LOGD(TAG, "%lu: New light states: %i", millis(), _byNewLightsState);
       _byCurrentLightsState = _byNewLightsState;
 #ifndef WS281x
       digitalWrite(_iLatchPin, LOW);
@@ -160,7 +158,7 @@ void LightsControllerClass::HandleStartSequence()
          && RaceHandler.RaceState == RaceHandler.STARTING)
       {
          RaceHandler.StartTimers();
-         syslog.logf_P(LOG_DEBUG, "%lu: GREEN light is ON!", millis());
+         ESP_LOGD(TAG, "%lu: GREEN light is ON!", millis());
       }
       if (!bStartSequenceBusy)
       {
@@ -272,7 +270,7 @@ void LightsControllerClass::ToggleFaultLight(uint8_t DogNumber, LightStates byLi
       _lLightsOutSchedule[0] = millis() + 1000; //keep on for 1 second
    }
    ToggleLightState(byLight, byLightState);
-   syslog.logf_P(LOG_DEBUG, "Fault light for dog %i: %i", DogNumber, byLightState);
+   ESP_LOGD(TAG, "Fault light for dog %i: %i", DogNumber, byLightState);
 }
 
 stLightsState LightsControllerClass::GetLightsState()

@@ -18,7 +18,6 @@
 
 #include "LCDController.h"
 #include <LiquidCrystal.h>
-#include "syslog.h"
 
 /// <summary>
 ///   Initialises this object.
@@ -94,7 +93,7 @@ void LCDControllerClass::UpdateField(LCDFields lcdfieldField, String strNewValue
    if (_SlcdfieldFields[lcdfieldField].iFieldLength < strNewValue.length())
    {
       //The new value will not fit into the new field!
-      syslog.logf_P(LOG_ERR, "[LCD Controller] Field (%i) received value that was too long (%i): %s", lcdfieldField, strNewValue.length(), strNewValue.c_str());
+      ESP_LOGE(TAG, "[LCD Controller] Field (%i) received value that was too long (%i): %s", lcdfieldField, strNewValue.length(), strNewValue.c_str());
       return;
    }
    _SlcdfieldFields[lcdfieldField].strText = strNewValue;

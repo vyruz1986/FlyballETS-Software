@@ -2,3 +2,4 @@
   network.password=FlyballETS.1234
   network.auth_upload=yes
   network.port=3232
+  build.code_debug=5

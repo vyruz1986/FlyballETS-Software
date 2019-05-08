@@ -23,7 +23,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
 
    if (type == WS_EVT_CONNECT)
    {
-      syslog.logf_P("ws[%s][%u] connect\n", server->url(), client->id());
+      ESP_LOGI(TAG, "ws[%s][%u] connect\n", server->url(), client->id());
       //client->printf("Hello Client %u :)", client->id());
 
       //Should we check authentication?
@@ -41,20 +41,20 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
       client->ping();
    }
    else if (type == WS_EVT_DISCONNECT) {
-      syslog.logf_P("ws[%s][%u] disconnect: %u\n", server->url(), client->id());
+      ESP_LOGI(TAG, "ws[%s][%u] disconnect: %u\n", server->url(), client->id());
    }
    else if (type == WS_EVT_ERROR) {
-      syslog.logf_P("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
+      ESP_LOGI(TAG, "ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
    }
    else if (type == WS_EVT_PONG) {
-      syslog.logf_P("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len) ? (char*)data : "");
+      ESP_LOGI(TAG, "ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len) ? (char*)data : "");
    }
    else if (type == WS_EVT_DATA) {
       AwsFrameInfo * info = (AwsFrameInfo*)arg;
       String msg = "";
       if (info->final && info->index == 0 && info->len == len) {
          //the whole message is in a single frame and we got all of it's data
-         syslog.logf_P("ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT) ? "text" : "binary", info->len);
+         ESP_LOGI(TAG, "ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT) ? "text" : "binary", info->len);
 
          if (info->opcode == WS_TEXT) {
             for (size_t i = 0; i < info->len; i++) {
@@ -68,17 +68,17 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
                msg += buff;
             }
          }
-         syslog.logf_P("%s\n", msg.c_str());
+         ESP_LOGI(TAG, "%s\n", msg.c_str());
       }
       else {
          //message is comprised of multiple frames or the frame is split into multiple packets
          if (info->index == 0) {
             if (info->num == 0)
-               syslog.logf_P("ws[%s][%u] %s-message start\n", server->url(), client->id(), (info->message_opcode == WS_TEXT) ? "text" : "binary");
-            syslog.logf_P("ws[%s][%u] frame[%u] start[%llu]\n", server->url(), client->id(), info->num, info->len);
+               ESP_LOGI(TAG, "ws[%s][%u] %s-message start\n", server->url(), client->id(), (info->message_opcode == WS_TEXT) ? "text" : "binary");
+            ESP_LOGI(TAG, "ws[%s][%u] frame[%u] start[%llu]\n", server->url(), client->id(), info->num, info->len);
          }
 
-         syslog.logf_P("ws[%s][%u] frame[%u] %s[%llu - %llu]: ", server->url(), client->id(), info->num, (info->message_opcode == WS_TEXT) ? "text" : "binary", info->index, info->index + len);
+         ESP_LOGI(TAG, "ws[%s][%u] frame[%u] %s[%llu - %llu]: ", server->url(), client->id(), info->num, (info->message_opcode == WS_TEXT) ? "text" : "binary", info->index, info->index + len);
 
          if (info->opcode == WS_TEXT) {
             for (size_t i = 0; i < info->len; i++) {
@@ -92,12 +92,12 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
                msg += buff;
             }
          }
-         syslog.logf_P("%s\n", msg.c_str());
+         ESP_LOGI(TAG, "%s\n", msg.c_str());
 
          if ((info->index + len) == info->len) {
-            syslog.logf_P("ws[%s][%u] frame[%u] end[%llu]\n", server->url(), client->id(), info->num, info->len);
+            ESP_LOGI(TAG, "ws[%s][%u] frame[%u] end[%llu]\n", server->url(), client->id(), info->num, info->len);
             if (info->final) {
-               syslog.logf_P("ws[%s][%u] %s-message end\n", server->url(), client->id(), (info->message_opcode == WS_TEXT) ? "text" : "binary");
+               ESP_LOGI(TAG, "ws[%s][%u] %s-message end\n", server->url(), client->id(), (info->message_opcode == WS_TEXT) ? "text" : "binary");
             }
          }
       }
@@ -106,7 +106,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
       DynamicJsonBuffer jsonBufferRequest;
       JsonObject& request = jsonBufferRequest.parseObject(msg);
       if (!request.success()) {
-         syslog.logf_P(LOG_ERR, "Error parsing JSON!");
+         ESP_LOGE(TAG, "Error parsing JSON!");
          //wsSend_P(client->id(), PSTR("{\"message\": 3}"));
          client->text("{\"error\":\"Invalid JSON received\"}");
          return;
@@ -198,7 +198,7 @@ void WebHandlerClass::init(int webPort)
    _server->addHandler(_wsa);
 
    _server->onNotFound([](AsyncWebServerRequest *request) {
-      syslog.logf_P(LOG_ERR, "Not found: %s!", request->url().c_str());
+      ESP_LOGE(TAG, "Not found: %s!", request->url().c_str());
       request->send(404);
    });
 
@@ -251,7 +251,7 @@ void WebHandlerClass::SendLightsData(stLightsState LightStates)
 
    if (!JsonRoot.success())
    {
-      syslog.logf_P(LOG_ERR, "Error creating JSON object!");
+      ESP_LOGE(TAG, "Error creating JSON object!");
       _ws->textAll("{\"error\": \"Error creating JSON object!\"}");
       return;
    }
@@ -340,7 +340,7 @@ boolean WebHandlerClass::_GetRaceDataJsonString(uint iRaceId, String &strJsonStr
    JsonObject& JsonRoot = JsonBuffer.createObject();
    if (!JsonRoot.success())
    {
-      syslog.logf_P(LOG_ERR, "Error parsing JSON!");
+      ESP_LOGE(TAG, "Error parsing JSON!");
       //strJsonString = "{\"error\": \"Error parsing JSON from RaceData!\"}";
       return false;
    }
@@ -384,7 +384,7 @@ void WebHandlerClass::_SendRaceData(uint iRaceId)
    JsonObject& JsonRoot = JsonBuffer.createObject();
    if (!JsonRoot.success())
    {
-      syslog.logf_P(LOG_ERR, "Error parsing JSON!");
+      ESP_LOGE(TAG, "Error parsing JSON!");
    }
    else
    {
@@ -426,7 +426,7 @@ boolean WebHandlerClass::_ProcessConfig(JsonArray& newConfig, String * ReturnErr
 {
    bool save = false;
    bool changed = false;
-   Serial.printf("config is %i big\r\n", newConfig.size());
+   ESP_LOGD(TAG, "config is %i big\r\n", newConfig.size());
    for (unsigned int i = 0; i < newConfig.size(); i++)
    {
       String key = newConfig[i]["name"];
@@ -434,7 +434,7 @@ boolean WebHandlerClass::_ProcessConfig(JsonArray& newConfig, String * ReturnErr
 
       if (value != SettingsManager.getSetting(key))
       {
-         syslog.logf_P(LOG_DEBUG, "[WEBHANDLER] Storing %s = %s", key.c_str(), value.c_str());
+         ESP_LOGD(TAG, "[WEBHANDLER] Storing %s = %s", key.c_str(), value.c_str());
          SettingsManager.setSetting(key, value);
          save = changed = true;
       }
@@ -539,7 +539,7 @@ bool WebHandlerClass::_authenticate(AsyncWebServerRequest *request) {
    password.toCharArray(httpPassword, password.length() + 1);
    boolean bAuthResult = request->authenticate("Admin", httpPassword);
    if (!bAuthResult) {
-      syslog.logf_P(LOG_ERR, "[WEBHANDLER] Admin user failed to login!");
+      ESP_LOGE(TAG, "[WEBHANDLER] Admin user failed to login!");
    }
    return bAuthResult;
 }
@@ -556,12 +556,12 @@ bool WebHandlerClass::_wsAuth(AsyncWebSocketClient * client) {
    //this new user will/could have the same IP as the previous user, and will be authenticated :(
 
    for (index = 0; index < WS_TICKET_BUFFER_SIZE; index++) {
-      syslog.logf_P("Checking ticket: %i, ip: %s, time: %lu", index, _ticket[index].ip.toString().c_str(), _ticket[index].timestamp);
+      ESP_LOGI(TAG, "Checking ticket: %i, ip: %s, time: %lu", index, _ticket[index].ip.toString().c_str(), _ticket[index].timestamp);
       if ((_ticket[index].ip == ip) && (now - _ticket[index].timestamp < WS_TIMEOUT)) break;
    }
 
    if (index == WS_TICKET_BUFFER_SIZE) {
-      syslog.logf_P("[WEBSOCKET] Validation check failed\n");
+      ESP_LOGI(TAG, "[WEBSOCKET] Validation check failed\n");
       client->text("{\"success\": false, \"error\": \"You shall not pass!!!! Please authenticate first :-)\", \"authenticated\": false}");
       return false;
    }
