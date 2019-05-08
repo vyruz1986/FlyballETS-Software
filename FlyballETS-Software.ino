@@ -40,10 +40,9 @@
 #include <ESPmDNS.h>
 #include <ArduinoOTA.h>
 #include <EEPROM.h>
-//#include <avr/pgmspace.h>
-#include <WiFiUdp.h>
-#include <Syslog.h>
-#include "SyslogHelper.h"
+#include "esp_log.h"
+
+#define TAG __FILE__
 
 /*List of pins and the ones used (Lolin32 board):
    - 34: S1 (handler side) photoelectric sensor
@@ -160,10 +159,6 @@ boolean bSerialStringComplete = false;
 //Define serial pins for GPS module
 HardwareSerial GPSSerial(1);
 
-//Syslog object
-WiFiUDP SyslogUDP;
-Syslog syslog(SyslogUDP, "255.255.255.255", 514, "FlyballETS", "FlyballETSApp", LOG_INFO, SYSLOG_PROTO_BSD);
-
 //Keep last reported OTA progress so we can send one syslog message for every % increment
 unsigned int uiLastProgress = 0;
 
@@ -184,8 +179,6 @@ void setup()
    SettingsManager.init();
    //SettingsManager.setSetting("OperationMode", "0");
    //SettingsManager.setSetting("APName", "FlyballETS");
-
-   syslog.setSerialPrint(true);
 
    pinMode(iS1Pin, INPUT_PULLDOWN);
    pinMode(iS2Pin, INPUT_PULLDOWN);
@@ -261,22 +254,22 @@ void setup()
          type = "filesystem";
 
       // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
-      syslog.logf_P(String("Start updating " + type).c_str());
+      //ESP_LOGI(TAG, String("Start updating " + type).c_str());
    });
 
    ArduinoOTA.onEnd([]() {
-      syslog.logf_P("[OTA]: End");
+      ESP_LOGI(TAG, "[OTA]: End");
    });
    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
       unsigned int progressPercentage = (progress / (total / 100));
       if (uiLastProgress != progressPercentage)
       {
-         syslog.logf_P("[OTA]: Progress: %u%%", progressPercentage);
+         ESP_LOGI(TAG, "[OTA]: Progress: %u%%", progressPercentage);
          uiLastProgress = progressPercentage;
       }
    });
    ArduinoOTA.onError([](ota_error_t error) {
-      syslog.logf_P(LOG_ERR, "[OTA]: Error[%u]: ", error);
+      ESP_LOGE(TAG, "[OTA]: Error[%u]: ", error);
    });
    ArduinoOTA.begin();
 
@@ -350,32 +343,32 @@ void loop()
       {
          //Race is finished, put final data on screen
          dtostrf(RaceHandler.GetDogTime(RaceHandler.iCurrentDog, -2), 7, 3, cDogTime);
-         syslog.logf_P("D%i: %s|CR: %s", RaceHandler.iCurrentDog, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iCurrentDog, -2).c_str());
-         syslog.logf_P("RT:%s", cElapsedRaceTime);
+         ESP_LOGI(TAG, "D%i: %s|CR: %s", RaceHandler.iCurrentDog, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iCurrentDog, -2).c_str());
+         ESP_LOGI(TAG, "RT:%s", cElapsedRaceTime);
       }
-      syslog.logf_P("RS: %i", RaceHandler.RaceState);
+      ESP_LOGI(TAG, "RS: %i", RaceHandler.RaceState);
    }
 
    if (RaceHandler.iCurrentDog != iCurrentDog)
    {
       dtostrf(RaceHandler.GetDogTime(RaceHandler.iPreviousDog, -2), 7, 3, cDogTime);
-      syslog.logf_P("D%i: %s|CR: %s", RaceHandler.iPreviousDog, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
-      syslog.logf_P("D: %i", RaceHandler.iCurrentDog);
-      syslog.logf_P("RT:%s", cElapsedRaceTime);
+      ESP_LOGI(TAG, "D%i: %s|CR: %s", RaceHandler.iPreviousDog, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
+      ESP_LOGI(TAG, "D: %i", RaceHandler.iCurrentDog);
+      ESP_LOGI(TAG, "RT:%s", cElapsedRaceTime);
    }
 
    //Enable (uncomment) the following if you want periodic status updates on the serial port
    if ((millis() - lLastSerialOutput) > 5000)
    {
       lLastSerialOutput = millis();
-      //syslog.logf_P("%lu: ping! analog: %i ,voltage is: %i, this is %i%%", millis(), BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
-      //syslog.logf_P("%lu: Elapsed time: %s", millis(), cElapsedRaceTime);
-      //syslog.logf_P("Free heap: %d", system_get_free_heap_size());
+      //ESP_LOGI(TAG, "%lu: ping! analog: %i ,voltage is: %i, this is %i%%", millis(), BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
+      //ESP_LOGI(TAG, "%lu: Elapsed time: %s", millis(), cElapsedRaceTime);
+      //ESP_LOGI(TAG, "Free heap: %d", system_get_free_heap_size());
       /*
       if (RaceHandler.RaceState == RaceHandler.RUNNING)
       {
          dtostrf(RaceHandler.GetDogTime(RaceHandler.iCurrentDog), 7, 3, cDogTime);
-         syslog.logf_P("Dog %i: %ss", RaceHandler.iCurrentDog, cDogTime);
+         ESP_LOGI(TAG, "Dog %i: %ss", RaceHandler.iCurrentDog, cDogTime);
       }
       */
       Serial.printf("GPS Time: %s\r\n", GPSHandler.GetUTCTimestamp());
@@ -391,7 +384,7 @@ void loop()
    if (digitalRead(SideSwitch.Pin) == LOW && millis() - SideSwitch.LastTriggerTime > SideSwitch.CoolDownTime)
    {
       SideSwitch.LastTriggerTime = millis();
-      syslog.logf_P("Switching sides!");
+      ESP_LOGI(TAG, "Switching sides!");
       RaceHandler.ToggleRunDirection();
    }
 }
@@ -452,7 +445,8 @@ void StartStopRace()
        && RaceHandler.GetRaceTime() == 0)           //and timers are zero
    {
       //Then start the race
-      syslog.logf_P(LOG_DEBUG, "%lu: START!\r\n", millis());
+      if (bDEBUG)
+         ESP_LOGI(TAG, "%lu: START!", millis());
       RaceHandler.StartRace();
    }
    else //If race state is running or starting, we should stop it

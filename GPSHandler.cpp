@@ -4,7 +4,6 @@
 
 #include "GPSHandler.h"
 #include <TinyGPS++.h>
-#include "SyslogHelper.h"
 #include <TimeLib.h>
 
 void GPSHandlerClass::_HandleSerialPort()
@@ -20,7 +19,7 @@ void GPSHandlerClass::init(HardwareSerial * SerialPort)
 {
    _SerialPort = SerialPort;
    _FormatUTCTime();
-   syslog.logf_P("GPS Class initialized!");
+   ESP_LOGI(TAG, "GPS Class initialized!");
 }
 
 void GPSHandlerClass::loop()
@@ -38,7 +37,7 @@ void GPSHandlerClass::loop()
          , _Tgps.date.year());
       _FormatUTCTime();
       long lAge = (_Tgps.time.centisecond() * 10) - (_Tgps.time.age());
-      //syslog.logf_P(LOG_DEBUG, "UTC time: %s + %ld ms", _cUTCTime, lAge);
+      //ESP_LOGD(TAG, "UTC time: %s + %ld ms", _cUTCTime, lAge);
    }
 }
 

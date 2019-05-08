@@ -23,7 +23,6 @@
 #include "SettingsManager.h"
 #include "global.h"
 #include "WebHandler.h"
-#include "SyslogHelper.h"
 #include "GPSHandler.h"
 
 /// <summary>
@@ -42,6 +41,7 @@ void RaceHandlerClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
    ResetRace();
 
    _iCurrentRaceId = 0;
+   ESP_LOGD(TAG, "Run Direction from settings: %s", SettingsManager.getSetting("RunDirectionInverted").c_str());
    if (SettingsManager.getSetting("RunDirectionInverted").equals("1")) {
       ToggleRunDirection();
    }
@@ -73,7 +73,7 @@ void RaceHandlerClass::_ChangeDogState(_byDogStates byNewDogState)
    if (_byDogState != byNewDogState)
    {
       _byDogState = byNewDogState;
-      syslog.logf_P(LOG_DEBUG, "DogState: %i", byNewDogState);
+      ESP_LOGD(TAG, "DogState: %i", byNewDogState);
    }
 }
 
@@ -89,7 +89,7 @@ void RaceHandlerClass::_ChangeDogNumber(uint8_t iNewDogNumber)
    {
       iPreviousDog = iCurrentDog;
       iCurrentDog = iNewDogNumber;
-      syslog.logf_P(LOG_DEBUG, "Prev Dog: %i|ENT:%lu|EXIT:%lu|TOT:%lu", iPreviousDog, _lDogEnterTimes[iPreviousDog], _lDogExitTimes[iPreviousDog], _lDogTimes[iPreviousDog][_iDogRunCounters[iPreviousDog]]);
+      ESP_LOGD(TAG, "Prev Dog: %i|ENT:%lu|EXIT:%lu|TOT:%lu", iPreviousDog, _lDogEnterTimes[iPreviousDog], _lDogExitTimes[iPreviousDog], _lDogTimes[iPreviousDog][_iDogRunCounters[iPreviousDog]]);
 
    }
 }
@@ -111,7 +111,7 @@ void RaceHandlerClass::Main()
       while (!_QueueEmpty())
       {
          STriggerRecord STempRecord = _QueuePop();
-         syslog.logf_P(LOG_DEBUG, "S%i|T:%li|St:%i", STempRecord.iSensorNumber, STempRecord.lTriggerTime - _lRaceStartTime, STempRecord.iSensorState);
+         ESP_LOGD(TAG, "S%i|T:%li|St:%i", STempRecord.iSensorNumber, STempRecord.lTriggerTime - _lRaceStartTime, STempRecord.iSensorState);
       }
       return;
    }
@@ -131,8 +131,8 @@ void RaceHandlerClass::Main()
          _bGatesClear = true;
       }
 
-      syslog.logf_P(LOG_DEBUG, "S%i|T:%li|St:%i", STriggerRecord.iSensorNumber, STriggerRecord.lTriggerTime - _lRaceStartTime, STriggerRecord.iSensorState);
-      syslog.logf_P(LOG_DEBUG, "bGatesClear: %i", _bGatesClear);
+      ESP_LOGD(TAG, "S%i|T:%li|St:%i", STriggerRecord.iSensorNumber, STriggerRecord.lTriggerTime - _lRaceStartTime, STriggerRecord.iSensorState);
+      ESP_LOGD(TAG, "bGatesClear: %i", _bGatesClear);
 
       //Calculate what our next dog will be
       if ((_bFault && _bRerunBusy)
@@ -168,7 +168,7 @@ void RaceHandlerClass::Main()
          {
             //Dog 0 is too early!
             SetDogFault(iCurrentDog, ON);
-            syslog.logf_P(LOG_DEBUG, "F! D:%i!", iCurrentDog);
+            ESP_LOGD(TAG, "F! D:%i!", iCurrentDog);
             _lCrossingTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = STriggerRecord.lTriggerTime - _lPerfectCrossingTime;
             _lDogEnterTimes[iCurrentDog] = STriggerRecord.lTriggerTime;
          }
@@ -187,7 +187,7 @@ void RaceHandlerClass::Main()
 
             //Handle next dog
             _lDogEnterTimes[iNextDog] = STriggerRecord.lTriggerTime;
-            syslog.logf_P(LOG_DEBUG, "F! D:%i!", iNextDog);
+            ESP_LOGD(TAG, "F! D:%i!", iNextDog);
          }
 
          //Normal race handling (no faults)
@@ -218,7 +218,7 @@ void RaceHandlerClass::Main()
             and thus passed through sensors unseen */
             //Set enter time for this dog to exit time of previous dog
             _lDogEnterTimes[iCurrentDog] = _lDogExitTimes[iPreviousDog];
-            syslog.logf_P(LOG_DEBUG, "Invisible dog came back!");
+            ESP_LOGD(TAG, "Invisible dog came back!");
          }
 
          //Check if current dog has a fault
@@ -249,7 +249,7 @@ void RaceHandlerClass::Main()
                || (_bRerunBusy == true && _bFault == false))                //Or if the rerun sequence was started but no faults exist anymore
             {
                StopRace(STriggerRecord.lTriggerTime);
-               syslog.logf_P(LOG_DEBUG, "Last Dog: %i|ENT:%lu|EXIT:%lu|TOT:%lu", iCurrentDog, _lDogEnterTimes[iCurrentDog], _lDogExitTimes[iCurrentDog], _lDogTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]]);
+               ESP_LOGD(TAG, "Last Dog: %i|ENT:%lu|EXIT:%lu|TOT:%lu", iCurrentDog, _lDogEnterTimes[iCurrentDog], _lDogExitTimes[iCurrentDog], _lDogTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]]);
             }
             else if ((iCurrentDog == 3 && _bFault == true && _bRerunBusy == false)  //If current dog is dog 4 and a fault exists, we have to initiate rerun sequence
                || _bRerunBusy == true)                                        //Or if rerun is busy (and faults still exist)
@@ -261,7 +261,7 @@ void RaceHandlerClass::Main()
                _lDogExitTimes[iNextDog] = 0;
                //Increase run counter for this dog
                _iDogRunCounters[iNextDog]++;
-               syslog.logf_P("RR%i", iNextDog);
+               ESP_LOGI(TAG, "RR%i", iNextDog);
             }
             else
             {
@@ -308,7 +308,7 @@ void RaceHandlerClass::Main()
          _bGatesClear = true;
          
          //Print the transition string up til now for debugging purposes
-         syslog.logf_P(LOG_DEBUG, "Tstring: %s", _strTransition.c_str());
+         ESP_LOGD(TAG, "Tstring: %s", _strTransition.c_str());
          
          //Only check transition string when gates are clear
          //TODO: If transistion string is 3 or longer but actually more events are coming related to same transition, these are not considered.
@@ -332,7 +332,7 @@ void RaceHandlerClass::Main()
             {
                //Transistion string BbAa indicates small object has passed through sensors
                //Most likely dog spat ball
-               syslog.logf_P("Spat ball detected?!");
+               ESP_LOGI(TAG, "Spat ball detected?!");
                SetDogFault(iCurrentDog, ON);
 
             }
@@ -568,13 +568,13 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
    {
       LightsController.ToggleFaultLight(iDogNumber, LightsController.ON);
       _bFault = true;
-      syslog.logf_P("D%iF1", iDogNumber);
+      ESP_LOGI(TAG, "D%iF1", iDogNumber);
    }
    else
    {
       //If fault is false, turn off fault light for this dog
       LightsController.ToggleFaultLight(iDogNumber, LightsController.OFF);
-      syslog.logf_P("D%iF0", iDogNumber);
+      ESP_LOGI(TAG, "D%iF0", iDogNumber);
    }
 }
 
@@ -905,8 +905,8 @@ stRaceData RaceHandlerClass::GetRaceData(uint iRaceId)
       RequestedRaceData.StartTime = _lRaceStartTime / 1000;
       RequestedRaceData.EndTime = _lRaceEndTime / 1000;
       RequestedRaceData.ElapsedTime = _lRaceTime / 1000;
-      //Serial.printf("Elapsed1: %lu - %lu = %lu\r\n", micros(), _lRaceStartTime, _lRaceTime);
-      //Serial.printf("Elapsed2: %lu - %lu = %lu\r\n", GET_MICROS, _lRaceStartTime, _lRaceTime);
+      //ESP_LOGD(TAG, "Elapsed1: %lu - %lu = %lu\r\n", micros(), _lRaceStartTime, _lRaceTime);
+      //ESP_LOGD(TAG, "Elapsed2: %lu - %lu = %lu\r\n", GET_MICROS, _lRaceStartTime, _lRaceTime);
       RequestedRaceData.TotalCrossingTime = this->GetTotalCrossingTimeMillis();
       RequestedRaceData.RaceState = RaceState;
       

@@ -4,13 +4,12 @@
 #include <SPIFFS.h>
 #include <StreamString.h>
 #include "config.h"
-#include "SyslogHelper.h"
 
 void SettingsManagerClass::loop()
 {
    if (_settings_save) {
-      syslog.logf_P(LOG_DEBUG, "[SETTINGS] Saving");
-      Serial.printf("Writing settings\r\n");
+      ESP_LOGD(TAG, "[SETTINGS] Saving");
+      ESP_LOGD(TAG, "Writing settings\r\n");
       EEPROM.commit();
       _settings_save = false;
    }
@@ -53,7 +52,7 @@ bool SettingsManagerClass::setSetting(const String& key, String value)
 void SettingsManagerClass::saveSettings()
 {
    _settings_save = true;
-   Serial.printf("Saving settings\r\n");
+   ESP_LOGD(TAG, "Saving settings\r\n");
 }
 
 bool SettingsManagerClass::hasSetting(const String& key)

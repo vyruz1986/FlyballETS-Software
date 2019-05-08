@@ -88,7 +88,7 @@ void SimulatorClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
    //digitalWrite(_iS2Pin, LOW);
    _iDataPos = 0;
    PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
-   Serial.printf("Simulator started!\r\n");
+   ESP_LOGI(TAG, "Simulator started!\r\n");
 }
 
 /// <summary>
