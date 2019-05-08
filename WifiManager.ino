@@ -29,14 +29,14 @@ void SetupWiFi() {
    uint8_t iOpMode = SettingsManager.getSetting("OperationMode").toInt();
    strAPName = SettingsManager.getSetting("APName");
    String strAPPass = SettingsManager.getSetting("APPass");
-   syslog.logf_P("[WiFi] Starting in mode %i", iOpMode);
-   Serial.printf("[WiFi] Name: %s, pass: %s\r\n", strAPName.c_str(), strAPPass.c_str());
+   ESP_LOGI(TAG, "[WiFi] Starting in mode %i", iOpMode);
+   ESP_LOGI(TAG, "[WiFi] Name: %s, pass: %s\r\n", strAPName.c_str(), strAPPass.c_str());
    if (iOpMode == SystemModes::MASTER) {
       IPGateway = IPAddress(192, 168, 20, 1);
       IPSubnet = IPAddress(255, 255, 255, 0);
       if (!WiFi.mode(WIFI_MODE_AP)
          || !WiFi.softAP(strAPName.c_str(), strAPPass.c_str())) {
-         syslog.logf_P(LOG_ALERT, "[WiFi]: Error initializing softAP with name %s!", strAPName.c_str());
+         ESP_LOGW(TAG, "[WiFi]: Error initializing softAP with name %s!", strAPName.c_str());
       }
    }
    else if (iOpMode == SystemModes::SLAVE) {
@@ -46,12 +46,12 @@ void SetupWiFi() {
       IPSubnet = IPAddress(255, 255, 255, 0);
       if(!WiFi.mode(WIFI_MODE_APSTA)
          || !WiFi.softAP(strAPName.c_str(), strAPPass.c_str())) {
-         syslog.logf_P(LOG_ALERT, "[WiFi]: Error initializing softAP with name %s!", strAPName.c_str());
+         ESP_LOGW(TAG, "[WiFi]: Error initializing softAP with name %s!", strAPName.c_str());
       }
       WiFi.begin(strSTAName.c_str(), strAPPass.c_str());
    }
    else {
-      syslog.logf_P(LOG_ERR, "[WiFi]: Got unknown mode, no idea how I should start...");
+      ESP_LOGE(TAG, "[WiFi]: Got unknown mode, no idea how I should start...");
    }
 }
 
@@ -64,46 +64,46 @@ void WiFiLoop() {
 void WiFiEvent(WiFiEvent_t event) {
    switch (event) {
    case SYSTEM_EVENT_AP_START:
-      syslog.logf_P("[WiFi] Trying to configure IP: %s, SM: %s", IPGateway.toString().c_str(), IPSubnet.toString().c_str());
+      ESP_LOGI(TAG, "[WiFi] Trying to configure IP: %s, SM: %s", IPGateway.toString().c_str(), IPSubnet.toString().c_str());
       if (!WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet)) {
-         syslog.logf_P(LOG_ERR, "[WiFi]: AP Config failed!");
+         ESP_LOGE(TAG, "[WiFi]: AP Config failed!");
       }
       else {
-         syslog.logf_P("[WiFi]: AP Started with name %s, IP: %s", strAPName.c_str(), WiFi.softAPIP().toString().c_str());
+         ESP_LOGI(TAG, "[WiFi]: AP Started with name %s, IP: %s", strAPName.c_str(), WiFi.softAPIP().toString().c_str());
       }
       if (WiFi.softAPIP() != IPGateway)
       {
-         syslog.logf_P(LOG_ERR, "I am not running on the correct IP (%s instead of %s), rebooting!", WiFi.softAPIP().toString().c_str(), IPGateway.toString().c_str());
+         ESP_LOGE(TAG, "I am not running on the correct IP (%s instead of %s), rebooting!", WiFi.softAPIP().toString().c_str(), IPGateway.toString().c_str());
          ESP.restart();
       }
       break;
    case SYSTEM_EVENT_AP_STOP:
-      syslog.logf_P("[WiFi]: AP Stopped");
+      ESP_LOGI(TAG, "[WiFi]: AP Stopped");
       break;
 
    case SYSTEM_EVENT_STA_GOT_IP:
-      syslog.logf_P("[WiFi]: STA got IP %s", WiFi.localIP().toString().c_str());
+      ESP_LOGI(TAG, "[WiFi]: STA got IP %s", WiFi.localIP().toString().c_str());
       break;
 
    case SYSTEM_EVENT_STA_DISCONNECTED:
    {
       SlaveHandler.resetConnection();
-      syslog.logf_P("[WiFi] Disconnected from AP (event %i)", SYSTEM_EVENT_STA_DISCONNECTED);
+      ESP_LOGI(TAG, "[WiFi] Disconnected from AP (event %i)", SYSTEM_EVENT_STA_DISCONNECTED);
       String strAPName = SettingsManager.getSetting("APName");
       String strAPPass = SettingsManager.getSetting("APPass");
       WiFi.begin(strAPName.c_str(), strAPPass.c_str());
-      syslog.logf_P(LOG_WARNING, "[WiFi]: Connecting to AP...");
+      ESP_LOGW(TAG, "[WiFi]: Connecting to AP...");
       break;
    }
 
    case SYSTEM_EVENT_STA_CONNECTED:
    {
-      syslog.logf_P("[WiFi] Connected to AP %s (event %i)", WiFi.SSID().c_str(), SYSTEM_EVENT_STA_CONNECTED);
+      ESP_LOGI(TAG, "[WiFi] Connected to AP %s (event %i)", WiFi.SSID().c_str(), SYSTEM_EVENT_STA_CONNECTED);
       break;
    }
 
    default:
-      Serial.printf("Wifi event %i\r\n", event);
+      ESP_LOGD(TAG, "Wifi event %i\r\n", event);
       break;
    }
 }

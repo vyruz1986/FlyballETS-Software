@@ -29,7 +29,7 @@ void SlaveHandlerClass::init()
       , std::placeholders::_3));
 
    //this->_wsClient.setReconnectInterval(CONNECT_CHECK);
-   syslog.logf_P("SlaveHandler initialized!");
+   ESP_LOGI(TAG, "SlaveHandler initialized!");
 
    _jsonRaceData = _jdocRaceData.to<JsonObject>();
 }
@@ -37,8 +37,8 @@ void SlaveHandlerClass::loop()
 {
    if (millis() - this->_ulLastConnectCheck > CONNECT_CHECK) {
       this->_ulLastConnectCheck = millis();
-      Serial.printf("[SLAVEHANDLER] C: %i, CN: %i, CS: %i, S: %i, SC: %i, strRDLength: %i\r\n", _bConnected, _ConnectionNeeded(), _bWSConnectionStarted, _bIAmSlave, _bSlaveConfigured, _strJsonRaceData.length());
-      Serial.printf("Wifi Status: %u, Wifi.localIP: %s\r\n", WiFi.status(), WiFi.localIP().toString().c_str());
+      ESP_LOGD(TAG, "[SLAVEHANDLER] C: %i, CN: %i, CS: %i, S: %i, SC: %i, strRDLength: %i\r\n", _bConnected, _ConnectionNeeded(), _bWSConnectionStarted, _bIAmSlave, _bSlaveConfigured, _strJsonRaceData.length());
+      ESP_LOGD(TAG, "Wifi Status: %u, Wifi.localIP: %s\r\n", WiFi.status(), WiFi.localIP().toString().c_str());
       if (!_bConnected
          && this->_ConnectionNeeded()
          && !_bWSConnectionStarted)
@@ -52,7 +52,6 @@ void SlaveHandlerClass::loop()
    }
 
    if (this->_bConnected || this->_ConnectionNeeded()) {
-      //Serial.print(".");
       this->_wsClient.loop();
    }
 
@@ -83,7 +82,7 @@ void SlaveHandlerClass::_ConnectRemote()
 {
    this->_wsClient.begin(this->_RemoteIP.toString(), 80, "/ws");
    this->_bWSConnectionStarted = true;
-   Serial.printf("[WSc] Initiated connection to %s\r\n", this->_RemoteIP.toString().c_str());
+   ESP_LOGD(TAG, "[WSc] Initiated connection to %s\r\n", this->_RemoteIP.toString().c_str());
 }
 
 void SlaveHandlerClass::_WsEvent(WStype_t type, uint8_t * payload, size_t length)
@@ -101,7 +100,7 @@ void SlaveHandlerClass::_WsEvent(WStype_t type, uint8_t * payload, size_t length
       this->_bWSConnectionStarted = false;
       this->_AnnounceSlaveIfApplicable();
       this->_AnnounceConsumerIfApplicable();
-      Serial.printf("[WSc] Connected to url: %s\n", payload);
+      ESP_LOGD(TAG, "[WSc] Connected to url: %s\n", payload);
       _SlaveStatus.LastReply = millis();
 
       // send message to server when Connected
@@ -110,11 +109,11 @@ void SlaveHandlerClass::_WsEvent(WStype_t type, uint8_t * payload, size_t length
 
    case WStype_TEXT:
    {
-      Serial.printf("[WSc] At %lu I got text: %s\n", millis(), payload);
+      ESP_LOGD(TAG, "[WSc] At %lu I got text: %s\n", millis(), payload);
       _SlaveStatus.LastReply = millis();
       DeserializationError error = deserializeJson(_jdocClientInput, (const char *)payload);
       if (error) {
-         syslog.logf_P(LOG_ERR, "Error parsing JSON: %s!", error.c_str());
+         ESP_LOGI(TAG, LOG_ERR, "Error parsing JSON: %s!", error.c_str());
          return;
       }
       _jsonClientInput = _jdocClientInput.as<JsonObject>();
@@ -125,18 +124,18 @@ void SlaveHandlerClass::_WsEvent(WStype_t type, uint8_t * payload, size_t length
          
          _strJsonRaceData = "";
          serializeJson(_jsonRaceData, _strJsonRaceData);
-         Serial.printf("[SLAVEHANDLER] got racedata from slave: %s\r\n", _strJsonRaceData.c_str());
+         ESP_LOGD(TAG, "[SLAVEHANDLER] got racedata from slave: %s\r\n", _strJsonRaceData.c_str());
 
       }
       else if (_jsonClientInput.containsKey("SystemData")) {
-         Serial.printf("Got SystemData!\r\n");
+         ESP_LOGD(TAG, "Got SystemData!\r\n");
          _ulLastSystemDataReceived = millis();
       }
       break;
    }
 
    case WStype_BIN:
-      Serial.printf("[WSc] get binary length: %u\n", length);
+      ESP_LOGD(TAG, "[WSc] get binary length: %u\n", length);
 
       break;
    }
@@ -145,7 +144,7 @@ void SlaveHandlerClass::_WsEvent(WStype_t type, uint8_t * payload, size_t length
 void SlaveHandlerClass::_SetDisconnected()
 {
    this->_bConnected = false;
-   Serial.printf("[WSc] Disconnected!\n");
+   ESP_LOGD(TAG, "[WSc] Disconnected!\n");
 }
 
 void SlaveHandlerClass::_AnnounceSlaveIfApplicable()
@@ -158,7 +157,7 @@ void SlaveHandlerClass::_AnnounceSlaveIfApplicable()
    this->_bSlaveAnnounced = true;
 
    //If we are slave and we have announced ourselves as such, we can close the connection
-   Serial.printf("[WSc] Announed slave, disconnecting...\r\n");
+   ESP_LOGD(TAG, "[WSc] Announed slave, disconnecting...\r\n");
    this->_WsCloseConnection();
 }
 
@@ -171,7 +170,7 @@ void SlaveHandlerClass::_AnnounceConsumerIfApplicable()
    this->_wsClient.sendTXT(strJson);
    this->_bConsumerAnnounced = true;
 
-   Serial.printf("[WSc] Announed Consumer!\r\n");
+   ESP_LOGD(TAG, "[WSc] Announed Consumer!\r\n");
 }
 
 void SlaveHandlerClass::_WsCloseConnection()
@@ -219,7 +218,7 @@ bool SlaveHandlerClass::sendToSlave(String strMessage)
 
 String SlaveHandlerClass::getSlaveRaceData()
 {
-   Serial.printf("[SLAVEHANDLER] Slave is returning racedata: %s\r\n", _strJsonRaceData.c_str());
+   ESP_LOGD(TAG, "[SLAVEHANDLER] Slave is returning racedata: %s\r\n", _strJsonRaceData.c_str());
    return _strJsonRaceData;
 }
 
@@ -227,7 +226,7 @@ JsonObject SlaveHandlerClass::getSlaveRaceData1()
 {
    String strJsonRaceData;
    serializeJson(_jdocRaceData, strJsonRaceData);
-   Serial.printf("[SLAVEHANDLER] Returning slave racedata: %s\r\n\r\n", strJsonRaceData.c_str());
+   ESP_LOGD(TAG, "[SLAVEHANDLER] Returning slave racedata: %s\r\n\r\n", strJsonRaceData.c_str());
    return _jsonRaceData;
 }
 
@@ -235,7 +234,7 @@ char * SlaveHandlerClass::getSlaveRaceData2()
 {
    char * strJsonRaceData;
    serializeJson(_jsonRaceData, strJsonRaceData, measureJson(_jsonRaceData));
-   Serial.printf("[SLAVEHANDLER] Returning slave racedata: %s\r\n\r\n", strJsonRaceData);
+   ESP_LOGD(TAG, "[SLAVEHANDLER] Returning slave racedata: %s\r\n\r\n", strJsonRaceData);
    return strJsonRaceData;
 }
 
@@ -245,12 +244,12 @@ void SlaveHandlerClass::_TestConnection()
    if (this->_ConnectionNeeded() && _bConnected) {
       if (millis() - _SlaveStatus.LastCheck > 1200) {
          _SlaveStatus.LastCheck = millis();
-         Serial.printf("[WSc] Testing connection at %lu...\r\n", millis());
+         ESP_LOGD(TAG, "[WSc] Testing connection at %lu...\r\n", millis());
          bool bCheckResult = _wsClient.sendPing();
-         Serial.printf("[WSc] Test result: %i\r\n", bCheckResult);
+         ESP_LOGD(TAG, "[WSc] Test result: %i\r\n", bCheckResult);
       }
       if (millis() - _SlaveStatus.LastReply > 6000) {
-         Serial.printf("[WSc] Connection broken at %lu, reconnecting...\r\n", millis());
+         ESP_LOGD(TAG, "[WSc] Connection broken at %lu, reconnecting...\r\n", millis());
          _wsClient.disconnect();
          this->_SetDisconnected();
       }

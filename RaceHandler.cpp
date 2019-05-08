@@ -401,7 +401,7 @@ void RaceHandlerClass::StartTimers()
 void RaceHandlerClass::StartRace(unsigned long StartTime)
 {
    _lSchduledRaceStartTime = StartTime;
-   syslog.logf_P(LOG_DEBUG, "Race scheduled to start at %lu ms", StartTime);
+   ESP_LOGI(TAG, LOG_DEBUG, "Race scheduled to start at %lu ms", StartTime);
    LightsController.ShowScheduledRace(StartTime - millis());
    RaceState = RaceStates::SCHEDULED;
 }

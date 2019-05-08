@@ -290,7 +290,7 @@ void setup()
       0);
 #endif //  ESP32
 
-   syslog.logf_P("Ready, version %s", APP_VER);
+   ESP_LOGI(TAG, "Ready, version %s", APP_VER);
 }
 
 void loop()
@@ -371,7 +371,7 @@ void loop()
          ESP_LOGI(TAG, "Dog %i: %ss", RaceHandler.iCurrentDog, cDogTime);
       }
       */
-      Serial.printf("GPS Time: %s\r\n", GPSHandler.GetUTCTimestamp());
+      ESP_LOGI(TAG, "GPS Time: %s\r\n", GPSHandler.GetUTCTimestamp());
    }
    //Cleanup variables used for checking if something changed
    iCurrentDog = RaceHandler.iCurrentDog;
@@ -439,14 +439,13 @@ void Sensor1Wrapper()
 /// </summary>
 void StartStopRace()
 {
-   Serial.printf("StartStopRace called\r\n");
+   ESP_LOGI(TAG, "StartStopRace called\r\n");
    lLastRCPress[0] = millis();
    if (RaceHandler.RaceState == RaceHandler.STOPPED //If race is stopped
        && RaceHandler.GetRaceTime() == 0)           //and timers are zero
    {
       //Then start the race
-      if (bDEBUG)
-         ESP_LOGI(TAG, "%lu: START!", millis());
+      ESP_LOGD(TAG, "%lu: START!", millis());
       RaceHandler.StartRace();
    }
    else //If race state is running or starting, we should stop it
@@ -496,7 +495,7 @@ void HandleSerialMessages() {
       StartStopRace();
    }
    else if (bSerialStringComplete) {
-      Serial.printf("Serial string was complete, it contains %s, which is not equal to START or STOP\r\n", strSerialData.c_str());
+      ESP_LOGD(TAG, "Serial string was complete, it contains %s, which is not equal to START or STOP\r\n", strSerialData.c_str());
    }
 
    if (bSerialStringComplete && strSerialData == "RESET")
@@ -528,8 +527,7 @@ void HandleSerialMessages() {
    if (strSerialData.length() > 0
       && bSerialStringComplete)
    {
-      syslog.logf_P(LOG_DEBUG, "cSer: '%s'", strSerialData.c_str());
-
+      ESP_LOGI(TAG, "cSer: '%s'", strSerialData.c_str());
 
       strSerialData = "";
       bSerialStringComplete = false;
