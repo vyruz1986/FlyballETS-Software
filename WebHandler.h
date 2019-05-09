@@ -12,7 +12,7 @@
 #include "SettingsManager.h"
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-#include <ArduinoJson.h>
+#include "ArduinoJson-v6.10.1.h"
 #include "RaceHandler.h"
 #include "Structs.h"
 #include "LightsController.h"

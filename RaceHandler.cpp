@@ -24,6 +24,7 @@
 #include "global.h"
 #include "WebHandler.h"
 #include "GPSHandler.h"
+static const char TAG[] = __FILE__;
 
 /// <summary>
 ///   Initialises this object andsets all counters to 0.
@@ -401,7 +402,7 @@ void RaceHandlerClass::StartTimers()
 void RaceHandlerClass::StartRace(unsigned long StartTime)
 {
    _lSchduledRaceStartTime = StartTime;
-   ESP_LOGI(TAG, LOG_DEBUG, "Race scheduled to start at %lu ms", StartTime);
+   ESP_LOGI(TAG, "Race scheduled to start at %lu ms", StartTime);
    LightsController.ShowScheduledRace(StartTime - millis());
    RaceState = RaceStates::SCHEDULED;
 }

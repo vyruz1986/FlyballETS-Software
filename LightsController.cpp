@@ -24,6 +24,7 @@
 #include "Structs.h"
 #include "WebHandler.h"
 #include <NeoPixelBus.h>
+static const char TAG[] = __FILE__;
 
 /// <summary>
 ///   Initialises this object. This function needs to be passed the pin numbers for the shift

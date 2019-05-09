@@ -4,6 +4,7 @@
 #include <SPIFFS.h>
 #include <StreamString.h>
 #include "config.h"
+static const char TAG[] = __FILE__;
 
 void SettingsManagerClass::loop()
 {

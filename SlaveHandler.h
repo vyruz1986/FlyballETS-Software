@@ -42,9 +42,9 @@ protected:
    bool _ConnectionNeeded();
    void _TestConnection();
    String _strJsonRaceData;
-   DynamicJsonDocument _jdocClientInput;
+   StaticJsonDocument<bsActionScheduleStartRace> _jdocClientInput;
    JsonObject _jsonClientInput;
-   DynamicJsonDocument _jdocRaceData;
+   StaticJsonDocument<bsRaceData> _jdocRaceData;
    JsonObject _jsonRaceData;
 
 

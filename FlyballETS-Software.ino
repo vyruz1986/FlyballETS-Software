@@ -28,7 +28,6 @@
 #include "Structs.h"
 #include "WebHandler.h"
 #include "config.h"
-#include "StreamPrint.h"
 #include "LCDController.h"
 #include "RaceHandler.h"
 #include "LightsController.h"
@@ -41,8 +40,7 @@
 #include <ArduinoOTA.h>
 #include <EEPROM.h>
 #include "esp_log.h"
-
-#define TAG __FILE__
+static const char TAG[] = __FILE__;
 
 /*List of pins and the ones used (Lolin32 board):
    - 34: S1 (handler side) photoelectric sensor
@@ -488,39 +486,47 @@ void Core0Loop(void * parameter) {
 }
 
 void HandleSerialMessages() {
-   //Race start/stop by serial command
-   if (bSerialStringComplete
-      && (strSerialData.equals("START") || strSerialData.equals("STOP")))
+   if (!bSerialStringComplete) {
+      return;
+   }
+   if (strSerialData.equals("START") || strSerialData.equals("STOP"))
    {
       StartStopRace();
    }
-   else if (bSerialStringComplete) {
-      ESP_LOGD(TAG, "Serial string was complete, it contains %s, which is not equal to START or STOP\r\n", strSerialData.c_str());
-   }
 
-   if (bSerialStringComplete && strSerialData == "RESET")
+   if (strSerialData == "RESET")
    {
       ResetRace();
    }
 
-   if (bSerialStringComplete && strSerialData == "D0F")
+   if (strSerialData == "D0F")
    {
       RaceHandler.SetDogFault(0);
    }
 
-   if (bSerialStringComplete && strSerialData == "D1F")
+   if (strSerialData == "D1F")
    {
       RaceHandler.SetDogFault(1);
    }
 
-   if (bSerialStringComplete && strSerialData == "D2F")
+   if (strSerialData == "D2F")
    {
       RaceHandler.SetDogFault(2);
    }
 
-   if (bSerialStringComplete && strSerialData == "D3F")
+   if (strSerialData == "D3F")
    {
       RaceHandler.SetDogFault(3);
+   }
+
+   if (strSerialData.indexOf("SET_LOGLEVEL=") > -1) {
+      String strLogLevel = strSerialData.substring(13);
+      ESP_LOGI(TAG, "Setting loglevel to %s", strLogLevel.c_str());
+      if (strLogLevel.indexOf("ERROR") > -1) esp_log_level_set("*", ESP_LOG_ERROR);
+      if (strLogLevel.indexOf("WARN") > -1) esp_log_level_set("*", ESP_LOG_WARN);
+      if (strLogLevel.indexOf("INFO") > -1) esp_log_level_set("*", ESP_LOG_INFO);
+      if (strLogLevel.indexOf("DEBUG") > -1) esp_log_level_set("*", ESP_LOG_DEBUG);
+      if (strLogLevel.indexOf("VERB") > -1) esp_log_level_set("*", ESP_LOG_VERBOSE);
    }
 
    //Make sure this stays last in the function!

@@ -13,8 +13,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.If not, see <http://www.gnu.org/licenses/>
 
-#include <ArduinoJson.h>
+#include "ArduinoJson-v6.10.1.h"
 #pragma once
 
 const size_t bsRaceData = 5 * JSON_ARRAY_SIZE(4) + JSON_OBJECT_SIZE(1) + 16 * JSON_OBJECT_SIZE(2) + 4 * JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(7) + 870;
 const size_t bsRaceDataArray = JSON_ARRAY_SIZE(2) + 10 * JSON_ARRAY_SIZE(4) + JSON_OBJECT_SIZE(1) + 32 * JSON_OBJECT_SIZE(2) + 8 * JSON_OBJECT_SIZE(4) + 2 * JSON_OBJECT_SIZE(7) + 1720;
+const size_t bsLightsData = JSON_ARRAY_SIZE(5) + JSON_OBJECT_SIZE(1) + 20;
+const size_t bsActionScheduleStartRace = 2 * JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(2);

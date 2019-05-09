@@ -5,6 +5,7 @@
 #include "GPSHandler.h"
 #include <TinyGPS++.h>
 #include <TimeLib.h>
+static const char TAG[] = __FILE__;
 
 void GPSHandlerClass::_HandleSerialPort()
 {

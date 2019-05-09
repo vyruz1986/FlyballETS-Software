@@ -14,6 +14,7 @@
 // along with this program.If not, see <http://www.gnu.org/licenses/>
 
 #include "SlaveHandler.h"
+//static const char TAG[] = __FILE__;
 
 //Wifi stuff
 IPAddress IPGateway;
@@ -29,8 +30,8 @@ void SetupWiFi() {
    uint8_t iOpMode = SettingsManager.getSetting("OperationMode").toInt();
    strAPName = SettingsManager.getSetting("APName");
    String strAPPass = SettingsManager.getSetting("APPass");
-   ESP_LOGI(TAG, "[WiFi] Starting in mode %i", iOpMode);
-   ESP_LOGI(TAG, "[WiFi] Name: %s, pass: %s\r\n", strAPName.c_str(), strAPPass.c_str());
+   ESP_LOGI(TAG, "Starting in mode %i", iOpMode);
+   ESP_LOGI(TAG, "Name: %s, pass: %s\r\n", strAPName.c_str(), strAPPass.c_str());
    if (iOpMode == SystemModes::MASTER) {
       IPGateway = IPAddress(192, 168, 20, 1);
       IPSubnet = IPAddress(255, 255, 255, 0);
@@ -64,7 +65,7 @@ void WiFiLoop() {
 void WiFiEvent(WiFiEvent_t event) {
    switch (event) {
    case SYSTEM_EVENT_AP_START:
-      ESP_LOGI(TAG, "[WiFi] Trying to configure IP: %s, SM: %s", IPGateway.toString().c_str(), IPSubnet.toString().c_str());
+      ESP_LOGI(TAG, "Trying to configure IP: %s, SM: %s", IPGateway.toString().c_str(), IPSubnet.toString().c_str());
       if (!WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet)) {
          ESP_LOGE(TAG, "[WiFi]: AP Config failed!");
       }
@@ -88,7 +89,7 @@ void WiFiEvent(WiFiEvent_t event) {
    case SYSTEM_EVENT_STA_DISCONNECTED:
    {
       SlaveHandler.resetConnection();
-      ESP_LOGI(TAG, "[WiFi] Disconnected from AP (event %i)", SYSTEM_EVENT_STA_DISCONNECTED);
+      ESP_LOGI(TAG, "Disconnected from AP (event %i)", SYSTEM_EVENT_STA_DISCONNECTED);
       String strAPName = SettingsManager.getSetting("APName");
       String strAPPass = SettingsManager.getSetting("APPass");
       WiFi.begin(strAPName.c_str(), strAPPass.c_str());
@@ -98,7 +99,7 @@ void WiFiEvent(WiFiEvent_t event) {
 
    case SYSTEM_EVENT_STA_CONNECTED:
    {
-      ESP_LOGI(TAG, "[WiFi] Connected to AP %s (event %i)", WiFi.SSID().c_str(), SYSTEM_EVENT_STA_CONNECTED);
+      ESP_LOGI(TAG, "Connected to AP %s (event %i)", WiFi.SSID().c_str(), SYSTEM_EVENT_STA_CONNECTED);
       break;
    }
 
