@@ -1,6 +1,6 @@
-// 
-// 
-// 
+//
+//
+//
 
 #include "WebHandler.h"
 #include <Hash.h>
@@ -14,10 +14,8 @@
 #include "BatterySensor.h"
 #include <rom/rtc.h>
 #include "..\..\src\static\index.html.gz.h"
-#include <Syslog.h>
-extern Syslog syslog;
 
-void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t * data, size_t len)
+void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
 {
    //FIXME: The next line works but introduces an unnecessary String. The 2nd line does not work, I don't know why...
    boolean isAdmin = String("/wsa").equals(server->url());
@@ -25,7 +23,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
 
    if (type == WS_EVT_CONNECT)
    {
-      syslog.logf_P("ws[%s][%u] connect\n", server->url(), client->id());
+      ESP_LOGI(__FILE__, "ws[%s][%u] connect: %zu\n", server->url(), client->id());
       //client->printf("Hello Client %u :)", client->id());
 
       //Should we check authentication?
@@ -39,76 +37,94 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
       }
 
       //TODO: Would be nicer if we only send this to the specific client who just connected instead of all clients
-      _SendRaceData();  //Make sure we always broadcast racedata when new client connects
+      _SendRaceData(); //Make sure we always broadcast racedata when new client connects
       client->ping();
    }
-   else if (type == WS_EVT_DISCONNECT) {
-      syslog.logf_P("ws[%s][%u] disconnect: %zu\n", server->url(), client->id());
+   else if (type == WS_EVT_DISCONNECT)
+   {
+      ESP_LOGI(__FILE__, "ws[%s][%u] disconnect: %zu\n", server->url(), client->id());
    }
-   else if (type == WS_EVT_ERROR) {
-      syslog.logf_P("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
+   else if (type == WS_EVT_ERROR)
+   {
+      ESP_LOGI(__FILE__, "ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t *)arg), (char *)data);
    }
-   else if (type == WS_EVT_PONG) {
-      syslog.logf_P("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len) ? (char*)data : "");
+   else if (type == WS_EVT_PONG)
+   {
+      ESP_LOGI(__FILE__, "ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len) ? (char *)data : "");
    }
-   else if (type == WS_EVT_DATA) {
-      AwsFrameInfo * info = (AwsFrameInfo*)arg;
+   else if (type == WS_EVT_DATA)
+   {
+      AwsFrameInfo *info = (AwsFrameInfo *)arg;
       String msg = "";
-      if (info->final && info->index == 0 && info->len == len) {
+      if (info->final && info->index == 0 && info->len == len)
+      {
          //the whole message is in a single frame and we got all of it's data
-         syslog.logf_P("ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT) ? "text" : "binary", info->len);
+         ESP_LOGI(__FILE__, "ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT) ? "text" : "binary", info->len);
 
-         if (info->opcode == WS_TEXT) {
-            for (size_t i = 0; i < info->len; i++) {
+         if (info->opcode == WS_TEXT)
+         {
+            for (size_t i = 0; i < info->len; i++)
+            {
                msg += (char)data[i];
             }
          }
-         else {
+         else
+         {
             char buff[3];
-            for (size_t i = 0; i < info->len; i++) {
+            for (size_t i = 0; i < info->len; i++)
+            {
                sprintf(buff, "%02x ", (uint8_t)data[i]);
                msg += buff;
             }
          }
-         syslog.logf_P("%s\n", msg.c_str());
+         ESP_LOGI(__FILE__, "%s\n", msg.c_str());
       }
-      else {
+      else
+      {
          //message is comprised of multiple frames or the frame is split into multiple packets
-         if (info->index == 0) {
+         if (info->index == 0)
+         {
             if (info->num == 0)
-               syslog.logf_P("ws[%s][%u] %s-message start\n", server->url(), client->id(), (info->message_opcode == WS_TEXT) ? "text" : "binary");
-            syslog.logf_P("ws[%s][%u] frame[%u] start[%llu]\n", server->url(), client->id(), info->num, info->len);
+               ESP_LOGI(__FILE__, "ws[%s][%u] %s-message start\n", server->url(), client->id(), (info->message_opcode == WS_TEXT) ? "text" : "binary");
+            ESP_LOGI(__FILE__, "ws[%s][%u] frame[%u] start[%llu]\n", server->url(), client->id(), info->num, info->len);
          }
 
-         syslog.logf_P("ws[%s][%u] frame[%u] %s[%llu - %llu]: ", server->url(), client->id(), info->num, (info->message_opcode == WS_TEXT) ? "text" : "binary", info->index, info->index + len);
+         ESP_LOGI(__FILE__, "ws[%s][%u] frame[%u] %s[%llu - %llu]: ", server->url(), client->id(), info->num, (info->message_opcode == WS_TEXT) ? "text" : "binary", info->index, info->index + len);
 
-         if (info->opcode == WS_TEXT) {
-            for (size_t i = 0; i < info->len; i++) {
+         if (info->opcode == WS_TEXT)
+         {
+            for (size_t i = 0; i < info->len; i++)
+            {
                msg += (char)data[i];
             }
          }
-         else {
+         else
+         {
             char buff[3];
-            for (size_t i = 0; i < info->len; i++) {
+            for (size_t i = 0; i < info->len; i++)
+            {
                sprintf(buff, "%02x ", (uint8_t)data[i]);
                msg += buff;
             }
          }
-         syslog.logf_P("%s\n", msg.c_str());
+         ESP_LOGI(__FILE__, "%s\n", msg.c_str());
 
-         if ((info->index + len) == info->len) {
-            syslog.logf_P("ws[%s][%u] frame[%u] end[%llu]\n", server->url(), client->id(), info->num, info->len);
-            if (info->final) {
-               syslog.logf_P("ws[%s][%u] %s-message end\n", server->url(), client->id(), (info->message_opcode == WS_TEXT) ? "text" : "binary");
+         if ((info->index + len) == info->len)
+         {
+            ESP_LOGI(__FILE__, "ws[%s][%u] frame[%u] end[%llu]\n", server->url(), client->id(), info->num, info->len);
+            if (info->final)
+            {
+               ESP_LOGI(__FILE__, "ws[%s][%u] %s-message end\n", server->url(), client->id(), (info->message_opcode == WS_TEXT) ? "text" : "binary");
             }
          }
       }
 
       // Parse JSON input
       DynamicJsonBuffer jsonBufferRequest;
-      JsonObject& request = jsonBufferRequest.parseObject(msg);
-      if (!request.success()) {
-         syslog.logf_P(LOG_ERR, "Error parsing JSON!");
+      JsonObject &request = jsonBufferRequest.parseObject(msg);
+      if (!request.success())
+      {
+         ESP_LOGE(__FILE__, "Error parsing JSON!");
          //wsSend_P(client->id(), PSTR("{\"message\": 3}"));
          client->text("{\"error\":\"Invalid JSON received\"}");
          return;
@@ -117,20 +133,22 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
       //const size_t bufferSize = JSON_ARRAY_SIZE(50) + 50 * JSON_OBJECT_SIZE(3);
       //DynamicJsonBuffer jsonBufferResponse(bufferSize);
       DynamicJsonBuffer jsonBufferResponse;
-      JsonObject& JsonResponseRoot = jsonBufferResponse.createObject();
+      JsonObject &JsonResponseRoot = jsonBufferResponse.createObject();
 
-      if (request.containsKey("action")) {
-         JsonObject& ActionResult = JsonResponseRoot.createNestedObject("ActionResult");
+      if (request.containsKey("action"))
+      {
+         JsonObject &ActionResult = JsonResponseRoot.createNestedObject("ActionResult");
          String errorText;
          bool result = _DoAction(request["action"], &errorText);
          ActionResult["success"] = result;
          ActionResult["error"] = errorText;
       }
 
-      if (request.containsKey("config")) {
-         JsonObject& ConfigResult = JsonResponseRoot.createNestedObject("configResult");
+      if (request.containsKey("config"))
+      {
+         JsonObject &ConfigResult = JsonResponseRoot.createNestedObject("configResult");
          String errorText;
-         JsonArray& config = request["config"];
+         JsonArray &config = request["config"];
          //We allow setting config only over admin websocket
          bool result;
          if (isAdmin)
@@ -146,10 +164,11 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
          ConfigResult["error"] = errorText;
       }
 
-      if (request.containsKey("getData")) {
+      if (request.containsKey("getData"))
+      {
          String dataName = request["getData"];
-         JsonObject& DataResult = JsonResponseRoot.createNestedObject("dataResult");
-         JsonObject& DataObject = DataResult.createNestedObject(dataName + "Data");
+         JsonObject &DataResult = JsonResponseRoot.createNestedObject("dataResult");
+         JsonObject &DataObject = DataResult.createNestedObject(dataName + "Data");
          bool result;
          if (dataName == "config" && !isAdmin)
          {
@@ -164,7 +183,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * c
       }
 
       size_t len = JsonResponseRoot.measureLength();
-      AsyncWebSocketMessageBuffer * wsBuffer = _ws->makeBuffer(len);
+      AsyncWebSocketMessageBuffer *wsBuffer = _ws->makeBuffer(len);
       if (wsBuffer)
       {
          JsonResponseRoot.printTo((char *)wsBuffer->get(), len + 1);
@@ -180,27 +199,15 @@ void WebHandlerClass::init(int webPort)
    _ws = new AsyncWebSocket("/ws");
    _wsa = new AsyncWebSocket("/wsa");
 
-   _ws->onEvent(std::bind(&WebHandlerClass::_WsEvent, this
-      , std::placeholders::_1
-      , std::placeholders::_2
-      , std::placeholders::_3
-      , std::placeholders::_4
-      , std::placeholders::_5
-      , std::placeholders::_6));
-   
-   _wsa->onEvent(std::bind(&WebHandlerClass::_WsEvent, this
-      , std::placeholders::_1
-      , std::placeholders::_2
-      , std::placeholders::_3
-      , std::placeholders::_4
-      , std::placeholders::_5
-      , std::placeholders::_6));
+   _ws->onEvent(std::bind(&WebHandlerClass::_WsEvent, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5, std::placeholders::_6));
+
+   _wsa->onEvent(std::bind(&WebHandlerClass::_WsEvent, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5, std::placeholders::_6));
 
    _server->addHandler(_ws);
    _server->addHandler(_wsa);
 
    _server->onNotFound([](AsyncWebServerRequest *request) {
-      syslog.logf_P(LOG_ERR, "Not found: %s!", request->url().c_str());
+      ESP_LOGE(__FILE__, "Not found: %s!", request->url().c_str());
       request->send(404);
    });
 
@@ -242,6 +249,15 @@ void WebHandlerClass::loop()
       _GetSystemData();
       _SendSystemData();
       _lLastSystemDataBroadcast = millis();
+      ESP_LOGD(__FILE__, "Current websocket clients connected: %i", _ws->count());
+      //    for (size_t i = 0; i < _ws->count(); i++)
+      //    {
+      //       ESP_LOGD(__FILE__, "Pinging client %i", i);
+      //       char *ping = "ping";
+      //       auto client = _ws->client(i);
+      //       client->ping(ping, sizeof ping);
+      //    }
+      _ws->pingAll();
    }
 }
 
@@ -249,21 +265,21 @@ void WebHandlerClass::SendLightsData(stLightsState LightStates)
 {
    const size_t bufferSize = JSON_ARRAY_SIZE(5) + JSON_OBJECT_SIZE(1);
    DynamicJsonBuffer JsonBuffer(bufferSize);
-   JsonObject& JsonRoot = JsonBuffer.createObject();
+   JsonObject &JsonRoot = JsonBuffer.createObject();
 
    if (!JsonRoot.success())
    {
-      syslog.logf_P(LOG_ERR, "Error creating JSON object!");
+      ESP_LOGE(__FILE__, "Error creating JSON object!");
       _ws->textAll("{\"error\": \"Error creating JSON object!\"}");
       return;
    }
    else
    {
-      JsonArray& JsonLightsData = JsonRoot.createNestedArray("LightsData");
+      JsonArray &JsonLightsData = JsonRoot.createNestedArray("LightsData");
       JsonLightsData.copyFrom(LightStates.State);
 
       size_t len = JsonRoot.measureLength();
-      AsyncWebSocketMessageBuffer * wsBuffer = _ws->makeBuffer(len);
+      AsyncWebSocketMessageBuffer *wsBuffer = _ws->makeBuffer(len);
       if (wsBuffer)
       {
          JsonRoot.printTo((char *)wsBuffer->get(), len + 1);
@@ -272,10 +288,13 @@ void WebHandlerClass::SendLightsData(stLightsState LightStates)
    }
 }
 
-boolean WebHandlerClass::_DoAction(JsonObject& ActionObj, String * ReturnError) {
+boolean WebHandlerClass::_DoAction(JsonObject &ActionObj, String *ReturnError)
+{
    String ActionType = ActionObj["actionType"];
-   if (ActionType == "StartRace") {
-      if (RaceHandler.RaceState != RaceHandler.STOPPED) {
+   if (ActionType == "StartRace")
+   {
+      if (RaceHandler.RaceState != RaceHandler.STOPPED)
+      {
          //ReturnError = String("Race was not stopped, stop it first!");
          return false;
       }
@@ -293,7 +312,8 @@ boolean WebHandlerClass::_DoAction(JsonObject& ActionObj, String * ReturnError) 
    }
    else if (ActionType == "StopRace")
    {
-      if (RaceHandler.RaceState == RaceHandler.STOPPED) {
+      if (RaceHandler.RaceState == RaceHandler.STOPPED)
+      {
          //ReturnError = "Race was already stopped!";
          return false;
       }
@@ -306,11 +326,13 @@ boolean WebHandlerClass::_DoAction(JsonObject& ActionObj, String * ReturnError) 
    }
    else if (ActionType == "ResetRace")
    {
-      if (RaceHandler.RaceState != RaceHandler.STOPPED) {
+      if (RaceHandler.RaceState != RaceHandler.STOPPED)
+      {
          //ReturnError = "Race was not stopped, first stop it before resetting!";
          return false;
       }
-      else if (RaceHandler._lRaceStartTime == 0) {
+      else if (RaceHandler._lRaceStartTime == 0)
+      {
          //ReturnError = "Race was already reset!";
          return false;
       }
@@ -344,16 +366,16 @@ boolean WebHandlerClass::_GetRaceDataJsonString(uint iRaceId, String &strJsonStr
 {
    const size_t bufferSize = 5 * JSON_ARRAY_SIZE(4) + JSON_OBJECT_SIZE(1) + 16 * JSON_OBJECT_SIZE(2) + 4 * JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(7);
    DynamicJsonBuffer JsonBuffer(bufferSize);
-   JsonObject& JsonRoot = JsonBuffer.createObject();
+   JsonObject &JsonRoot = JsonBuffer.createObject();
    if (!JsonRoot.success())
    {
-      syslog.logf_P(LOG_ERR, "Error parsing JSON!");
+      ESP_LOGE(__FILE__, "Error parsing JSON!");
       //strJsonString = "{\"error\": \"Error parsing JSON from RaceData!\"}";
       return false;
    }
    else
    {
-      JsonObject& JsonRaceData = JsonRoot.createNestedObject("RaceData");
+      JsonObject &JsonRaceData = JsonRoot.createNestedObject("RaceData");
       stRaceData RequestedRaceData = RaceHandler.GetRaceData();
       JsonRaceData["id"] = RequestedRaceData.Id;
       JsonRaceData["startTime"] = RequestedRaceData.StartTime;
@@ -362,15 +384,15 @@ boolean WebHandlerClass::_GetRaceDataJsonString(uint iRaceId, String &strJsonStr
       JsonRaceData["totalCrossingTime"] = RequestedRaceData.TotalCrossingTime;
       JsonRaceData["raceState"] = RequestedRaceData.RaceState;
 
-      JsonArray& JsonDogDataArray = JsonRaceData.createNestedArray("dogData");
+      JsonArray &JsonDogDataArray = JsonRaceData.createNestedArray("dogData");
       for (uint8_t i = 0; i < 4; i++)
       {
-         JsonObject& JsonDogData = JsonDogDataArray.createNestedObject();
+         JsonObject &JsonDogData = JsonDogDataArray.createNestedObject();
          JsonDogData["dogNumber"] = RequestedRaceData.DogData[i].DogNumber;
-         JsonArray& JsonDogDataTimingArray = JsonDogData.createNestedArray("timing");
+         JsonArray &JsonDogDataTimingArray = JsonDogData.createNestedArray("timing");
          for (uint8_t i2 = 0; i2 < 4; i2++)
          {
-            JsonObject& DogTiming = JsonDogDataTimingArray.createNestedObject();
+            JsonObject &DogTiming = JsonDogDataTimingArray.createNestedObject();
             DogTiming["time"] = RequestedRaceData.DogData[i].Timing[i2].Time;
             DogTiming["crossingTime"] = RequestedRaceData.DogData[i].Timing[i2].CrossingTime;
          }
@@ -388,14 +410,14 @@ void WebHandlerClass::_SendRaceData(uint iRaceId)
 {
    const size_t bufferSize = 5 * JSON_ARRAY_SIZE(4) + JSON_OBJECT_SIZE(1) + 16 * JSON_OBJECT_SIZE(2) + 4 * JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(7);
    DynamicJsonBuffer JsonBuffer(bufferSize);
-   JsonObject& JsonRoot = JsonBuffer.createObject();
+   JsonObject &JsonRoot = JsonBuffer.createObject();
    if (!JsonRoot.success())
    {
-      syslog.logf_P(LOG_ERR, "Error parsing JSON!");
+      ESP_LOGE(__FILE__, "Error parsing JSON!");
    }
    else
    {
-      JsonObject& JsonRaceData = JsonRoot.createNestedObject("RaceData");
+      JsonObject &JsonRaceData = JsonRoot.createNestedObject("RaceData");
       stRaceData RequestedRaceData = RaceHandler.GetRaceData();
       JsonRaceData["id"] = RequestedRaceData.Id;
       JsonRaceData["startTime"] = RequestedRaceData.StartTime;
@@ -404,15 +426,15 @@ void WebHandlerClass::_SendRaceData(uint iRaceId)
       JsonRaceData["totalCrossingTime"] = RequestedRaceData.TotalCrossingTime;
       JsonRaceData["raceState"] = RequestedRaceData.RaceState;
 
-      JsonArray& JsonDogDataArray = JsonRaceData.createNestedArray("dogData");
+      JsonArray &JsonDogDataArray = JsonRaceData.createNestedArray("dogData");
       for (uint8_t i = 0; i < 4; i++)
       {
-         JsonObject& JsonDogData = JsonDogDataArray.createNestedObject();
+         JsonObject &JsonDogData = JsonDogDataArray.createNestedObject();
          JsonDogData["dogNumber"] = RequestedRaceData.DogData[i].DogNumber;
-         JsonArray& JsonDogDataTimingArray = JsonDogData.createNestedArray("timing");
+         JsonArray &JsonDogDataTimingArray = JsonDogData.createNestedArray("timing");
          for (uint8_t i2 = 0; i2 < 4; i2++)
          {
-            JsonObject& DogTiming = JsonDogDataTimingArray.createNestedObject();
+            JsonObject &DogTiming = JsonDogDataTimingArray.createNestedObject();
             DogTiming["time"] = RequestedRaceData.DogData[i].Timing[i2].Time;
             DogTiming["crossingTime"] = RequestedRaceData.DogData[i].Timing[i2].CrossingTime;
          }
@@ -420,7 +442,7 @@ void WebHandlerClass::_SendRaceData(uint iRaceId)
          JsonDogData["running"] = RequestedRaceData.DogData[i].Running;
       }
       size_t len = JsonRoot.measureLength();
-      AsyncWebSocketMessageBuffer * wsBuffer = _ws->makeBuffer(len);
+      AsyncWebSocketMessageBuffer *wsBuffer = _ws->makeBuffer(len);
       if (wsBuffer)
       {
          JsonRoot.printTo((char *)wsBuffer->get(), len + 1);
@@ -429,7 +451,7 @@ void WebHandlerClass::_SendRaceData(uint iRaceId)
    }
 }
 
-boolean WebHandlerClass::_ProcessConfig(JsonArray& newConfig, String * ReturnError)
+boolean WebHandlerClass::_ProcessConfig(JsonArray &newConfig, String *ReturnError)
 {
    bool save = false;
    bool changed = false;
@@ -441,11 +463,10 @@ boolean WebHandlerClass::_ProcessConfig(JsonArray& newConfig, String * ReturnErr
 
       if (value != SettingsManager.getSetting(key))
       {
-         syslog.logf_P(LOG_DEBUG, "[WEBHANDLER] Storing %s = %s", key.c_str(), value.c_str());
+         ESP_LOGD(__FILE__, "[WEBHANDLER] Storing %s = %s", key.c_str(), value.c_str());
          SettingsManager.setSetting(key, value);
          save = changed = true;
       }
-      
    }
 
    if (save)
@@ -456,7 +477,7 @@ boolean WebHandlerClass::_ProcessConfig(JsonArray& newConfig, String * ReturnErr
    return true;
 }
 
-boolean WebHandlerClass::_GetData(String dataType, JsonObject& Data)
+boolean WebHandlerClass::_GetData(String dataType, JsonObject &Data)
 {
    if (dataType == "config")
    {
@@ -467,11 +488,11 @@ boolean WebHandlerClass::_GetData(String dataType, JsonObject& Data)
    }
    else if (dataType == "triggerQueue")
    {
-      JsonArray& triggerQueue = Data.createNestedArray("triggerQueue");
-      
-      for (auto& trigger : RaceHandler._STriggerQueue)
+      JsonArray &triggerQueue = Data.createNestedArray("triggerQueue");
+
+      for (auto &trigger : RaceHandler._STriggerQueue)
       {
-         JsonObject& triggerObj = triggerQueue.createNestedObject();
+         JsonObject &triggerObj = triggerQueue.createNestedObject();
          triggerObj["sensorNum"] = trigger.iSensorNumber;
          triggerObj["triggerTime"] = trigger.lTriggerTime - RaceHandler._lRaceStartTime;
          triggerObj["state"] = trigger.iSensorState;
@@ -484,7 +505,7 @@ boolean WebHandlerClass::_GetData(String dataType, JsonObject& Data)
    }
 
    return true;
-}  
+}
 
 void WebHandlerClass::_GetSystemData()
 {
@@ -499,19 +520,19 @@ void WebHandlerClass::_SendSystemData()
 {
    const size_t bufferSize = JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(7);
    DynamicJsonBuffer JsonBuffer(bufferSize);
-   JsonObject& JsonRoot = JsonBuffer.createObject();
+   JsonObject &JsonRoot = JsonBuffer.createObject();
 
-   JsonObject& JsonSystemData = JsonRoot.createNestedObject("SystemData");
-   JsonSystemData["uptime"]            = _SystemData.Uptime;
-   JsonSystemData["freeHeap"]          = _SystemData.FreeHeap;
-   JsonSystemData["CPU0ResetReason"]   = (int)_SystemData.CPU0ResetReason;
-   JsonSystemData["CPU1ResetReason"]   = (int)_SystemData.CPU1ResetReason;
-   JsonSystemData["numClients"]        = _SystemData.NumClients;
-   JsonSystemData["systemTimestamp"]   = _SystemData.UTCSystemTime;
-   JsonSystemData["batteryPercentage"]   = _SystemData.BatteryPercentage;
+   JsonObject &JsonSystemData = JsonRoot.createNestedObject("SystemData");
+   JsonSystemData["uptime"] = _SystemData.Uptime;
+   JsonSystemData["freeHeap"] = _SystemData.FreeHeap;
+   JsonSystemData["CPU0ResetReason"] = (int)_SystemData.CPU0ResetReason;
+   JsonSystemData["CPU1ResetReason"] = (int)_SystemData.CPU1ResetReason;
+   JsonSystemData["numClients"] = _SystemData.NumClients;
+   JsonSystemData["systemTimestamp"] = _SystemData.UTCSystemTime;
+   JsonSystemData["batteryPercentage"] = _SystemData.BatteryPercentage;
 
    size_t len = JsonRoot.measureLength();
-   AsyncWebSocketMessageBuffer * wsBuffer = _ws->makeBuffer(len);
+   AsyncWebSocketMessageBuffer *wsBuffer = _ws->makeBuffer(len);
    if (wsBuffer)
    {
       JsonRoot.printTo((char *)wsBuffer->get(), len + 1);
@@ -521,37 +542,47 @@ void WebHandlerClass::_SendSystemData()
 
 void WebHandlerClass::_onAuth(AsyncWebServerRequest *request)
 {
-   if (!_authenticate(request)) return request->requestAuthentication("",false);
+   if (!_authenticate(request))
+      return request->requestAuthentication("", false);
    IPAddress ip = request->client()->remoteIP();
    unsigned long now = millis();
    unsigned short index;
-   for (index = 0; index < WS_TICKET_BUFFER_SIZE; index++) {
-      if (_ticket[index].ip == ip) break;
-      if (_ticket[index].timestamp == 0) break;
-      if (now - _ticket[index].timestamp > WS_TIMEOUT) break;
+   for (index = 0; index < WS_TICKET_BUFFER_SIZE; index++)
+   {
+      if (_ticket[index].ip == ip)
+         break;
+      if (_ticket[index].timestamp == 0)
+         break;
+      if (now - _ticket[index].timestamp > WS_TIMEOUT)
+         break;
    }
-   if (index == WS_TICKET_BUFFER_SIZE) {
+   if (index == WS_TICKET_BUFFER_SIZE)
+   {
       request->send(429);
    }
-   else {
+   else
+   {
       _ticket[index].ip = ip;
       _ticket[index].timestamp = now;
       request->send(204);
    }
 }
 
-bool WebHandlerClass::_authenticate(AsyncWebServerRequest *request) {
+bool WebHandlerClass::_authenticate(AsyncWebServerRequest *request)
+{
    String password = SettingsManager.getSetting("AdminPass");
    char httpPassword[password.length() + 1];
    password.toCharArray(httpPassword, password.length() + 1);
    boolean bAuthResult = request->authenticate("Admin", httpPassword);
-   if (!bAuthResult) {
-      syslog.logf_P(LOG_ERR, "[WEBHANDLER] Admin user failed to login!");
+   if (!bAuthResult)
+   {
+      ESP_LOGE(__FILE__, "[WEBHANDLER] Admin user failed to login!");
    }
    return bAuthResult;
 }
 
-bool WebHandlerClass::_wsAuth(AsyncWebSocketClient * client) {
+bool WebHandlerClass::_wsAuth(AsyncWebSocketClient *client)
+{
 
    IPAddress ip = client->remoteIP();
    unsigned long now = millis();
@@ -562,37 +593,39 @@ bool WebHandlerClass::_wsAuth(AsyncWebSocketClient * client) {
    //So if someone logs in, then disconnects from the WiFi, and then someone else connects
    //this new user will/could have the same IP as the previous user, and will be authenticated :(
 
-   for (index = 0; index < WS_TICKET_BUFFER_SIZE; index++) {
-      syslog.logf_P("Checking ticket: %i, ip: %s, time: %lu", index, _ticket[index].ip.toString().c_str(), _ticket[index].timestamp);
-      if ((_ticket[index].ip == ip) && (now - _ticket[index].timestamp < WS_TIMEOUT)) break;
+   for (index = 0; index < WS_TICKET_BUFFER_SIZE; index++)
+   {
+      ESP_LOGI(__FILE__, "Checking ticket: %i, ip: %s, time: %lu", index, _ticket[index].ip.toString().c_str(), _ticket[index].timestamp);
+      if ((_ticket[index].ip == ip) && (now - _ticket[index].timestamp < WS_TIMEOUT))
+         break;
    }
 
-   if (index == WS_TICKET_BUFFER_SIZE) {
-      syslog.logf_P("[WEBSOCKET] Validation check failed\n");
+   if (index == WS_TICKET_BUFFER_SIZE)
+   {
+      ESP_LOGI(__FILE__, "[WEBSOCKET] Validation check failed\n");
       client->text("{\"success\": false, \"error\": \"You shall not pass!!!! Please authenticate first :-)\", \"authenticated\": false}");
       return false;
    }
 
    return true;
-
 }
 
-void WebHandlerClass::_onHome(AsyncWebServerRequest *request) {
+void WebHandlerClass::_onHome(AsyncWebServerRequest *request)
+{
 
    //if (!_authenticate(request)) return request->requestAuthentication(getSetting("hostname").c_str());
 
-   if (request->header("If-Modified-Since").equals(_last_modified)) {
+   if (request->header("If-Modified-Since").equals(_last_modified))
+   {
       request->send(304);
    }
-   else {
+   else
+   {
       AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", index_html_gz, index_html_gz_len);
       response->addHeader("Content-Encoding", "gzip");
       response->addHeader("Last-Modified", _last_modified);
       request->send(response);
    }
-
 }
-
-
 
 WebHandlerClass WebHandler;

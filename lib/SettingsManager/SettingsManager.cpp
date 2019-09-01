@@ -3,14 +3,12 @@
 #include <EEPROM.h>
 #include <SPIFFS.h>
 #include "config.h"
-#include <Syslog.h>
-extern Syslog syslog;
-
 
 void SettingsManagerClass::loop()
 {
-   if (_settings_save) {
-      syslog.logf_P(LOG_DEBUG, "[SETTINGS] Saving");
+   if (_settings_save)
+   {
+      ESP_LOGD(__FILE__, "[SETTINGS] Saving");
       Serial.printf("Writing settings\r\n");
       EEPROM.commit();
       _settings_save = false;
@@ -23,29 +21,29 @@ void SettingsManagerClass::init()
    _settings_save = false;
 
    Embedis::dictionary(F("EEPROM"),
-      SPI_FLASH_SEC_SIZE,
-      [](size_t pos) -> char { return EEPROM.read(pos); },
-      [](size_t pos, char value) { EEPROM.write(pos, value); },
-      []() {}
-   );
+                       SPI_FLASH_SEC_SIZE,
+                       [](size_t pos) -> char { return EEPROM.read(pos); },
+                       [](size_t pos, char value) { EEPROM.write(pos, value); },
+                       []() {});
 
    setDefaultSettings();
 }
 
-String SettingsManagerClass::getSetting(const String& key, String defaultValue)
+String SettingsManagerClass::getSetting(const String &key, String defaultValue)
 {
    String value;
-   if (!Embedis::get(key, value)) value = defaultValue;
+   if (!Embedis::get(key, value))
+      value = defaultValue;
    return value;
 }
 
-String SettingsManagerClass::getSetting(const String& key)
+String SettingsManagerClass::getSetting(const String &key)
 {
    return getSetting(key, "");
 }
 
 //template<typename T> bool SettingsManagerClass::setSetting(const String& key, T value)
-bool SettingsManagerClass::setSetting(const String& key, String value)
+bool SettingsManagerClass::setSetting(const String &key, String value)
 {
    saveSettings();
    return Embedis::set(key, String(value));
@@ -57,29 +55,33 @@ void SettingsManagerClass::saveSettings()
    Serial.printf("Saving settings\r\n");
 }
 
-bool SettingsManagerClass::hasSetting(const String& key)
+bool SettingsManagerClass::hasSetting(const String &key)
 {
    return getSetting(key).length() != 0;
 }
 
 void SettingsManagerClass::setDefaultSettings()
 {
-   if (!hasSetting("AdminPass")) {
+   if (!hasSetting("AdminPass"))
+   {
       setSetting("AdminPass", "FlyballETS.1234");
       saveSettings();
    }
 
-   if (!hasSetting("APName")) {
+   if (!hasSetting("APName"))
+   {
       setSetting("APName", "FlyballETS");
       saveSettings();
    }
 
-   if (!hasSetting("APPass")) {
+   if (!hasSetting("APPass"))
+   {
       setSetting("APPass", "FlyballETS.1234");
       saveSettings();
    }
 
-   if (!hasSetting("RunDirectionInverted")) {
+   if (!hasSetting("RunDirectionInverted"))
+   {
       setSetting("RunDirectionInverted", String("0"));
       saveSettings();
    }

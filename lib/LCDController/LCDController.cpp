@@ -19,16 +19,13 @@
 #include "LCDController.h"
 #include <LiquidCrystal.h>
 
-#include <Syslog.h>
-extern Syslog syslog;
-
 /// <summary>
 ///   Initialises this object.
 /// </summary>
 ///
 /// <param name="Clcd1">   [in,out] Pointer to first LCD object. </param>
 /// <param name="Clcd2">   [in,out] Pointer to second LCD object. </param>
-void LCDControllerClass::init(LiquidCrystal* Clcd1, LiquidCrystal* Clcd2)
+void LCDControllerClass::init(LiquidCrystal *Clcd1, LiquidCrystal *Clcd2)
 {
    _Clcd1 = Clcd1;
    _Clcd1->begin(40, 2);
@@ -46,23 +43,23 @@ void LCDControllerClass::init(LiquidCrystal* Clcd1, LiquidCrystal* Clcd2)
    _UpdateLCD(3, 0, String("3:   0.000s +  0.000s   |   CR:   0.000s"), 40);
    _UpdateLCD(4, 0, String("4:   0.000s +  0.000s   |       Box: -->"), 40);
 
-   _SlcdfieldFields[D1Time]          = { 1, 3, 7, String("  0.000") };
-   _SlcdfieldFields[D1RerunInfo]     = { 1, 22, 2, String("  ") };
-   _SlcdfieldFields[D2Time]          = { 2, 3, 7, String("  0.000") };
-   _SlcdfieldFields[D2RerunInfo]     = { 2, 22, 2, String("  ") };
-   _SlcdfieldFields[D3Time]          = { 3, 3, 7, String("  0.000") };
-   _SlcdfieldFields[D3RerunInfo]     = { 3, 22, 2, String("  ") };
-   _SlcdfieldFields[D4Time]          = { 4, 3, 7, String("  0.000") };
-   _SlcdfieldFields[D4RerunInfo]     = { 4, 22, 2, String("  ") };
-   _SlcdfieldFields[D1CrossTime]     = { 1, 12, 8, String("+  0.000") };
-   _SlcdfieldFields[D2CrossTime]     = { 2, 12, 8, String("+  0.000") };
-   _SlcdfieldFields[D3CrossTime]     = { 3, 12, 8, String("+  0.000") };
-   _SlcdfieldFields[D4CrossTime]     = { 4, 12, 8, String("+  0.000") };
-   _SlcdfieldFields[BattLevel]       = { 1, 36, 3, String("  0") };
-   _SlcdfieldFields[RaceState]       = { 1, 25, 7, String(" STOP") };
-   _SlcdfieldFields[TeamTime]        = { 2, 32, 7, String("  0.000") };
-   _SlcdfieldFields[TotalCrossTime]  = { 3, 32, 7, String("  0.000") };
-   _SlcdfieldFields[BoxDirection]    = { 4, 37, 3, String("-->") };
+   _SlcdfieldFields[D1Time] = {1, 3, 7, String("  0.000")};
+   _SlcdfieldFields[D1RerunInfo] = {1, 22, 2, String("  ")};
+   _SlcdfieldFields[D2Time] = {2, 3, 7, String("  0.000")};
+   _SlcdfieldFields[D2RerunInfo] = {2, 22, 2, String("  ")};
+   _SlcdfieldFields[D3Time] = {3, 3, 7, String("  0.000")};
+   _SlcdfieldFields[D3RerunInfo] = {3, 22, 2, String("  ")};
+   _SlcdfieldFields[D4Time] = {4, 3, 7, String("  0.000")};
+   _SlcdfieldFields[D4RerunInfo] = {4, 22, 2, String("  ")};
+   _SlcdfieldFields[D1CrossTime] = {1, 12, 8, String("+  0.000")};
+   _SlcdfieldFields[D2CrossTime] = {2, 12, 8, String("+  0.000")};
+   _SlcdfieldFields[D3CrossTime] = {3, 12, 8, String("+  0.000")};
+   _SlcdfieldFields[D4CrossTime] = {4, 12, 8, String("+  0.000")};
+   _SlcdfieldFields[BattLevel] = {1, 36, 3, String("  0")};
+   _SlcdfieldFields[RaceState] = {1, 25, 7, String(" STOP")};
+   _SlcdfieldFields[TeamTime] = {2, 32, 7, String("  0.000")};
+   _SlcdfieldFields[TotalCrossTime] = {3, 32, 7, String("  0.000")};
+   _SlcdfieldFields[BoxDirection] = {4, 37, 3, String("-->")};
 }
 
 /// <summary>
@@ -76,11 +73,11 @@ void LCDControllerClass::Main()
    if ((millis() - _lLastLCDUpdate) > _iLCDUpdateInterval)
    {
 
-      for (const SLCDField& lcdField : _SlcdfieldFields)
+      for (const SLCDField &lcdField : _SlcdfieldFields)
       {
          _UpdateLCD(lcdField.iLine, lcdField.iStartingPosition, lcdField.strText, lcdField.iFieldLength);
       }
-      
+
       _lLastLCDUpdate = millis();
    }
 }
@@ -96,7 +93,7 @@ void LCDControllerClass::UpdateField(LCDFields lcdfieldField, String strNewValue
    if (_SlcdfieldFields[lcdfieldField].iFieldLength < strNewValue.length())
    {
       //The new value will not fit into the new field!
-      syslog.logf_P(LOG_ERR, "[LCD Controller] Field (%i) received value that was too long (%i): %s", lcdfieldField, strNewValue.length(), strNewValue.c_str());
+      ESP_LOGE(__FILE__, "[LCD Controller] Field (%i) received value that was too long (%i): %s", lcdfieldField, strNewValue.length(), strNewValue.c_str());
       return;
    }
    _SlcdfieldFields[lcdfieldField].strText = strNewValue;
@@ -112,7 +109,7 @@ void LCDControllerClass::UpdateField(LCDFields lcdfieldField, String strNewValue
 /// <param name="iFieldLength">  Length of the field, if the given text is longer than this value, the text will be made scrolling within the given field length. </param>
 void LCDControllerClass::_UpdateLCD(int iLine, int iPosition, String strText, int iFieldLength)
 {
-   LiquidCrystal* CActiveLCD = 0;
+   LiquidCrystal *CActiveLCD = 0;
    if (iLine > 2)
    {
       //DisplayLine is higher than 2, this means we need to update the 2nd LCD
@@ -127,13 +124,13 @@ void LCDControllerClass::_UpdateLCD(int iLine, int iPosition, String strText, in
       to a real display line (0-1) by substracting 1 again
    */
    iLine = iLine - 1;
-   
+
    //Check how long strMessage is:
    int iMessageLength = strText.length();
    if (iMessageLength > iFieldLength)
    {
       //Message is too long, make it scroll!
-      int iExtraChars = iMessageLength - (iFieldLength -1);
+      int iExtraChars = iMessageLength - (iFieldLength - 1);
       for (int i = 0; i < iExtraChars; i++)
       {
          String strMessageSubString = strText.substring(i, i + iFieldLength);
@@ -154,7 +151,6 @@ void LCDControllerClass::_UpdateLCD(int iLine, int iPosition, String strText, in
    }
    CActiveLCD->setCursor(iPosition, iLine);
    CActiveLCD->print(strText);
-   
 }
 
 /// <summary>

@@ -23,26 +23,27 @@
 class WebHandlerClass
 {
    friend class RaceHandlerClass;
+
 protected:
    AsyncWebServer *_server;
    AsyncWebSocket *_ws;
    AsyncWebSocket *_wsa;
-   void _WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len);
-   boolean _DoAction(JsonObject& ActionObj, String * ReturnError);
+   void _WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
+   boolean _DoAction(JsonObject &ActionObj, String *ReturnError);
    boolean _GetRaceDataJsonString(uint iRaceId, String &strJsonString);
    void _SendRaceData(uint iRaceId = RaceHandler._iCurrentRaceId);
 
-   boolean _ProcessConfig(JsonArray& newConfig, String * ReturnError);
+   boolean _ProcessConfig(JsonArray &newConfig, String *ReturnError);
 
-   boolean _GetData(String dataType, JsonObject& ReturnError);
+   boolean _GetData(String dataType, JsonObject &ReturnError);
 
    void _GetSystemData();
    void _SendSystemData();
-   void _onAuth(AsyncWebServerRequest * request);
-   bool _authenticate(AsyncWebServerRequest * request);
-   bool _wsAuth(AsyncWebSocketClient * client);
+   void _onAuth(AsyncWebServerRequest *request);
+   bool _authenticate(AsyncWebServerRequest *request);
+   bool _wsAuth(AsyncWebSocketClient *client);
 
-   void _onHome(AsyncWebServerRequest * request);
+   void _onHome(AsyncWebServerRequest *request);
 
    unsigned long _lLastRaceDataBroadcast;
    unsigned long _lRaceDataBroadcastInterval;
@@ -50,7 +51,7 @@ protected:
    unsigned long _lSystemDataBroadcastInterval;
    stSystemData _SystemData;
    char _last_modified[50];
-   
+
    typedef struct
    {
       IPAddress ip;
@@ -67,4 +68,3 @@ public:
 extern WebHandlerClass WebHandler;
 
 #endif
-

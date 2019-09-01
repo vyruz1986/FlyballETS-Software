@@ -30,7 +30,6 @@
 #include <ESPmDNS.h>
 #include <ArduinoOTA.h>
 #include <EEPROM.h>
-#include <Syslog.h>
 #include <WiFiUdp.h>
 
 //Private libs
@@ -41,12 +40,10 @@
 #include <RaceHandler.h>
 #include <LightsController.h>
 #include <BatterySensor.h>
-#include <Syslog.h>
 
 //Includes
 #include "Structs.h"
 #include "config.h"
-//#include "SyslogHelper.h"
 
 /*List of pins and the ones used (Lolin32 board):
    - 34: S1 (handler side) photoelectric sensor
@@ -169,11 +166,8 @@ IPAddress IPSubnet(255, 255, 255, 0);
 //Define serial pins for GPS module
 HardwareSerial GPSSerial(1);
 
-//Keep last reported OTA progress so we can send one syslog message for every % increment
+//Keep last reported OTA progress so we can send message for every % increment
 unsigned int uiLastProgress = 0;
-
-WiFiUDP SyslogUDP;
-extern Syslog syslog;
 
 //Function prototypes
 void Sensor1Wrapper();
@@ -186,11 +180,9 @@ void serialEvent();
 
 void setup()
 {
-   syslog = Syslog(SyslogUDP, "255.255.255.255", 514, "FlyballETS", "FlyballETSApp", LOG_INFO, SYSLOG_PROTO_BSD);
    EEPROM.begin(EEPROM_SIZE);
    Serial.begin(115200);
    SettingsManager.init();
-   syslog.setSerialPrint(true);
 
    pinMode(iS1Pin, INPUT_PULLDOWN);
    pinMode(iS2Pin, INPUT_PULLDOWN);
@@ -251,11 +243,11 @@ void setup()
 
    if (!WiFi.softAP(strAPName.c_str(), strAPPass.c_str()))
    {
-      syslog.logf_P(LOG_ALERT, "Error initializing softAP!");
+      ESP_LOGW(__FILE__, "Error initializing softAP!");
    }
    else
    {
-      syslog.logf_P("Wifi started successfully, AP name: %s, pass: %s!", strAPName.c_str(), strAPPass.c_str());
+      ESP_LOGI(__FILE__, "Wifi started successfully, AP name: %s, pass: %s!", strAPName.c_str(), strAPPass.c_str());
    }
    WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
 
@@ -281,22 +273,23 @@ void setup()
          type = "filesystem";
 
       // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
-      syslog.logf_P(String("Start updating " + type).c_str());
+      ESP_LOGI(__FILE__, "Start updating %s", type);
    });
 
    ArduinoOTA.onEnd([]() {
-      syslog.logf_P("[OTA]: End");
+      ESP_LOGI(__FILE__, "[OTA]: End");
    });
    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
       unsigned int progressPercentage = (progress / (total / 100));
       if (uiLastProgress != progressPercentage)
       {
-         syslog.logf_P("[OTA]: Progress: %u%%", progressPercentage);
+         ESP_LOGI(__FILE__, "[OTA]: Progress: %u%%", progressPercentage);
          uiLastProgress = progressPercentage;
       }
    });
    ArduinoOTA.onError([](ota_error_t error) {
-      syslog.logf_P(LOG_ERR, "[OTA]: Error[%u]: ", error);
+      ESP_LOGE(__FILE__, "");
+      ESP_LOGE(__FILE__, "[OTA]: Error[%u]: ", error);
    });
    ArduinoOTA.begin();
 
@@ -430,31 +423,31 @@ void loop()
       {
          //Race is finished, put final data on screen
          dtostrf(RaceHandler.GetDogTime(RaceHandler.iCurrentDog, -2), 7, 3, cDogTime);
-         syslog.logf_P("D%i: %s|CR: %s", RaceHandler.iCurrentDog, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iCurrentDog, -2).c_str());
-         syslog.logf_P("RT:%s", cElapsedRaceTime);
+         ESP_LOGI(__FILE__, "D%i: %s|CR: %s", RaceHandler.iCurrentDog, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iCurrentDog, -2).c_str());
+         ESP_LOGI(__FILE__, "RT:%s", cElapsedRaceTime);
       }
-      syslog.logf_P("RS: %i", RaceHandler.RaceState);
+      ESP_LOGI(__FILE__, "RS: %i", RaceHandler.RaceState);
    }
 
    if (RaceHandler.iCurrentDog != iCurrentDog)
    {
       dtostrf(RaceHandler.GetDogTime(RaceHandler.iPreviousDog, -2), 7, 3, cDogTime);
-      syslog.logf_P("D%i: %s|CR: %s", RaceHandler.iPreviousDog, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
-      syslog.logf_P("D: %i", RaceHandler.iCurrentDog);
-      syslog.logf_P("RT:%s", cElapsedRaceTime);
+      ESP_LOGI(__FILE__, "D%i: %s|CR: %s", RaceHandler.iPreviousDog, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
+      ESP_LOGI(__FILE__, "D: %i", RaceHandler.iCurrentDog);
+      ESP_LOGI(__FILE__, "RT:%s", cElapsedRaceTime);
    }
 
    //Enable (uncomment) the following if you want periodic status updates on the serial port
    if ((millis() - lLastSerialOutput) > 500)
    {
-      //syslog.logf_P("%lu: ping! analog: %i ,voltage is: %i, this is %i%%", millis(), BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
-      //syslog.logf_P("%lu: Elapsed time: %s", millis(), cElapsedRaceTime);
-      //syslog.logf_P("Free heap: %d", system_get_free_heap_size());
+      //ESP_LOGI(__FILE__, "%lu: ping! analog: %i ,voltage is: %i, this is %i%%", millis(), BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
+      //ESP_LOGI(__FILE__, "%lu: Elapsed time: %s", millis(), cElapsedRaceTime);
+      //ESP_LOGI(__FILE__, "Free heap: %d", system_get_free_heap_size());
       /*
       if (RaceHandler.RaceState == RaceHandler.RUNNING)
       {
          dtostrf(RaceHandler.GetDogTime(RaceHandler.iCurrentDog), 7, 3, cDogTime);
-         syslog.logf_P("Dog %i: %ss", RaceHandler.iCurrentDog, cDogTime);
+         ESP_LOGI(__FILE__, "Dog %i: %ss", RaceHandler.iCurrentDog, cDogTime);
       }
       */
       lLastSerialOutput = millis();
@@ -466,7 +459,7 @@ void loop()
    //Check if we have serial data which we should handle
    if (strSerialData.length() > 0 && bSerialStringComplete)
    {
-      syslog.logf_P(LOG_DEBUG, "cSer: '%s'", strSerialData.c_str());
+      ESP_LOGD(__FILE__, "cSer: '%s'", strSerialData.c_str());
       strSerialData = "";
       bSerialStringComplete = false;
    }
@@ -478,7 +471,7 @@ void loop()
    if (digitalRead(SideSwitch.Pin) == LOW && millis() - SideSwitch.LastTriggerTime > SideSwitch.CoolDownTime)
    {
       SideSwitch.LastTriggerTime = millis();
-      syslog.logf_P("Switching sides!");
+      ESP_LOGI(__FILE__, "Switching sides!");
       RaceHandler.ToggleRunDirection();
    }
 }
@@ -528,7 +521,7 @@ void StartStopRace()
        && RaceHandler.GetRaceTime() == 0)           //and timers are zero
    {
       //Then start the race
-      syslog.logf_P(LOG_DEBUG, "%lu: START!", millis());
+      ESP_LOGD(__FILE__, "%lu: START!", millis());
       LightsController.InitiateStartSequence();
       RaceHandler.StartRace();
    }
@@ -559,19 +552,19 @@ void WiFiEvent(WiFiEvent_t event)
    switch (event)
    {
    case SYSTEM_EVENT_AP_START:
-      syslog.logf_P("AP Started");
+      ESP_LOGI(__FILE__, "AP Started");
       WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
 
       if (WiFi.softAPIP() != IPGateway)
       {
-         syslog.logf_P(LOG_ERR, "I am not running on the correct IP (%s instead of %s), rebooting!", WiFi.softAPIP().toString().c_str(), IPGateway.toString().c_str());
+         ESP_LOGE(__FILE__, "I am not running on the correct IP (%s instead of %s), rebooting!", WiFi.softAPIP().toString().c_str(), IPGateway.toString().c_str());
          ESP.restart();
       }
 
-      syslog.logf_P("Ready on IP: %s, v%s", WiFi.softAPIP().toString().c_str(), APP_VER);
+      ESP_LOGI(__FILE__, "Ready on IP: %s, v%s", WiFi.softAPIP().toString().c_str(), APP_VER);
       break;
    case SYSTEM_EVENT_AP_STOP:
-      syslog.logf_P("AP Stopped");
+      ESP_LOGI(__FILE__, "AP Stopped");
       break;
 
    default:

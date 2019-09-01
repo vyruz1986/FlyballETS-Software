@@ -24,9 +24,6 @@
 //#include <Adafruit_NeoPixel.h>
 #include <NeoPixelBus.h>
 
-#include <Syslog.h>
-extern Syslog syslog;
-
 /// <summary>
 ///   Initialises this object. This function needs to be passed the pin numbers for the shift
 ///   register which is used to control the lights.
@@ -36,7 +33,7 @@ extern Syslog syslog;
 /// <param name="iClockPin">  Zero-based index of the clock pin. </param>
 /// <param name="iDataPin">   Zero-based index of the data pin. </param>
 #ifdef WS281x
-void LightsControllerClass::init(NeoPixelBus<NeoRgbFeature, WS_METHOD>* LightsStrip)
+void LightsControllerClass::init(NeoPixelBus<NeoRgbFeature, WS_METHOD> *LightsStrip)
 #else
 void LightsControllerClass::init(uint8_t iLatchPin, uint8_t iClockPin, uint8_t iDataPin)
 #endif // WS281x
@@ -77,14 +74,12 @@ void LightsControllerClass::Main()
    //Check if we have to toggle any lights
    for (int i = 0; i < 6; i++)
    {
-      if (millis() > _lLightsOnSchedule[i]
-         && _lLightsOnSchedule[i] != 0)
+      if (millis() > _lLightsOnSchedule[i] && _lLightsOnSchedule[i] != 0)
       {
          ToggleLightState(_byLightsArray[i], ON);
          _lLightsOnSchedule[i] = 0; //Delete schedule
       }
-      if (millis() > _lLightsOutSchedule[i]
-         && _lLightsOutSchedule[i] != 0)
+      if (millis() > _lLightsOutSchedule[i] && _lLightsOutSchedule[i] != 0)
       {
          ToggleLightState(_byLightsArray[i], OFF);
          _lLightsOutSchedule[i] = 0; //Delete schedule
@@ -100,7 +95,7 @@ void LightsControllerClass::Main()
 
    if (_byCurrentLightsState != _byNewLightsState)
    {
-      syslog.logf_P(LOG_DEBUG, "%lu: New light states: %i", millis(), _byNewLightsState);
+      ESP_LOGD(__FILE__, "%lu: New light states: %i", millis(), _byNewLightsState);
       _byCurrentLightsState = _byNewLightsState;
 #ifndef WS281x
       digitalWrite(_iLatchPin, LOW);
@@ -126,21 +121,21 @@ void LightsControllerClass::HandleStartSequence()
       if (!_bStartSequenceStarted)
       {
          //Start sequence is not yet started, we need to schedule the lights on/off times
-         
+
          //Set schedule for RED light
-         _lLightsOnSchedule[1] = millis(); //Turn on NOW
+         _lLightsOnSchedule[1] = millis();         //Turn on NOW
          _lLightsOutSchedule[1] = millis() + 1000; //keep on for 1 second
 
          //Set schedule for YELLOW1 light
-         _lLightsOnSchedule[2] = millis() + 1000; //Turn on after 1 second
+         _lLightsOnSchedule[2] = millis() + 1000;  //Turn on after 1 second
          _lLightsOutSchedule[2] = millis() + 2000; //Turn off after 2 seconds
 
          //Set schedule for YELLOW2 light
-         _lLightsOnSchedule[4] = millis() + 2000; //Turn on after 2 seconds
+         _lLightsOnSchedule[4] = millis() + 2000;  //Turn on after 2 seconds
          _lLightsOutSchedule[4] = millis() + 3000; //Turn off after 3 seconds
 
          //Set schedule for GREEN light
-         _lLightsOnSchedule[5] = millis() + 3000; //Turn on after 3 seconds
+         _lLightsOnSchedule[5] = millis() + 3000;  //Turn on after 3 seconds
          _lLightsOutSchedule[5] = millis() + 4000; //Turn off after 4 seconds
 
          _bStartSequenceStarted = true;
@@ -149,18 +144,16 @@ void LightsControllerClass::HandleStartSequence()
       bool bStartSequenceBusy = false;
       for (int i = 0; i < 6; i++)
       {
-         if (_lLightsOnSchedule[i] > 0
-            || _lLightsOutSchedule[i] > 0)
+         if (_lLightsOnSchedule[i] > 0 || _lLightsOutSchedule[i] > 0)
          {
             bStartSequenceBusy = true;
          }
       }
       //Check if we should start the timer (GREEN light on)
-      if (CheckLightState(GREEN) == ON
-         && RaceHandler.RaceState == RaceHandler.STARTING)
+      if (CheckLightState(GREEN) == ON && RaceHandler.RaceState == RaceHandler.STARTING)
       {
          RaceHandler.StartTimers();
-         syslog.logf_P(LOG_DEBUG, "%lu: GREEN light is ON!", millis());
+         ESP_LOGD(__FILE__, "%lu: GREEN light is ON!", millis());
       }
       if (!bStartSequenceBusy)
       {
@@ -184,7 +177,7 @@ void LightsControllerClass::InitiateStartSequence()
 void LightsControllerClass::ResetLights()
 {
    byOverallState = STOPPED;
-   
+
    //Set all lights off
 #ifdef WS281x
    for (uint16_t i = 0; i < _LightsStrip->PixelCount(); i++)
@@ -204,7 +197,7 @@ void LightsControllerClass::DeleteSchedules()
    //Delete any set schedules
    for (int i = 0; i < 6; i++)
    {
-      _lLightsOnSchedule[i] = 0; //Delete schedule
+      _lLightsOnSchedule[i] = 0;  //Delete schedule
       _lLightsOutSchedule[i] = 0; //Delete schedule
    }
 }
@@ -268,11 +261,11 @@ void LightsControllerClass::ToggleFaultLight(uint8_t DogNumber, LightStates byLi
    {
       //If a fault lamp is turned on we have to light the white light for 1 sec
       //Set schedule for WHITE light
-      _lLightsOnSchedule[0] = millis(); //Turn on NOW
+      _lLightsOnSchedule[0] = millis();         //Turn on NOW
       _lLightsOutSchedule[0] = millis() + 1000; //keep on for 1 second
    }
    ToggleLightState(byLight, byLightState);
-   syslog.logf_P(LOG_DEBUG, "Fault light for dog %i: %i", DogNumber, byLightState);
+   ESP_LOGD(__FILE__, "Fault light for dog %i: %i", DogNumber, byLightState);
 }
 
 stLightsState LightsControllerClass::GetLightsState()
@@ -286,7 +279,7 @@ stLightsState LightsControllerClass::GetLightsState()
    {
       CurrentLightsState.State[2] = 1;
    }
-   else if(CheckLightState(BLUE))
+   else if (CheckLightState(BLUE))
    {
       CurrentLightsState.State[2] = 2;
    }
@@ -364,9 +357,7 @@ LightsControllerClass::SNeoPixelConfig LightsControllerClass::_GetNeoPixelConfig
 }
 #endif // WS281x
 
-
 /// <summary>
 ///   The lights controller.
 /// </summary>
 LightsControllerClass LightsController;
-
