@@ -1,6 +1,0 @@
-{
-    "port": "COM5",
-    "board": "esp32:esp32:lolin32",
-    "configuration": "FlashFreq=80,PartitionScheme=default,UploadSpeed=921600,DebugLevel=none",
-    "sketch": "FlyballETS-Software.ino"
-}
