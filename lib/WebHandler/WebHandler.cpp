@@ -3,20 +3,6 @@
 //
 
 #include "WebHandler.h"
-#include <Hash.h>
-#include <AsyncTCP.h>
-#include <ESPAsyncWebServer.h>
-#include <FS.h>
-#include <SPIFFS.h>
-#include "ArduinoJson-v6.10.1.h"
-#include "SettingsManager.h"
-#include "GPSHandler.h"
-#include "BatterySensor.h"
-#include "SlaveHandler.h"
-#include "SystemManager.h"
-#include "global.h"
-#include <rom/rtc.h>
-#include "..\..\src\static\index.html.gz.h"
 
 void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
 {
@@ -26,7 +12,8 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
 
    if (type == WS_EVT_CONNECT)
    {
-      if (client->remoteIP().toString().equals("192.168.20.1")) {
+      if (client->remoteIP().toString().equals("192.168.20.1"))
+      {
          //This client is the master!
          _MasterStatus.client = _ws->client(client->id());
          _MasterStatus.ClientID = client->id();
@@ -36,7 +23,6 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
          //_MasterStatus.LastCheck = millis();
       }
       ESP_LOGI(__FILE__, "Client %i connected to %s!", client->id(), server->url());
-
 
       //Should we check authentication?
       if (isAdmin)
@@ -52,29 +38,33 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
       _SendRaceData(); //Make sure we always broadcast racedata when new client connects
       client->ping();
    }
-   else if (type == WS_EVT_DISCONNECT) {
-      if (client->id() == _MasterStatus.ClientID) {
-          ESP_LOGI(__FILE__, "Disconnecting master due to disconnect event from ws\r\n");
+   else if (type == WS_EVT_DISCONNECT)
+   {
+      if (client->id() == _MasterStatus.ClientID)
+      {
+         ESP_LOGI(__FILE__, "Disconnecting master due to disconnect event from ws\r\n");
          _DisconnectMaster();
       }
-      if (_bIsConsumerArray[client->id()]) {
+      if (_bIsConsumerArray[client->id()])
+      {
          _iNumOfConsumers--;
          _bIsConsumerArray[client->id()] = false;
       }
-      
-      
-      ESP_LOGI(TAG, "Client %u disconnected!\n", client->id());
+
+      ESP_LOGI(__FILE__, "Client %u disconnected!\n", client->id());
    }
    else if (type == WS_EVT_ERROR)
    {
       ESP_LOGI(__FILE__, "ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t *)arg), (char *)data);
    }
-   else if (type == WS_EVT_PONG) {
-      if (client->id() == _MasterStatus.ClientID) {
+   else if (type == WS_EVT_PONG)
+   {
+      if (client->id() == _MasterStatus.ClientID)
+      {
          _MasterStatus.LastReply = millis();
          ESP_LOGD(__FILE__, "Pong received from master (%lu)!\r\n", millis());
       }
-       ESP_LOGI(__FILE__, "ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len) ? (char*)data : "");
+      ESP_LOGI(__FILE__, "ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len) ? (char *)data : "");
    }
    else if (type == WS_EVT_DATA)
    {
@@ -148,8 +138,9 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
       StaticJsonDocument<bsActionScheduleStartRace> jsonRequestDoc;
       DeserializationError error = deserializeJson(jsonRequestDoc, msg);
       JsonObject request = jsonRequestDoc.as<JsonObject>();
-      if (error) {
-          ESP_LOGE(__FILE__, "Error parsing JSON: %s", error.c_str());
+      if (error)
+      {
+         ESP_LOGE(__FILE__, "Error parsing JSON: %s", error.c_str());
          //wsSend_P(client->id(), PSTR("{\"message\": 3}"));
          client->text("{\"error\":\"Invalid JSON received\"}");
          return;
@@ -159,14 +150,16 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
       StaticJsonDocument<bufferSize> jsonResponseDoc;
       JsonObject JsonResponseRoot = jsonResponseDoc.to<JsonObject>();
 
-      if (request.containsKey("action")) {
+      if (request.containsKey("action"))
+      {
          JsonObject ActionResult = JsonResponseRoot.createNestedObject("ActionResult");
          String errorText;
          bool result = _DoAction(request["action"].as<JsonObject>(), &errorText, client);
          ActionResult["success"] = result;
          ActionResult["error"] = errorText;
       }
-      else if (request.containsKey("config")) {
+      else if (request.containsKey("config"))
+      {
          JsonObject ConfigResult = JsonResponseRoot.createNestedObject("configResult");
          String errorText;
          JsonArray config = request["config"].as<JsonArray>();
@@ -184,7 +177,8 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
          ConfigResult["success"] = result;
          ConfigResult["error"] = errorText;
       }
-      else if (request.containsKey("getData")) {
+      else if (request.containsKey("getData"))
+      {
          String dataName = request["getData"];
          JsonObject DataResult = JsonResponseRoot.createNestedObject("dataResult");
          JsonObject DataObject = DataResult.createNestedObject(dataName + "Data");
@@ -199,9 +193,10 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
             result = _GetData(dataName, DataObject);
          }
          DataResult["success"] = result;
-      } 
-      else {
-         ESP_LOGI(TAG, "Got valid JSON but unknown message!");
+      }
+      else
+      {
+         ESP_LOGI(__FILE__, "Got valid JSON but unknown message!");
          JsonResponseRoot["error"] = "Got valid JSON but unknown message!";
       }
 
@@ -231,7 +226,7 @@ void WebHandlerClass::init(int webPort)
    _server->addHandler(_wsa);
 
    _server->onNotFound([](AsyncWebServerRequest *request) {
-      ESP_LOGE(TAG, "Not found: %s!", request->url().c_str());
+      ESP_LOGE(__FILE__, "Not found: %s!", request->url().c_str());
       request->send(404);
    });
 
@@ -255,7 +250,8 @@ void WebHandlerClass::init(int webPort)
    _SystemData.CPU0ResetReason = rtc_get_reset_reason(0);
    _SystemData.CPU1ResetReason = rtc_get_reset_reason(1);
 
-   for (boolean &bIsConsumer : _bIsConsumerArray) {
+   for (boolean &bIsConsumer : _bIsConsumerArray)
+   {
       bIsConsumer = false;
    }
 
@@ -279,8 +275,8 @@ void WebHandlerClass::loop()
       _lLastSystemDataBroadcast = millis();
       _GetSystemData();
       _SendSystemData();
-      
-      ESP_LOGD(TAG, "Have %i clients, %i consumers\r\n", _ws->count(), _iNumOfConsumers);
+
+      ESP_LOGD(__FILE__, "Have %i clients, %i consumers\r\n", _ws->count(), _iNumOfConsumers);
    }
 
    _CheckMasterStatus();
@@ -295,19 +291,22 @@ void WebHandlerClass::SendLightsData(stLightsState LightStates)
    copyArray(LightStates.State, JsonLightsData);
 
    size_t len = measureJson(JsonDoc);
-   AsyncWebSocketMessageBuffer * wsBuffer = _ws->makeBuffer(len);
+   AsyncWebSocketMessageBuffer *wsBuffer = _ws->makeBuffer(len);
    if (wsBuffer)
    {
       serializeJson(JsonDoc, (char *)wsBuffer->get(), len + 1);
-      for (uint8_t i = 0; i < _ws->count(); i++) {
-         if (_bIsConsumerArray[i]) {
-            _ws->text(i, (char*)wsBuffer);
+      for (uint8_t i = 0; i < _ws->count(); i++)
+      {
+         if (_bIsConsumerArray[i])
+         {
+            _ws->text(i, (char *)wsBuffer);
          }
       }
    }
 }
 
-boolean WebHandlerClass::_DoAction(JsonObject ActionObj, String * ReturnError, AsyncWebSocketClient * Client) {
+boolean WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, AsyncWebSocketClient *Client)
+{
    String ActionType = ActionObj["actionType"];
    if (ActionType == "StartRace")
    {
@@ -323,7 +322,8 @@ boolean WebHandlerClass::_DoAction(JsonObject ActionObj, String * ReturnError, A
       }
       else
       {
-         if (_bSlavePresent) {
+         if (_bSlavePresent)
+         {
             unsigned long ulStartTime = GPSHandler.GetEpochTime() + 2;
 
             StaticJsonDocument<bsActionScheduleStartRace> jsonDoc;
@@ -340,12 +340,14 @@ boolean WebHandlerClass::_DoAction(JsonObject ActionObj, String * ReturnError, A
             SlaveHandler.sendToSlave(strScheduleStartMessage);
 
             long lMillisToStart = GPSHandler.GetMillisToEpochSecond(ulStartTime);
-            if (lMillisToStart < 0) {
+            if (lMillisToStart < 0)
+            {
                return false;
             }
             RaceHandler.StartRace(lMillisToStart + millis());
          }
-         else {
+         else
+         {
             RaceHandler.StartRace();
          }
          return true;
@@ -362,7 +364,8 @@ boolean WebHandlerClass::_DoAction(JsonObject ActionObj, String * ReturnError, A
       {
          RaceHandler.StopRace();
          LightsController.DeleteSchedules();
-         if (_bSlavePresent) {
+         if (_bSlavePresent)
+         {
             SlaveHandler.sendToSlave("{ \"action\": {\"actionType\": \"StopRace\"}}");
          }
          return true;
@@ -384,7 +387,8 @@ boolean WebHandlerClass::_DoAction(JsonObject ActionObj, String * ReturnError, A
       {
          LightsController.ResetLights();
          RaceHandler.ResetRace();
-         if (_bSlavePresent) {
+         if (_bSlavePresent)
+         {
             SlaveHandler.sendToSlave("{ \"action\": {\"actionType\": \"ResetRace\"}}");
          }
          return true;
@@ -402,10 +406,11 @@ boolean WebHandlerClass::_DoAction(JsonObject ActionObj, String * ReturnError, A
       RaceHandler.SetDogFault(iDogNum, (bFaultState ? RaceHandler.ON : RaceHandler.OFF));
       return true;
    }
-   else if (ActionType == "ScheduleStartRace")  //ScheduleStartRace action is used to schedule a race start on 2 lanes. This command would typically be sent by the master to the slave
+   else if (ActionType == "ScheduleStartRace") //ScheduleStartRace action is used to schedule a race start on 2 lanes. This command would typically be sent by the master to the slave
    {
       //Check if race is stopped. Instead of returning error if it isn't, we just stop and reset it.
-      if (RaceHandler.RaceState != RaceHandler.STOPPED) {
+      if (RaceHandler.RaceState != RaceHandler.STOPPED)
+      {
          RaceHandler.StopRace(micros());
          RaceHandler.ResetRace();
          LightsController.ResetLights();
@@ -414,15 +419,15 @@ boolean WebHandlerClass::_DoAction(JsonObject ActionObj, String * ReturnError, A
       String StartTime = ActionObj["actionData"]["startTime"];
 
       unsigned long lStartEpochTime = StartTime.toInt();
-      ESP_LOGD(TAG, "StartTime S: %s, UL: %lu\r\n",StartTime.c_str() , lStartEpochTime);
+      ESP_LOGD(__FILE__, "StartTime S: %s, UL: %lu\r\n", StartTime.c_str(), lStartEpochTime);
       long lMillisToStart = GPSHandler.GetMillisToEpochSecond(lStartEpochTime);
 
-      ESP_LOGI(TAG, "Received request to schedule race to start at %lu s which is in %ld ms", lStartEpochTime, lMillisToStart);
+      ESP_LOGI(__FILE__, "Received request to schedule race to start at %lu s which is in %ld ms", lStartEpochTime, lMillisToStart);
 
       if (lMillisToStart < 0)
       {
          //ReturnError = "Requested starttime is in the past!";
-         ESP_LOGI(TAG, "Race schedule received for the past (%ld ms)!", lMillisToStart);
+         ESP_LOGI(__FILE__, "Race schedule received for the past (%ld ms)!", lMillisToStart);
          return false;
       }
 
@@ -431,7 +436,7 @@ boolean WebHandlerClass::_DoAction(JsonObject ActionObj, String * ReturnError, A
    }
    else if (ActionType == "AnnounceSlave")
    {
-      ESP_LOGI(TAG, "We have a slave with IP %s", Client->remoteIP().toString().c_str());
+      ESP_LOGI(__FILE__, "We have a slave with IP %s", Client->remoteIP().toString().c_str());
       SlaveHandler.configureSlave(Client->remoteIP());
       _bSlavePresent = true;
       return true;
@@ -439,8 +444,9 @@ boolean WebHandlerClass::_DoAction(JsonObject ActionObj, String * ReturnError, A
 
    else if (ActionType == "AnnounceConsumer")
    {
-      ESP_LOGI(TAG, "We have a consumer with ID %i and IP %s", Client->id(), Client->remoteIP().toString().c_str());
-      if (!_bIsConsumerArray[Client->id()]) {
+      ESP_LOGI(__FILE__, "We have a consumer with ID %i and IP %s", Client->id(), Client->remoteIP().toString().c_str());
+      if (!_bIsConsumerArray[Client->id()])
+      {
          _iNumOfConsumers++;
       }
       _bIsConsumerArray[Client->id()] = true;
@@ -490,7 +496,8 @@ boolean WebHandlerClass::_GetRaceDataJsonString(uint iRaceId, String &strJsonStr
 
 void WebHandlerClass::_SendRaceData(uint iRaceId, int8_t iClientId)
 {
-   if (_iNumOfConsumers == 0) {
+   if (_iNumOfConsumers == 0)
+   {
       return;
    }
    StaticJsonDocument<bsRaceDataArray> JsonDoc;
@@ -528,38 +535,41 @@ void WebHandlerClass::_SendRaceData(uint iRaceId, int8_t iClientId)
    }
 
    jsonRaceData.add(jsonMasterRaceData);
-   ESP_LOGD(TAG, "[WEBHANDLER]: Collected own racedata, length: %i\r\n", measureJson(jsonRaceData));
+   ESP_LOGD(__FILE__, "[WEBHANDLER]: Collected own racedata, length: %i\r\n", measureJson(jsonRaceData));
 
-   if (_bSlavePresent) {
-      ESP_LOGD(TAG, "[WEBHANDLER]: Requesting slave racedata...\r\n");
+   if (_bSlavePresent)
+   {
+      ESP_LOGD(__FILE__, "[WEBHANDLER]: Requesting slave racedata...\r\n");
 #define USE_STRING
-      
+
 #ifdef USE_STRING
       String strJsonSlaveRaceData = SlaveHandler.getSlaveRaceData();
-      ESP_LOGD(TAG, "Slave racedata: %s\r\n", strJsonSlaveRaceData.c_str());
+      ESP_LOGD(__FILE__, "Slave racedata: %s\r\n", strJsonSlaveRaceData.c_str());
       DeserializationError error = deserializeJson(jsonSlaveRaceDataDoc, strJsonSlaveRaceData);
       //char * strJsonSlaveRaceData = SlaveHandler.getSlaveRaceData2();
-      //ESP_LOGD(TAG, "Slave racedata: %s, length: %i\r\n", strJsonSlaveRaceData, strlen(strJsonSlaveRaceData));
+      //ESP_LOGD(__FILE__, "Slave racedata: %s, length: %i\r\n", strJsonSlaveRaceData, strlen(strJsonSlaveRaceData));
       //DeserializationError error = deserializeJson(jsonSlaveRaceDataDoc, strJsonSlaveRaceData, strlen(strJsonSlaveRaceData));
-      if (error) {
-         ESP_LOGD(TAG, "Error parsing json data from slave: %s\r\n", error.c_str());
+      if (error)
+      {
+         ESP_LOGD(__FILE__, "Error parsing json data from slave: %s\r\n", error.c_str());
       }
       jsonSlaveRaceData = jsonSlaveRaceDataDoc.as<JsonObject>();
 #else
       JsonObject jsonSlaveRaceData = SlaveHandler.getSlaveRaceData1();
 
 #endif // USE_STRING
-      
-      
+
       String strJsonRaceDataTest;
       serializeJson(jsonSlaveRaceData, strJsonRaceDataTest);
-      ESP_LOGD(TAG, "Got json slave racedata: %s, length: %i\r\n", strJsonRaceDataTest.c_str(), measureJson(jsonSlaveRaceData));
+      ESP_LOGD(__FILE__, "Got json slave racedata: %s, length: %i\r\n", strJsonRaceDataTest.c_str(), measureJson(jsonSlaveRaceData));
 
-      if (measureJson(jsonSlaveRaceData) > 2) {
+      if (measureJson(jsonSlaveRaceData) > 2)
+      {
          jsonRaceData.add(jsonSlaveRaceData);
       }
-      else {
-         ESP_LOGI(TAG, "Got invalid slave racedata (length: %i)", measureJson(jsonSlaveRaceData));
+      else
+      {
+         ESP_LOGI(__FILE__, "Got invalid slave racedata (length: %i)", measureJson(jsonSlaveRaceData));
       }
    }
 
@@ -583,33 +593,38 @@ void WebHandlerClass::_SendRaceData(uint iRaceId, int8_t iClientId)
    */
    String strJsonRaceData;
    serializeJson(JsonDoc, strJsonRaceData);
-   ESP_LOGD(TAG, "Sending back RD array: %s\r\n", strJsonRaceData.c_str());
-   if (iClientId == -1) {
+   ESP_LOGD(__FILE__, "Sending back RD array: %s\r\n", strJsonRaceData.c_str());
+   if (iClientId == -1)
+   {
 
       uint8_t iId = 0;
-      for (auto &isConsumer : _bIsConsumerArray) {
-         if (isConsumer) {
-            ESP_LOGD(TAG, "Getting client obj for id %i\r\n", iId);
-            AsyncWebSocketClient * client = _ws->client(iId);
-            if (client && client->status() == WS_CONNECTED) {
-               ESP_LOGD(TAG, "Sending to client %i\r\n", iId);
+      for (auto &isConsumer : _bIsConsumerArray)
+      {
+         if (isConsumer)
+         {
+            ESP_LOGD(__FILE__, "Getting client obj for id %i\r\n", iId);
+            AsyncWebSocketClient *client = _ws->client(iId);
+            if (client && client->status() == WS_CONNECTED)
+            {
+               ESP_LOGD(__FILE__, "Sending to client %i\r\n", iId);
                client->text(strJsonRaceData);
             }
          }
          iId++;
       }
    }
-   else {
-      ESP_LOGD(TAG, "Sending to client %i\r\n", iClientId);
+   else
+   {
+      ESP_LOGD(__FILE__, "Sending to client %i\r\n", iClientId);
       _ws->text(iClientId, strJsonRaceData);
    }
 }
 
-boolean WebHandlerClass::_ProcessConfig(JsonArray newConfig, String * ReturnError)
+boolean WebHandlerClass::_ProcessConfig(JsonArray newConfig, String *ReturnError)
 {
    bool save = false;
    bool changed = false;
-   ESP_LOGD(TAG, "config is %i big\r\n", newConfig.size());
+   ESP_LOGD(__FILE__, "config is %i big\r\n", newConfig.size());
    for (unsigned int i = 0; i < newConfig.size(); i++)
    {
       String key = newConfig[i]["name"];
@@ -645,8 +660,8 @@ boolean WebHandlerClass::_GetData(String dataType, JsonObject Data)
    else if (dataType == "triggerQueue")
    {
       JsonArray triggerQueue = Data.createNestedArray("triggerQueue");
-      
-      for (auto& trigger : RaceHandler._STriggerQueue)
+
+      for (auto &trigger : RaceHandler._STriggerQueue)
       {
          JsonObject triggerObj = triggerQueue.createNestedObject();
          triggerObj["sensorNum"] = trigger.iSensorNumber;
@@ -674,45 +689,51 @@ void WebHandlerClass::_GetSystemData()
 
 void WebHandlerClass::_SendSystemData(int8_t iClientId)
 {
-   if (_iNumOfConsumers == 0) {
+   if (_iNumOfConsumers == 0)
+   {
       return;
    }
    const size_t bufferSize = JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(7) + 170;
    StaticJsonDocument<bufferSize> JsonDoc;
    JsonObject JsonRoot = JsonDoc.to<JsonObject>();
-   
+
    JsonObject JsonSystemData = JsonRoot.createNestedObject("SystemData");
-   JsonSystemData["uptime"]            = _SystemData.Uptime;
-   JsonSystemData["freeHeap"]          = _SystemData.FreeHeap;
-   JsonSystemData["CPU0ResetReason"]   = (int)_SystemData.CPU0ResetReason;
-   JsonSystemData["CPU1ResetReason"]   = (int)_SystemData.CPU1ResetReason;
-   JsonSystemData["numClients"]        = _SystemData.NumClients;
-   JsonSystemData["systemTimestamp"]   = _SystemData.UTCSystemTime;
-   JsonSystemData["batteryPercentage"]   = _SystemData.BatteryPercentage;
-   
+   JsonSystemData["uptime"] = _SystemData.Uptime;
+   JsonSystemData["freeHeap"] = _SystemData.FreeHeap;
+   JsonSystemData["CPU0ResetReason"] = (int)_SystemData.CPU0ResetReason;
+   JsonSystemData["CPU1ResetReason"] = (int)_SystemData.CPU1ResetReason;
+   JsonSystemData["numClients"] = _SystemData.NumClients;
+   JsonSystemData["systemTimestamp"] = _SystemData.UTCSystemTime;
+   JsonSystemData["batteryPercentage"] = _SystemData.BatteryPercentage;
+
    String strJsonSystemData;
    serializeJson(JsonDoc, strJsonSystemData);
-  
-   if (iClientId == -1) {
+
+   if (iClientId == -1)
+   {
 
       uint8_t iId = 0;
-      for (auto &isConsumer : _bIsConsumerArray) {
-         if (isConsumer) {
-            ESP_LOGD(TAG, "Getting client obj for id %i\r\n", iId);
-            AsyncWebSocketClient * client = _ws->client(iId);
-            if (client && client->status() == WS_CONNECTED) {
-               ESP_LOGD(TAG, "Sending to client %i\r\n", iId);
+      for (auto &isConsumer : _bIsConsumerArray)
+      {
+         if (isConsumer)
+         {
+            ESP_LOGD(__FILE__, "Getting client obj for id %i\r\n", iId);
+            AsyncWebSocketClient *client = _ws->client(iId);
+            if (client && client->status() == WS_CONNECTED)
+            {
+               ESP_LOGD(__FILE__, "Sending to client %i\r\n", iId);
                client->text(strJsonSystemData);
             }
          }
          iId++;
       }
    }
-   else {
-      ESP_LOGD(TAG, "Sending to client %i\r\n", iClientId);
+   else
+   {
+      ESP_LOGD(__FILE__, "Sending to client %i\r\n", iClientId);
       _ws->text(iClientId, strJsonSystemData);
    }
-   ESP_LOGD(TAG, "Sent sysdata at %lu\r\n", millis());
+   ESP_LOGD(__FILE__, "Sent sysdata at %lu\r\n", millis());
 }
 
 void WebHandlerClass::_onAuth(AsyncWebServerRequest *request)
@@ -749,7 +770,8 @@ bool WebHandlerClass::_authenticate(AsyncWebServerRequest *request)
    char httpPassword[password.length() + 1];
    password.toCharArray(httpPassword, password.length() + 1);
    boolean bAuthResult = request->authenticate("Admin", httpPassword);
-   if (!bAuthResult) {
+   if (!bAuthResult)
+   {
       ESP_LOGE(__FILE__, "Admin user failed to login!");
    }
    return bAuthResult;
@@ -809,23 +831,28 @@ bool WebHandlerClass::MasterConnected()
 
 void WebHandlerClass::_CheckMasterStatus()
 {
-   if (!_MasterStatus.Configured) {
+   if (!_MasterStatus.Configured)
+   {
       return;
    }
-   if (millis() - _MasterStatus.LastCheck > 1200) {
-      ESP_LOGD(TAG, "Checking slave, if any...\r\n");
+   if (millis() - _MasterStatus.LastCheck > 1200)
+   {
+      ESP_LOGD(__FILE__, "Checking slave, if any...\r\n");
       _MasterStatus.LastCheck = millis();
-      ESP_LOGD(TAG, "Slave wsClient->Status: %i\r\n", _MasterStatus.client->status());
-      if (_MasterStatus.client->status() != WS_CONNECTED) {
-         ESP_LOGD(TAG, "ws client status says master is disconnected (actual status: %i)\r\n", _MasterStatus.client->status());
+      ESP_LOGD(__FILE__, "Slave wsClient->Status: %i\r\n", _MasterStatus.client->status());
+      if (_MasterStatus.client->status() != WS_CONNECTED)
+      {
+         ESP_LOGD(__FILE__, "ws client status says master is disconnected (actual status: %i)\r\n", _MasterStatus.client->status());
          _DisconnectMaster();
       }
-      else if (millis() - _MasterStatus.LastReply > 3600) {
-         ESP_LOGD(TAG, "Disconnecting master due to timeout (last pong: %lu, now: %lu)\r\n", _MasterStatus.LastReply, millis());
+      else if (millis() - _MasterStatus.LastReply > 3600)
+      {
+         ESP_LOGD(__FILE__, "Disconnecting master due to timeout (last pong: %lu, now: %lu)\r\n", _MasterStatus.LastReply, millis());
          _DisconnectMaster();
       }
-      else {
-         ESP_LOGD(TAG, "I am pinging the master at %lu\r\n", millis());
+      else
+      {
+         ESP_LOGD(__FILE__, "I am pinging the master at %lu\r\n", millis());
          _MasterStatus.client->ping();
       }
    }
@@ -835,7 +862,7 @@ void WebHandlerClass::_DisconnectMaster()
 {
    _MasterStatus.Configured = false;
    _ws->close(_MasterStatus.ClientID);
-   ESP_LOGI(TAG, "Master disconnected!");
+   ESP_LOGI(__FILE__, "Master disconnected!");
 }
 
 WebHandlerClass WebHandler;

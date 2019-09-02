@@ -6,20 +6,20 @@
 #define _SIMULATOR_h
 
 #if defined(ARDUINO) && ARDUINO >= 100
-   #include "Arduino.h"
+#include "Arduino.h"
 #else
-   #include "WProgram.h"
+#include "WProgram.h"
 #endif
+#include <config.h>
+#include <RaceHandler.h>
+#include "PROGMEM_readAnything.h"
 
 class SimulatorClass
 {
 protected:
-
-
 public:
    void init(uint8_t iS1Pin, uint8_t iS2Pin);
    void Main();
-
 
 private:
    uint8_t _iS1Pin;
@@ -39,4 +39,3 @@ private:
 extern class SimulatorClass Simulator;
 
 #endif
-

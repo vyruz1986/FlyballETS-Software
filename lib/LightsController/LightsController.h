@@ -17,10 +17,12 @@
 #ifndef _LIGHTSCONTROLLER_h
 #define _LIGHTSCONTROLLER_h
 #include "Arduino.h"
+#include "NeoPixelBus.h"
 
-#include <NeoPixelBus.h>
-#include "config.h"
-#include "Structs.h"
+#include <RaceHandler.h>
+#include <config.h>
+#include <Structs.h>
+#include "WebHandler.h"
 #ifdef WS281x
 
 #endif // WS281x
@@ -28,16 +30,15 @@
 class LightsControllerClass
 {
 protected:
-
 public:
-   
 #ifdef WS281x
-   void init(NeoPixelBus<NeoRgbFeature, WS_METHOD>* LightsStrip);
+   void init(NeoPixelBus<NeoRgbFeature, WS_METHOD> *LightsStrip);
 #else
    void init(uint8_t iLatchPin, uint8_t iClockPin, uint8_t iDataPin);
 #endif
    //Overal state of this class
-   enum OverallStates{
+   enum OverallStates
+   {
       STOPPED,
       STARTING,
       STARTED
@@ -45,15 +46,17 @@ public:
    OverallStates byOverallState = STOPPED;
 
    //Decimal values of lights connected to 74HC595
-   enum Lights {
-      WHITE = 130,   //74HC595 QH (128) + QB (2). I made a boo-boo on my prototype, WHITE should be wired to QB.
-      RED = 64,      //74HC595 QG
-      YELLOW1 = 32,  //74HC595 QF
-      BLUE = 16,     //74HC595 QE
-      YELLOW2 = 8,   //74HC595 QD
-      GREEN = 4      //74HC595 QC
+   enum Lights
+   {
+      WHITE = 130,  //74HC595 QH (128) + QB (2). I made a boo-boo on my prototype, WHITE should be wired to QB.
+      RED = 64,     //74HC595 QG
+      YELLOW1 = 32, //74HC595 QF
+      BLUE = 16,    //74HC595 QE
+      YELLOW2 = 8,  //74HC595 QD
+      GREEN = 4     //74HC595 QC
    };
-   enum LightStates {
+   enum LightStates
+   {
       OFF,
       ON,
       TOGGLE
@@ -69,12 +72,12 @@ public:
    void ShowScheduledRace(unsigned long Duration);
 
    stLightsState GetLightsState();
-   
+
 private:
 #ifdef WS281x
    //Neopixel object
    //Adafruit_NeoPixel _LightsStrip;
-   NeoPixelBus<NeoRgbFeature, WS_METHOD>* _LightsStrip;
+   NeoPixelBus<NeoRgbFeature, WS_METHOD> *_LightsStrip;
 #else
    //Pin connected to ST_CP of 74HC595
    uint8_t _iLatchPin = 12;
@@ -94,20 +97,18 @@ private:
    unsigned long _lLightsOutSchedule[6];
 
    Lights _byLightsArray[6] = {
-      WHITE,
-      RED,
-      YELLOW1,
-      BLUE,
-      YELLOW2,
-      GREEN
-   };
+       WHITE,
+       RED,
+       YELLOW1,
+       BLUE,
+       YELLOW2,
+       GREEN};
 
    Lights _byDogErrorLigths[4] = {
-      RED,
-      BLUE,
-      YELLOW2,
-      GREEN
-   };
+       RED,
+       BLUE,
+       YELLOW2,
+       GREEN};
 
 #ifdef WS281x
    struct SNeoPixelConfig
@@ -118,11 +119,8 @@ private:
    };
    SNeoPixelConfig _GetNeoPixelConfig(Lights byLight);
 #endif // WS281x
-
-
 };
 
 extern LightsControllerClass LightsController;
 
 #endif
-

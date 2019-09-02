@@ -1,8 +1,4 @@
-#include "SystemManager.h"
-#include "SettingsManager.h"
-#include "SlaveHandler.h"
-#include "WebHandler.h"
-#include "enums.h"
+#include <SystemManager.h>
 
 void SystemManagerClass::init()
 {
@@ -12,24 +8,28 @@ void SystemManagerClass::init()
 
 void SystemManagerClass::loop()
 {
-   if (_ulScheduledRebootTS > 0
-      && millis() > _ulScheduledRebootTS) {
+   if (_ulScheduledRebootTS > 0 && millis() > _ulScheduledRebootTS)
+   {
       ESP.restart();
    }
 }
 
-void SystemManagerClass::scheduleReboot(unsigned long ulRebootTs) {
-   if (ulRebootTs > millis()) {
+void SystemManagerClass::scheduleReboot(unsigned long ulRebootTs)
+{
+   if (ulRebootTs > millis())
+   {
       _ulScheduledRebootTS = ulRebootTs;
    }
 }
 
 bool SystemManagerClass::CheckMasterSlaveConnection()
 {
-   if (_iOpMode == SystemModes::MASTER) {
+   if (_iOpMode == SystemModes::MASTER)
+   {
       return SlaveHandler.GetConnectionStatus();
    }
-   else {
+   else
+   {
       return WebHandler.MasterConnected();
    }
 }

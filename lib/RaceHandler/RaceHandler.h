@@ -1,5 +1,10 @@
 // RaceHandler.h
-#include "Structs.h"
+#include <LightsController.h>
+#include <LCDController.h>
+#include <SettingsManager.h>
+#include <config.h>
+#include <Structs.h>
+#include <WebHandler.h>
 #ifndef _RACEHANDLER_h
 #define _RACEHANDLER_h
 
@@ -10,9 +15,9 @@
 #endif
 
 #if defined(ARDUINO) && ARDUINO >= 100
-	#include "Arduino.h"
+#include "Arduino.h"
 #else
-	#include "WProgram.h"
+#include "WProgram.h"
 #endif
 
 #define NUM_HISTORIC_RACE_RECORDS 100
@@ -21,12 +26,12 @@ class RaceHandlerClass
 {
    friend class SimulatorClass;
    friend class WebHandlerClass;
- protected:
 
-
- public:
-	void init(uint8_t iS1Pin, uint8_t iS2Pin);
-   enum RaceStates {
+protected:
+public:
+   void init(uint8_t iS1Pin, uint8_t iS2Pin);
+   enum RaceStates
+   {
       STOPPED,
       STARTING,
       RUNNING,
@@ -38,7 +43,7 @@ class RaceHandlerClass
    uint8_t iCurrentDog;
    uint8_t iPreviousDog;
    uint8_t iNextDog;
-   
+
    void Main();
    void StartTimers();
    void StartRace(unsigned long StartTime);
@@ -49,7 +54,8 @@ class RaceHandlerClass
    void TriggerSensor1();
    void TriggerSensor2();
 
-   enum DogFaults {
+   enum DogFaults
+   {
       OFF,
       ON,
       TOGGLE
@@ -80,8 +86,8 @@ private:
    unsigned long _lPerfectCrossingTime;
    unsigned long _lLastTransitionStringUpdate;
 
-   uint8_t  _iS1Pin;
-   uint8_t  _iS2Pin;
+   uint8_t _iS1Pin;
+   uint8_t _iS2Pin;
    boolean _bRunDirectionInverted = false;
 
    struct STriggerRecord
@@ -99,7 +105,7 @@ private:
    bool _bFault;
    bool _bDogFaults[4];
    bool _bRerunBusy;
-   uint8_t _iDogRunCounters[4];  //Number of (re-)runs for each dog
+   uint8_t _iDogRunCounters[4]; //Number of (re-)runs for each dog
    unsigned long _lLastDogTimeReturnTimeStamp[4];
    uint8_t _iLastReturnedRunNumber[4];
    unsigned long _lDogEnterTimes[4];
@@ -109,8 +115,9 @@ private:
    long _lCrossingTimes[4][4];
 
    String _strTransition;
-   
-   enum _byDogStates {
+
+   enum _byDogStates
+   {
       GOINGIN,
       COMINGBACK
    };
@@ -133,4 +140,3 @@ private:
 extern RaceHandlerClass RaceHandler;
 
 #endif
-

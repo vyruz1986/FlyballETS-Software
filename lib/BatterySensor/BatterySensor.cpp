@@ -15,8 +15,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.If not, see <http://www.gnu.org/licenses/>
-#include "BatterySensor.h"
-#include "config.h"
+#include <BatterySensor.h>
 
 /// <summary>
 ///   Initialises this object.
@@ -55,7 +54,7 @@ void BatterySensorClass::CheckBatteryVoltage()
       //Also ESP32 has 12-bit ADC, so 3.3V = 4095 analogRead value
       //First calculate voltage at ADC pin
       int iPinVoltage = map(_iAverageBatteryReading, 0, 4095, 0, 315);
-      _iBatteryVoltage = iPinVoltage * 4.3;  // 14.19/3.3=4.3
+      _iBatteryVoltage = iPinVoltage * 4.3; // 14.19/3.3=4.3
 #else
       float fMeasuredVoltage = iAverageBatteryReading * 0.0048828125;
       _iBatteryVoltage = fMeasuredVoltage * 2.5 * 100;

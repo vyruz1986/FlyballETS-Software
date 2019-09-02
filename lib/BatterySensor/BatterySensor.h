@@ -18,22 +18,22 @@
 #define _BATTERYSENSOR_h
 
 #if defined(ARDUINO) && ARDUINO >= 100
-	#include "Arduino.h"
+#include "Arduino.h"
 #else
-	#include "WProgram.h"
+#include "WProgram.h"
 #endif
+#include <config.h>
 
 class BatterySensorClass
 {
 protected:
-
 public:
    void init(uint8_t iBatterySensorPin);
    void CheckBatteryVoltage();
    uint16_t GetBatteryVoltage();
    uint16_t GetBatteryPercentage();
    uint16_t GetLastAnalogRead();
-   
+
 private:
    uint8_t _iBatterySensorPin;
 
@@ -41,10 +41,8 @@ private:
    int _iNumberOfBatteryReadings = 0;
    uint16_t _iBatteryVoltage = 0;
    uint16_t _iAverageBatteryReading;
-   
 };
 
 extern BatterySensorClass BatterySensor;
 
 #endif
-

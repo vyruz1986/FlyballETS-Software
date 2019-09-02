@@ -8,8 +8,11 @@
 #else
 #include "WProgram.h"
 #endif
-#include <WebSocketsClient.h>
-#include "global.h"
+#include "WebSocketsClient.h"
+#include "ArduinoJson.h"
+#include <SettingsManager.h>
+#include <enums.h>
+#include <global.h>
 #define CONNECT_CHECK 1000
 
 class SlaveHandlerClass
@@ -34,7 +37,7 @@ protected:
    stSlaveStatus _SlaveStatus;
 
    void _ConnectRemote();
-   void _WsEvent(WStype_t type, uint8_t * payload, size_t length);
+   void _WsEvent(WStype_t type, uint8_t *payload, size_t length);
    void _SetDisconnected();
    void _AnnounceSlaveIfApplicable();
    void _AnnounceConsumerIfApplicable();
@@ -47,7 +50,6 @@ protected:
    StaticJsonDocument<bsRaceData> _jdocRaceData;
    JsonObject _jsonRaceData;
 
-
 public:
    void init();
    void loop();
@@ -59,10 +61,9 @@ public:
    bool GetConnectionStatus();
    String getSlaveRaceData();
    JsonObject getSlaveRaceData1();
-   char * getSlaveRaceData2();
+   char *getSlaveRaceData2();
 };
 
 extern SlaveHandlerClass SlaveHandler;
 
 #endif
-

@@ -9,13 +9,23 @@
 #include "WProgram.h"
 #endif
 
-#include "SettingsManager.h"
-//#include <AsyncTCP.h>
+#include <RaceHandler.h>
+#include <Structs.h>
+#include <LightsController.h>
+#include <Hash.h>
+#include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-#include "ArduinoJson-v6.10.1.h"
-#include "RaceHandler.h"
-#include "Structs.h"
-#include "LightsController.h"
+#include <FS.h>
+#include <SPIFFS.h>
+#include <ArduinoJson.h>
+#include <SettingsManager.h>
+#include <GPSHandler.h>
+#include <BatterySensor.h>
+#include <SlaveHandler.h>
+#include <SystemManager.h>
+#include "global.h"
+#include <rom/rtc.h>
+#include "..\..\src\static\index.html.gz.h"
 
 class WebHandlerClass
 {
@@ -25,12 +35,12 @@ protected:
    AsyncWebServer *_server;
    AsyncWebSocket *_ws;
    AsyncWebSocket *_wsa;
-   void _WsEvent(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len);
-   boolean _DoAction(JsonObject ActionObj, String * ReturnError, AsyncWebSocketClient * Client);
+   void _WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
+   boolean _DoAction(JsonObject ActionObj, String *ReturnError, AsyncWebSocketClient *Client);
    boolean _GetRaceDataJsonString(uint iRaceId, String &strJsonString);
    void _SendRaceData(uint iRaceId = RaceHandler._iCurrentRaceId, int8_t iClientId = -1);
 
-   boolean _ProcessConfig(JsonArray newConfig, String * ReturnError);
+   boolean _ProcessConfig(JsonArray newConfig, String *ReturnError);
 
    boolean _GetData(String dataType, JsonObject ReturnError);
 
@@ -40,7 +50,7 @@ protected:
    bool _authenticate(AsyncWebServerRequest *request);
    bool _wsAuth(AsyncWebSocketClient *client);
 
-   void _onHome(AsyncWebServerRequest * request);
+   void _onHome(AsyncWebServerRequest *request);
    void _CheckMasterStatus();
    void _DisconnectMaster();
 
@@ -56,7 +66,7 @@ protected:
    {
       bool Configured;
       IPAddress ip;
-      AsyncWebSocketClient * client;
+      AsyncWebSocketClient *client;
       uint8_t ClientID;
       unsigned long LastCheck;
       unsigned long LastReply;

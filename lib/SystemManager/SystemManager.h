@@ -9,6 +9,11 @@
 #include "WProgram.h"
 #endif
 
+#include <SettingsManager.h>
+#include <SlaveHandler.h>
+#include "WebHandler.h"
+#include <enums.h>
+
 class SystemManagerClass
 {
 protected:
@@ -25,4 +30,3 @@ public:
 extern SystemManagerClass SystemManager;
 
 #endif
-

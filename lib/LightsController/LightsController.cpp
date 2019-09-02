@@ -17,11 +17,6 @@
 // along with this program.If not, see <http://www.gnu.org/licenses/>
 
 #include "LightsController.h"
-#include "RaceHandler.h"
-#include "config.h"
-#include "Structs.h"
-#include "WebHandler.h"
-#include <NeoPixelBus.h>
 
 /// <summary>
 ///   Initialises this object. This function needs to be passed the pin numbers for the shift
@@ -327,7 +322,7 @@ void LightsControllerClass::ShowScheduledRace(unsigned long Duration)
 {
    this->ResetLights();
    //Set schedule for RED light
-   _lLightsOnSchedule[0] = millis(); //Turn on NOW
+   _lLightsOnSchedule[0] = millis();             //Turn on NOW
    _lLightsOutSchedule[0] = millis() + Duration; //keep on for 1 second
 }
 

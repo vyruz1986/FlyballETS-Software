@@ -16,12 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.If not, see <http://www.gnu.org/licenses/>
 
-#include "LightsController.h"
-#include "LCDController.h"
-#include "RaceHandler.h"
-#include "SettingsManager.h"
-#include "config.h"
-#include "WebHandler.h"
+#include <RaceHandler.h>
 
 /// <summary>
 ///   Initialises this object andsets all counters to 0.
@@ -39,7 +34,7 @@ void RaceHandlerClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
    ResetRace();
 
    _iCurrentRaceId = 0;
-   ESP_LOGD(TAG, "Run Direction from settings: %s", SettingsManager.getSetting("RunDirectionInverted").c_str());
+   ESP_LOGD(__FILE__, "Run Direction from settings: %s", SettingsManager.getSetting("RunDirectionInverted").c_str());
    if (SettingsManager.getSetting("RunDirectionInverted").equals("1"))
    {
       ToggleRunDirection();
@@ -390,7 +385,7 @@ void RaceHandlerClass::StartTimers()
 void RaceHandlerClass::StartRace(unsigned long StartTime)
 {
    _lSchduledRaceStartTime = StartTime;
-   ESP_LOGI(TAG, "Race scheduled to start at %lu ms", StartTime);
+   ESP_LOGI(__FILE__, "Race scheduled to start at %lu ms", StartTime);
    LightsController.ShowScheduledRace(StartTime - millis());
    RaceState = RaceStates::SCHEDULED;
 }
@@ -414,14 +409,12 @@ void RaceHandlerClass::StartRace()
 /// </summary>
 void RaceHandlerClass::_HandleScheduledRace()
 {
-   if (RaceState == RaceStates::SCHEDULED
-      && millis() >= _lSchduledRaceStartTime)
+   if (RaceState == RaceStates::SCHEDULED && millis() >= _lSchduledRaceStartTime)
    {
       this->StartRace();
       _lSchduledRaceStartTime = 0;
    }
 }
-
 
 /// <summary>
 ///   Stops a race.
@@ -471,8 +464,8 @@ void RaceHandlerClass::ResetRace()
       _strTransition = "";
       _bGatesClear = true;
       _lSchduledRaceStartTime = 0;
-      
-      for (auto& bFault : _bDogFaults)
+
+      for (auto &bFault : _bDogFaults)
       {
          bFault = false;
       }
@@ -892,8 +885,8 @@ stRaceData RaceHandlerClass::GetRaceData(uint iRaceId)
       RequestedRaceData.StartTime = _lRaceStartTime / 1000;
       RequestedRaceData.EndTime = _lRaceEndTime / 1000;
       RequestedRaceData.ElapsedTime = _lRaceTime / 1000;
-      //ESP_LOGD(TAG, "Elapsed1: %lu - %lu = %lu\r\n", micros(), _lRaceStartTime, _lRaceTime);
-      //ESP_LOGD(TAG, "Elapsed2: %lu - %lu = %lu\r\n", GET_MICROS, _lRaceStartTime, _lRaceTime);
+      //ESP_LOGD(__FILE__, "Elapsed1: %lu - %lu = %lu\r\n", micros(), _lRaceStartTime, _lRaceTime);
+      //ESP_LOGD(__FILE__, "Elapsed2: %lu - %lu = %lu\r\n", GET_MICROS, _lRaceStartTime, _lRaceTime);
       RequestedRaceData.TotalCrossingTime = this->GetTotalCrossingTimeMillis();
       RequestedRaceData.RaceState = RaceState;
 

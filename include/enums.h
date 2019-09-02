@@ -13,7 +13,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.If not, see <http://www.gnu.org/licenses/>
 
-enum SystemModes {
+#ifndef ENUMS_H
+#define ENUMS_H
+
+enum SystemModes
+{
    MASTER,
    SLAVE
 };
+
+#endif

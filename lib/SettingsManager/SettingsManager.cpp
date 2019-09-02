@@ -1,8 +1,4 @@
-#include "SettingsManager.h"
-#include "Embedis.h"
-#include <EEPROM.h>
-#include <SPIFFS.h>
-#include "config.h"
+#include <SettingsManager.h>
 
 void SettingsManagerClass::loop()
 {
@@ -17,7 +13,7 @@ void SettingsManagerClass::loop()
 
 void SettingsManagerClass::init()
 {
-   EEPROM.begin(EEPROM_SIZE);
+   EEPROM.begin(4069);
    _settings_save = false;
 
    Embedis::dictionary(F("EEPROM"),
@@ -53,7 +49,7 @@ bool SettingsManagerClass::setSetting(const String &key, String value)
 void SettingsManagerClass::saveSettings()
 {
    _settings_save = true;
-   ESP_LOGD(TAG, "Saving settings\r\n");
+   ESP_LOGD(__FILE__, "Saving settings\r\n");
 }
 
 bool SettingsManagerClass::hasSetting(const String &key)
@@ -87,7 +83,8 @@ void SettingsManagerClass::setDefaultSettings()
       saveSettings();
    }
 
-   if (!hasSetting("OperationMode")) {
+   if (!hasSetting("OperationMode"))
+   {
       setSetting("OperationMode", "0");
       saveSettings();
    }
