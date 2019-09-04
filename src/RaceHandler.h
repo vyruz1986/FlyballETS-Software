@@ -81,14 +81,14 @@ private:
    unsigned long _lPerfectCrossingTime;
    unsigned long _lLastTransitionStringUpdate;
 
-   uint8_t _iS1Pin;
-   uint8_t _iS2Pin;
+   int _iS1Pin;
+   int _iS2Pin;
    boolean _bRunDirectionInverted = false;
 
    struct STriggerRecord
    {
       volatile uint8_t iSensorNumber;
-      volatile unsigned long lTriggerTime;
+      volatile int64_t lTriggerTime;
       volatile int iSensorState;
    };
 #define TRIGGER_QUEUE_LENGTH 50

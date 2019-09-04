@@ -31,7 +31,7 @@ void GPSHandlerClass::loop()
       setTime(
           _Tgps.time.hour(), _Tgps.time.minute(), _Tgps.time.second(), _Tgps.date.day(), _Tgps.date.month(), _Tgps.date.year());
       _FormatUTCTime();
-      long lAge = (_Tgps.time.centisecond() * 10) - (_Tgps.time.age());
+      //long lAge = (_Tgps.time.centisecond() * 10) - (_Tgps.time.age());
       //ESP_LOGD(__FILE__, "UTC time: %s", _cUTCTime);
    }
 }

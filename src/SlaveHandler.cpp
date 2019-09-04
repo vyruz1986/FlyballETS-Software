@@ -136,8 +136,10 @@ void SlaveHandlerClass::_WsEvent(WStype_t type, uint8_t *payload, size_t length)
 
    case WStype_BIN:
       ESP_LOGD(__FILE__, "get binary length: %u\n", length);
-
       break;
+
+   default:
+      ESP_LOGD(__FILE__, "Received event %i", type);
    }
 }
 
@@ -254,8 +256,7 @@ void SlaveHandlerClass::_TestConnection()
       {
          _SlaveStatus.LastCheck = millis();
          ESP_LOGD(__FILE__, "Testing connection at %lu...\r\n", millis());
-         bool bCheckResult = _wsClient.sendPing();
-         ESP_LOGD(__FILE__, "Test result: %i\r\n", bCheckResult);
+         ESP_LOGD(__FILE__, "Test result: %i\r\n", _wsClient.sendPing());
       }
       if (millis() - _SlaveStatus.LastReply > 6000)
       {
