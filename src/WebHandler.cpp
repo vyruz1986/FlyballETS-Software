@@ -3,6 +3,23 @@
 //
 
 #include "WebHandler.h"
+#include <RaceHandler.h>
+#include <Structs.h>
+#include <LightsController.h>
+#include <Hash.h>
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
+#include <FS.h>
+#include <SPIFFS.h>
+#include <ArduinoJson.h>
+#include <SettingsManager.h>
+#include <GPSHandler.h>
+#include <BatterySensor.h>
+#include <SlaveHandler.h>
+#include <SystemManager.h>
+#include "global.h"
+#include <rom/rtc.h>
+#include "static\index.html.gz.h"
 
 void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
 {
@@ -35,7 +52,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
       }
 
       //TODO: Would be nicer if we only send this to the specific client who just connected instead of all clients
-      _SendRaceData(); //Make sure we always broadcast racedata when new client connects
+      _SendRaceData(RaceHandler._iCurrentRaceId, client->id()); //Make sure we always broadcast racedata when new client connects
       client->ping();
    }
    else if (type == WS_EVT_DISCONNECT)
@@ -266,7 +283,7 @@ void WebHandlerClass::loop()
       //Send race data each 200ms
       if (millis() - _lLastRaceDataBroadcast > _lRaceDataBroadcastInterval)
       {
-         _SendRaceData();
+         _SendRaceData(RaceHandler._iCurrentRaceId, -1);
          _lLastRaceDataBroadcast = millis();
       }
    }

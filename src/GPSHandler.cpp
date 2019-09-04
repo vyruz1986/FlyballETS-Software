@@ -3,6 +3,8 @@
 //
 
 #include <GPSHandler.h>
+#include "TinyGPS++.h"
+#include <TimeLib.h>
 
 void GPSHandlerClass::_HandleSerialPort()
 {

@@ -2,6 +2,10 @@
 //
 //
 #include <SlaveHandler.h>
+#include "WebSocketsClient.h"
+#include <SettingsManager.h>
+#include <enums.h>
+#include <global.h>
 
 void SlaveHandlerClass::init()
 {

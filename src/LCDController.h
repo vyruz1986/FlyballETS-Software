@@ -16,8 +16,10 @@
 
 #ifndef _LCDCONTROLLER_h
 #define _LCDCONTROLLER_h
-#include "LiquidCrystal.h"
+
 #include <Arduino.h>
+
+class LiquidCrystal;
 class LCDControllerClass
 {
 protected:

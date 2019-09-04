@@ -10,9 +10,6 @@
 #else
 #include "WProgram.h"
 #endif
-#include <config.h>
-#include <RaceHandler.h>
-#include "PROGMEM_readAnything.h"
 
 class SimulatorClass
 {

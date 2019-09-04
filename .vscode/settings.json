@@ -4,6 +4,16 @@
       "PLATFORMIO_CALLER": "vscode"
    },
    "files.associations": {
-      "functional": "cpp"
+      "functional": "cpp",
+      "chrono": "cpp",
+      "complex": "cpp",
+      "memory": "cpp",
+      "ratio": "cpp",
+      "tuple": "cpp",
+      "type_traits": "cpp",
+      "utility": "cpp",
+      "xmemory0": "cpp",
+      "xtr1common": "cpp",
+      "xutility": "cpp"
    }
 }

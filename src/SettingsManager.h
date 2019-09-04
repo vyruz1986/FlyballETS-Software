@@ -9,11 +9,6 @@
 #include "WProgram.h"
 #endif
 
-#include "Embedis.h"
-#include <EEPROM.h>
-#include <SPIFFS.h>
-#include <config.h>
-
 class SettingsManagerClass
 {
 protected:

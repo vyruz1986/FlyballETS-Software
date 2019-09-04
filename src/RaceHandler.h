@@ -1,10 +1,4 @@
 // RaceHandler.h
-#include <LightsController.h>
-#include <LCDController.h>
-#include <SettingsManager.h>
-#include <config.h>
-#include <Structs.h>
-#include <WebHandler.h>
 #ifndef _RACEHANDLER_h
 #define _RACEHANDLER_h
 
@@ -21,6 +15,7 @@
 #endif
 
 #define NUM_HISTORIC_RACE_RECORDS 100
+#include "Structs.h"
 
 class RaceHandlerClass
 {

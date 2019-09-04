@@ -8,9 +8,8 @@
 #else
 #include "WProgram.h"
 #endif
-
 #include "TinyGPS++.h"
-#include <TimeLib.h>
+
 class GPSHandlerClass
 {
 protected:

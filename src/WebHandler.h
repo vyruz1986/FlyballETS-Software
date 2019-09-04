@@ -9,23 +9,16 @@
 #include "WProgram.h"
 #endif
 
-#include <RaceHandler.h>
-#include <Structs.h>
-#include <LightsController.h>
-#include <Hash.h>
-#include <AsyncTCP.h>
-#include <ESPAsyncWebServer.h>
-#include <FS.h>
-#include <SPIFFS.h>
-#include <ArduinoJson.h>
-#include <SettingsManager.h>
-#include <GPSHandler.h>
-#include <BatterySensor.h>
-#include <SlaveHandler.h>
-#include <SystemManager.h>
-#include "global.h"
-#include <rom/rtc.h>
-#include "..\..\src\static\index.html.gz.h"
+#include "Structs.h"
+#include "config.h"
+#include "ArduinoJson.h"
+#include "ESPAsyncWebServer.h"
+
+// class AsyncWebServer;
+// class AsyncWebSocket;
+// class AsyncWebSocketClient;
+// class AwsEventType;
+// class AsyncWebServerRequest;
 
 class WebHandlerClass
 {
@@ -38,7 +31,7 @@ protected:
    void _WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
    boolean _DoAction(JsonObject ActionObj, String *ReturnError, AsyncWebSocketClient *Client);
    boolean _GetRaceDataJsonString(uint iRaceId, String &strJsonString);
-   void _SendRaceData(uint iRaceId = RaceHandler._iCurrentRaceId, int8_t iClientId = -1);
+   void _SendRaceData(uint iRaceId, int8_t iClientId);
 
    boolean _ProcessConfig(JsonArray newConfig, String *ReturnError);
 

@@ -17,6 +17,12 @@
 // along with this program.If not, see <http://www.gnu.org/licenses/>
 
 #include <RaceHandler.h>
+#include <LightsController.h>
+#include <LCDController.h>
+#include <SettingsManager.h>
+#include <config.h>
+#include <Structs.h>
+#include <WebHandler.h>
 
 /// <summary>
 ///   Initialises this object andsets all counters to 0.
@@ -53,7 +59,7 @@ void RaceHandlerClass::_ChangeRaceState(RaceStates byNewRaceState)
    {
       PreviousRaceState = RaceState;
       RaceState = byNewRaceState;
-      WebHandler._SendRaceData();
+      WebHandler._SendRaceData(_iCurrentRaceId, -1);
    }
 }
 
@@ -515,7 +521,7 @@ void RaceHandlerClass::ResetRace()
    }
 
    //Send updated racedata to any web clients
-   WebHandler._SendRaceData();
+   WebHandler._SendRaceData(_iCurrentRaceId, -1);
 }
 
 /// <summary>

@@ -3,6 +3,9 @@
 // summary:	Implements the simulator class. Since this class is memory intensive, it should only be
 // included if actual simulation is wished.
 #include "Simulator.h"
+#include <config.h>
+#include <RaceHandler.h>
+#include "PROGMEM_readAnything.h"
 
 /// <summary>
 ///   Program the interrupt triggers which should be simulated here. See end of file for a collection of records from actual races.

@@ -1,4 +1,8 @@
 #include <SettingsManager.h>
+#include "Embedis.h"
+#include <EEPROM.h>
+#include <SPIFFS.h>
+#include <config.h>
 
 void SettingsManagerClass::loop()
 {

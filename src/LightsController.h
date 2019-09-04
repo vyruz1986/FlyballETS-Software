@@ -16,17 +16,10 @@
 
 #ifndef _LIGHTSCONTROLLER_h
 #define _LIGHTSCONTROLLER_h
-#include "Arduino.h"
-#include "NeoPixelBus.h"
 
-#include <RaceHandler.h>
 #include <config.h>
-#include <Structs.h>
-#include "WebHandler.h"
-#ifdef WS281x
-
-#endif // WS281x
-
+#include "NeoPixelBus.h"
+#include "Structs.h"
 class LightsControllerClass
 {
 protected:

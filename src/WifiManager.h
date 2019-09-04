@@ -13,16 +13,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.If not, see <http://www.gnu.org/licenses/>
 
-#include <SlaveHandler.h>
-#include <SettingsManager.h>
-
 //Wifi stuff
-IPAddress IPGateway;
-IPAddress IPSubnet;
-String strAPName;
-String strSTAName;
+#include "Arduino.h"
+#include "WiFi.h"
 
-unsigned long ulLastWifiCheck = 0;
 #define WIFI_CHECK_INTERVAL 500
 
 void SetupWiFi();

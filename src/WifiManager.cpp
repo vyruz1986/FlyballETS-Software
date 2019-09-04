@@ -14,6 +14,16 @@
 // along with this program.If not, see <http://www.gnu.org/licenses/>
 
 #include "WifiManager.h"
+#include <SlaveHandler.h>
+#include <SettingsManager.h>
+#include "enums.h"
+
+IPAddress IPGateway;
+IPAddress IPSubnet;
+String strAPName;
+String strSTAName;
+
+unsigned long ulLastWifiCheck = 0;
 
 void SetupWiFi()
 {
