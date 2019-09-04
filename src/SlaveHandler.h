@@ -19,6 +19,7 @@ protected:
    bool _bWSConnectionStarted;
    bool _bSlaveAnnounced;
    bool _bConsumerAnnounced;
+   bool _bInitialized = false;
    unsigned long _ulLastConnectCheck;
    unsigned long _ulLastSystemDataReceived;
    WebSocketsClient _wsClient;

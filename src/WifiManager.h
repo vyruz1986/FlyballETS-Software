@@ -13,14 +13,28 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.If not, see <http://www.gnu.org/licenses/>
 
-//Wifi stuff
+#ifndef _WIFIMANAGER_H
+#define _WIFIMANAGER_H
+
 #include "Arduino.h"
 #include "WiFi.h"
 
 #define WIFI_CHECK_INTERVAL 500
 
-void SetupWiFi();
+class WifiManager
+{
+public:
+    void SetupWiFi();
+    void WiFiLoop();
+    void WiFiEvent(WiFiEvent_t event, system_event_info_t info);
 
-void WiFiLoop();
+private:
+    IPAddress _IPGateway;
+    IPAddress _IPSubnet;
+    String _strAPName;
+    String _strSTAName;
 
-void WiFiEvent(WiFiEvent_t event);
+    unsigned long ulLastWifiCheck = 0;
+};
+
+#endif

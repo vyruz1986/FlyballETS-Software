@@ -22,6 +22,7 @@
 // You should have received a copy of the GNU General Public License along with this program.If not,
 // see <http://www.gnu.org/licenses/>
 #include "main.h"
+#include "WifiManager.h"
 
 /*List of pins and the ones used (Lolin32 board):
    - 34: S1 (handler side) photoelectric sensor
@@ -132,6 +133,8 @@ unsigned int uiLastProgress = 0;
 TaskHandle_t Task0;
 #endif
 
+WifiManager wifiManager;
+
 void setup()
 {
    //Configure serial interface
@@ -140,8 +143,8 @@ void setup()
 
    //init SettingsManager
    SettingsManager.init();
-   //SettingsManager.setSetting("OperationMode", "0");
-   //SettingsManager.setSetting("APName", "FlyballETS");
+   SettingsManager.setSetting("OperationMode", "0");
+   SettingsManager.setSetting("APName", "FlyballETS");
 
    pinMode(iS1Pin, INPUT_PULLDOWN);
    pinMode(iS2Pin, INPUT_PULLDOWN);
@@ -191,7 +194,7 @@ void setup()
    LCDController.init(&lcd, &lcd2);
 
    //Init Wifi setup
-   SetupWiFi();
+   wifiManager.SetupWiFi();
 
    //configure webserver
    WebHandler.init(80);
@@ -285,7 +288,7 @@ void loop()
    //Handle GPS
    GPSHandler.loop();
 
-   WiFiLoop();
+   wifiManager.WiFiLoop();
 
    SystemManager.loop();
 

@@ -9,6 +9,8 @@
 
 void SlaveHandlerClass::init()
 {
+   if (_bInitialized)
+      return;
    this->_bConnected = false;
    this->_bIAmSlave = false;
    this->_bWSConnectionStarted = false;
@@ -27,6 +29,7 @@ void SlaveHandlerClass::init()
    ESP_LOGI(__FILE__, "SlaveHandler initialized!");
 
    _jsonRaceData = _jdocRaceData.to<JsonObject>();
+   _bInitialized = true;
 }
 void SlaveHandlerClass::loop()
 {
@@ -34,7 +37,6 @@ void SlaveHandlerClass::loop()
    {
       this->_ulLastConnectCheck = millis();
       ESP_LOGV(__FILE__, "C: %i, CN: %i, CS: %i, S: %i, SC: %i, strRDLength: %i\r\n", _bConnected, _ConnectionNeeded(), _bWSConnectionStarted, _bIAmSlave, _bSlaveConfigured, _strJsonRaceData.length());
-      ESP_LOGV(__FILE__, "Wifi Status: %u, Wifi.localIP: %s\r\n", WiFi.status(), WiFi.localIP().toString().c_str());
       if (!_bConnected && this->_ConnectionNeeded() && !_bWSConnectionStarted)
       {
          this->_ConnectRemote();
@@ -145,6 +147,8 @@ void SlaveHandlerClass::_WsEvent(WStype_t type, uint8_t *payload, size_t length)
 
 void SlaveHandlerClass::_SetDisconnected()
 {
+   if (!this->_bConnected)
+      return;
    this->_bConnected = false;
    ESP_LOGD(__FILE__, "Disconnected!\n");
 }

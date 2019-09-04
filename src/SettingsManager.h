@@ -21,7 +21,7 @@ public:
    String getSetting(const String &key, String defaultValue);
    String getSetting(const String &key);
 
-   bool setSetting(const String &key, String value);
+   void setSetting(const String &key, String value);
 
    void saveSettings();
    bool hasSetting(const String &key);

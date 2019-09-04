@@ -640,7 +640,6 @@ void WebHandlerClass::_SendRaceData(uint iRaceId, int8_t iClientId)
 boolean WebHandlerClass::_ProcessConfig(JsonArray newConfig, String *ReturnError)
 {
    bool save = false;
-   bool changed = false;
    ESP_LOGD(__FILE__, "config is %i big\r\n", newConfig.size());
    for (unsigned int i = 0; i < newConfig.size(); i++)
    {
@@ -651,7 +650,7 @@ boolean WebHandlerClass::_ProcessConfig(JsonArray newConfig, String *ReturnError
       {
          ESP_LOGD(__FILE__, "[WEBHANDLER] Storing %s = %s", key.c_str(), value.c_str());
          SettingsManager.setSetting(key, value);
-         save = changed = true;
+         save = true;
       }
    }
 

@@ -2,7 +2,6 @@
 
 //Public libs
 #include <LiquidCrystal.h>
-#include "WiFi.h"
 #include <ESPmDNS.h>
 #include <ArduinoOTA.h>
 #include <EEPROM.h>
@@ -19,7 +18,6 @@
 #include <BatterySensor.h>
 #include <SystemManager.h>
 #include <SlaveHandler.h>
-#include "WifiManager.h"
 
 //Includes
 #include <Structs.h>
@@ -42,7 +40,6 @@
 //Function prototypes
 void Sensor1Wrapper();
 void Sensor2Wrapper();
-void WiFiEvent(WiFiEvent_t event);
 void ResetRace();
 void mdnsServerSetup();
 void StartStopRace();

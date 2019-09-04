@@ -17,14 +17,14 @@ void SettingsManagerClass::loop()
 
 void SettingsManagerClass::init()
 {
-   EEPROM.begin(4069);
+   EEPROM.begin(SPI_FLASH_SEC_SIZE);
    _settings_save = false;
 
-   Embedis::dictionary(F("EEPROM"),
+   Embedis::dictionary("EEPROM",
                        SPI_FLASH_SEC_SIZE,
                        [](size_t pos) -> char { return EEPROM.read(pos); },
                        [](size_t pos, char value) { EEPROM.write(pos, value); },
-                       []() {});
+                       []() { EEPROM.commit(); });
 
    setDefaultSettings();
 }
@@ -34,6 +34,7 @@ String SettingsManagerClass::getSetting(const String &key, String defaultValue)
    String value;
    if (!Embedis::get(key, value))
       value = defaultValue;
+   ESP_LOGD(__FILE__, "Returning value %s for setting %s", value.c_str(), key.c_str());
    return value;
 }
 
@@ -43,17 +44,16 @@ String SettingsManagerClass::getSetting(const String &key)
    return strReturnValue;
 }
 
-//template<typename T> bool SettingsManagerClass::setSetting(const String& key, T value)
-bool SettingsManagerClass::setSetting(const String &key, String value)
+void SettingsManagerClass::setSetting(const String &key, String value)
 {
+   ESP_LOGD(__FILE__, "Setting value %s for key %s", value.c_str(), key.c_str());
+   Embedis::set(key, String(value));
    saveSettings();
-   return Embedis::set(key, String(value));
 }
 
 void SettingsManagerClass::saveSettings()
 {
    _settings_save = true;
-   ESP_LOGD(__FILE__, "Saving settings\r\n");
 }
 
 bool SettingsManagerClass::hasSetting(const String &key)
@@ -63,35 +63,38 @@ bool SettingsManagerClass::hasSetting(const String &key)
 
 void SettingsManagerClass::setDefaultSettings()
 {
+   bool shouldSave = false;
    if (!hasSetting("AdminPass"))
    {
       setSetting("AdminPass", "FlyballETS.1234");
-      saveSettings();
+      shouldSave = true;
    }
 
    if (!hasSetting("APName"))
    {
       setSetting("APName", "FlyballETS");
-      saveSettings();
+      shouldSave = true;
    }
 
    if (!hasSetting("APPass"))
    {
       setSetting("APPass", "FlyballETS.1234");
-      saveSettings();
+      shouldSave = true;
    }
 
    if (!hasSetting("RunDirectionInverted"))
    {
       setSetting("RunDirectionInverted", "0");
-      saveSettings();
+      shouldSave = true;
    }
 
    if (!hasSetting("OperationMode"))
    {
       setSetting("OperationMode", "0");
-      saveSettings();
+      shouldSave = true;
    }
+   if (shouldSave)
+      saveSettings();
 }
 
 SettingsManagerClass SettingsManager;

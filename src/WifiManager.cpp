@@ -17,42 +17,42 @@
 #include <SlaveHandler.h>
 #include <SettingsManager.h>
 #include "enums.h"
+#include "WiFi.h"
 
-IPAddress IPGateway;
-IPAddress IPSubnet;
-String strAPName;
-String strSTAName;
-
-unsigned long ulLastWifiCheck = 0;
-
-void SetupWiFi()
+void WifiManager::SetupWiFi()
 {
-   WiFi.onEvent(WiFiEvent);
+   //WiFi.onEvent(std::bind(&WifiManager::WiFiEvent, this, std::placeholders::_1));
+   WiFi.onEvent(
+       [this](WiFiEvent_t event, system_event_info_t info) {
+          this->WiFiEvent(event, info);
+       });
    uint8_t iOpMode = SettingsManager.getSetting("OperationMode").toInt();
-   strAPName = SettingsManager.getSetting("APName");
+   _strAPName = SettingsManager.getSetting("APName");
    String strAPPass = SettingsManager.getSetting("APPass");
    ESP_LOGI(__FILE__, "Starting in mode %i", iOpMode);
-   ESP_LOGI(__FILE__, "Name: %s, pass: %s\r\n", strAPName.c_str(), strAPPass.c_str());
+   ESP_LOGI(__FILE__, "Name: %s, pass: %s\r\n", _strAPName.c_str(), strAPPass.c_str());
    if (iOpMode == SystemModes::MASTER)
    {
-      IPGateway = IPAddress(192, 168, 20, 1);
-      IPSubnet = IPAddress(255, 255, 255, 0);
-      if (!WiFi.mode(WIFI_MODE_AP) || !WiFi.softAP(strAPName.c_str(), strAPPass.c_str()))
+      _IPGateway = IPAddress(192, 168, 20, 1);
+      _IPSubnet = IPAddress(255, 255, 255, 0);
+      if (!WiFi.mode(WIFI_MODE_AP) ||
+          !WiFi.softAPConfig(_IPGateway, _IPGateway, _IPSubnet) ||
+          !WiFi.softAP(_strAPName.c_str(), strAPPass.c_str()))
       {
-         ESP_LOGW(__FILE__, "[WiFi]: Error initializing softAP with name %s!", strAPName.c_str());
+         ESP_LOGW(__FILE__, "[WiFi]: Error initializing softAP with name %s!", _strAPName.c_str());
       }
    }
    else if (iOpMode == SystemModes::SLAVE)
    {
-      strSTAName = strAPName;
-      strAPName += "_SLV";
-      IPGateway = IPAddress(192, 168, 4, 1);
-      IPSubnet = IPAddress(255, 255, 255, 0);
-      if (!WiFi.mode(WIFI_MODE_APSTA) || !WiFi.softAP(strAPName.c_str(), strAPPass.c_str()))
+      _strSTAName = _strAPName;
+      _strAPName += "_SLV";
+      _IPGateway = IPAddress(192, 168, 4, 1);
+      _IPSubnet = IPAddress(255, 255, 255, 0);
+      if (!WiFi.mode(WIFI_MODE_APSTA) || !WiFi.softAP(_strAPName.c_str(), strAPPass.c_str()))
       {
-         ESP_LOGW(__FILE__, "[WiFi]: Error initializing softAP with name %s!", strAPName.c_str());
+         ESP_LOGW(__FILE__, "[WiFi]: Error initializing softAP with name %s!", _strAPName.c_str());
       }
-      WiFi.begin(strSTAName.c_str(), strAPPass.c_str());
+      WiFi.begin(_strSTAName.c_str(), strAPPass.c_str());
    }
    else
    {
@@ -60,31 +60,36 @@ void SetupWiFi()
    }
 }
 
-void WiFiLoop()
+void WifiManager::WiFiLoop()
 {
    if (millis() - ulLastWifiCheck > WIFI_CHECK_INTERVAL)
    {
       ulLastWifiCheck = millis();
+      ESP_LOGV(__FILE__, "Wifi Status: %u, Wifi.localIP: %S, SoftAPIP: %s, SoftAPStationNum: %i",
+               WiFi.status(),
+               WiFi.localIP().toString().c_str(),
+               WiFi.softAPIP().toString().c_str(),
+               WiFi.softAPgetStationNum());
    }
 }
 
-void WiFiEvent(WiFiEvent_t event)
+void WifiManager::WiFiEvent(WiFiEvent_t event, system_event_info_t info)
 {
    switch (event)
    {
    case SYSTEM_EVENT_AP_START:
-      ESP_LOGI(__FILE__, "Trying to configure IP: %s, SM: %s", IPGateway.toString().c_str(), IPSubnet.toString().c_str());
-      if (!WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet))
+      ESP_LOGI(__FILE__, "Trying to configure IP: %s, SM: %s", _IPGateway.toString().c_str(), _IPSubnet.toString().c_str());
+      if (!WiFi.softAPConfig(_IPGateway, _IPGateway, _IPSubnet))
       {
          ESP_LOGE(__FILE__, "[WiFi]: AP Config failed!");
       }
       else
       {
-         ESP_LOGI(__FILE__, "[WiFi]: AP Started with name %s, IP: %s", strAPName.c_str(), WiFi.softAPIP().toString().c_str());
+         ESP_LOGI(__FILE__, "[WiFi]: AP Started with name %s, IP: %s", _strAPName.c_str(), WiFi.softAPIP().toString().c_str());
       }
-      if (WiFi.softAPIP() != IPGateway)
+      if (WiFi.softAPIP() != _IPGateway)
       {
-         ESP_LOGE(__FILE__, "I am not running on the correct IP (%s instead of %s), rebooting!", WiFi.softAPIP().toString().c_str(), IPGateway.toString().c_str());
+         ESP_LOGE(__FILE__, "I am not running on the correct IP (%s instead of %s), rebooting!", WiFi.softAPIP().toString().c_str(), _IPGateway.toString().c_str());
          ESP.restart();
       }
       break;
@@ -100,9 +105,9 @@ void WiFiEvent(WiFiEvent_t event)
    {
       SlaveHandler.resetConnection();
       ESP_LOGI(__FILE__, "Disconnected from AP (event %i)", SYSTEM_EVENT_STA_DISCONNECTED);
-      String strAPName = SettingsManager.getSetting("APName");
+      String _strAPName = SettingsManager.getSetting("APName");
       String strAPPass = SettingsManager.getSetting("APPass");
-      WiFi.begin(strAPName.c_str(), strAPPass.c_str());
+      WiFi.begin(_strAPName.c_str(), strAPPass.c_str());
       ESP_LOGW(__FILE__, "[WiFi]: Connecting to AP...");
       break;
    }
