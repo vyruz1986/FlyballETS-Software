@@ -230,7 +230,11 @@ void LightsControllerClass::ToggleLightState(Lights byLight, LightStates byLight
    {
       LightConfig.iColor = RgbColor(0);
    }
-   _LightsStrip->SetPixelColor(LightConfig.iPixelNumber, LightConfig.iColor);
+   for(int i=0; i<LIGHTSCHAINS; i++)
+      {
+      _LightsStrip->SetPixelColor(LightConfig.iPixelNumber+5*i, LightConfig.iColor);
+      }
+         
 #endif // WS281x
    if (byCurrentLightState != byLightState)
    {
