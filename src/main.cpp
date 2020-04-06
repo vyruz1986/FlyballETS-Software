@@ -23,6 +23,10 @@
 // see <http://www.gnu.org/licenses/>
 #include "Arduino.h"
 
+//Includes
+#include "Structs.h"
+#include "config.h"
+
 //Public libs
 #include <LiquidCrystal.h>
 #include <WiFi.h>
@@ -41,10 +45,6 @@
 #include <LightsController.h>
 #include <BatterySensor.h>
 
-//Includes
-#include "Structs.h"
-#include "config.h"
-
 /*List of pins and the ones used (Lolin32 board):
    - 34: S1 (handler side) photoelectric sensor
    - 33: S2 (box side) photoelectric sensor
@@ -52,7 +52,7 @@
    - 27: LCD Data7
    - 14: LCD Data6
    - 26: LCD Data5
-   - 12: LCD Data4
+   - 13: LCD Data4
    -  2: LCD1 (line 1&2) enable pin
    - 15: LCD2 (line 3&4) enable pin
    - 25: LCD RS Pin
@@ -113,7 +113,7 @@ uint16_t iBatteryVoltage = 0;
 //Initialise Lights stuff
 #ifdef WS281x
 uint8_t iLightsDataPin = 0;
-NeoPixelBus<NeoRgbFeature, WS_METHOD> LightsStrip(5, iLightsDataPin);
+NeoPixelBus<NeoRgbFeature, WS_METHOD> LightsStrip(5 * LIGHTSCHAINS, iLightsDataPin);
 
 #else
 uint8_t iLightsClockPin = 8;
@@ -138,6 +138,7 @@ int iRC2Pin = 18;
 int iRC3Pin = 17;
 int iRC4Pin = 16;
 int iRC5Pin = 4;
+
 //Array to hold last time button presses
 unsigned long lLastRCPress[6] = {0, 0, 0, 0, 0, 0};
 
