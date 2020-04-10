@@ -66,7 +66,8 @@ private:
       int iStartingPosition;
       int iFieldLength;
       String strText;
-   }_SlcdfieldFields[17];
+   };
+   struct SLCDField _SlcdfieldFields[17];
 
 };
 
