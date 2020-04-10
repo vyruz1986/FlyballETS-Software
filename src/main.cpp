@@ -268,7 +268,7 @@ void setup()
    ArduinoOTA.setPort(3232);
    ArduinoOTA.onStart([]() {
       String type;
-      if (ArduinoOTA.getCommand() == U_FLASH)
+      if (ArduinoOTA.getCommand() == 0) //Instead of 0 it was U_FLASH
          type = "sketch";
       else // U_SPIFFS
          type = "filesystem";
