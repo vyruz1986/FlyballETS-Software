@@ -112,7 +112,7 @@ void SimulatorClass::Main()
       //Pending record doesn't contain valid data, this means we've reched the end of our queue
       return;
    }
-   long lRaceElapsedTime = micros() - RaceHandler._lRaceStartTime;
+   long lRaceElapsedTime = GET_MICROS - RaceHandler._lRaceStartTime;
    //Simulate sensors
    if (RaceHandler.RaceState != RaceHandler.STOPPED && PendingRecord.lTriggerTime <= (long)lRaceElapsedTime)
    {
