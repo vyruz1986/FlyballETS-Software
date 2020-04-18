@@ -17,6 +17,7 @@
 #define GLOBALVAR_H
 
 #define Simulate false                     // Set to true to enable race simulation (see Simulator.h/.cpp)
+#define JTAG false                         // when set to true you need converter board with remapping 32 --> 15, 22 --> 14, 5 --> 13 and laser button, side switch and laser dioes inactive (not connected)
 
 #define LIGHTSCHAINS          2           // Numer of WS281x lights chains. 1 - one chain of 5 pixels/lights, 2 - two chains --> 10 pixels/lights, etc.
 

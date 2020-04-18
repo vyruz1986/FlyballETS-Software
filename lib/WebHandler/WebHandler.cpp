@@ -13,7 +13,7 @@
 #include "GPSHandler.h"
 #include "BatterySensor.h"
 #include <rom/rtc.h>
-#include "..\..\src\static\index.html.gz.h"
+#include "../../src/static/index.html.gz.h"
 
 void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
 {
@@ -249,7 +249,7 @@ void WebHandlerClass::loop()
       _GetSystemData();
       _SendSystemData();
       _lLastSystemDataBroadcast = millis();
-      ESP_LOGD(__FILE__, "Current websocket clients connected: %i", _ws->count());
+      // ESP_LOGD(__FILE__, "Current websocket clients connected: %i", _ws->count());
       //    for (size_t i = 0; i < _ws->count(); i++)
       //    {
       //       ESP_LOGD(__FILE__, "Pinging client %i", i);

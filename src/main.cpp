@@ -50,11 +50,11 @@
    - 33: S2 (box side) photoelectric sensor
 
    - 27: LCD Data7
-   - 14: LCD Data6
+   - 14: LCD Data6                       with jtag=22
    - 26: LCD Data5
-   - 13: LCD Data4
+   - 13: LCD Data4                       with jtag=5
    -  2: LCD1 (line 1&2) enable pin
-   - 15: LCD2 (line 3&4) enable pin
+   - 15: LCD2 (line 3&4) enable pin      with jtag=32
    - 25: LCD RS Pin
 
    -  0: WS2811B lights data pin / Lights 74HC595 clock pin
@@ -70,10 +70,10 @@
 
    - 35: battery sensor pin
 
-   - 22: Side switch button
+   -  5: Side switch button               with jtag disabled
 
-   - 32: Laser trigger button
-   - 12: Laser output
+   - 32: Laser trigger button             with jtag disabled
+   - 12: Laser output                     with jtag disabled
 
    -  1: free/TX
    -  3: free/RX
@@ -122,11 +122,12 @@ uint8_t iLightsLatchPin = 21;
 #endif // WS281x
 
 //Other IO's
+#if !JTAG
 uint8_t iLaserTriggerPin = 32;
 uint8_t iLaserOutputPin = 12;
 boolean bLaserState = false;
-
 stInputSignal SideSwitch = {5, 0, 500};
+#endif
 
 //Set last serial output variable
 long lLastSerialOutput = 0;
@@ -142,12 +143,18 @@ int iRC5Pin = 4;
 //Array to hold last time button presses
 unsigned long lLastRCPress[6] = {0, 0, 0, 0, 0, 0};
 
+#if !JTAG
 uint8_t iLCDData4Pin = 13;
-uint8_t iLCDData5Pin = 26;
 uint8_t iLCDData6Pin = 14;
+uint8_t iLCDE2Pin = 15;
+#else
+uint8_t iLCDData4Pin = 5;
+uint8_t iLCDData6Pin = 22;
+uint8_t iLCDE2Pin = 32;
+#endif
+uint8_t iLCDData5Pin = 26;
 uint8_t iLCDData7Pin = 27;
 uint8_t iLCDE1Pin = 2;
-uint8_t iLCDE2Pin = 15;
 uint8_t iLCDRSPin = 25;
 
 LiquidCrystal lcd(iLCDRSPin, iLCDE1Pin, iLCDData4Pin, iLCDData5Pin, iLCDData6Pin, iLCDData7Pin);  //declare two LCD's, this will be line 1&2
@@ -209,9 +216,11 @@ void setup()
    pinMode(iLCDRSPin, OUTPUT);
 
    //Initialize other I/O's
+#if !JTAG
    pinMode(iLaserTriggerPin, INPUT_PULLUP);
    pinMode(iLaserOutputPin, OUTPUT);
    pinMode(SideSwitch.Pin, INPUT_PULLUP);
+#endif
 
    //Set ISR's with wrapper functions
 #if !Simulate
@@ -291,7 +300,7 @@ void setup()
    ArduinoOTA.onError([](ota_error_t error) {
       ESP_LOGE(__FILE__, "");
       ESP_LOGE(__FILE__, "[OTA]: Error[%u]: ", error);
-   });
+    });
    ArduinoOTA.begin();
 
    //Initialize GPS Serial port and class
@@ -465,6 +474,8 @@ void loop()
       bSerialStringComplete = false;
    }
 
+
+#if !JTAG
    //Handle laser output
    digitalWrite(iLaserOutputPin, !digitalRead(iLaserTriggerPin));
 
@@ -475,6 +486,7 @@ void loop()
       ESP_LOGI(__FILE__, "Switching sides!");
       RaceHandler.ToggleRunDirection();
    }
+#endif
 }
 
 void serialEvent()
