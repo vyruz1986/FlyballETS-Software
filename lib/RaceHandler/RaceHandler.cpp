@@ -758,14 +758,9 @@ String RaceHandlerClass::GetRerunInfo(uint8_t iDogNumber)
 }
 
 /// <summary>
-///   Gets total crossing time. This will return the total crossing time of all dogs (and reruns
-///   if applicable). It allows the user to easily calculate the theoretical best time of the
-///   team by subtracting this number from the total team time.
+///   Gets total crossing time (milliseconds) without consideration negative crosses or false start as those are inluded in Race Time.
+///   Result will be use to calculate team Clean Time.
 /// </summary>
-///
-/// <returns>
-///   The total crossing time in milliseconds
-/// </returns>
 long RaceHandlerClass::GetTotalCrossingTimeMillis()
 {
    long lTotalCrossingTime = 0;
@@ -774,25 +769,22 @@ long RaceHandlerClass::GetTotalCrossingTimeMillis()
    {
       for (auto &lTime : Dog)
       {
-         lTotalCrossingTime += lTime;
+         if (lTime > 0)
+         {
+            lTotalCrossingTime += lTime;
+         }
       }
    }
    return lTotalCrossingTime / 1000;
 }
 
 /// <summary>
-///   Gets total crossing time. This will return the total crossing time of all dogs (and reruns
-///   if applicable). It allows the user to easily calculate the theoretical best time of the
-///   team by subtracting this number from the total team time.
+///   Gets team Clean Time in seconds (called also Netto Time) to present theoretical team time without positive crosses.
 /// </summary>
-///
-/// <returns>
-///   The total crossing time in seconds with 2 decimals.
-/// </returns>
-double RaceHandlerClass::GetTotalCrossingTime()
+double RaceHandlerClass::GetCleanTime()
 {
-   double dTotalCrossingTime = this->GetTotalCrossingTimeMillis() / 1000.0;
-   return dTotalCrossingTime;
+   double dCleanTime = GetRaceTime() - (GetTotalCrossingTimeMillis() / 1000.0);
+   return dCleanTime;
 }
 
 /// <summary>

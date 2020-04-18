@@ -406,9 +406,9 @@ void loop()
    LCDController.UpdateField(LCDController.BattLevel, String(iBatteryPercentage));
 #endif
 
-   //Update total crossing time
-   dtostrf(RaceHandler.GetTotalCrossingTime(), 7, 3, cTotalCrossingTime);
-   LCDController.UpdateField(LCDController.TotalCrossTime, cTotalCrossingTime);
+   //Update team clean (netto) time
+   dtostrf(RaceHandler.GetCleanTime(), 7, 3, cTotalCrossingTime);
+   LCDController.UpdateField(LCDController.CleanTime, cTotalCrossingTime);
 
    //Update race status to display
    LCDController.UpdateField(LCDController.RaceState, RaceHandler.GetRaceStateString());
