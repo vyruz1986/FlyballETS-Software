@@ -112,7 +112,7 @@ char cTotalCrossingTime[8];
 
 //Initialise Lights stuff
 #ifdef WS281x
-uint8_t iLightsDataPin = 22;    // escaped from 0 to avoid issues with flash programming
+uint8_t iLightsDataPin = 22; // escaped from 0 to avoid issues with flash programming
 NeoPixelBus<NeoRgbFeature, WS_METHOD> LightsStrip(5 * LIGHTSCHAINS, iLightsDataPin);
 
 #else
@@ -305,7 +305,7 @@ void setup()
    ArduinoOTA.onError([](ota_error_t error) {
       ESP_LOGE(__FILE__, "");
       ESP_LOGE(__FILE__, "[OTA]: Error[%u]: ", error);
-    });
+   });
    ArduinoOTA.begin();
 
    //Initialize GPS Serial port and class
@@ -480,7 +480,6 @@ void loop()
       strSerialData = "";
       bSerialStringComplete = false;
    }
-
 
 #if !JTAG
    //Handle laser output
