@@ -47,14 +47,14 @@
 
 /*List of pins and the ones used (Lolin32 board):
    - 34: S1 (handler side) photoelectric sensor
-   - 33: S2 (box side) photoelectric sensor
+   - 33: S2 (box side) photoelectric sensor | with jtag port used for LCD Data4
 
    - 27: LCD Data7
-   - 14: LCD Data6                       with jtag=22
+   - 14: LCD Data6                       with jtag board switched to 32; jtag uses 14 for MTMS
    - 26: LCD Data5
-   - 13: LCD Data4                       with jtag=5
+   - 13: LCD Data4                       with jtag board switched to 33; jtag uses 13 for MTCK
    -  2: LCD1 (line 1&2) enable pin
-   - 15: LCD2 (line 3&4) enable pin      with jtag=32
+   - 15: LCD2 (line 3&4) enable pin      with jtag board switched to  5; jtag uses 15 for MTDO
    - 25: LCD RS Pin
 
    -  0: WS2811B lights data pin / Lights 74HC595 clock pin
@@ -68,17 +68,17 @@
    - 16: remote D4
    -  4: remote D5
 
-   - 35: battery sensor pin
+   - 35: battery sensor pin               swithed to S2 (box side)
 
-   -  5: Side switch button               with jtag disabled
+   -  5: Side switch button               disabled with jtag board to act as 15 pin LCD2 (line 3&4)
 
-   - 32: Laser trigger button             with jtag disabled
-   - 12: Laser output                     with jtag disabled
-
-   -  1: free/TX
-   -  3: free/RX
-   -  5: free/LED/SS
-   - 21: free/SCA
+   - 32: Laser trigger button             disabled with jtag board to act as 14 pin LCD Data6
+   - 12: Laser output                     disabled with jtag board; jtag uses 12 for MTDI
+   
+   -  1: free/TX, but used with jtag board
+   -  3: free/RX, but used with jtag
+   -  0: free to avoid flash programming difficulties via usb/serial
+   - 21: GPS PPS signal
    - 36/VP: GPS rx (ESP tx)
    - 39/VN: GPS tx (ESP rx)
 */
@@ -97,7 +97,11 @@
 #include <ESPmDNS.h>
 #endif
 uint8_t iS1Pin = 34;
+#if !JTAG
 uint8_t iS2Pin = 33;
+#else
+uint8_t iS2Pin = 35;
+#endif
 uint8_t iCurrentDog;
 uint8_t iCurrentRaceState;
 
@@ -106,13 +110,9 @@ char cDogCrossingTime[8];
 char cElapsedRaceTime[8];
 char cTotalCrossingTime[8];
 
-//Battery variables
-int iBatterySensorPin = 35;
-uint16_t iBatteryVoltage = 0;
-
 //Initialise Lights stuff
 #ifdef WS281x
-uint8_t iLightsDataPin = 0;
+uint8_t iLightsDataPin = 22;    // escaped from 0 to avoid issues with flash programming
 NeoPixelBus<NeoRgbFeature, WS_METHOD> LightsStrip(5 * LIGHTSCHAINS, iLightsDataPin);
 
 #else
@@ -121,12 +121,17 @@ uint8_t iLightsDataPin = 9;
 uint8_t iLightsLatchPin = 21;
 #endif // WS281x
 
-//Other IO's
 #if !JTAG
+//Battery variables
+int iBatterySensorPin = 35;
+uint16_t iBatteryVoltage = 0;
+
+//Other IO's
 uint8_t iLaserTriggerPin = 32;
 uint8_t iLaserOutputPin = 12;
 boolean bLaserState = false;
-stInputSignal SideSwitch = {5, 0, 500};
+uint8_t iSideSwitchPin = 5;
+stInputSignal SideSwitch = {iSideSwitchPin, 0, 500};
 #endif
 
 //Set last serial output variable
@@ -148,9 +153,9 @@ uint8_t iLCDData4Pin = 13;
 uint8_t iLCDData6Pin = 14;
 uint8_t iLCDE2Pin = 15;
 #else
-uint8_t iLCDData4Pin = 5;
-uint8_t iLCDData6Pin = 22;
-uint8_t iLCDE2Pin = 32;
+uint8_t iLCDData4Pin = 33;
+uint8_t iLCDData6Pin = 32;
+uint8_t iLCDE2Pin = 5;
 #endif
 uint8_t iLCDData5Pin = 26;
 uint8_t iLCDData7Pin = 27;
@@ -215,21 +220,21 @@ void setup()
    pinMode(iLCDE2Pin, OUTPUT);
    pinMode(iLCDRSPin, OUTPUT);
 
-   //Initialize other I/O's
-#if !JTAG
-   pinMode(iLaserTriggerPin, INPUT_PULLUP);
-   pinMode(iLaserOutputPin, OUTPUT);
-   pinMode(SideSwitch.Pin, INPUT_PULLUP);
-#endif
-
    //Set ISR's with wrapper functions
 #if !Simulate
    attachInterrupt(digitalPinToInterrupt(iS2Pin), Sensor2Wrapper, CHANGE);
    attachInterrupt(digitalPinToInterrupt(iS1Pin), Sensor1Wrapper, CHANGE);
 #endif
 
+#if !JTAG
+   //Initialize other I/O's
+   pinMode(iLaserTriggerPin, INPUT_PULLUP);
+   pinMode(iLaserOutputPin, OUTPUT);
+   pinMode(SideSwitch.Pin, INPUT_PULLUP);
+
    //Initialize BatterySensor class with correct pin
    BatterySensor.init(iBatterySensorPin);
+#endif
 
    //Initialize LightsController class with shift register pins
 #ifdef WS281x
@@ -394,10 +399,12 @@ void loop()
    dtostrf(RaceHandler.GetRaceTime(), 7, 3, cElapsedRaceTime);
    LCDController.UpdateField(LCDController.TeamTime, cElapsedRaceTime);
 
+#if !JTAG
    //Update battery percentage to display
    iBatteryVoltage = BatterySensor.GetBatteryVoltage();
    uint16_t iBatteryPercentage = BatterySensor.GetBatteryPercentage();
    LCDController.UpdateField(LCDController.BattLevel, String(iBatteryPercentage));
+#endif
 
    //Update total crossing time
    dtostrf(RaceHandler.GetTotalCrossingTime(), 7, 3, cTotalCrossingTime);
