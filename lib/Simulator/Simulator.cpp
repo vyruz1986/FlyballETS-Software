@@ -118,7 +118,8 @@ void SimulatorClass::Main()
    {
       if (RaceHandler._QueueEmpty())
       {
-         if ((PendingRecord.lTriggerTime < 0 && RaceHandler.RaceState == RaceHandler.STARTING) || (PendingRecord.lTriggerTime > 0 && RaceHandler.RaceState == RaceHandler.RUNNING))
+         if ((PendingRecord.lTriggerTime < 0 && RaceHandler.RaceState == RaceHandler.STARTING)
+          || (PendingRecord.lTriggerTime > 0 && RaceHandler.RaceState == RaceHandler.RUNNING))
          {
             RaceHandler._QueuePush({PendingRecord.iSensorNumber, (RaceHandler._lRaceStartTime + PendingRecord.lTriggerTime), PendingRecord.iState});
             //And increase pending record

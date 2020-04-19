@@ -675,19 +675,74 @@ String RaceHandlerClass::GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber)
    double dCrossingTime = 0;
    char cCrossingTime[8];
    String strCrossingTime;
-   long lCrossingTimeMillis = GetCrossingTimeMillis(iDogNumber, iRunNumber);
+
+   long lCrossingTimeMillis = 0;
+   if (_iDogRunCounters[iDogNumber] > 0)
+   {
+      //We have multiple times for this dog.
+      //if run number is -1 (unspecified), we have to cycle throug them
+      if (iRunNumber == -1)
+      {
+         auto &lLastReturnedTimeStamp = _lLastDogTimeReturnTimeStamp[iDogNumber];
+         iRunNumber = _iLastReturnedRunNumber[iDogNumber];
+         if ((millis() - lLastReturnedTimeStamp) > 2000)
+         {
+            if (iRunNumber == _iDogRunCounters[iDogNumber])
+            {
+               iRunNumber = 0;
+            }
+            else
+            {
+               iRunNumber++;
+            }
+            lLastReturnedTimeStamp = millis();
+         }
+         _iLastReturnedRunNumber[iDogNumber] = iRunNumber;
+      }
+      else if (iRunNumber == -2)
+      {
+         //if RunNumber is -2 it means we should return the last one
+         iRunNumber = _iDogRunCounters[iDogNumber];
+      }
+   }
+   else if (iRunNumber < 0)
+   {
+      iRunNumber = 0;
+   }
+
+   lCrossingTimeMillis = _lCrossingTimes[iDogNumber][iRunNumber] / 1000;
+
    dCrossingTime = lCrossingTimeMillis / 1000.0;
+
    if (dCrossingTime < 0)
    {
       dCrossingTime = fabs(dCrossingTime);
       strCrossingTime = "-";
+      dtostrf(dCrossingTime, 7, 3, cCrossingTime);
+      strCrossingTime += cCrossingTime;
+   }
+   else if (dCrossingTime > 0)
+   {
+      strCrossingTime = "+";
+      dtostrf(dCrossingTime, 7, 3, cCrossingTime);
+      strCrossingTime += cCrossingTime;
    }
    else
    {
-      strCrossingTime = "+";
+      if (_lDogTimes[iDogNumber][iRunNumber] > 0)
+      {
+         // if (_iDogRunCounters[iDogNumber]) !=
+         strCrossingTime = "      OK";
+      }
+      else if ((RaceState == RUNNING && iCurrentDog == iDogNumber && _byDogState == COMINGBACK) && iRunNumber <= _iDogRunCounters[iDogNumber]) //And if requested run number is lower then number of times dog has run
+      {
+         strCrossingTime = "      OK";
+      }
+      else
+      {
+         strCrossingTime = " ";
+      }
    }
-   dtostrf(dCrossingTime, 7, 3, cCrossingTime);
-   strCrossingTime += cCrossingTime;
 
    return strCrossingTime;
 }
