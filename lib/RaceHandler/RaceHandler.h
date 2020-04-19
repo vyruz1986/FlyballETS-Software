@@ -61,7 +61,7 @@ class RaceHandlerClass
    unsigned long GetCrossingTimeMillis(uint8_t iDogNumber, int8_t iRunNumber = -1);
    String GetRerunInfo(uint8_t iDogNumber);
    long GetTotalCrossingTimeMillis();
-   double GetTotalCrossingTime();
+   double GetNetTime();
 
    String GetRaceStateString();
 

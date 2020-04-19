@@ -758,14 +758,9 @@ String RaceHandlerClass::GetRerunInfo(uint8_t iDogNumber)
 }
 
 /// <summary>
-///   Gets total crossing time. This will return the total crossing time of all dogs (and reruns
-///   if applicable). It allows the user to easily calculate the theoretical best time of the
-///   team by subtracting this number from the total team time.
+///   Gets total crossing time (milliseconds) without consideration negative crosses or false start as those are inluded in Race Time.
+///   Result will be use to calculate team Net Time that is equal to Clean Time in case of clean heat (no single fault during the heat).
 /// </summary>
-///
-/// <returns>
-///   The total crossing time in milliseconds
-/// </returns>
 long RaceHandlerClass::GetTotalCrossingTimeMillis()
 {
    long lTotalCrossingTime = 0;
@@ -774,25 +769,25 @@ long RaceHandlerClass::GetTotalCrossingTimeMillis()
    {
       for (auto &lTime : Dog)
       {
-         lTotalCrossingTime += lTime;
+         if (lTime > 0)
+         {
+            lTotalCrossingTime += lTime;
+         }
       }
    }
    return lTotalCrossingTime / 1000;
 }
 
 /// <summary>
-///   Gets total crossing time. This will return the total crossing time of all dogs (and reruns
-///   if applicable). It allows the user to easily calculate the theoretical best time of the
-///   team by subtracting this number from the total team time.
+///   Gets team Net Time in seconds (see also GetTotalCrossingTimeMillis description above).
+///   In case of heat without faults (clean heat) Net Time == Clean Time.
+///   Please mark that "Cleat Time" term is often use in the meaning of Cleat Time Breakout.
+///   Please refer to FCI Regulations for Flyball Competition section 1.03 point (h).
 /// </summary>
-///
-/// <returns>
-///   The total crossing time in seconds with 2 decimals.
-/// </returns>
-double RaceHandlerClass::GetTotalCrossingTime()
+double RaceHandlerClass::GetNetTime()
 {
-   double dTotalCrossingTime = this->GetTotalCrossingTimeMillis() / 1000.0;
-   return dTotalCrossingTime;
+   double dNetTime = GetRaceTime() - (GetTotalCrossingTimeMillis() / 1000.0);
+   return dNetTime;
 }
 
 /// <summary>
@@ -810,10 +805,10 @@ String RaceHandlerClass::GetRaceStateString()
    switch (RaceState)
    {
    case RaceHandlerClass::STOPPED:
-      strRaceState = " STOP";
+      strRaceState = " STOP  ";
       break;
    case RaceHandlerClass::STARTING:
-      strRaceState = " START";
+      strRaceState = " START ";
       break;
    case RaceHandlerClass::RUNNING:
       strRaceState = "RUNNING";

@@ -108,7 +108,7 @@ uint8_t iCurrentRaceState;
 char cDogTime[8];
 char cDogCrossingTime[8];
 char cElapsedRaceTime[8];
-char cTotalCrossingTime[8];
+char cTeamNetTime[8];
 
 //Initialise Lights stuff
 #ifdef WS281x
@@ -406,9 +406,9 @@ void loop()
    LCDController.UpdateField(LCDController.BattLevel, String(iBatteryPercentage));
 #endif
 
-   //Update total crossing time
-   dtostrf(RaceHandler.GetTotalCrossingTime(), 7, 3, cTotalCrossingTime);
-   LCDController.UpdateField(LCDController.TotalCrossTime, cTotalCrossingTime);
+   //Update team netto time
+   dtostrf(RaceHandler.GetNetTime(), 7, 3, cTeamNetTime);
+   LCDController.UpdateField(LCDController.NetTime, cTeamNetTime);
 
    //Update race status to display
    LCDController.UpdateField(LCDController.RaceState, RaceHandler.GetRaceStateString());
