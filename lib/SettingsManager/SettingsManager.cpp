@@ -20,11 +20,12 @@ void SettingsManagerClass::init()
    EEPROM.begin(EEPROM_SIZE);
    _settings_save = false;
 
-   Embedis::dictionary(F("EEPROM"),
-                       SPI_FLASH_SEC_SIZE,
-                       [](size_t pos) -> char { return EEPROM.read(pos); },
-                       [](size_t pos, char value) { EEPROM.write(pos, value); },
-                       []() {});
+   Embedis::dictionary(
+       F("EEPROM"),
+       SPI_FLASH_SEC_SIZE,
+       [](size_t pos) -> char { return EEPROM.read(pos); },
+       [](size_t pos, char value) { EEPROM.write(pos, value); },
+       []() {});
 
    setDefaultSettings();
 }
