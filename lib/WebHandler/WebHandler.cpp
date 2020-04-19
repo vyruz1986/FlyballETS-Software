@@ -13,7 +13,7 @@
 #include "GPSHandler.h"
 #include "BatterySensor.h"
 #include <rom/rtc.h>
-#include "..\..\src\static\index.html.gz.h"
+#include "../../src/static/index.html.gz.h"
 
 void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
 {
