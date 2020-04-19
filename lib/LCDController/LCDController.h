@@ -46,7 +46,7 @@ public:
       RaceState,
       BattLevel,
       TeamTime,
-      CleanTime,
+      NetTime,
       BoxDirection
    };
 

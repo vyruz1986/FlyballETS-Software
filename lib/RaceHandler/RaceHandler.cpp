@@ -759,7 +759,7 @@ String RaceHandlerClass::GetRerunInfo(uint8_t iDogNumber)
 
 /// <summary>
 ///   Gets total crossing time (milliseconds) without consideration negative crosses or false start as those are inluded in Race Time.
-///   Result will be use to calculate team Clean Time.
+///   Result will be use to calculate team Net Time that is equal to Clean Time in case of clean heat (no single fault during the heat).
 /// </summary>
 long RaceHandlerClass::GetTotalCrossingTimeMillis()
 {
@@ -779,12 +779,15 @@ long RaceHandlerClass::GetTotalCrossingTimeMillis()
 }
 
 /// <summary>
-///   Gets team Clean Time in seconds (called also Netto Time) to present theoretical team time without positive crosses.
+///   Gets team Net Time in seconds (see also GetTotalCrossingTimeMillis description above).
+///   In case of heat without faults (clean heat) Net Time == Clean Time.
+///   Please mark that "Cleat Time" term is often use in the meaning of Cleat Time Breakout.
+///   Please refer to FCI Regulations for Flyball Competition section 1.03 point (h).
 /// </summary>
-double RaceHandlerClass::GetCleanTime()
+double RaceHandlerClass::GetNetTime()
 {
-   double dCleanTime = GetRaceTime() - (GetTotalCrossingTimeMillis() / 1000.0);
-   return dCleanTime;
+   double dNetTime = GetRaceTime() - (GetTotalCrossingTimeMillis() / 1000.0);
+   return dNetTime;
 }
 
 /// <summary>
@@ -802,10 +805,10 @@ String RaceHandlerClass::GetRaceStateString()
    switch (RaceState)
    {
    case RaceHandlerClass::STOPPED:
-      strRaceState = " STOP";
+      strRaceState = " STOP  ";
       break;
    case RaceHandlerClass::STARTING:
-      strRaceState = " START";
+      strRaceState = " START ";
       break;
    case RaceHandlerClass::RUNNING:
       strRaceState = "RUNNING";
