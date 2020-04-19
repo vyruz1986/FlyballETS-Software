@@ -268,7 +268,7 @@ void setup()
    ArduinoOTA.setPort(3232);
    ArduinoOTA.onStart([]() {
       String type;
-      if (ArduinoOTA.getCommand() == U_FLASH)
+      if (ArduinoOTA.getCommand() == 0) //VSCode constantly can't read properly value of U_FLASH, therefore replacing with "0"
          type = "sketch";
       else // U_SPIFFS
          type = "filesystem";
