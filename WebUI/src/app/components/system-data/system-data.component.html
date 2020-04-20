@@ -1,0 +1,12 @@
+<footer class="footer">
+  <div class="container">
+    <span class="badge badge-info">
+      U: {{hmsTime}}
+       | H: {{systemData.freeHeap}}
+       | B: {{systemData.CPU0ResetReason}}/{{systemData.CPU1ResetReason}}
+       | C: {{systemData.numClients}}
+       | T: {{systemData.systemTimestamp | date:'short'}}
+       | Batt: {{systemData.batteryPercentage}}%
+    </span>
+  </div>
+</footer>
