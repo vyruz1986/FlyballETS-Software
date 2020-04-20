@@ -1,7 +1,7 @@
 // file:	Simulator.cpp
-// 
+//
 // summary:	Implements the simulator class. Since this class is memory intensive, it should only be
-// included if actual simulation is wished. 
+// included if actual simulation is wished.
 #include "Simulator.h"
 #include "config.h"
 #include "RaceHandler.h"
@@ -12,35 +12,64 @@
 ///   Program the interrupt triggers which should be simulated here. See end of file for a collection of records from actual races.
 /// </summary>
 const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60] PROGMEM = {
-   //See the end of this file for a collection of races
-   { 1,162901,1 },
-   { 2,190287,1 },
-   { 1,292299,0 },
-   { 1,308171,1 },
-   { 2,311576,0 },
-   { 1,315275,0 },
-   { 1,327828,1 },
-   { 1,331783,0 },
-   { 2,5216625,1 },
-   { 1,5233268,1 },
-   { 1,5240338,0 },
-   { 1,5242136,1 },
-   { 2,5362002,0 },
-   { 2,5367346,1 },
-   { 1,5468382,0 },
-   { 2,5488550,0 },
-   { 2,9910598,1 },
-   { 2,9915971,0 },
-   { 2,9919530,1 },
-   { 1,9923699,1 },
-   { 1,10092756,0 },
-   { 2,10112577,0 },
-   { 2,14495214,1 },
-   { 1,14509473,1 },
-   { 1,14511453,0 },
-   { 1,14515396,1 },
-   { 2,14627607,0 },
-   { 1,14641081,0 }
+    //See the end of this file for a collection of races
+    // Race3 (GT Team 4):
+    {1, -102316, 1},
+    {2, -87824, 1},
+    {2, -80456, 0},
+    {2, -78800, 1},
+    {1, 28952, 0},
+    {2, 44596, 0},
+    {2, 4364748, 1},
+    {2, 4366600, 0},
+    {2, 4368436, 1},
+    {1, 4380404, 1},
+    {1, 4382296, 0},
+    {1, 4384164, 1},
+    {2, 4489344, 0},
+    {1, 4505604, 0},
+    {1, 4730036, 1},
+    {2, 4744732, 1},
+    {1, 4857296, 0},
+    {2, 4872020, 0},
+    {2, 9344132, 1},
+    {1, 9361276, 1},
+    {1, 9552148, 0},
+    {2, 9575988, 0},
+    {2, 15477068, 1},
+    {1, 15494804, 1},
+    {1, 15549608, 0},
+    {1, 15563036, 1},
+    {2, 15580812, 0},
+    {1, 15594584, 0},
+    {1, 15610220, 1},
+    {1, 15613904, 0},
+    {1, 15909920, 1},
+    {2, 15925776, 1},
+    {1, 16042356, 0},
+    {2, 16060036, 0},
+    {2, 20674000, 1},
+    {1, 20690804, 1},
+    {2, 20795000, 0},
+    {1, 20803392, 0},
+    {1, 21335620, 1},
+    {2, 21355152, 1},
+    {2, 21469528, 0},
+    {2, 21473956, 1},
+    {1, 21497288, 0},
+    {2, 21521176, 0},
+    {2, 26444356, 1},
+    {1, 26461276, 1},
+    {2, 26582668, 0},
+    {1, 26600304, 0},
+    {1, 34022032, 1},
+    {2, 34130784, 1},
+    {2, 35350988, 0},
+    {2, 35720860, 1},
+    {2, 35731936, 0},
+    {2, 35768820, 1},
+    {2, 47982712, 0},
+    {1, 48095780, 0}
 
 };
 
@@ -83,18 +112,16 @@ void SimulatorClass::Main()
       //Pending record doesn't contain valid data, this means we've reched the end of our queue
       return;
    }
+   long lRaceElapsedTime = GET_MICROS - RaceHandler._lRaceStartTime;
    //Simulate sensors
-   if (RaceHandler.RaceState != RaceHandler.STOPPED
-      && PendingRecord.lTriggerTime <= (long) RaceHandler._lRaceTime)
+   if (RaceHandler.RaceState != RaceHandler.STOPPED && PendingRecord.lTriggerTime <= (long)lRaceElapsedTime)
    {
       if (RaceHandler._QueueEmpty())
       {
-         if ((PendingRecord.lTriggerTime < 0
-            && RaceHandler.RaceState == RaceHandler.STARTING)
-            || (PendingRecord.lTriggerTime > 0
-            && RaceHandler.RaceState == RaceHandler.RUNNING))
+         if ((PendingRecord.lTriggerTime < 0 && RaceHandler.RaceState == RaceHandler.STARTING)
+          || (PendingRecord.lTriggerTime > 0 && RaceHandler.RaceState == RaceHandler.RUNNING))
          {
-            RaceHandler._QueuePush({ PendingRecord.iSensorNumber, (RaceHandler._lRaceStartTime + PendingRecord.lTriggerTime), PendingRecord.iState });
+            RaceHandler._QueuePush({PendingRecord.iSensorNumber, (RaceHandler._lRaceStartTime + PendingRecord.lTriggerTime), PendingRecord.iState});
             //And increase pending record
             _iDataPos++;
             PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
@@ -301,7 +328,6 @@ Race3 (GT Team 4):
    //Code has been implemented to filter these out.
    , { 2, 9370240, 1 }
    , { 2, 9373992, 0 }
-
    , { 2, 14112436, 1 }
    , { 1, 14127916, 1 }
    , { 2, 14233032, 0 }
@@ -450,4 +476,3 @@ Race3 (GT Team 4):
    {1,14641081,0}
 
 */
-
