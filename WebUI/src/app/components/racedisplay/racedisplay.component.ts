@@ -1,33 +1,31 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy } from "@angular/core";
 
-import { RaceData } from '../../interfaces/race';
-import { WebsocketAction } from '../../interfaces/websocketaction';
-import { EtsdataService } from '../../services/etsdata.service';
-import { RaceState } from '../../class/race-state';
-import { RaceCommandEnum } from '../../enums/race-state.enum';
-import { LightStates } from '../../interfaces/light-states';
+import { RaceData } from "../../interfaces/race";
+import { WebsocketAction } from "../../interfaces/websocketaction";
+import { EtsdataService } from "../../services/etsdata.service";
+import { RaceState } from "../../class/race-state";
+import { RaceCommandEnum } from "../../enums/race-state.enum";
+import { LightStates } from "../../interfaces/light-states";
 
 @Component({
-   selector: 'app-racedisplay',
-   templateUrl: './racedisplay.component.html',
-   styleUrls: ['./racedisplay.component.scss']
+   selector: "app-racedisplay",
+   templateUrl: "./racedisplay.component.html",
+   styleUrls: ["./racedisplay.component.scss"],
 })
 export class RacedisplayComponent implements OnInit {
+   currentRaces: RaceData[] = [];
 
-   currentRaces:RaceData[] = [];
+   raceStates: RaceState = { RaceStates: [], StartTimes: [] };
 
-   raceStates: RaceState = {RaceStates: [], StartTimes: []};
+   lightStates: LightStates[] = [{ State: [0, 0, 0, 0, 0] }];
 
-   lightStates: LightStates[] = [{State: [0, 0, 0, 0, 0]}];
-   
-   constructor(public etsDataService:EtsdataService) {  //TODO why does making etsDataService private cause build to fail?
+   constructor(public etsDataService: EtsdataService) {
+      //TODO why does making etsDataService private cause build to fail?
       this.etsDataService.dataStream.subscribe(
          (data) => {
-            console.log(data);
-            if(data.RaceData) {
+            if (data.RaceData) {
                this.HandleCurrentRaceData(data.RaceData);
-            } else if(data.LightsData) {
-               console.log(data.LightsData);
+            } else if (data.LightsData) {
                this.lightStates[0].State = data.LightsData;
             }
          },
@@ -40,12 +38,11 @@ export class RacedisplayComponent implements OnInit {
       );
    }
 
-   ngOnInit() {
-   }
+   ngOnInit() {}
 
-   onRaceCommand(raceCommand: RaceCommandEnum){
-      let action:WebsocketAction = { actionType: "" };
-      switch(raceCommand) {
+   onRaceCommand(raceCommand: RaceCommandEnum) {
+      let action: WebsocketAction = { actionType: "" };
+      switch (raceCommand) {
          case RaceCommandEnum.CMD_START:
             action.actionType = "StartRace";
             break;
@@ -59,34 +56,40 @@ export class RacedisplayComponent implements OnInit {
       this.etsDataService.sendAction(action);
    }
 
-   onSetDogFault(dogFault: {raceNum: number, dogNum: number, fault: boolean}) {
-      console.log('Setting fault for race %i, dog %i to value: %o',dogFault.raceNum, dogFault.dogNum, dogFault.fault);
-      let StopAction:WebsocketAction = {
-      actionType: "SetDogFault",
-      actionData: {
-         dogNumber: dogFault.dogNum,
-         faultState: dogFault.fault
-      }
+   onSetDogFault(dogFault: {
+      raceNum: number;
+      dogNum: number;
+      fault: boolean;
+   }) {
+      console.log(
+         "Setting fault for race %i, dog %i to value: %o",
+         dogFault.raceNum,
+         dogFault.dogNum,
+         dogFault.fault
+      );
+      let StopAction: WebsocketAction = {
+         actionType: "SetDogFault",
+         actionData: {
+            dogNumber: dogFault.dogNum,
+            faultState: dogFault.fault,
+         },
       };
       this.etsDataService.sendAction(StopAction);
    }
 
-   HandleCurrentRaceData(raceData:RaceData[]) {
+   HandleCurrentRaceData(raceData: RaceData[]) {
       this.currentRaces = [];
-      raceData.forEach(element => {
-         if(typeof element == "object") {
+      raceData.forEach((element) => {
+         if (typeof element == "object") {
             this.currentRaces.push(element);
          }
       });
-      this.raceStates = {RaceStates: [], StartTimes: []};
-      this.currentRaces.forEach(element => {
+      this.raceStates = { RaceStates: [], StartTimes: [] };
+      this.currentRaces.forEach((element) => {
          this.raceStates.RaceStates.push(element.raceState);
          this.raceStates.StartTimes.push(element.startTime);
       });
    }
 
-  reconnect() {
-  }
-
-  
+   reconnect() {}
 }

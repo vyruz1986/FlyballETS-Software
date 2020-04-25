@@ -1,39 +1,64 @@
 <div style="position: relative;">
-  <ngx-loading [show]="!etsDataService.isConnected" [config]="{ backdropBorderRadius: '14px' }"></ngx-loading>
-  <div class="container" *ngIf="!etsDataService.isConnected">
-    <div class="row">
-      <div class="col-lg-12">
-        <div class="alert alert-danger text-center" *ngIf="!etsDataService.isConnected" role="alert">Connecting to FlyballETS, please wait...</div>
+   <ngx-loading
+      [show]="!etsDataService.isConnected"
+      [config]="{ backdropBorderRadius: '14px' }"
+   ></ngx-loading>
+   <div class="container" *ngIf="!etsDataService.isConnected">
+      <div class="row">
+         <div class="col-lg-12">
+            <div
+               class="alert alert-danger text-center"
+               *ngIf="!etsDataService.isConnected"
+               role="alert"
+            >
+               Connecting to FlyballETS, please wait...
+            </div>
+         </div>
       </div>
-    </div>
-  </div>
-  <div class="container" *ngIf="etsDataService.isConnected">
-    <div class="row">
-      <div class="col-12 col-md-12 text-center">
-        <app-race-control [raceStates]="raceStates" (raceCommand)="onRaceCommand($event)"></app-race-control>
+   </div>
+   <div class="container" *ngIf="etsDataService.isConnected">
+      <div class="row">
+         <div class="col-12 col-md-12 text-center">
+            <app-race-control
+               [raceStates]="raceStates"
+               (raceCommand)="onRaceCommand($event)"
+            ></app-race-control>
+         </div>
       </div>
-    </div>
-    <div class="row" *ngFor="let currentRace of currentRaces; let raceIndex = index">
-        <div class="col-8 col-md-4 text-center">
-        <app-time-display
-          [elapsedTime]="currentRace.elapsedTime"
-          [totalCrossingTime]="currentRace.totalCrossingTime"></app-time-display>
+      <div
+         class="row"
+         *ngFor="let currentRace of currentRaces; let raceIndex = index"
+      >
+         <div class="col-8 col-md-4 text-center">
+            <app-time-display
+               [elapsedTime]="currentRace.elapsedTime"
+               [totalCrossingTime]="currentRace.totalCrossingTime"
+            ></app-time-display>
+         </div>
+         <div class="col-4 col-md-2">
+            <app-lights
+               *ngIf="lightStates?.length > raceIndex"
+               [lightsState]="lightStates[raceIndex]"
+            ></app-lights>
+         </div>
+         <div class="col-12 col-md-6">
+            <app-dog-details
+               [dogData]="currentRace.dogData"
+               [raceIndex]="raceIndex"
+               (setDogFault)="onSetDogFault($event)"
+            ></app-dog-details>
+         </div>
       </div>
-      <div class="col-4 col-md-2">
-        <app-lights *ngIf="lightStates?.length > raceIndex" [lightsState]="lightStates[raceIndex]"></app-lights>
-      </div>
-      <div class="col-12 col-md-6">
-        <app-dog-details
-          [dogData]="currentRace.dogData"
-          [raceIndex]="raceIndex"
-          (setDogFault)="onSetDogFaul($event)"></app-dog-details>
-      </div>
-    </div>
-  </div>
+   </div>
 </div>
-<div *ngIf="!etsDataService.isConnected && etsDataService.sessionEnded" class="container">
-    <div class="alert alert-success text-center" role="alert">
-      Session ended.<br>
-      <button type="button" class="btn btn-success" (click)="reconnect()" >Reconnect</button>
-    </div>
+<div
+   *ngIf="!etsDataService.isConnected && etsDataService.sessionEnded"
+   class="container"
+>
+   <div class="alert alert-success text-center" role="alert">
+      Session ended.<br />
+      <button type="button" class="btn btn-success" (click)="reconnect()">
+         Reconnect
+      </button>
+   </div>
 </div>
