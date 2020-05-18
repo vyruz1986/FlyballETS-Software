@@ -238,17 +238,17 @@ void WebHandlerClass::loop()
    if ((RaceHandler.RaceState != RaceHandler.STOPPED || RaceHandler.GetRaceTime() > 0))
    {
       //Send race data each 200ms
-      if (millis() - _lLastRaceDataBroadcast > _lRaceDataBroadcastInterval)
+      if (GET_MICROS / 1000 - _lLastRaceDataBroadcast > _lRaceDataBroadcastInterval)
       {
          _SendRaceData();
-         _lLastRaceDataBroadcast = millis();
+         _lLastRaceDataBroadcast = GET_MICROS / 1000;
       }
    }
-   if (millis() - _lLastSystemDataBroadcast > _lSystemDataBroadcastInterval)
+   if (GET_MICROS / 1000- _lLastSystemDataBroadcast > _lSystemDataBroadcastInterval)
    {
       _GetSystemData();
       _SendSystemData();
-      _lLastSystemDataBroadcast = millis();
+      _lLastSystemDataBroadcast = GET_MICROS / 1000;
       // ESP_LOGD(__FILE__, "Current websocket clients connected: %i", _ws->count());
       //    for (size_t i = 0; i < _ws->count(); i++)
       //    {
@@ -510,7 +510,7 @@ boolean WebHandlerClass::_GetData(String dataType, JsonObject &Data)
 void WebHandlerClass::_GetSystemData()
 {
    _SystemData.FreeHeap = esp_get_free_heap_size();
-   _SystemData.Uptime = millis();
+   _SystemData.Uptime = GET_MICROS / 1000;
    _SystemData.NumClients = _ws->count();
    _SystemData.UTCSystemTime = GPSHandler.GetUTCTimestamp();
    _SystemData.BatteryPercentage = BatterySensor.GetBatteryPercentage();
@@ -545,7 +545,7 @@ void WebHandlerClass::_onAuth(AsyncWebServerRequest *request)
    if (!_authenticate(request))
       return request->requestAuthentication("", false);
    IPAddress ip = request->client()->remoteIP();
-   unsigned long now = millis();
+   unsigned long now = GET_MICROS / 1000;
    unsigned short index;
    for (index = 0; index < WS_TICKET_BUFFER_SIZE; index++)
    {
@@ -585,7 +585,7 @@ bool WebHandlerClass::_wsAuth(AsyncWebSocketClient *client)
 {
 
    IPAddress ip = client->remoteIP();
-   unsigned long now = millis();
+   unsigned long now = GET_MICROS / 1000;
    unsigned short index = 0;
 
    //TODO: Here be dragons, this way of 'authenticating' is all but secure

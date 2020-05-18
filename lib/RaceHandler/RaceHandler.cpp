@@ -612,7 +612,7 @@ unsigned long RaceHandlerClass::GetDogTimeMillis(uint8_t iDogNumber, int8_t iRun
       {
          auto &lLastReturnedTimeStamp = _lLastDogTimeReturnTimeStamp[iDogNumber];
          iRunNumber = _iLastReturnedRunNumber[iDogNumber];
-         if ((millis() - lLastReturnedTimeStamp) > 2000)
+         if ((GET_MICROS / 1000 - lLastReturnedTimeStamp) > 2000)
          {
             if (iRunNumber == _iDogRunCounters[iDogNumber])
             {
@@ -622,7 +622,7 @@ unsigned long RaceHandlerClass::GetDogTimeMillis(uint8_t iDogNumber, int8_t iRun
             {
                iRunNumber++;
             }
-            lLastReturnedTimeStamp = millis();
+            lLastReturnedTimeStamp = GET_MICROS / 1000;
          }
          _iLastReturnedRunNumber[iDogNumber] = iRunNumber;
       }
@@ -685,7 +685,7 @@ String RaceHandlerClass::GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber)
       {
          auto &lLastReturnedTimeStamp = _lLastDogTimeReturnTimeStamp[iDogNumber];
          iRunNumber = _iLastReturnedRunNumber[iDogNumber];
-         if ((millis() - lLastReturnedTimeStamp) > 2000)
+         if ((GET_MICROS / 1000 - lLastReturnedTimeStamp) > 2000)
          {
             if (iRunNumber == _iDogRunCounters[iDogNumber])
             {
@@ -695,7 +695,7 @@ String RaceHandlerClass::GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber)
             {
                iRunNumber++;
             }
-            lLastReturnedTimeStamp = millis();
+            lLastReturnedTimeStamp = GET_MICROS / 1000;
          }
          _iLastReturnedRunNumber[iDogNumber] = iRunNumber;
       }
@@ -731,10 +731,20 @@ String RaceHandlerClass::GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber)
    {
       if (_lDogTimes[iDogNumber][iRunNumber] > 0)
       {
-         // if (_iDogRunCounters[iDogNumber]) !=
-         strCrossingTime = "      OK";
+         if ((_iDogRunCounters[iDogNumber] > 0 && _iDogRunCounters[iDogNumber] != iRunNumber) || (_iDogRunCounters[iDogNumber] == 0 && _bDogFaults[iDogNumber] == true))
+         {
+            strCrossingTime = "     NOK";
+         }
+         else
+         {
+            strCrossingTime = "      OK";
+         }
       }
-      else if ((RaceState == RUNNING && iCurrentDog == iDogNumber && _byDogState == COMINGBACK) && iRunNumber <= _iDogRunCounters[iDogNumber]) //And if requested run number is lower then number of times dog has run
+      else if ((RaceState == RUNNING && iCurrentDog == iDogNumber && _byDogState == COMINGBACK) && iRunNumber <= _iDogRunCounters[iDogNumber] && _bDogFaults[iDogNumber] == true) //If still running and fault active
+      {
+         strCrossingTime = "     NOK";
+      }
+      else if ((RaceState == RUNNING && iCurrentDog == iDogNumber && _byDogState == COMINGBACK) && iRunNumber <= _iDogRunCounters[iDogNumber] && _bDogFaults[iDogNumber] == false) //If still running and no active fault
       {
          strCrossingTime = "      OK";
       }
@@ -757,7 +767,7 @@ unsigned long RaceHandlerClass::GetCrossingTimeMillis(uint8_t iDogNumber, int8_t
       {
          auto &lLastReturnedTimeStamp = _lLastDogTimeReturnTimeStamp[iDogNumber];
          iRunNumber = _iLastReturnedRunNumber[iDogNumber];
-         if ((millis() - lLastReturnedTimeStamp) > 2000)
+         if ((GET_MICROS / 1000 - lLastReturnedTimeStamp) > 2000)
          {
             if (iRunNumber == _iDogRunCounters[iDogNumber])
             {
@@ -767,7 +777,7 @@ unsigned long RaceHandlerClass::GetCrossingTimeMillis(uint8_t iDogNumber, int8_t
             {
                iRunNumber++;
             }
-            lLastReturnedTimeStamp = millis();
+            lLastReturnedTimeStamp = GET_MICROS / 1000;
          }
          _iLastReturnedRunNumber[iDogNumber] = iRunNumber;
       }

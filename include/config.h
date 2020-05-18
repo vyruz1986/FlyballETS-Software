@@ -13,11 +13,18 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.If not, see <http://www.gnu.org/licenses/>
 
+#ifdef ESP32
+#define GET_MICROS esp_timer_get_time()
+#elif
+#define GET_MICROS micros()
+#endif
+
 #ifndef GLOBALVAR_H
 #define GLOBALVAR_H
 
 #define Simulate true                     // Set to true to enable race simulation (see Simulator.h/.cpp)
 #define JTAG true                         // when set to true you need converter board with pins remappig and jtag + programing port. It deactite featuers: LSR BTN+LED, battery sensor, switch button
+#define NumSimulatedRaces     3           // number of prepeared simulated races
 
 #define LIGHTSCHAINS          2           // Numer of WS281x lights chains. 1 - one chain of 5 pixels/lights, 2 - two chains --> 10 pixels/lights, etc.
 
