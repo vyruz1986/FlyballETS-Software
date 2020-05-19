@@ -360,13 +360,17 @@ void loop()
       StartStopRace();
    }
 
-   //Race reset button (remote D1 output)
+   //Race reset button (remote D1 output) + stability reset after 30min
    if ((digitalRead(iRC1Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[1] > 2000)) || (bSerialStringComplete && strSerialData == "RESET"))
    {
+      if (esp_timer_get_time() > 1800000000)
+      {
+         ESP.restart();
+      }
       ResetRace();
    }
 
-      //Change Race ID (only serial command), e.g. RACE 1 or RACE 2
+   //Change Race ID (only serial command), e.g. RACE 1 or RACE 2
    if (bSerialStringComplete && strSerialData.startsWith("RACE"))
    {
       strSerialData.remove(0, 5);
@@ -374,10 +378,10 @@ void loop()
       if (iSimulatedRaceID < 0 || iSimulatedRaceID >= NumSimulatedRaces)
       {
          iSimulatedRaceID = 0;
-      }   
+      }
       Simulator.ChangeSimulatedRaceID(iSimulatedRaceID);
    }
-   
+
    //Dog0 fault RC button
    if ((digitalRead(iRC2Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[2] > 2000)) || (bSerialStringComplete && strSerialData == "D0F"))
    {
@@ -462,7 +466,7 @@ void loop()
    }
 
    //heap memory monitor
-/* unsigned long lCurrentMillis = GET_MICROS / 1000;
+   /* unsigned long lCurrentMillis = GET_MICROS / 1000;
    if (lCurrentMillis - lHeapPreviousMillis > lHeapInterval)
    {
       ESP_LOGI(__FILE__, "Heap caps free size: %i\n", heap_caps_get_free_size(MALLOC_CAP_8BIT));
@@ -526,7 +530,7 @@ void serialEvent()
    while (Serial.available() > 0)
    {
       char cInChar = Serial.read(); // Read a character
-       //Check if buffer contains complete serial message, terminated by newline (\n)
+                                    //Check if buffer contains complete serial message, terminated by newline (\n)
       if (cInChar == '\n')
       {
          //Serial message in buffer is complete, null terminate it and store it for further handling
