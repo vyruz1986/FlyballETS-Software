@@ -366,7 +366,7 @@ void loop()
       ResetRace();
    }
 
-      //Change Race ID (only serial command)
+      //Change Race ID (only serial command), e.g. RACE 1 or RACE 2
    if (bSerialStringComplete && strSerialData.startsWith("RACE"))
    {
       strSerialData.remove(0, 5);

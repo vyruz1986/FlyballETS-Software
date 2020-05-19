@@ -327,16 +327,20 @@ void RaceHandlerClass::Main()
             {
                //Transition string indicates more than 1 dog passed
                //We increase the dog number
+               ESP_LOGD(__FILE__, "Current Dog was: %i", iCurrentDog);
                _ChangeDogNumber(iNextDog);
+               ESP_LOGD(__FILE__, "Current Dog is: %i", iCurrentDog);
+               ESP_LOGD(__FILE__, "_bRerunBusy is: %i", _bRerunBusy);
+               ESP_LOGD(__FILE__, "_bFault is: %i", _bFault);
 
-               //First check if no error was set for next dog (too early)
-               if (_bDogFaults[iCurrentDog])
+               //If this is Re-run and dog had fault active we need to turn it OFF is this is perfect crossing case during re-run
+               if ((_bRerunBusy == true && _bFault == true))
                {
-                  //This dog was too early, but since have a simultaneous crossing we don't know the crossing time.
-                  //Set it to 0 for now
+                  SetDogFault(iCurrentDog, OFF);
                }
 
                // and set perfect crossing time for new dog
+               ESP_LOGD(__FILE__, "Dog State was: %i", _byDogState);
                _ChangeDogState(COMINGBACK);
                _lCrossingTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = 0;
                _lDogEnterTimes[iCurrentDog] = _lDogExitTimes[iPreviousDog];
