@@ -568,7 +568,7 @@ void StartStopRace()
        && RaceHandler.GetRaceTime() == 0)           //and timers are zero
    {
       //Then start the race
-      ESP_LOGD(__FILE__, "%lu: START!", GET_MICROS / 1000);
+      ESP_LOGD(__FILE__, "%lu: START!", millis());
       LightsController.InitiateStartSequence();
       RaceHandler.StartRace();
    }

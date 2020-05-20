@@ -95,7 +95,7 @@ void LightsControllerClass::Main()
 
    if (_byCurrentLightsState != _byNewLightsState)
    {
-      ESP_LOGD(__FILE__, "%lu: New light states: %i", GET_MICROS / 1000, _byNewLightsState);
+      //ESP_LOGD(__FILE__, " %lu: New light states: %i", millis(), _byNewLightsState);
       _byCurrentLightsState = _byNewLightsState;
 #ifndef WS281x
       digitalWrite(_iLatchPin, LOW);
@@ -127,7 +127,7 @@ void LightsControllerClass::HandleStartSequence()
          _lLightsOutSchedule[1] = GET_MICROS / 1000 + 1000; //keep on for 1 second
 
          //Set schedule for YELLOW1 light
-         _lLightsOnSchedule[2] = GET_MICROS / 1000+ 1000;  //Turn on after 1 second
+         _lLightsOnSchedule[2] = GET_MICROS / 1000 + 1000;  //Turn on after 1 second
          _lLightsOutSchedule[2] = GET_MICROS / 1000 + 2000; //Turn off after 2 seconds
 
          //Set schedule for YELLOW2 light
@@ -153,7 +153,7 @@ void LightsControllerClass::HandleStartSequence()
       if (CheckLightState(GREEN) == ON && RaceHandler.RaceState == RaceHandler.STARTING)
       {
          RaceHandler.StartTimers();
-         ESP_LOGD(__FILE__, "%lu: GREEN light is ON!", GET_MICROS / 1000);
+         ESP_LOGD(__FILE__, "%d: GREEN light is ON!", millis());
       }
       if (!bStartSequenceBusy)
       {
@@ -229,6 +229,11 @@ void LightsControllerClass::ToggleLightState(Lights byLight, LightStates byLight
    if (byLightState == OFF)
    {
       LightConfig.iColor = RgbColor(0);
+      ESP_LOGD(__FILE__, "%d: Light %d switched OFF", millis(), LightConfig.iPixelNumber);
+   }
+   else
+   {
+      ESP_LOGD(__FILE__, "%d: Light %d switched ON", millis(), LightConfig.iPixelNumber);
    }
 
    for (int lightschain = 0; lightschain < LIGHTSCHAINS; lightschain++)
@@ -270,7 +275,7 @@ void LightsControllerClass::ToggleFaultLight(uint8_t DogNumber, LightStates byLi
       _lLightsOutSchedule[0] = GET_MICROS / 1000 + 1000; //keep on for 1 second
    }
    ToggleLightState(byLight, byLightState);
-   ESP_LOGD(__FILE__, "Fault light for dog %i: %i", DogNumber, byLightState);
+   //ESP_LOGD(__FILE__, "Fault light for dog %i: %i", DogNumber, byLightState);
 }
 
 stLightsState LightsControllerClass::GetLightsState()

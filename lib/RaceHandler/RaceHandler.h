@@ -70,6 +70,7 @@ private:
    unsigned long _lRaceTime;
    unsigned long _lPerfectCrossingTime;
    unsigned long _lLastTransitionStringUpdate;
+   unsigned long _lFalseStartTime = 0;
 
    uint8_t  _iS1Pin;
    uint8_t  _iS2Pin;

@@ -161,6 +161,7 @@ void RaceHandlerClass::Main()
             ESP_LOGD(__FILE__, "F! D:%i!", iCurrentDog);
             _lCrossingTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = STriggerRecord.lTriggerTime - _lPerfectCrossingTime;
             _lDogEnterTimes[iCurrentDog] = STriggerRecord.lTriggerTime;
+            _lFalseStartTime = STriggerRecord.lTriggerTime - _lPerfectCrossingTime;
          }
          //Check if this is a next dog which is too early (we are expecting a dog to come back)
          else if (_byDogState == COMINGBACK)
@@ -237,7 +238,7 @@ void RaceHandlerClass::Main()
             if ((iCurrentDog == 3 && _bFault == false && _bRerunBusy == false) //If this is the 4th dog and there is no fault we have to stop the race
                 || (_bRerunBusy == true && _bFault == false))                  //Or if the rerun sequence was started but no faults exist anymore
             {
-               StopRace(STriggerRecord.lTriggerTime);
+               StopRace(STriggerRecord.lTriggerTime - _lFalseStartTime);
                ESP_LOGD(__FILE__, "Last Dog: %i|ENT:%lu|EXIT:%lu|TOT:%lu", iCurrentDog, _lDogEnterTimes[iCurrentDog], _lDogExitTimes[iCurrentDog], _lDogTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]]);
             }
             else if ((iCurrentDog == 3 && _bFault == true && _bRerunBusy == false) //If current dog is dog 4 and a fault exists, we have to initiate rerun sequence
@@ -359,7 +360,7 @@ void RaceHandlerClass::Main()
    {
       if (GET_MICROS > _lRaceStartTime)
       {
-         _lRaceTime = GET_MICROS - _lRaceStartTime;
+         _lRaceTime = GET_MICROS - _lFalseStartTime - _lRaceStartTime;
       }
    }
 
@@ -401,7 +402,7 @@ void RaceHandlerClass::StartRace()
 /// </summary>
 void RaceHandlerClass::StopRace()
 {
-   this->StopRace(GET_MICROS);
+   this->StopRace(GET_MICROS - _lFalseStartTime);
 }
 
 /// <summary>
@@ -434,6 +435,7 @@ void RaceHandlerClass::ResetRace()
       _lRaceStartTime = 0;
       _lRaceEndTime = 0;
       _lRaceTime = 0;
+      _lFalseStartTime = 0;
       _lPerfectCrossingTime = 0;
       _byDogState = GOINGIN;
       _ChangeDogNumber(0);
