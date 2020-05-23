@@ -90,22 +90,22 @@ private:
 
    bool _bStartSequenceStarted = 0;
 
-   unsigned long _lLightsOnSchedule[6];
-   unsigned long _lLightsOutSchedule[6];
+   long long _lLightsOnSchedule[6];
+   long long _lLightsOutSchedule[6];
 
    Lights _byLightsArray[6] = {
-       WHITE,
-       RED,
-       YELLOW1,
-       BLUE,
-       YELLOW2,
-       GREEN};
+      WHITE,
+      RED,
+      YELLOW1,
+      BLUE,
+      YELLOW2,
+      GREEN};
 
    Lights _byDogErrorLigths[4] = {
-       RED,
-       BLUE,
-       YELLOW2,
-       GREEN};
+      RED,
+      BLUE,
+      YELLOW2,
+      GREEN};
 
 #ifdef WS281x
    struct SNeoPixelConfig

@@ -123,10 +123,11 @@ void RaceHandlerClass::Main()
       if (_strTransition.length() == 0)
       {
          _bGatesClear = true;
+         ESP_LOGD(__FILE__, "GatesClear?: 1 (true)");
       }
 
       ESP_LOGD(__FILE__, "S%i|T:%li|St:%i", STriggerRecord.iSensorNumber, STriggerRecord.lTriggerTime - _lRaceStartTime, STriggerRecord.iSensorState);
-      ESP_LOGD(__FILE__, "bGatesClear: %i", _bGatesClear);
+
 
       //Calculate what our next dog will be
       if ((_bFault && _bRerunBusy) || (_bFault && iCurrentDog == 3))
@@ -221,19 +222,19 @@ void RaceHandlerClass::Main()
          {
             //Current dog had a fault (was too early), so we need to modify the previous dog crossing time (we didn't know this before)
             //Update exit and total time of previous dog
-            _lDogExitTimes[iPreviousDog] = STriggerRecord.lTriggerTime;
-            _lDogTimes[iPreviousDog][_iDogRunCounters[iPreviousDog]] = _lDogExitTimes[iPreviousDog] - _lDogEnterTimes[iPreviousDog];
+            _lDogExitTimes[iPreviousDog] = STriggerRecord.lTriggerTime; //SIMON: delete
+            _lDogTimes[iPreviousDog][_iDogRunCounters[iPreviousDog]] = _lDogExitTimes[iPreviousDog] - _lDogEnterTimes[iPreviousDog]; //SIMON: delete
 
             //And update crossing time of this dog (who is in fault)
-            _lCrossingTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = _lDogEnterTimes[iCurrentDog] - _lDogExitTimes[iPreviousDog];
+            _lCrossingTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = _lDogEnterTimes[iCurrentDog] - STriggerRecord.lTriggerTime;  //SIMON: this is OK
          }
          else if ((STriggerRecord.lTriggerTime - _lDogEnterTimes[iCurrentDog]) > 2000000) //Filter out S2 HIGH signals that are < 2 seconds after dog enter time
          {
             //Normal handling for dog coming back
-            _lDogExitTimes[iCurrentDog] = STriggerRecord.lTriggerTime;
-            _lDogTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = STriggerRecord.lTriggerTime - _lDogEnterTimes[iCurrentDog];
+            _lDogExitTimes[iCurrentDog] = STriggerRecord.lTriggerTime; //SIMON: not true, this need to be handle by S1
+            _lDogTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = STriggerRecord.lTriggerTime - _lDogEnterTimes[iCurrentDog]; //SIMON: not true, this need to be handle by S1
             //The time the dog came in is also the perfect crossing time
-            _lPerfectCrossingTime = STriggerRecord.lTriggerTime;
+            _lPerfectCrossingTime = STriggerRecord.lTriggerTime; //SIMON: this is OK
 
             if ((iCurrentDog == 3 && _bFault == false && _bRerunBusy == false) //If this is the 4th dog and there is no fault we have to stop the race
                 || (_bRerunBusy == true && _bFault == false))                  //Or if the rerun sequence was started but no faults exist anymore
@@ -295,6 +296,7 @@ void RaceHandlerClass::Main()
       {
          //The gates are clear, set boolean
          _bGatesClear = true;
+         ESP_LOGD(__FILE__, "GatesClear?: 1 (true)");
 
          //Print the transition string up til now for debugging purposes
          ESP_LOGD(__FILE__, "Tstring: %s", _strTransition.c_str());
@@ -348,6 +350,7 @@ void RaceHandlerClass::Main()
       else
       {
          _bGatesClear = false;
+         ESP_LOGD(__FILE__, "GatesClear?: 0 (false)");
       }
    }
 
@@ -405,7 +408,7 @@ void RaceHandlerClass::StopRace()
 ///   Stops a race.
 /// </summary>
 /// <param name="StopTime">   The time in microseconds at which the race stopped. </param>
-void RaceHandlerClass::StopRace(unsigned long lStopTime)
+void RaceHandlerClass::StopRace(long long lStopTime)
 {
    if (RaceState == RUNNING)
    {
@@ -603,7 +606,7 @@ double RaceHandlerClass::GetDogTime(uint8_t iDogNumber, int8_t iRunNumber)
 
    return dDogTime;
 }
-unsigned long RaceHandlerClass::GetDogTimeMillis(uint8_t iDogNumber, int8_t iRunNumber)
+long long RaceHandlerClass::GetDogTimeMillis(uint8_t iDogNumber, int8_t iRunNumber)
 {
    unsigned long ulDogTimeMillis = 0;
    if (_iDogRunCounters[iDogNumber] > 0)
@@ -758,7 +761,7 @@ String RaceHandlerClass::GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber)
 
    return strCrossingTime;
 }
-unsigned long RaceHandlerClass::GetCrossingTimeMillis(uint8_t iDogNumber, int8_t iRunNumber)
+long long RaceHandlerClass::GetCrossingTimeMillis(uint8_t iDogNumber, int8_t iRunNumber)
 {
    long lCrossingTime = 0;
    if (_iDogRunCounters[iDogNumber] > 0)
@@ -828,7 +831,7 @@ String RaceHandlerClass::GetRerunInfo(uint8_t iDogNumber)
 ///   Gets total crossing time (milliseconds) without consideration negative crosses or false start as those are inluded in Race Time.
 ///   Result will be use to calculate team Net Time that is equal to Clean Time in case of clean heat (no single fault during the heat).
 /// </summary>
-long RaceHandlerClass::GetTotalCrossingTimeMillis()
+long long RaceHandlerClass::GetTotalCrossingTimeMillis()
 {
    long lTotalCrossingTime = 0;
 

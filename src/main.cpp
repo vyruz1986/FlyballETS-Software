@@ -109,8 +109,8 @@ char cDogTime[8];
 char cDogCrossingTime[8];
 char cElapsedRaceTime[8];
 char cTeamNetTime[8];
-long lHeapPreviousMillis = 0;
-long lHeapInterval = 10000;
+long long lHeapPreviousMillis = 0;
+long long lHeapInterval = 10000;
 
 //Initialise Lights stuff
 #ifdef WS281x
@@ -137,7 +137,7 @@ stInputSignal SideSwitch = {iSideSwitchPin, 0, 500};
 #endif
 
 //Set last serial output variable
-long lLastSerialOutput = 0;
+long long lLastSerialOutput = 0;
 
 //remote control pins
 int iRC0Pin = 19;
@@ -148,7 +148,7 @@ int iRC4Pin = 16;
 int iRC5Pin = 4;
 
 //Array to hold last time button presses
-unsigned long lLastRCPress[6] = {0, 0, 0, 0, 0, 0};
+long long lLastRCPress[6] = {0, 0, 0, 0, 0, 0};
 
 #if !JTAG
 uint8_t iLCDData4Pin = 13;
@@ -169,7 +169,7 @@ LiquidCrystal lcd2(iLCDRSPin, iLCDE2Pin, iLCDData4Pin, iLCDData5Pin, iLCDData6Pi
 
 //String for serial comms storage
 String strSerialData;
-unsigned long iSimulatedRaceID = 0;
+uint iSimulatedRaceID = 0;
 byte bySerialIndex = 0;
 boolean bSerialStringComplete = false;
 
@@ -370,6 +370,7 @@ void loop()
       ResetRace();
    }
 
+#if Simulate
    //Change Race ID (only serial command), e.g. RACE 1 or RACE 2
    if (bSerialStringComplete && strSerialData.startsWith("RACE"))
    {
@@ -381,6 +382,7 @@ void loop()
       }
       Simulator.ChangeSimulatedRaceID(iSimulatedRaceID);
    }
+#endif
 
    //Dog0 fault RC button
    if ((digitalRead(iRC2Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[2] > 2000)) || (bSerialStringComplete && strSerialData == "D0F"))
