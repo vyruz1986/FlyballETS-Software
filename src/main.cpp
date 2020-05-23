@@ -363,7 +363,7 @@ void loop()
    //Race reset button (remote D1 output) + stability reset after 30min
    if ((digitalRead(iRC1Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[1] > 2000)) || (bSerialStringComplete && strSerialData == "RESET"))
    {
-      if (esp_timer_get_time() > 1800000000)
+      if (RecoveryResetTimer > 0 && esp_timer_get_time() > (RecoveryResetTimer * 60 * 1000000))
       {
          ESP.restart();
       }
