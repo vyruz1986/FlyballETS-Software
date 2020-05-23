@@ -74,12 +74,12 @@ void LightsControllerClass::Main()
    //Check if we have to toggle any lights
    for (int i = 0; i < 6; i++)
    {
-      if (millis() > _lLightsOnSchedule[i] && _lLightsOnSchedule[i] != 0)
+      if (GET_MICROS / 1000 > _lLightsOnSchedule[i] && _lLightsOnSchedule[i] != 0)
       {
          ToggleLightState(_byLightsArray[i], ON);
          _lLightsOnSchedule[i] = 0; //Delete schedule
       }
-      if (millis() > _lLightsOutSchedule[i] && _lLightsOutSchedule[i] != 0)
+      if (GET_MICROS / 1000 > _lLightsOutSchedule[i] && _lLightsOutSchedule[i] != 0)
       {
          ToggleLightState(_byLightsArray[i], OFF);
          _lLightsOutSchedule[i] = 0; //Delete schedule
@@ -95,7 +95,7 @@ void LightsControllerClass::Main()
 
    if (_byCurrentLightsState != _byNewLightsState)
    {
-      ESP_LOGD(__FILE__, "%lu: New light states: %i", millis(), _byNewLightsState);
+      //ESP_LOGD(__FILE__, " %lu: New light states: %i", millis(), _byNewLightsState);
       _byCurrentLightsState = _byNewLightsState;
 #ifndef WS281x
       digitalWrite(_iLatchPin, LOW);
@@ -123,20 +123,20 @@ void LightsControllerClass::HandleStartSequence()
          //Start sequence is not yet started, we need to schedule the lights on/off times
 
          //Set schedule for RED light
-         _lLightsOnSchedule[1] = millis();         //Turn on NOW
-         _lLightsOutSchedule[1] = millis() + 1000; //keep on for 1 second
+         _lLightsOnSchedule[1] = GET_MICROS / 1000;         //Turn on NOW
+         _lLightsOutSchedule[1] = GET_MICROS / 1000 + 1000; //keep on for 1 second
 
          //Set schedule for YELLOW1 light
-         _lLightsOnSchedule[2] = millis() + 1000;  //Turn on after 1 second
-         _lLightsOutSchedule[2] = millis() + 2000; //Turn off after 2 seconds
+         _lLightsOnSchedule[2] = GET_MICROS / 1000 + 1000;  //Turn on after 1 second
+         _lLightsOutSchedule[2] = GET_MICROS / 1000 + 2000; //Turn off after 2 seconds
 
          //Set schedule for YELLOW2 light
-         _lLightsOnSchedule[4] = millis() + 2000;  //Turn on after 2 seconds
-         _lLightsOutSchedule[4] = millis() + 3000; //Turn off after 3 seconds
+         _lLightsOnSchedule[4] = GET_MICROS / 1000 + 2000;  //Turn on after 2 seconds
+         _lLightsOutSchedule[4] = GET_MICROS / 1000 + 3000; //Turn off after 3 seconds
 
          //Set schedule for GREEN light
-         _lLightsOnSchedule[5] = millis() + 3000;  //Turn on after 3 seconds
-         _lLightsOutSchedule[5] = millis() + 4000; //Turn off after 4 seconds
+         _lLightsOnSchedule[5] = GET_MICROS / 1000 + 3000;  //Turn on after 3 seconds
+         _lLightsOutSchedule[5] = GET_MICROS / 1000 + 4000; //Turn off after 4 seconds
 
          _bStartSequenceStarted = true;
       }
@@ -153,7 +153,7 @@ void LightsControllerClass::HandleStartSequence()
       if (CheckLightState(GREEN) == ON && RaceHandler.RaceState == RaceHandler.STARTING)
       {
          RaceHandler.StartTimers();
-         ESP_LOGD(__FILE__, "%lu: GREEN light is ON!", millis());
+         ESP_LOGD(__FILE__, "%d: GREEN light is ON!", millis());
       }
       if (!bStartSequenceBusy)
       {
@@ -229,6 +229,11 @@ void LightsControllerClass::ToggleLightState(Lights byLight, LightStates byLight
    if (byLightState == OFF)
    {
       LightConfig.iColor = RgbColor(0);
+      ESP_LOGD(__FILE__, "%d: Light %d switched OFF", millis(), LightConfig.iPixelNumber);
+   }
+   else
+   {
+      ESP_LOGD(__FILE__, "%d: Light %d switched ON", millis(), LightConfig.iPixelNumber);
    }
 
    for (int lightschain = 0; lightschain < LIGHTSCHAINS; lightschain++)
@@ -266,11 +271,11 @@ void LightsControllerClass::ToggleFaultLight(uint8_t DogNumber, LightStates byLi
    {
       //If a fault lamp is turned on we have to light the white light for 1 sec
       //Set schedule for WHITE light
-      _lLightsOnSchedule[0] = millis();         //Turn on NOW
-      _lLightsOutSchedule[0] = millis() + 1000; //keep on for 1 second
+      _lLightsOnSchedule[0] = GET_MICROS / 1000;         //Turn on NOW
+      _lLightsOutSchedule[0] = GET_MICROS / 1000 + 1000; //keep on for 1 second
    }
    ToggleLightState(byLight, byLightState);
-   ESP_LOGD(__FILE__, "Fault light for dog %i: %i", DogNumber, byLightState);
+   //ESP_LOGD(__FILE__, "Fault light for dog %i: %i", DogNumber, byLightState);
 }
 
 stLightsState LightsControllerClass::GetLightsState()

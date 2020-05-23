@@ -109,6 +109,8 @@ char cDogTime[8];
 char cDogCrossingTime[8];
 char cElapsedRaceTime[8];
 char cTeamNetTime[8];
+long lHeapPreviousMillis = 0;
+long lHeapInterval = 10000;
 
 //Initialise Lights stuff
 #ifdef WS281x
@@ -167,6 +169,7 @@ LiquidCrystal lcd2(iLCDRSPin, iLCDE2Pin, iLCDData4Pin, iLCDData5Pin, iLCDData6Pi
 
 //String for serial comms storage
 String strSerialData;
+unsigned long iSimulatedRaceID = 0;
 byte bySerialIndex = 0;
 boolean bSerialStringComplete = false;
 
@@ -352,44 +355,60 @@ void loop()
 #endif
 
    //Race start/stop button (remote D0 output) or serial command
-   if ((digitalRead(iRC0Pin) == HIGH && (millis() - lLastRCPress[0] > 2000)) || (bSerialStringComplete && (strSerialData == "START" || strSerialData == "STOP")))
+   if ((digitalRead(iRC0Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[0] > 2000)) || (bSerialStringComplete && (strSerialData == "START" || strSerialData == "STOP")))
    {
       StartStopRace();
    }
 
-   //Race reset button (remote D1 output)
-   if ((digitalRead(iRC1Pin) == HIGH && (millis() - lLastRCPress[1] > 2000)) || (bSerialStringComplete && strSerialData == "RESET"))
+   //Race reset button (remote D1 output) + stability reset after RecoveryResetTimer defined in config.h
+   if ((digitalRead(iRC1Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[1] > 2000)) || (bSerialStringComplete && strSerialData == "RESET"))
    {
+      if (RecoveryResetTimer > 0 && esp_timer_get_time() > (RecoveryResetTimer * 60 * 1000000))
+      {
+         ESP.restart();
+      }
       ResetRace();
    }
 
-   //Dog0 fault RC button
-   if ((digitalRead(iRC2Pin) == HIGH && (millis() - lLastRCPress[2] > 2000)) || (bSerialStringComplete && strSerialData == "D0F"))
+   //Change Race ID (only serial command), e.g. RACE 1 or RACE 2
+   if (bSerialStringComplete && strSerialData.startsWith("RACE"))
    {
-      lLastRCPress[2] = millis();
+      strSerialData.remove(0, 5);
+      iSimulatedRaceID = strSerialData.toInt();
+      if (iSimulatedRaceID < 0 || iSimulatedRaceID >= NumSimulatedRaces)
+      {
+         iSimulatedRaceID = 0;
+      }
+      Simulator.ChangeSimulatedRaceID(iSimulatedRaceID);
+   }
+
+   //Dog0 fault RC button
+   if ((digitalRead(iRC2Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[2] > 2000)) || (bSerialStringComplete && strSerialData == "D0F"))
+   {
+      lLastRCPress[2] = GET_MICROS / 1000;
       //Toggle fault for dog
       RaceHandler.SetDogFault(0);
    }
 
    //Dog1 fault RC button
-   if ((digitalRead(iRC3Pin) == HIGH && (millis() - lLastRCPress[3] > 2000)) || (bSerialStringComplete && strSerialData == "D1F"))
+   if ((digitalRead(iRC3Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[3] > 2000)) || (bSerialStringComplete && strSerialData == "D1F"))
    {
-      lLastRCPress[3] = millis();
+      lLastRCPress[3] = GET_MICROS / 1000;
       //Toggle fault for dog
       RaceHandler.SetDogFault(1);
    }
    //Dog2 fault RC button
-   if ((digitalRead(iRC4Pin) == HIGH && (millis() - lLastRCPress[4] > 2000)) || (bSerialStringComplete && strSerialData == "D2F"))
+   if ((digitalRead(iRC4Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[4] > 2000)) || (bSerialStringComplete && strSerialData == "D2F"))
    {
-      lLastRCPress[4] = millis();
+      lLastRCPress[4] = GET_MICROS / 1000;
       //Toggle fault for dog
       RaceHandler.SetDogFault(2);
    }
 
    //Dog3 fault RC button
-   if ((digitalRead(iRC5Pin) == HIGH && (millis() - lLastRCPress[5] > 2000)) || (bSerialStringComplete && strSerialData == "D3F"))
+   if ((digitalRead(iRC5Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[5] > 2000)) || (bSerialStringComplete && strSerialData == "D3F"))
    {
-      lLastRCPress[5] = millis();
+      lLastRCPress[5] = GET_MICROS / 1000;
       //Toggle fault for dog
       RaceHandler.SetDogFault(3);
    }
@@ -446,16 +465,25 @@ void loop()
       ESP_LOGI(__FILE__, "RS: %i", RaceHandler.RaceState);
    }
 
+   //heap memory monitor
+   /* unsigned long lCurrentMillis = GET_MICROS / 1000;
+   if (lCurrentMillis - lHeapPreviousMillis > lHeapInterval)
+   {
+      ESP_LOGI(__FILE__, "Heap caps free size: %i\n", heap_caps_get_free_size(MALLOC_CAP_8BIT));
+      lHeapPreviousMillis = lCurrentMillis;
+   }
+*/
    if (RaceHandler.iCurrentDog != iCurrentDog)
    {
       dtostrf(RaceHandler.GetDogTime(RaceHandler.iPreviousDog, -2), 7, 3, cDogTime);
+
       ESP_LOGI(__FILE__, "D%i: %s|CR: %s", RaceHandler.iPreviousDog, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
       ESP_LOGI(__FILE__, "D: %i", RaceHandler.iCurrentDog);
       ESP_LOGI(__FILE__, "RT:%s", cElapsedRaceTime);
    }
 
    //Enable (uncomment) the following if you want periodic status updates on the serial port
-   if ((millis() - lLastSerialOutput) > 500)
+   if ((GET_MICROS / 1000 - lLastSerialOutput) > 500)
    {
       //ESP_LOGI(__FILE__, "%lu: ping! analog: %i ,voltage is: %i, this is %i%%", millis(), BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
       //ESP_LOGI(__FILE__, "%lu: Elapsed time: %s", millis(), cElapsedRaceTime);
@@ -467,7 +495,7 @@ void loop()
          ESP_LOGI(__FILE__, "Dog %i: %ss", RaceHandler.iCurrentDog, cDogTime);
       }
       */
-      lLastSerialOutput = millis();
+      lLastSerialOutput = GET_MICROS / 1000;
    }
    //Cleanup variables used for checking if something changed
    iCurrentDog = RaceHandler.iCurrentDog;
@@ -486,9 +514,9 @@ void loop()
    digitalWrite(iLaserOutputPin, !digitalRead(iLaserTriggerPin));
 
    //Handle side switch button
-   if (digitalRead(SideSwitch.Pin) == LOW && millis() - SideSwitch.LastTriggerTime > SideSwitch.CoolDownTime)
+   if (digitalRead(SideSwitch.Pin) == LOW && GET_MICROS / 1000 - SideSwitch.LastTriggerTime > SideSwitch.CoolDownTime)
    {
-      SideSwitch.LastTriggerTime = millis();
+      SideSwitch.LastTriggerTime = GET_MICROS / 1000;
       ESP_LOGI(__FILE__, "Switching sides!");
       RaceHandler.ToggleRunDirection();
    }
@@ -535,7 +563,7 @@ void Sensor1Wrapper()
 /// </summary>
 void StartStopRace()
 {
-   lLastRCPress[0] = millis();
+   lLastRCPress[0] = GET_MICROS / 1000;
    if (RaceHandler.RaceState == RaceHandler.STOPPED //If race is stopped
        && RaceHandler.GetRaceTime() == 0)           //and timers are zero
    {
@@ -560,7 +588,7 @@ void ResetRace()
    {
       return;
    }
-   lLastRCPress[1] = millis();
+   lLastRCPress[1] = GET_MICROS / 1000;
    LightsController.ResetLights();
    RaceHandler.ResetRace();
 }

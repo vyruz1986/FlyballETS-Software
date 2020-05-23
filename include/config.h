@@ -13,11 +13,19 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.If not, see <http://www.gnu.org/licenses/>
 
+#ifdef ESP32
+#define GET_MICROS esp_timer_get_time()
+#elif
+#define GET_MICROS micros()
+#endif
+
 #ifndef GLOBALVAR_H
 #define GLOBALVAR_H
 
-#define Simulate false // Set to true to enable race simulation (see Simulator.h/.cpp)
-#define JTAG false     // when set to true you need converter board with pins remappig and jtag + programing port. It deactite featuers: LSR BTN+LED, battery sensor, switch button
+#define Simulate false                    // Set to true to enable race simulation (see Simulator.h/.cpp)
+#define JTAG false                        // when set to true you need converter board with pins remappig and jtag + programing port. It deactite featuers: LSR BTN+LED, battery sensor, switch button
+#define NumSimulatedRaces     3           // number of prepeared simulated races. Sererial interface command to chane interface: e.g. RACE 1
+#define RecoveryResetTimer    30          // Timer in minutes counted since ESP32 hard/software reset. After timer expire Triggering reset via remote or UART will trigger full ESP32 SW reset and not only race data reset
 
 #define LIGHTSCHAINS 2 // Numer of WS281x lights chains. 1 - one chain of 5 pixels/lights, 2 - two chains --> 10 pixels/lights, etc.
 

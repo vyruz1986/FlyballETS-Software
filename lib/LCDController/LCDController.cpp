@@ -16,6 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.If not, see <http://www.gnu.org/licenses/>
 
+#include "config.h"
 #include "LCDController.h"
 #include <LiquidCrystal.h>
 
@@ -51,10 +52,10 @@ void LCDControllerClass::init(LiquidCrystal *Clcd1, LiquidCrystal *Clcd2)
    _SlcdfieldFields[D3RerunInfo] = {3, 22, 2, String("  ")};
    _SlcdfieldFields[D4Time] = {4, 3, 7, String("  0.000")};
    _SlcdfieldFields[D4RerunInfo] = {4, 22, 2, String("  ")};
-   _SlcdfieldFields[D1CrossTime] = {1, 12, 8, String("+  0.000")};
-   _SlcdfieldFields[D2CrossTime] = {2, 12, 8, String("+  0.000")};
-   _SlcdfieldFields[D3CrossTime] = {3, 12, 8, String("+  0.000")};
-   _SlcdfieldFields[D4CrossTime] = {4, 12, 8, String("+  0.000")};
+   _SlcdfieldFields[D1CrossTime] = {1, 12, 8, String("        ")};
+   _SlcdfieldFields[D2CrossTime] = {2, 12, 8, String("        ")};
+   _SlcdfieldFields[D3CrossTime] = {3, 12, 8, String("        ")};
+   _SlcdfieldFields[D4CrossTime] = {4, 12, 8, String("        ")};
    _SlcdfieldFields[BattLevel] = {4, 27, 3, String("  0")};
    _SlcdfieldFields[RaceState] = {1, 30, 7, String(" STOP  ")};
    _SlcdfieldFields[TeamTime] = {2, 33, 7, String("  0.000")};
@@ -70,7 +71,7 @@ void LCDControllerClass::init(LiquidCrystal *Clcd1, LiquidCrystal *Clcd2)
 void LCDControllerClass::Main()
 {
    //This is the main loop which handles LCD updates
-   if ((millis() - _lLastLCDUpdate) > _iLCDUpdateInterval)
+   if ((GET_MICROS / 1000 - _lLastLCDUpdate) > _iLCDUpdateInterval)
    {
 
       for (const SLCDField &lcdField : _SlcdfieldFields)
@@ -78,7 +79,7 @@ void LCDControllerClass::Main()
          _UpdateLCD(lcdField.iLine, lcdField.iStartingPosition, lcdField.strText, lcdField.iFieldLength);
       }
 
-      _lLastLCDUpdate = millis();
+      _lLastLCDUpdate = GET_MICROS / 1000;
    }
 }
 
