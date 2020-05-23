@@ -253,7 +253,7 @@ void SimulatorClass::Main()
    }
 }
 
-void SimulatorClass::ChangeSimulatedRaceID(uint8_t iSimulatedRaceID)
+void SimulatorClass::ChangeSimulatedRaceID(uint iSimulatedRaceID)
 {
    if (RaceHandler.RaceState == RaceHandler.STOPPED)
    {

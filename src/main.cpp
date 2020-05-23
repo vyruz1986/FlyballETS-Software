@@ -169,7 +169,7 @@ LiquidCrystal lcd2(iLCDRSPin, iLCDE2Pin, iLCDData4Pin, iLCDData5Pin, iLCDData6Pi
 
 //String for serial comms storage
 String strSerialData;
-unsigned long iSimulatedRaceID = 0;
+uint iSimulatedRaceID = 0;
 byte bySerialIndex = 0;
 boolean bSerialStringComplete = false;
 
@@ -370,6 +370,7 @@ void loop()
       ResetRace();
    }
 
+#if Simulate
    //Change Race ID (only serial command), e.g. RACE 1 or RACE 2
    if (bSerialStringComplete && strSerialData.startsWith("RACE"))
    {
@@ -381,6 +382,7 @@ void loop()
       }
       Simulator.ChangeSimulatedRaceID(iSimulatedRaceID);
    }
+#endif
 
    //Dog0 fault RC button
    if ((digitalRead(iRC2Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[2] > 2000)) || (bSerialStringComplete && strSerialData == "D0F"))
