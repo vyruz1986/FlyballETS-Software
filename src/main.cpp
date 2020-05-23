@@ -468,7 +468,7 @@ void loop()
    }
 
    //heap memory monitor
-   /* unsigned long lCurrentMillis = GET_MICROS / 1000;
+   /* long long lCurrentMillis = GET_MICROS / 1000;
    if (lCurrentMillis - lHeapPreviousMillis > lHeapInterval)
    {
       ESP_LOGI(__FILE__, "Heap caps free size: %i\n", heap_caps_get_free_size(MALLOC_CAP_8BIT));
@@ -487,9 +487,9 @@ void loop()
    //Enable (uncomment) the following if you want periodic status updates on the serial port
    if ((GET_MICROS / 1000 - lLastSerialOutput) > 500)
    {
-      //ESP_LOGI(__FILE__, "%lu: ping! analog: %i ,voltage is: %i, this is %i%%", millis(), BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
-      //ESP_LOGI(__FILE__, "%lu: Elapsed time: %s", millis(), cElapsedRaceTime);
-      //ESP_LOGI(__FILE__, "Free heap: %d", system_get_free_heap_size());
+      //ESP_LOGI(__FILE__, "%lld: ping! analog: %i ,voltage is: %i, this is %i%%", millis(), BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
+      //ESP_LOGI(__FILE__, "%lld: Elapsed time: %s", millis(), cElapsedRaceTime);
+      //ESP_LOGI(__FILE__, "Free heap: %i", system_get_free_heap_size());
       /*
       if (RaceHandler.RaceState == RaceHandler.RUNNING)
       {
@@ -570,7 +570,7 @@ void StartStopRace()
        && RaceHandler.GetRaceTime() == 0)           //and timers are zero
    {
       //Then start the race
-      ESP_LOGD(__FILE__, "%lu: START!", millis());
+      ESP_LOGD(__FILE__, "%llu: START!", millis());
       LightsController.InitiateStartSequence();
       RaceHandler.StartRace();
    }

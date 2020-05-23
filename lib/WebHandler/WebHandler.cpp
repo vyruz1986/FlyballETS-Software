@@ -1,7 +1,6 @@
 //
 //
 //
-
 #include "WebHandler.h"
 #include <Hash.h>
 #include <AsyncTCP.h>
@@ -595,7 +594,7 @@ bool WebHandlerClass::_wsAuth(AsyncWebSocketClient *client)
 
    for (index = 0; index < WS_TICKET_BUFFER_SIZE; index++)
    {
-      ESP_LOGI(__FILE__, "Checking ticket: %i, ip: %s, time: %lu", index, _ticket[index].ip.toString().c_str(), _ticket[index].timestamp);
+      ESP_LOGI(__FILE__, "Checking ticket: %i, ip: %s, time: %llu", index, _ticket[index].ip.toString().c_str(), _ticket[index].timestamp);
       if ((_ticket[index].ip == ip) && (now - _ticket[index].timestamp < WS_TIMEOUT))
          break;
    }

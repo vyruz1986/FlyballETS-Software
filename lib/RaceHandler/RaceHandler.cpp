@@ -72,7 +72,7 @@ void RaceHandlerClass::_ChangeDogState(_byDogStates byNewDogState)
    if (_byDogState != byNewDogState)
    {
       _byDogState = byNewDogState;
-      ESP_LOGD(__FILE__, "DogState: %i", byNewDogState);
+      //ESP_LOGD(__FILE__, "DogState: %i", byNewDogState);
    }
 }
 
@@ -88,7 +88,7 @@ void RaceHandlerClass::_ChangeDogNumber(uint8_t iNewDogNumber)
    {
       iPreviousDog = iCurrentDog;
       iCurrentDog = iNewDogNumber;
-      ESP_LOGD(__FILE__, "Prev Dog: %i|ENT:%lu|EXIT:%lu|TOT:%lu", iPreviousDog, _lDogEnterTimes[iPreviousDog], _lDogExitTimes[iPreviousDog], _lDogTimes[iPreviousDog][_iDogRunCounters[iPreviousDog]]);
+      ESP_LOGD(__FILE__, "Prev Dog: %i|ENT:%lld|EXIT:%lld|TOT:%lld", iPreviousDog, _lDogEnterTimes[iPreviousDog], _lDogExitTimes[iPreviousDog], _lDogTimes[iPreviousDog][_iDogRunCounters[iPreviousDog]]);
    }
 }
 
@@ -106,7 +106,7 @@ void RaceHandlerClass::Main()
       while (!_QueueEmpty())
       {
          STriggerRecord STempRecord = _QueuePop();
-         ESP_LOGD(__FILE__, "S%i|T:%li|St:%i", STempRecord.iSensorNumber, STempRecord.lTriggerTime - _lRaceStartTime, STempRecord.iSensorState);
+         ESP_LOGD(__FILE__, "S%i|T:%lld|St:%i", STempRecord.iSensorNumber, STempRecord.lTriggerTime - _lRaceStartTime, STempRecord.iSensorState);
       }
       return;
    }
@@ -123,10 +123,10 @@ void RaceHandlerClass::Main()
       if (_strTransition.length() == 0)
       {
          _bGatesClear = true;
-         ESP_LOGD(__FILE__, "GatesClear?: 1 (true)");
+         ESP_LOGD(__FILE__, "Gate Clear!");
       }
 
-      ESP_LOGD(__FILE__, "S%i|T:%li|St:%i", STriggerRecord.iSensorNumber, STriggerRecord.lTriggerTime - _lRaceStartTime, STriggerRecord.iSensorState);
+      ESP_LOGD(__FILE__, "S%i|T:%lld|St:%i", STriggerRecord.iSensorNumber, STriggerRecord.lTriggerTime - _lRaceStartTime, STriggerRecord.iSensorState);
 
 
       //Calculate what our next dog will be
@@ -240,7 +240,7 @@ void RaceHandlerClass::Main()
                 || (_bRerunBusy == true && _bFault == false))                  //Or if the rerun sequence was started but no faults exist anymore
             {
                StopRace(STriggerRecord.lTriggerTime - _lFalseStartTime);
-               ESP_LOGD(__FILE__, "Last Dog: %i|ENT:%lu|EXIT:%lu|TOT:%lu", iCurrentDog, _lDogEnterTimes[iCurrentDog], _lDogExitTimes[iCurrentDog], _lDogTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]]);
+               ESP_LOGD(__FILE__, "Last Dog: %i|ENT:%lld|EXIT:%lld|TOT:%lld", iCurrentDog, _lDogEnterTimes[iCurrentDog], _lDogExitTimes[iCurrentDog], _lDogTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]]);
             }
             else if ((iCurrentDog == 3 && _bFault == true && _bRerunBusy == false) //If current dog is dog 4 and a fault exists, we have to initiate rerun sequence
                      || _bRerunBusy == true)                                       //Or if rerun is busy (and faults still exist)
@@ -296,7 +296,7 @@ void RaceHandlerClass::Main()
       {
          //The gates are clear, set boolean
          _bGatesClear = true;
-         ESP_LOGD(__FILE__, "GatesClear?: 1 (true)");
+         ESP_LOGD(__FILE__, "Gate Clear!");
 
          //Print the transition string up til now for debugging purposes
          ESP_LOGD(__FILE__, "Tstring: %s", _strTransition.c_str());
@@ -311,13 +311,16 @@ void RaceHandlerClass::Main()
             {
                //Change dog state to coming back
                _ChangeDogState(COMINGBACK);
+               ESP_LOGD(__FILE__, "Dog state changed to COMINGBACK");
             }
             else if (_strTransition == "BAba") //Dog coming back
             {
                //Normal handling, change dog state to GOING IN
                _ChangeDogState(GOINGIN);
+               ESP_LOGD(__FILE__, "Dog state changed to GOINGING");
                //Set next dog active
                _ChangeDogNumber(iNextDog);
+               
             }
             else if (_strTransition == "BbAa")
             {
@@ -339,8 +342,8 @@ void RaceHandlerClass::Main()
                }
 
                // and set perfect crossing time for new dog
-               ESP_LOGD(__FILE__, "Dog State was: %i", _byDogState);
                _ChangeDogState(COMINGBACK);
+               ESP_LOGD(__FILE__, "Dog state changed to COMINGBACK");
                _lCrossingTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = 0;
                _lDogEnterTimes[iCurrentDog] = _lDogExitTimes[iPreviousDog];
             }
@@ -350,7 +353,7 @@ void RaceHandlerClass::Main()
       else
       {
          _bGatesClear = false;
-         ESP_LOGD(__FILE__, "GatesClear?: 0 (false)");
+         ESP_LOGD(__FILE__, "Dog(s) in the Gate!");
       }
    }
 
@@ -922,8 +925,8 @@ stRaceData RaceHandlerClass::GetRaceData(uint iRaceId)
       RequestedRaceData.StartTime = _lRaceStartTime / 1000;
       RequestedRaceData.EndTime = _lRaceEndTime / 1000;
       RequestedRaceData.ElapsedTime = _lRaceTime / 1000;
-      //Serial.printf("Elapsed1: %lu - %lu = %lu\r\n", micros(), _lRaceStartTime, _lRaceTime);
-      //Serial.printf("Elapsed2: %lu - %lu = %lu\r\n", GET_MICROS, _lRaceStartTime, _lRaceTime);
+      //Serial.printf("Elapsed1: %lld - %lld = %lld\r\n", micros(), _lRaceStartTime, _lRaceTime);
+      //Serial.printf("Elapsed2: %lld - %lld = %lld\r\n", GET_MICROS, _lRaceStartTime, _lRaceTime);
       RequestedRaceData.TotalCrossingTime = this->GetTotalCrossingTimeMillis();
       RequestedRaceData.RaceState = RaceState;
 

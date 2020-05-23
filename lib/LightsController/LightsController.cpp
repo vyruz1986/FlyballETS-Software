@@ -95,7 +95,7 @@ void LightsControllerClass::Main()
 
    if (_byCurrentLightsState != _byNewLightsState)
    {
-      //ESP_LOGD(__FILE__, " %lu: New light states: %i", millis(), _byNewLightsState);
+      //ESP_LOGD(__FILE__, " %llu: New light states: %i", millis(), _byNewLightsState);
       _byCurrentLightsState = _byNewLightsState;
 #ifndef WS281x
       digitalWrite(_iLatchPin, LOW);
@@ -153,7 +153,7 @@ void LightsControllerClass::HandleStartSequence()
       if (CheckLightState(GREEN) == ON && RaceHandler.RaceState == RaceHandler.STARTING)
       {
          RaceHandler.StartTimers();
-         ESP_LOGD(__FILE__, "%d: GREEN light is ON!", millis());
+         ESP_LOGD(__FILE__, "%llu: GREEN light is ON!", millis());
       }
       if (!bStartSequenceBusy)
       {
@@ -229,11 +229,11 @@ void LightsControllerClass::ToggleLightState(Lights byLight, LightStates byLight
    if (byLightState == OFF)
    {
       LightConfig.iColor = RgbColor(0);
-      ESP_LOGD(__FILE__, "%d: Light %d switched OFF", millis(), LightConfig.iPixelNumber);
+      ESP_LOGD(__FILE__, "%llu: Light %d switched OFF", millis(), LightConfig.iPixelNumber);
    }
    else
    {
-      ESP_LOGD(__FILE__, "%d: Light %d switched ON", millis(), LightConfig.iPixelNumber);
+      ESP_LOGD(__FILE__, "%llu: Light %d switched ON", millis(), LightConfig.iPixelNumber);
    }
 
    for (int lightschain = 0; lightschain < LIGHTSCHAINS; lightschain++)
