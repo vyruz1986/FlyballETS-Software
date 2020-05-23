@@ -244,7 +244,7 @@ void WebHandlerClass::loop()
          _lLastRaceDataBroadcast = GET_MICROS / 1000;
       }
    }
-   if (GET_MICROS / 1000- _lLastSystemDataBroadcast > _lSystemDataBroadcastInterval)
+   if (GET_MICROS / 1000 - _lLastSystemDataBroadcast > _lSystemDataBroadcastInterval)
    {
       _GetSystemData();
       _SendSystemData();
@@ -545,7 +545,7 @@ void WebHandlerClass::_onAuth(AsyncWebServerRequest *request)
    if (!_authenticate(request))
       return request->requestAuthentication("", false);
    IPAddress ip = request->client()->remoteIP();
-   unsigned long now = GET_MICROS / 1000;
+   long long now = GET_MICROS / 1000;
    unsigned short index;
    for (index = 0; index < WS_TICKET_BUFFER_SIZE; index++)
    {
@@ -585,7 +585,7 @@ bool WebHandlerClass::_wsAuth(AsyncWebSocketClient *client)
 {
 
    IPAddress ip = client->remoteIP();
-   unsigned long now = GET_MICROS / 1000;
+   long long now = GET_MICROS / 1000;
    unsigned short index = 0;
 
    //TODO: Here be dragons, this way of 'authenticating' is all but secure

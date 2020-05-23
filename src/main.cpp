@@ -109,8 +109,8 @@ char cDogTime[8];
 char cDogCrossingTime[8];
 char cElapsedRaceTime[8];
 char cTeamNetTime[8];
-long lHeapPreviousMillis = 0;
-long lHeapInterval = 10000;
+long long lHeapPreviousMillis = 0;
+long long lHeapInterval = 10000;
 
 //Initialise Lights stuff
 #ifdef WS281x
@@ -137,7 +137,7 @@ stInputSignal SideSwitch = {iSideSwitchPin, 0, 500};
 #endif
 
 //Set last serial output variable
-long lLastSerialOutput = 0;
+long long lLastSerialOutput = 0;
 
 //remote control pins
 int iRC0Pin = 19;
@@ -148,7 +148,7 @@ int iRC4Pin = 16;
 int iRC5Pin = 4;
 
 //Array to hold last time button presses
-unsigned long lLastRCPress[6] = {0, 0, 0, 0, 0, 0};
+long long lLastRCPress[6] = {0, 0, 0, 0, 0, 0};
 
 #if !JTAG
 uint8_t iLCDData4Pin = 13;

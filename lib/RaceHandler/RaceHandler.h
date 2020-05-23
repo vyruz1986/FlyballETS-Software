@@ -36,7 +36,7 @@ class RaceHandlerClass
    void StartTimers();
    void StartRace();
    void StopRace();
-   void StopRace(unsigned long lStopTime);
+   void StopRace(long long lStopTime);
    void ResetRace();
    void TriggerSensor1();
    void TriggerSensor2();
@@ -50,11 +50,11 @@ class RaceHandlerClass
 
    double GetRaceTime();
    double GetDogTime(uint8_t iDogNumber, int8_t iRunNumber = -1);
-   unsigned long GetDogTimeMillis(uint8_t iDogNumber, int8_t iRunNumber = -1);
+   long long GetDogTimeMillis(uint8_t iDogNumber, int8_t iRunNumber = -1);
    String GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber = -1);
-   unsigned long GetCrossingTimeMillis(uint8_t iDogNumber, int8_t iRunNumber = -1);
+   long long GetCrossingTimeMillis(uint8_t iDogNumber, int8_t iRunNumber = -1);
    String GetRerunInfo(uint8_t iDogNumber);
-   long GetTotalCrossingTimeMillis();
+   long long GetTotalCrossingTimeMillis();
    double GetNetTime();
 
    String GetRaceStateString();
@@ -65,12 +65,12 @@ class RaceHandlerClass
    boolean GetRunDirection();
 
 private:
-   unsigned long _lRaceStartTime;
-   unsigned long _lRaceEndTime;
-   unsigned long _lRaceTime;
-   unsigned long _lPerfectCrossingTime;
-   unsigned long _lLastTransitionStringUpdate;
-   unsigned long _lFalseStartTime = 0;
+   long long _lRaceStartTime;
+   long long _lRaceEndTime;
+   long long _lRaceTime;
+   long long _lPerfectCrossingTime;
+   long long _lLastTransitionStringUpdate;
+   long long _lFalseStartTime = 0;
 
    uint8_t  _iS1Pin;
    uint8_t  _iS2Pin;
@@ -78,8 +78,8 @@ private:
 
    struct STriggerRecord
    {
-      volatile uint8_t iSensorNumber;
-      volatile unsigned long lTriggerTime;
+      volatile int iSensorNumber;
+      volatile long long lTriggerTime;
       volatile int iSensorState;
    };
 #define TRIGGER_QUEUE_LENGTH 50
@@ -92,13 +92,13 @@ private:
    bool _bDogFaults[4];
    bool _bRerunBusy;
    uint8_t _iDogRunCounters[4];  //Number of (re-)runs for each dog
-   unsigned long _lLastDogTimeReturnTimeStamp[4];
+   long long _lLastDogTimeReturnTimeStamp[4];
    uint8_t _iLastReturnedRunNumber[4];
-   unsigned long _lDogEnterTimes[4];
-   unsigned long _lDogExitTimes[4];
+   long long _lDogEnterTimes[4];
+   long long _lDogExitTimes[4];
 
-   unsigned long _lDogTimes[4][4];
-   long _lCrossingTimes[4][4];
+   long long _lDogTimes[4][4];
+   long long _lCrossingTimes[4][4];
 
    String _strTransition;
    
@@ -107,7 +107,7 @@ private:
       COMINGBACK
    };
    _byDogStates _byDogState;
-   bool _bGatesClear = false;
+   bool _bGatesClear = true;
 
    stRaceData _HistoricRaceData[NUM_HISTORIC_RACE_RECORDS];
    uint _iCurrentRaceId;

@@ -56,8 +56,8 @@ private:
    void _UpdateLCD(int iLine, int iPosition, String strText, int iFieldLength);
    LiquidCrystal *_Clcd1;
    LiquidCrystal *_Clcd2;
-   unsigned long _lLastLCDUpdate = 0;
-   unsigned int _iLCDUpdateInterval = 500; //500ms update interval
+   long long _lLastLCDUpdate = 0;
+   long long _iLCDUpdateInterval = 500; //500ms update interval
 
    struct SLCDField
    {

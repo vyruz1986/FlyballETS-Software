@@ -3,8 +3,8 @@
 
 struct stDogTimeData
 {
-   unsigned long Time;
-   long CrossingTime;
+   long long Time;
+   long long CrossingTime;
 };
 
 struct stDogData
@@ -19,17 +19,17 @@ struct stDogData
 struct stRaceData
 {
    uint Id;
-   unsigned long StartTime;
-   unsigned long EndTime;
-   unsigned long ElapsedTime;
+   long long StartTime;
+   long long EndTime;
+   long long ElapsedTime;
    uint8_t RaceState;
    stDogData DogData[4];
-   long TotalCrossingTime;
+   long long TotalCrossingTime;
 };
 
 struct stSystemData
 {
-   unsigned long Uptime;
+   long long Uptime;
    uint32_t FreeHeap;
    RESET_REASON CPU0ResetReason;
    RESET_REASON CPU1ResetReason;
@@ -46,6 +46,6 @@ struct stLightsState
 struct stInputSignal
 {
    uint8_t Pin;
-   unsigned long LastTriggerTime;
+   long long LastTriggerTime;
    word CoolDownTime;
 };

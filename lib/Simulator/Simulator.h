@@ -20,7 +20,7 @@ protected:
 
 public:
    void init(uint8_t iS1Pin, uint8_t iS2Pin);
-   void ChangeSimulatedRaceID(unsigned long iSimulatedRaceID);
+   void ChangeSimulatedRaceID(uint8_t iSimulatedRaceID);
    void Main();
 
 
