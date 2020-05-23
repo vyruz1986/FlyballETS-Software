@@ -88,7 +88,7 @@ void RaceHandlerClass::_ChangeDogNumber(uint8_t iNewDogNumber)
    {
       iPreviousDog = iCurrentDog;
       iCurrentDog = iNewDogNumber;
-      ESP_LOGD(__FILE__, "Prev Dog: %i|ENT:%lld|EXIT:%lld|TOT:%lld", iPreviousDog, _lDogEnterTimes[iPreviousDog], _lDogExitTimes[iPreviousDog], _lDogTimes[iPreviousDog][_iDogRunCounters[iPreviousDog]]);
+      ESP_LOGD(__FILE__, "Dog: %i | ENT:%lld | EXIT:%lld | TOT:%lld", iPreviousDog, _lDogEnterTimes[iPreviousDog], _lDogExitTimes[iPreviousDog], _lDogTimes[iPreviousDog][_iDogRunCounters[iPreviousDog]]);
    }
 }
 
@@ -106,7 +106,7 @@ void RaceHandlerClass::Main()
       while (!_QueueEmpty())
       {
          STriggerRecord STempRecord = _QueuePop();
-         ESP_LOGD(__FILE__, "S%i|T:%lld|St:%i", STempRecord.iSensorNumber, STempRecord.lTriggerTime - _lRaceStartTime, STempRecord.iSensorState);
+         ESP_LOGD(__FILE__, "S%i | T:%lld | St:%i", STempRecord.iSensorNumber, STempRecord.lTriggerTime - _lRaceStartTime, STempRecord.iSensorState);
       }
       return;
    }
@@ -123,10 +123,10 @@ void RaceHandlerClass::Main()
       if (_strTransition.length() == 0)
       {
          _bGatesClear = true;
-         ESP_LOGD(__FILE__, "Gate Clear!");
+         ESP_LOGD(__FILE__, "Gate: CLEAR");
       }
 
-      ESP_LOGD(__FILE__, "S%i|T:%lld|St:%i", STriggerRecord.iSensorNumber, STriggerRecord.lTriggerTime - _lRaceStartTime, STriggerRecord.iSensorState);
+      ESP_LOGD(__FILE__, "S%i | T:%lld | St:%i", STriggerRecord.iSensorNumber, STriggerRecord.lTriggerTime - _lRaceStartTime, STriggerRecord.iSensorState);
 
 
       //Calculate what our next dog will be
@@ -159,7 +159,7 @@ void RaceHandlerClass::Main()
          {
             //Dog 0 is too early!
             SetDogFault(iCurrentDog, ON);
-            ESP_LOGD(__FILE__, "F! D:%i!", iCurrentDog);
+            ESP_LOGD(__FILE__, "Fault! Dog: %i!", iCurrentDog);
             _lCrossingTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = STriggerRecord.lTriggerTime - _lPerfectCrossingTime;
             _lDogEnterTimes[iCurrentDog] = STriggerRecord.lTriggerTime;
             _lFalseStartTime = STriggerRecord.lTriggerTime - _lPerfectCrossingTime;
@@ -179,7 +179,7 @@ void RaceHandlerClass::Main()
 
             //Handle next dog
             _lDogEnterTimes[iNextDog] = STriggerRecord.lTriggerTime;
-            ESP_LOGD(__FILE__, "F! D:%i!", iNextDog);
+            ESP_LOGD(__FILE__, "Fault! Dog: %i!", iNextDog);
          }
 
          //Normal race handling (no faults)
@@ -240,7 +240,7 @@ void RaceHandlerClass::Main()
                 || (_bRerunBusy == true && _bFault == false))                  //Or if the rerun sequence was started but no faults exist anymore
             {
                StopRace(STriggerRecord.lTriggerTime - _lFalseStartTime);
-               ESP_LOGD(__FILE__, "Last Dog: %i|ENT:%lld|EXIT:%lld|TOT:%lld", iCurrentDog, _lDogEnterTimes[iCurrentDog], _lDogExitTimes[iCurrentDog], _lDogTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]]);
+               ESP_LOGD(__FILE__, "Last Dog: %i | ENT:%lld | EXIT:%lld | TOT:%lld", iCurrentDog, _lDogEnterTimes[iCurrentDog], _lDogExitTimes[iCurrentDog], _lDogTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]]);
             }
             else if ((iCurrentDog == 3 && _bFault == true && _bRerunBusy == false) //If current dog is dog 4 and a fault exists, we have to initiate rerun sequence
                      || _bRerunBusy == true)                                       //Or if rerun is busy (and faults still exist)
@@ -252,7 +252,7 @@ void RaceHandlerClass::Main()
                _lDogExitTimes[iNextDog] = 0;
                //Increase run counter for this dog
                _iDogRunCounters[iNextDog]++;
-               ESP_LOGI(__FILE__, "RR%i", iNextDog);
+               ESP_LOGI(__FILE__, "Re-run for dog %i", iNextDog);
             }
             else
             {
@@ -296,7 +296,7 @@ void RaceHandlerClass::Main()
       {
          //The gates are clear, set boolean
          _bGatesClear = true;
-         ESP_LOGD(__FILE__, "Gate Clear!");
+         ESP_LOGD(__FILE__, "Gate: CLEAR");
 
          //Print the transition string up til now for debugging purposes
          ESP_LOGD(__FILE__, "Tstring: %s", _strTransition.c_str());
@@ -311,13 +311,13 @@ void RaceHandlerClass::Main()
             {
                //Change dog state to coming back
                _ChangeDogState(COMINGBACK);
-               ESP_LOGD(__FILE__, "Dog state changed to COMINGBACK");
+               ESP_LOGD(__FILE__, "New dog state: COMINGBACK");
             }
             else if (_strTransition == "BAba") //Dog coming back
             {
                //Normal handling, change dog state to GOING IN
                _ChangeDogState(GOINGIN);
-               ESP_LOGD(__FILE__, "Dog state changed to GOINGING");
+               ESP_LOGD(__FILE__, "New dog state: GOINGING");
                //Set next dog active
                _ChangeDogNumber(iNextDog);
                
@@ -343,7 +343,7 @@ void RaceHandlerClass::Main()
 
                // and set perfect crossing time for new dog
                _ChangeDogState(COMINGBACK);
-               ESP_LOGD(__FILE__, "Dog state changed to COMINGBACK");
+               ESP_LOGD(__FILE__, "New dog state: COMINGBACK");
                _lCrossingTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = 0;
                _lDogEnterTimes[iCurrentDog] = _lDogExitTimes[iPreviousDog];
             }
@@ -353,7 +353,7 @@ void RaceHandlerClass::Main()
       else
       {
          _bGatesClear = false;
-         ESP_LOGD(__FILE__, "Dog(s) in the Gate!");
+         ESP_LOGD(__FILE__, "Gate: DOG");
       }
    }
 
@@ -533,13 +533,13 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
    {
       LightsController.ToggleFaultLight(iDogNumber, LightsController.ON);
       _bFault = true;
-      ESP_LOGI(__FILE__, "D%iF1", iDogNumber);
+      ESP_LOGI(__FILE__, "Dog%i fault ON", iDogNumber);
    }
    else
    {
       //If fault is false, turn off fault light for this dog
       LightsController.ToggleFaultLight(iDogNumber, LightsController.OFF);
-      ESP_LOGI(__FILE__, "D%iF0", iDogNumber);
+      ESP_LOGI(__FILE__, "Dog%i fault OFF", iDogNumber);
    }
 }
 

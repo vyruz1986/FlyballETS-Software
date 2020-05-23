@@ -463,8 +463,14 @@ void loop()
          dtostrf(RaceHandler.GetDogTime(RaceHandler.iCurrentDog, -2), 7, 3, cDogTime);
          ESP_LOGI(__FILE__, "D%i: %s|CR: %s", RaceHandler.iCurrentDog, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iCurrentDog, -2).c_str());
          ESP_LOGI(__FILE__, "RT:%s", cElapsedRaceTime);
+         ESP_LOGI(__FILE__, "RS: STOPPED");
       }
-      ESP_LOGI(__FILE__, "RS: %i", RaceHandler.RaceState);
+      else if (RaceHandler.RaceState == RaceHandler.STARTING)
+      {
+      ESP_LOGI(__FILE__, "RS: STARTING");
+      }
+      else
+      ESP_LOGI(__FILE__, "RS: RUNNING");
    }
 
    //heap memory monitor
@@ -479,16 +485,16 @@ void loop()
    {
       dtostrf(RaceHandler.GetDogTime(RaceHandler.iPreviousDog, -2), 7, 3, cDogTime);
 
-      ESP_LOGI(__FILE__, "D%i: %s|CR: %s", RaceHandler.iPreviousDog, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
-      ESP_LOGI(__FILE__, "D: %i", RaceHandler.iCurrentDog);
+      ESP_LOGI(__FILE__, "Dog %i: %s|CR: %s", RaceHandler.iPreviousDog, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
+      ESP_LOGI(__FILE__, "Next dog: %i", RaceHandler.iCurrentDog);
       ESP_LOGI(__FILE__, "RT:%s", cElapsedRaceTime);
    }
 
    //Enable (uncomment) the following if you want periodic status updates on the serial port
    if ((GET_MICROS / 1000 - lLastSerialOutput) > 500)
    {
-      //ESP_LOGI(__FILE__, "%lld: ping! analog: %i ,voltage is: %i, this is %i%%", millis(), BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
-      //ESP_LOGI(__FILE__, "%lld: Elapsed time: %s", millis(), cElapsedRaceTime);
+      //ESP_LOGI(__FILE__, "%llu: ping! analog: %i ,voltage is: %i, this is %i%%", GET_MICROS / 1000, BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
+      //ESP_LOGI(__FILE__, "%llu: Elapsed time: %s", GET_MICROS / 1000, cElapsedRaceTime);
       //ESP_LOGI(__FILE__, "Free heap: %i", system_get_free_heap_size());
       /*
       if (RaceHandler.RaceState == RaceHandler.RUNNING)
@@ -506,7 +512,7 @@ void loop()
    //Check if we have serial data which we should handle
    if (strSerialData.length() > 0 && bSerialStringComplete)
    {
-      ESP_LOGD(__FILE__, "cSer: '%s'", strSerialData.c_str());
+      ESP_LOGD(__FILE__, "UART string: '%s'", strSerialData.c_str());
       strSerialData = "";
       bSerialStringComplete = false;
    }
@@ -570,7 +576,7 @@ void StartStopRace()
        && RaceHandler.GetRaceTime() == 0)           //and timers are zero
    {
       //Then start the race
-      ESP_LOGD(__FILE__, "%llu: START!", millis());
+      ESP_LOGD(__FILE__, "%llu: START!", GET_MICROS / 1000);
       LightsController.InitiateStartSequence();
       RaceHandler.StartRace();
    }
