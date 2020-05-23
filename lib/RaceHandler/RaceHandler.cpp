@@ -328,13 +328,9 @@ void RaceHandlerClass::Main()
             {
                //Transition string indicates more than 1 dog passed
                //We increase the dog number
-               ESP_LOGD(__FILE__, "Current Dog was: %i", iCurrentDog);
                _ChangeDogNumber(iNextDog);
-               ESP_LOGD(__FILE__, "Current Dog is: %i", iCurrentDog);
-               ESP_LOGD(__FILE__, "_bRerunBusy is: %i", _bRerunBusy);
-               ESP_LOGD(__FILE__, "_bFault is: %i", _bFault);
 
-               //If this is Re-run and dog had fault active we need to turn it OFF is this is perfect crossing case during re-run
+               //If this is Re-run and dog had fault active we need to turn it OFF if this is perfect crossing case during re-run
                if ((_bRerunBusy == true && _bFault == true))
                {
                   SetDogFault(iCurrentDog, OFF);

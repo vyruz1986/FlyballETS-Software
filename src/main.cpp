@@ -360,7 +360,7 @@ void loop()
       StartStopRace();
    }
 
-   //Race reset button (remote D1 output) + stability reset after 30min
+   //Race reset button (remote D1 output) + stability reset after RecoveryResetTimer defined in config.h
    if ((digitalRead(iRC1Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[1] > 2000)) || (bSerialStringComplete && strSerialData == "RESET"))
    {
       if (RecoveryResetTimer > 0 && esp_timer_get_time() > (RecoveryResetTimer * 60 * 1000000))
@@ -485,8 +485,8 @@ void loop()
    //Enable (uncomment) the following if you want periodic status updates on the serial port
    if ((GET_MICROS / 1000 - lLastSerialOutput) > 500)
    {
-      //ESP_LOGI(__FILE__, "%lu: ping! analog: %i ,voltage is: %i, this is %i%%", GET_MICROS / 1000, BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
-      //ESP_LOGI(__FILE__, "%lu: Elapsed time: %s", GET_MICROS / 1000, cElapsedRaceTime);
+      //ESP_LOGI(__FILE__, "%lu: ping! analog: %i ,voltage is: %i, this is %i%%", millis(), BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
+      //ESP_LOGI(__FILE__, "%lu: Elapsed time: %s", millis(), cElapsedRaceTime);
       //ESP_LOGI(__FILE__, "Free heap: %d", system_get_free_heap_size());
       /*
       if (RaceHandler.RaceState == RaceHandler.RUNNING)

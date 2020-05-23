@@ -213,7 +213,7 @@ void SimulatorClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
    _iDataPos = 0;
    _iDataStartPos = 0;
    PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
-   Serial.printf("Simulator Race 0 selected!\r\n");
+   Serial.printf("Simulated Race 0 selected!\r\n");
 }
 
 /// <summary>
@@ -253,7 +253,6 @@ void SimulatorClass::Main()
    }
 }
 
-
 void SimulatorClass::ChangeSimulatedRaceID(unsigned long iSimulatedRaceID)
 {
    if (RaceHandler.RaceState == RaceHandler.STOPPED)
@@ -261,7 +260,7 @@ void SimulatorClass::ChangeSimulatedRaceID(unsigned long iSimulatedRaceID)
       _iDataStartPos = 60 * iSimulatedRaceID;
       _iDataPos = _iDataStartPos;
       PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
-      Serial.printf("Simulator Race %i selected!\r\n", iSimulatedRaceID);
+      Serial.printf("Simulated Race %i selected!\r\n", iSimulatedRaceID);
    }
    return;
 }
