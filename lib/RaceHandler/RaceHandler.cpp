@@ -496,7 +496,7 @@ void RaceHandlerClass::ResetRace()
    {
       _iCurrentRaceId++;
    }
-
+   ESP_LOGD(__FILE__, "Reset Race: DONE");
    //Send updated racedata to any web clients
    WebHandler._SendRaceData();
 }
@@ -609,7 +609,7 @@ double RaceHandlerClass::GetDogTime(uint8_t iDogNumber, int8_t iRunNumber)
 
    return dDogTime;
 }
-long long RaceHandlerClass::GetDogTimeMillis(uint8_t iDogNumber, int8_t iRunNumber)
+unsigned long RaceHandlerClass::GetDogTimeMillis(uint8_t iDogNumber, int8_t iRunNumber)
 {
    long long llDogTimeMillis = 0;
    if (_iDogRunCounters[iDogNumber] > 0)
@@ -764,7 +764,7 @@ String RaceHandlerClass::GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber)
 
    return strCrossingTime;
 }
-long long RaceHandlerClass::GetCrossingTimeMillis(uint8_t iDogNumber, int8_t iRunNumber)
+long RaceHandlerClass::GetCrossingTimeMillis(uint8_t iDogNumber, int8_t iRunNumber)
 {
    long long llCrossingTime = 0;
    if (_iDogRunCounters[iDogNumber] > 0)
@@ -834,7 +834,7 @@ String RaceHandlerClass::GetRerunInfo(uint8_t iDogNumber)
 ///   Gets total crossing time (milliseconds) without consideration negative crosses or false start as those are inluded in Race Time.
 ///   Result will be use to calculate team Net Time that is equal to Clean Time in case of clean heat (no single fault during the heat).
 /// </summary>
-long long RaceHandlerClass::GetTotalCrossingTimeMillis()
+long RaceHandlerClass::GetTotalCrossingTimeMillis()
 {
    long long llTotalCrossingTime = 0;
 

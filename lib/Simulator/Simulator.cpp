@@ -213,7 +213,7 @@ void SimulatorClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
    _iDataPos = 0;
    _iDataStartPos = 0;
    PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
-   Serial.printf("Simulated Race 0 selected!\r\n");
+   ESP_LOGD(__FILE__, "Simulated Race 0 selected!");
 }
 
 /// <summary>
@@ -260,7 +260,7 @@ void SimulatorClass::ChangeSimulatedRaceID(uint iSimulatedRaceID)
       _iDataStartPos = 60 * iSimulatedRaceID;
       _iDataPos = _iDataStartPos;
       PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
-      Serial.printf("Simulated Race %i selected!\r\n", iSimulatedRaceID);
+      ESP_LOGD(__FILE__, "Simulated Race %i selected!", iSimulatedRaceID);
    }
    return;
 }
