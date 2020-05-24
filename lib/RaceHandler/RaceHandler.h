@@ -65,12 +65,12 @@ class RaceHandlerClass
    boolean GetRunDirection();
 
 private:
-   long long _lRaceStartTime;
-   long long _lRaceEndTime;
-   long long _lRaceTime;
-   long long _lPerfectCrossingTime;
-   long long _lLastTransitionStringUpdate;
-   long long _lFalseStartTime = 0;
+   long long _llRaceStartTime;
+   long long _llRaceEndTime;
+   long long _llRaceTime;
+   long long _llPerfectCrossingTime;
+   long long _llLastTransitionStringUpdate;
+   long long _llFalseStartTime = 0;
 
    uint8_t  _iS1Pin;
    uint8_t  _iS2Pin;
@@ -79,7 +79,7 @@ private:
    struct STriggerRecord
    {
       volatile int iSensorNumber;
-      volatile long long lTriggerTime;
+      volatile long long llTriggerTime;
       volatile int iSensorState;
    };
 #define TRIGGER_QUEUE_LENGTH 50
@@ -92,13 +92,13 @@ private:
    bool _bDogFaults[4];
    bool _bRerunBusy;
    uint8_t _iDogRunCounters[4];  //Number of (re-)runs for each dog
-   long long _lLastDogTimeReturnTimeStamp[4];
+   long long _llLastDogTimeReturnTimeStamp[4];
    uint8_t _iLastReturnedRunNumber[4];
-   long long _lDogEnterTimes[4];
-   long long _lDogExitTimes[4];
+   long long _llDogEnterTimes[4];
+   long long _llDogExitTimes[4];
 
-   long long _lDogTimes[4][4];
-   long long _lCrossingTimes[4][4];
+   long long _llDogTimes[4][4];
+   long long _llCrossingTimes[4][4];
 
    String _strTransition;
    

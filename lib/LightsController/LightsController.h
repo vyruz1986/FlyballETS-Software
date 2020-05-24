@@ -90,8 +90,8 @@ private:
 
    bool _bStartSequenceStarted = 0;
 
-   long long _lLightsOnSchedule[6];
-   long long _lLightsOutSchedule[6];
+   long long _llLightsOnSchedule[6];
+   long long _llLightsOutSchedule[6];
 
    Lights _byLightsArray[6] = {
       WHITE,

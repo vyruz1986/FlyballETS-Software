@@ -231,20 +231,20 @@ void SimulatorClass::Main()
       }
       return;
    }
-   if (PendingRecord.lTriggerTime == 0)
+   if (PendingRecord.llTriggerTime == 0)
    {
       //Pending record doesn't contain valid data, this means we've reched the end of our queue
       return;
    }
-   long long lRaceElapsedTime = GET_MICROS - RaceHandler._lRaceStartTime;
+   long long llRaceElapsedTime = GET_MICROS - RaceHandler._llRaceStartTime;
    //Simulate sensors
-   if (RaceHandler.RaceState != RaceHandler.STOPPED && PendingRecord.lTriggerTime <= (long)lRaceElapsedTime)
+   if (RaceHandler.RaceState != RaceHandler.STOPPED && PendingRecord.llTriggerTime <= (long long)llRaceElapsedTime)
    {
       if (RaceHandler._QueueEmpty())
       {
-         if ((PendingRecord.lTriggerTime < 0 && RaceHandler.RaceState == RaceHandler.STARTING) || (PendingRecord.lTriggerTime > 0 && RaceHandler.RaceState == RaceHandler.RUNNING))
+         if ((PendingRecord.llTriggerTime < 0 && RaceHandler.RaceState == RaceHandler.STARTING) || (PendingRecord.llTriggerTime > 0 && RaceHandler.RaceState == RaceHandler.RUNNING))
          {
-            RaceHandler._QueuePush({PendingRecord.iSensorNumber, (RaceHandler._lRaceStartTime + PendingRecord.lTriggerTime), PendingRecord.iState});
+            RaceHandler._QueuePush({PendingRecord.iSensorNumber, (RaceHandler._llRaceStartTime + PendingRecord.llTriggerTime), PendingRecord.iState});
             //And increase pending record
             _iDataPos++;
             PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
