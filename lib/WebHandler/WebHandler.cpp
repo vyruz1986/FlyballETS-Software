@@ -1,7 +1,6 @@
 //
 //
 //
-
 #include "WebHandler.h"
 #include <Hash.h>
 #include <AsyncTCP.h>
@@ -11,9 +10,11 @@
 #include <ArduinoJson.h>
 #include "SettingsManager.h"
 #include "GPSHandler.h"
-#include "BatterySensor.h"
 #include <rom/rtc.h>
 #include "../../src/static/index.html.gz.h"
+#if !JTAG
+#include "BatterySensor.h"
+#endif
 
 void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
 {
@@ -50,7 +51,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
    }
    else if (type == WS_EVT_PONG)
    {
-      ESP_LOGI(__FILE__, "ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len) ? (char *)data : "");
+      //ESP_LOGD(__FILE__, "ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len) ? (char *)data : "");
    }
    else if (type == WS_EVT_DATA)
    {
@@ -249,7 +250,7 @@ void WebHandlerClass::loop()
       _GetSystemData();
       _SendSystemData();
       _lLastSystemDataBroadcast = millis();
-      ESP_LOGD(__FILE__, "Current websocket clients connected: %i", _ws->count());
+      // ESP_LOGD(__FILE__, "Current websocket clients connected: %i", _ws->count());
       //    for (size_t i = 0; i < _ws->count(); i++)
       //    {
       //       ESP_LOGD(__FILE__, "Pinging client %i", i);
@@ -331,7 +332,7 @@ boolean WebHandlerClass::_DoAction(JsonObject &ActionObj, String *ReturnError)
          //ReturnError = "Race was not stopped, first stop it before resetting!";
          return false;
       }
-      else if (RaceHandler._lRaceStartTime == 0)
+      else if (RaceHandler._llRaceStartTime == 0)
       {
          //ReturnError = "Race was already reset!";
          return false;
@@ -494,7 +495,7 @@ boolean WebHandlerClass::_GetData(String dataType, JsonObject &Data)
       {
          JsonObject &triggerObj = triggerQueue.createNestedObject();
          triggerObj["sensorNum"] = trigger.iSensorNumber;
-         triggerObj["triggerTime"] = trigger.lTriggerTime - RaceHandler._lRaceStartTime;
+         triggerObj["triggerTime"] = trigger.llTriggerTime - RaceHandler._llRaceStartTime;
          triggerObj["state"] = trigger.iSensorState;
       }
    }
@@ -513,7 +514,9 @@ void WebHandlerClass::_GetSystemData()
    _SystemData.Uptime = millis();
    _SystemData.NumClients = _ws->count();
    _SystemData.UTCSystemTime = GPSHandler.GetUTCTimestamp();
+#if !JTAG
    _SystemData.BatteryPercentage = BatterySensor.GetBatteryPercentage();
+#endif
 }
 
 void WebHandlerClass::_SendSystemData()

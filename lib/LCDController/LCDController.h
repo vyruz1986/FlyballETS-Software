@@ -18,20 +18,19 @@
 #define _LCDCONTROLLER_h
 
 #if defined(ARDUINO) && ARDUINO >= 100
-	#include "Arduino.h"
+#include "Arduino.h"
 #else
-	#include "WProgram.h"
+#include "WProgram.h"
 #endif
 #include <LiquidCrystal.h>
 class LCDControllerClass
 {
- protected:
-
-
- public:
-	void init(LiquidCrystal* Clcd1, LiquidCrystal* Clcd2);
+protected:
+public:
+   void init(LiquidCrystal *Clcd1, LiquidCrystal *Clcd2);
    void Main();
-   enum LCDFields {
+   enum LCDFields
+   {
       D1Time,
       D1RerunInfo,
       D2Time,
@@ -47,7 +46,7 @@ class LCDControllerClass
       RaceState,
       BattLevel,
       TeamTime,
-      TotalCrossTime,
+      NetTime,
       BoxDirection
    };
 
@@ -55,10 +54,10 @@ class LCDControllerClass
 
 private:
    void _UpdateLCD(int iLine, int iPosition, String strText, int iFieldLength);
-   LiquidCrystal* _Clcd1;
-   LiquidCrystal* _Clcd2;
-   unsigned long _lLastLCDUpdate = 0;
-   unsigned int _iLCDUpdateInterval = 500; //500ms update interval
+   LiquidCrystal *_Clcd1;
+   LiquidCrystal *_Clcd2;
+   long long _llLastLCDUpdate = 0;
+   long long _llLCDUpdateInterval = 500; //500ms update interval
 
    struct SLCDField
    {
@@ -66,11 +65,10 @@ private:
       int iStartingPosition;
       int iFieldLength;
       String strText;
-   }_SlcdfieldFields[17];
-
+   };
+   struct SLCDField _SlcdfieldFields[17];
 };
 
 extern LCDControllerClass LCDController;
 
 #endif
-

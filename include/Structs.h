@@ -35,7 +35,7 @@ struct stSystemData
    RESET_REASON CPU1ResetReason;
    uint NumClients;
    char* UTCSystemTime;
-   uint BatteryPercentage;
+   uint BatteryPercentage = 0;
 };
 
 struct stLightsState

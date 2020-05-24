@@ -47,14 +47,14 @@
 
 /*List of pins and the ones used (Lolin32 board):
    - 34: S1 (handler side) photoelectric sensor
-   - 33: S2 (box side) photoelectric sensor
+   - 33: S2 (box side) photoelectric sensor | with jtag port used for LCD Data4
 
    - 27: LCD Data7
-   - 14: LCD Data6
+   - 14: LCD Data6                       with jtag board switched to 32; jtag uses 14 for MTMS
    - 26: LCD Data5
-   - 13: LCD Data4
+   - 13: LCD Data4                       with jtag board switched to 33; jtag uses 13 for MTCK
    -  2: LCD1 (line 1&2) enable pin
-   - 15: LCD2 (line 3&4) enable pin
+   - 15: LCD2 (line 3&4) enable pin      with jtag board switched to  5; jtag uses 15 for MTDO
    - 25: LCD RS Pin
 
    -  0: WS2811B lights data pin / Lights 74HC595 clock pin
@@ -68,15 +68,15 @@
    - 16: remote D4
    -  4: remote D5
 
-   - 35: battery sensor pin
+   - 35: battery sensor pin               swithed to S2 (box side)
 
-   - 22: Side switch button
+   - 22: Side switch button               disabled with jtag board to act as 15 pin LCD2 (line 3&4)
 
-   - 32: Laser trigger button
-   - 12: Laser output
-
-   -  1: free/TX
-   -  3: free/RX
+   - 32: Laser trigger button             disabled with jtag board to act as 14 pin LCD Data6
+   - 12: Laser output                     disabled with jtag board; jtag uses 12 for MTDI
+   
+   -  1: free/TX, but used with jtag board
+   -  3: free/RX, but used with jtag
    -  5: free/LED/SS
    - 21: free/SCA
    - 36/VP: GPS rx (ESP tx)
@@ -97,18 +97,20 @@
 #include <ESPmDNS.h>
 #endif
 uint8_t iS1Pin = 34;
+#if !JTAG
 uint8_t iS2Pin = 33;
+#else
+uint8_t iS2Pin = 35;
+#endif
 uint8_t iCurrentDog;
 uint8_t iCurrentRaceState;
 
 char cDogTime[8];
 char cDogCrossingTime[8];
 char cElapsedRaceTime[8];
-char cTotalCrossingTime[8];
-
-//Battery variables
-int iBatterySensorPin = 35;
-uint16_t iBatteryVoltage = 0;
+char cTeamNetTime[8];
+long long llHeapPreviousMillis = 0;
+long long llHeapInterval = 30000;
 
 //Initialise Lights stuff
 #ifdef WS281x
@@ -121,15 +123,21 @@ uint8_t iLightsDataPin = 9;
 uint8_t iLightsLatchPin = 21;
 #endif // WS281x
 
+#if !JTAG
+//Battery variables
+int iBatterySensorPin = 35;
+uint16_t iBatteryVoltage = 0;
+
 //Other IO's
 uint8_t iLaserTriggerPin = 32;
 uint8_t iLaserOutputPin = 12;
 boolean bLaserState = false;
-
-stInputSignal SideSwitch = {5, 0, 500};
+uint8_t iSideSwitchPin = 5;
+stInputSignal SideSwitch = {iSideSwitchPin, 0, 500};
+#endif
 
 //Set last serial output variable
-long lLastSerialOutput = 0;
+long long llLastSerialOutput = 0;
 
 //remote control pins
 int iRC0Pin = 19;
@@ -140,14 +148,20 @@ int iRC4Pin = 16;
 int iRC5Pin = 4;
 
 //Array to hold last time button presses
-unsigned long lLastRCPress[6] = {0, 0, 0, 0, 0, 0};
+long long llLastRCPress[6] = {0, 0, 0, 0, 0, 0};
 
+#if !JTAG
 uint8_t iLCDData4Pin = 13;
-uint8_t iLCDData5Pin = 26;
 uint8_t iLCDData6Pin = 14;
+uint8_t iLCDE2Pin = 15;
+#else
+uint8_t iLCDData4Pin = 33;
+uint8_t iLCDData6Pin = 32;
+uint8_t iLCDE2Pin = 5;
+#endif
+uint8_t iLCDData5Pin = 26;
 uint8_t iLCDData7Pin = 27;
 uint8_t iLCDE1Pin = 2;
-uint8_t iLCDE2Pin = 15;
 uint8_t iLCDRSPin = 25;
 
 LiquidCrystal lcd(iLCDRSPin, iLCDE1Pin, iLCDData4Pin, iLCDData5Pin, iLCDData6Pin, iLCDData7Pin);  //declare two LCD's, this will be line 1&2
@@ -155,6 +169,7 @@ LiquidCrystal lcd2(iLCDRSPin, iLCDE2Pin, iLCDData4Pin, iLCDData5Pin, iLCDData6Pi
 
 //String for serial comms storage
 String strSerialData;
+uint iSimulatedRaceID = 0;
 byte bySerialIndex = 0;
 boolean bSerialStringComplete = false;
 
@@ -208,19 +223,21 @@ void setup()
    pinMode(iLCDE2Pin, OUTPUT);
    pinMode(iLCDRSPin, OUTPUT);
 
-   //Initialize other I/O's
-   pinMode(iLaserTriggerPin, INPUT_PULLUP);
-   pinMode(iLaserOutputPin, OUTPUT);
-   pinMode(SideSwitch.Pin, INPUT_PULLUP);
-
    //Set ISR's with wrapper functions
 #if !Simulate
    attachInterrupt(digitalPinToInterrupt(iS2Pin), Sensor2Wrapper, CHANGE);
    attachInterrupt(digitalPinToInterrupt(iS1Pin), Sensor1Wrapper, CHANGE);
 #endif
 
+#if !JTAG
+   //Initialize other I/O's
+   pinMode(iLaserTriggerPin, INPUT_PULLUP);
+   pinMode(iLaserOutputPin, OUTPUT);
+   pinMode(SideSwitch.Pin, INPUT_PULLUP);
+
    //Initialize BatterySensor class with correct pin
    BatterySensor.init(iBatterySensorPin);
+#endif
 
    //Initialize LightsController class with shift register pins
 #ifdef WS281x
@@ -268,7 +285,7 @@ void setup()
    ArduinoOTA.setPort(3232);
    ArduinoOTA.onStart([]() {
       String type;
-      if (ArduinoOTA.getCommand() == 0) //VSCode constantly can't read properly value of U_FLASH, therefore replacing with "0"
+      if (ArduinoOTA.getCommand() == 0) //Instead of 0 it was U_FLASH
          type = "sketch";
       else // U_SPIFFS
          type = "filesystem";
@@ -317,8 +334,10 @@ void loop()
    //Handle Race main processing
    RaceHandler.Main();
 
+#if !JTAG
    //Handle battery sensor main processing
    BatterySensor.CheckBatteryVoltage();
+#endif
 
    //Handle LCD processing
    LCDController.Main();
@@ -338,44 +357,58 @@ void loop()
 #endif
 
    //Race start/stop button (remote D0 output) or serial command
-   if ((digitalRead(iRC0Pin) == HIGH && (millis() - lLastRCPress[0] > 2000)) || (bSerialStringComplete && (strSerialData == "START" || strSerialData == "STOP")))
+   if ((digitalRead(iRC0Pin) == HIGH && (GET_MICROS / 1000 - llLastRCPress[0] > 2000)) || (bSerialStringComplete && (strSerialData == "START" || strSerialData == "STOP")))
    {
       StartStopRace();
    }
 
    //Race reset button (remote D1 output)
-   if ((digitalRead(iRC1Pin) == HIGH && (millis() - lLastRCPress[1] > 2000)) || (bSerialStringComplete && strSerialData == "RESET"))
+   if ((digitalRead(iRC1Pin) == HIGH && (GET_MICROS / 1000 - llLastRCPress[1] > 2000)) || (bSerialStringComplete && strSerialData == "RESET"))
    {
       ResetRace();
    }
 
-   //Dog0 fault RC button
-   if ((digitalRead(iRC2Pin) == HIGH && (millis() - lLastRCPress[2] > 2000)) || (bSerialStringComplete && strSerialData == "D0F"))
+#if Simulate
+   //Change Race ID (only serial command), e.g. RACE 1 or RACE 2
+   if (bSerialStringComplete && strSerialData.startsWith("RACE"))
    {
-      lLastRCPress[2] = millis();
+      strSerialData.remove(0, 5);
+      iSimulatedRaceID = strSerialData.toInt();
+      if (iSimulatedRaceID < 0 || iSimulatedRaceID >= NumSimulatedRaces)
+      {
+         iSimulatedRaceID = 0;
+      }
+      Simulator.ChangeSimulatedRaceID(iSimulatedRaceID);
+   }
+#endif
+
+   //Dog0 fault RC button
+   if ((digitalRead(iRC2Pin) == HIGH && (GET_MICROS / 1000 - llLastRCPress[2] > 2000)) || (bSerialStringComplete && strSerialData == "D0F"))
+   {
+      llLastRCPress[2] = GET_MICROS / 1000;
       //Toggle fault for dog
       RaceHandler.SetDogFault(0);
    }
 
    //Dog1 fault RC button
-   if ((digitalRead(iRC3Pin) == HIGH && (millis() - lLastRCPress[3] > 2000)) || (bSerialStringComplete && strSerialData == "D1F"))
+   if ((digitalRead(iRC3Pin) == HIGH && (GET_MICROS / 1000 - llLastRCPress[3] > 2000)) || (bSerialStringComplete && strSerialData == "D1F"))
    {
-      lLastRCPress[3] = millis();
+      llLastRCPress[3] = GET_MICROS / 1000;
       //Toggle fault for dog
       RaceHandler.SetDogFault(1);
    }
    //Dog2 fault RC button
-   if ((digitalRead(iRC4Pin) == HIGH && (millis() - lLastRCPress[4] > 2000)) || (bSerialStringComplete && strSerialData == "D2F"))
+   if ((digitalRead(iRC4Pin) == HIGH && (GET_MICROS / 1000 - llLastRCPress[4] > 2000)) || (bSerialStringComplete && strSerialData == "D2F"))
    {
-      lLastRCPress[4] = millis();
+      llLastRCPress[4] = GET_MICROS / 1000;
       //Toggle fault for dog
       RaceHandler.SetDogFault(2);
    }
 
    //Dog3 fault RC button
-   if ((digitalRead(iRC5Pin) == HIGH && (millis() - lLastRCPress[5] > 2000)) || (bSerialStringComplete && strSerialData == "D3F"))
+   if ((digitalRead(iRC5Pin) == HIGH && (GET_MICROS / 1000 - llLastRCPress[5] > 2000)) || (bSerialStringComplete && strSerialData == "D3F"))
    {
-      lLastRCPress[5] = millis();
+      llLastRCPress[5] = GET_MICROS / 1000;
       //Toggle fault for dog
       RaceHandler.SetDogFault(3);
    }
@@ -385,14 +418,16 @@ void loop()
    dtostrf(RaceHandler.GetRaceTime(), 7, 3, cElapsedRaceTime);
    LCDController.UpdateField(LCDController.TeamTime, cElapsedRaceTime);
 
+#if !JTAG
    //Update battery percentage to display
    iBatteryVoltage = BatterySensor.GetBatteryVoltage();
    uint16_t iBatteryPercentage = BatterySensor.GetBatteryPercentage();
    LCDController.UpdateField(LCDController.BattLevel, String(iBatteryPercentage));
+#endif
 
-   //Update total crossing time
-   dtostrf(RaceHandler.GetTotalCrossingTime(), 7, 3, cTotalCrossingTime);
-   LCDController.UpdateField(LCDController.TotalCrossTime, cTotalCrossingTime);
+   //Update team netto time
+   dtostrf(RaceHandler.GetNetTime(), 7, 3, cTeamNetTime);
+   LCDController.UpdateField(LCDController.NetTime, cTeamNetTime);
 
    //Update race status to display
    LCDController.UpdateField(LCDController.RaceState, RaceHandler.GetRaceStateString());
@@ -427,23 +462,32 @@ void loop()
          ESP_LOGI(__FILE__, "D%i: %s|CR: %s", RaceHandler.iCurrentDog, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iCurrentDog, -2).c_str());
          ESP_LOGI(__FILE__, "RT:%s", cElapsedRaceTime);
       }
-      ESP_LOGI(__FILE__, "RS: %i", RaceHandler.RaceState);
+      ESP_LOGI(__FILE__, "RS: %s", RaceHandler.GetRaceStateString());
+   }
+
+   //heap memory monitor
+   long long llCurrentMillis = GET_MICROS / 1000;
+   if (llCurrentMillis - llHeapPreviousMillis > llHeapInterval)
+   {
+      ESP_LOGI(__FILE__, "Elapsed system time: %llu. Heap caps free size: %i\n", GET_MICROS / 1000, heap_caps_get_free_size(MALLOC_CAP_8BIT));
+      llHeapPreviousMillis = llCurrentMillis;
    }
 
    if (RaceHandler.iCurrentDog != iCurrentDog)
    {
       dtostrf(RaceHandler.GetDogTime(RaceHandler.iPreviousDog, -2), 7, 3, cDogTime);
-      ESP_LOGI(__FILE__, "D%i: %s|CR: %s", RaceHandler.iPreviousDog, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
-      ESP_LOGI(__FILE__, "D: %i", RaceHandler.iCurrentDog);
+
+      ESP_LOGI(__FILE__, "Dog %i: %s|CR: %s", RaceHandler.iPreviousDog, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
+      ESP_LOGI(__FILE__, "Next dog: %i", RaceHandler.iCurrentDog);
       ESP_LOGI(__FILE__, "RT:%s", cElapsedRaceTime);
    }
 
    //Enable (uncomment) the following if you want periodic status updates on the serial port
-   if ((millis() - lLastSerialOutput) > 500)
+   if ((GET_MICROS / 1000 - llLastSerialOutput) > 500)
    {
-      //ESP_LOGI(__FILE__, "%lu: ping! analog: %i ,voltage is: %i, this is %i%%", millis(), BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
-      //ESP_LOGI(__FILE__, "%lu: Elapsed time: %s", millis(), cElapsedRaceTime);
-      //ESP_LOGI(__FILE__, "Free heap: %d", system_get_free_heap_size());
+      //ESP_LOGI(__FILE__, "%llu: ping! analog: %i ,voltage is: %i, this is %i%%", GET_MICROS / 1000, BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
+      //ESP_LOGI(__FILE__, "%llu: Elapsed time: %s", GET_MICROS / 1000, cElapsedRaceTime);
+      //ESP_LOGI(__FILE__, "Free heap: %i", system_get_free_heap_size());
       /*
       if (RaceHandler.RaceState == RaceHandler.RUNNING)
       {
@@ -451,7 +495,7 @@ void loop()
          ESP_LOGI(__FILE__, "Dog %i: %ss", RaceHandler.iCurrentDog, cDogTime);
       }
       */
-      lLastSerialOutput = millis();
+      llLastSerialOutput = GET_MICROS / 1000;
    }
    //Cleanup variables used for checking if something changed
    iCurrentDog = RaceHandler.iCurrentDog;
@@ -460,21 +504,22 @@ void loop()
    //Check if we have serial data which we should handle
    if (strSerialData.length() > 0 && bSerialStringComplete)
    {
-      ESP_LOGD(__FILE__, "cSer: '%s'", strSerialData.c_str());
       strSerialData = "";
       bSerialStringComplete = false;
    }
 
+#if !JTAG
    //Handle laser output
    digitalWrite(iLaserOutputPin, !digitalRead(iLaserTriggerPin));
 
    //Handle side switch button
-   if (digitalRead(SideSwitch.Pin) == LOW && millis() - SideSwitch.LastTriggerTime > SideSwitch.CoolDownTime)
+   if (digitalRead(SideSwitch.Pin) == LOW && GET_MICROS / 1000 - SideSwitch.LastTriggerTime > SideSwitch.CoolDownTime)
    {
-      SideSwitch.LastTriggerTime = millis();
+      SideSwitch.LastTriggerTime = GET_MICROS / 1000;
       ESP_LOGI(__FILE__, "Switching sides!");
       RaceHandler.ToggleRunDirection();
    }
+#endif
 }
 
 void serialEvent()
@@ -489,6 +534,7 @@ void serialEvent()
       {
          //Serial message in buffer is complete, null terminate it and store it for further handling
          bSerialStringComplete = true;
+         ESP_LOGD(__FILE__, "SERIAL received: '%s'", strSerialData.c_str());
          strSerialData += '\0'; // Null terminate the string
          break;
       }
@@ -517,12 +563,12 @@ void Sensor1Wrapper()
 /// </summary>
 void StartStopRace()
 {
-   lLastRCPress[0] = millis();
+   llLastRCPress[0] = GET_MICROS / 1000;
    if (RaceHandler.RaceState == RaceHandler.STOPPED //If race is stopped
        && RaceHandler.GetRaceTime() == 0)           //and timers are zero
    {
       //Then start the race
-      ESP_LOGD(__FILE__, "%lu: START!", millis());
+      ESP_LOGD(__FILE__, "%llu: START!", GET_MICROS / 1000);
       LightsController.InitiateStartSequence();
       RaceHandler.StartRace();
    }
@@ -542,7 +588,7 @@ void ResetRace()
    {
       return;
    }
-   lLastRCPress[1] = millis();
+   llLastRCPress[1] = GET_MICROS / 1000;
    LightsController.ResetLights();
    RaceHandler.ResetRace();
 }
