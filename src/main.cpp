@@ -285,7 +285,7 @@ void setup()
    ArduinoOTA.setPort(3232);
    ArduinoOTA.onStart([]() {
       String type;
-      if (ArduinoOTA.getCommand() == 0) //Instead of 0 it was U_FLASH
+      if (ArduinoOTA.getCommand() == 0) //VSCode constantly can't read properly value of U_FLASH, therefore replacing with "0"
          type = "sketch";
       else // U_SPIFFS
          type = "filesystem";
@@ -476,7 +476,6 @@ void loop()
    if (RaceHandler.iCurrentDog != iCurrentDog)
    {
       dtostrf(RaceHandler.GetDogTime(RaceHandler.iPreviousDog, -2), 7, 3, cDogTime);
-
       ESP_LOGI(__FILE__, "Dog %i: %s|CR: %s", RaceHandler.iPreviousDog, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
       ESP_LOGI(__FILE__, "Next dog: %i", RaceHandler.iCurrentDog);
       ESP_LOGI(__FILE__, "RT:%s", cElapsedRaceTime);

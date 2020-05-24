@@ -18,9 +18,9 @@
 #define _LCDCONTROLLER_h
 
 #if defined(ARDUINO) && ARDUINO >= 100
-#include "Arduino.h"
+	#include "Arduino.h"
 #else
-#include "WProgram.h"
+	#include "WProgram.h"
 #endif
 #include <LiquidCrystal.h>
 class LCDControllerClass
@@ -29,8 +29,7 @@ protected:
 public:
    void init(LiquidCrystal *Clcd1, LiquidCrystal *Clcd2);
    void Main();
-   enum LCDFields
-   {
+   enum LCDFields {
       D1Time,
       D1RerunInfo,
       D2Time,

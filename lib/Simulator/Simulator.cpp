@@ -225,7 +225,7 @@ void SimulatorClass::Main()
    {
       if (_iDataPos != _iDataStartPos)
       {
-         //We've stopped a race, reset data position to 0
+         //We've stopped a race, reset data position to start position
          _iDataPos = _iDataStartPos;
          PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
       }
@@ -242,7 +242,8 @@ void SimulatorClass::Main()
    {
       if (RaceHandler._QueueEmpty())
       {
-         if ((PendingRecord.llTriggerTime < 0 && RaceHandler.RaceState == RaceHandler.STARTING) || (PendingRecord.llTriggerTime > 0 && RaceHandler.RaceState == RaceHandler.RUNNING))
+         if ((PendingRecord.llTriggerTime < 0 && RaceHandler.RaceState == RaceHandler.STARTING)
+          || (PendingRecord.llTriggerTime > 0 && RaceHandler.RaceState == RaceHandler.RUNNING))
          {
             RaceHandler._QueuePush({PendingRecord.iSensorNumber, (RaceHandler._llRaceStartTime + PendingRecord.llTriggerTime), PendingRecord.iState});
             //And increase pending record

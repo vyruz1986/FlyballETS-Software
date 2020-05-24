@@ -1,6 +1,7 @@
 //
 //
 //
+#include "config.h"
 #include "WebHandler.h"
 #include <Hash.h>
 #include <AsyncTCP.h>

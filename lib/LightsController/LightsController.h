@@ -44,8 +44,7 @@ public:
    OverallStates byOverallState = STOPPED;
 
    //Decimal values of lights connected to 74HC595
-   enum Lights
-   {
+   enum Lights {
       WHITE = 130,  //74HC595 QH (128) + QB (2). I made a boo-boo on my prototype, WHITE should be wired to QB.
       RED = 64,     //74HC595 QG
       YELLOW1 = 32, //74HC595 QF
@@ -99,13 +98,15 @@ private:
       YELLOW1,
       BLUE,
       YELLOW2,
-      GREEN};
+      GREEN
+   };
 
    Lights _byDogErrorLigths[4] = {
       RED,
       BLUE,
       YELLOW2,
-      GREEN};
+      GREEN
+   };
 
 #ifdef WS281x
    struct SNeoPixelConfig
