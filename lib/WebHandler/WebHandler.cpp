@@ -1,7 +1,6 @@
 //
 //
 //
-
 #include "WebHandler.h"
 #include <Hash.h>
 #include <AsyncTCP.h>
@@ -222,11 +221,11 @@ void WebHandlerClass::init(int webPort)
 
    _server->begin();
 
-   _lLastRaceDataBroadcast = 0;
-   _lRaceDataBroadcastInterval = 750;
+   _llLastRaceDataBroadcast = 0;
+   _llRaceDataBroadcastInterval = 750;
 
-   _lLastSystemDataBroadcast = 0;
-   _lSystemDataBroadcastInterval = 2000;
+   _llLastSystemDataBroadcast = 0;
+   _llSystemDataBroadcastInterval = 2000;
 
    _SystemData.CPU0ResetReason = rtc_get_reset_reason(0);
    _SystemData.CPU1ResetReason = rtc_get_reset_reason(1);
@@ -238,17 +237,17 @@ void WebHandlerClass::loop()
    if ((RaceHandler.RaceState != RaceHandler.STOPPED || RaceHandler.GetRaceTime() > 0))
    {
       //Send race data each 200ms
-      if (GET_MICROS / 1000 - _lLastRaceDataBroadcast > _lRaceDataBroadcastInterval)
+      if (GET_MICROS / 1000 - _llLastRaceDataBroadcast > _llRaceDataBroadcastInterval)
       {
          _SendRaceData();
-         _lLastRaceDataBroadcast = GET_MICROS / 1000;
+         _llLastRaceDataBroadcast = GET_MICROS / 1000;
       }
    }
-   if (GET_MICROS / 1000 - _lLastSystemDataBroadcast > _lSystemDataBroadcastInterval)
+   if (GET_MICROS / 1000 - _llLastSystemDataBroadcast > _llSystemDataBroadcastInterval)
    {
       _GetSystemData();
       _SendSystemData();
-      _lLastSystemDataBroadcast = GET_MICROS / 1000;
+      _llLastSystemDataBroadcast = GET_MICROS / 1000;
       // ESP_LOGD(__FILE__, "Current websocket clients connected: %i", _ws->count());
       //    for (size_t i = 0; i < _ws->count(); i++)
       //    {
@@ -331,7 +330,7 @@ boolean WebHandlerClass::_DoAction(JsonObject &ActionObj, String *ReturnError)
          //ReturnError = "Race was not stopped, first stop it before resetting!";
          return false;
       }
-      else if (RaceHandler._lRaceStartTime == 0)
+      else if (RaceHandler._llRaceStartTime == 0)
       {
          //ReturnError = "Race was already reset!";
          return false;
@@ -494,7 +493,7 @@ boolean WebHandlerClass::_GetData(String dataType, JsonObject &Data)
       {
          JsonObject &triggerObj = triggerQueue.createNestedObject();
          triggerObj["sensorNum"] = trigger.iSensorNumber;
-         triggerObj["triggerTime"] = trigger.lTriggerTime - RaceHandler._lRaceStartTime;
+         triggerObj["triggerTime"] = trigger.llTriggerTime - RaceHandler._llRaceStartTime;
          triggerObj["state"] = trigger.iSensorState;
       }
    }
@@ -595,7 +594,7 @@ bool WebHandlerClass::_wsAuth(AsyncWebSocketClient *client)
 
    for (index = 0; index < WS_TICKET_BUFFER_SIZE; index++)
    {
-      ESP_LOGI(__FILE__, "Checking ticket: %i, ip: %s, time: %lu", index, _ticket[index].ip.toString().c_str(), _ticket[index].timestamp);
+      ESP_LOGI(__FILE__, "Checking ticket: %i, ip: %s, time: %llu", index, _ticket[index].ip.toString().c_str(), _ticket[index].timestamp);
       if ((_ticket[index].ip == ip) && (now - _ticket[index].timestamp < WS_TIMEOUT))
          break;
    }

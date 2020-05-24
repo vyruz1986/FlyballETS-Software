@@ -45,10 +45,10 @@ protected:
 
    void _onHome(AsyncWebServerRequest *request);
 
-   long long _lLastRaceDataBroadcast;
-   long long _lRaceDataBroadcastInterval;
-   long long _lLastSystemDataBroadcast;
-   long long _lSystemDataBroadcastInterval;
+   long long _llLastRaceDataBroadcast;
+   long long _llRaceDataBroadcastInterval;
+   long long _llLastSystemDataBroadcast;
+   long long _llSystemDataBroadcastInterval;
    stSystemData _SystemData;
    char _last_modified[50];
 

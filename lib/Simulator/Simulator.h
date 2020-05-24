@@ -32,7 +32,7 @@ private:
    typedef struct SimulatorRecord
    {
       uint8_t iSensorNumber;
-      long lTriggerTime;
+      long long llTriggerTime;
       uint8_t iState;
    } SimulatorRecord;
    static const SimulatorRecord SimulatorQueue[60 * NumSimulatedRaces] PROGMEM;
