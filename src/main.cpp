@@ -110,7 +110,7 @@ char cDogCrossingTime[8];
 char cElapsedRaceTime[8];
 char cTeamNetTime[8];
 long long llHeapPreviousMillis = 0;
-long long llHeapInterval = 10000;
+long long llHeapInterval = 30000;
 
 //Initialise Lights stuff
 #ifdef WS281x
@@ -334,8 +334,10 @@ void loop()
    //Handle Race main processing
    RaceHandler.Main();
 
+#if !JTAG
    //Handle battery sensor main processing
    BatterySensor.CheckBatteryVoltage();
+#endif
 
    //Handle LCD processing
    LCDController.Main();
@@ -360,13 +362,9 @@ void loop()
       StartStopRace();
    }
 
-   //Race reset button (remote D1 output) + stability reset after RecoveryResetTimer defined in config.h
+   //Race reset button (remote D1 output)
    if ((digitalRead(iRC1Pin) == HIGH && (GET_MICROS / 1000 - llLastRCPress[1] > 2000)) || (bSerialStringComplete && strSerialData == "RESET"))
    {
-      if (RecoveryResetTimer > 0 && esp_timer_get_time() > (RecoveryResetTimer * 60 * 1000000))
-      {
-         ESP.restart();
-      }
       ResetRace();
    }
 
@@ -468,13 +466,13 @@ void loop()
    }
 
    //heap memory monitor
-   /* long long llCurrentMillis = GET_MICROS / 1000;
+   long long llCurrentMillis = GET_MICROS / 1000;
    if (llCurrentMillis - llHeapPreviousMillis > llHeapInterval)
    {
-      ESP_LOGI(__FILE__, "Heap caps free size: %i\n", heap_caps_get_free_size(MALLOC_CAP_8BIT));
+      ESP_LOGI(__FILE__, "Elapsed system time: %llu. Heap caps free size: %i\n", GET_MICROS / 1000, heap_caps_get_free_size(MALLOC_CAP_8BIT));
       llHeapPreviousMillis = llCurrentMillis;
    }
-*/
+
    if (RaceHandler.iCurrentDog != iCurrentDog)
    {
       dtostrf(RaceHandler.GetDogTime(RaceHandler.iPreviousDog, -2), 7, 3, cDogTime);
@@ -506,7 +504,6 @@ void loop()
    //Check if we have serial data which we should handle
    if (strSerialData.length() > 0 && bSerialStringComplete)
    {
-      ESP_LOGD(__FILE__, "UART string: '%s'", strSerialData.c_str());
       strSerialData = "";
       bSerialStringComplete = false;
    }
@@ -537,6 +534,7 @@ void serialEvent()
       {
          //Serial message in buffer is complete, null terminate it and store it for further handling
          bSerialStringComplete = true;
+         ESP_LOGD(__FILE__, "SERIAL received: '%s'", strSerialData.c_str());
          strSerialData += '\0'; // Null terminate the string
          break;
       }

@@ -50,11 +50,11 @@ class RaceHandlerClass
 
    double GetRaceTime();
    double GetDogTime(uint8_t iDogNumber, int8_t iRunNumber = -1);
-   long long GetDogTimeMillis(uint8_t iDogNumber, int8_t iRunNumber = -1);
+   unsigned long GetDogTimeMillis(uint8_t iDogNumber, int8_t iRunNumber = -1);
    String GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber = -1);
-   long long GetCrossingTimeMillis(uint8_t iDogNumber, int8_t iRunNumber = -1);
+   long GetCrossingTimeMillis(uint8_t iDogNumber, int8_t iRunNumber = -1);
    String GetRerunInfo(uint8_t iDogNumber);
-   long long GetTotalCrossingTimeMillis();
+   long GetTotalCrossingTimeMillis();
    double GetNetTime();
 
    String GetRaceStateString();
@@ -82,7 +82,7 @@ private:
       volatile long long llTriggerTime;
       volatile int iSensorState;
    };
-#define TRIGGER_QUEUE_LENGTH 50
+#define TRIGGER_QUEUE_LENGTH 60
    STriggerRecord _STriggerQueue[TRIGGER_QUEUE_LENGTH];
 
    volatile uint8_t _iQueueReadIndex;

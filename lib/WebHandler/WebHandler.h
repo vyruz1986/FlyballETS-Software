@@ -45,17 +45,17 @@ protected:
 
    void _onHome(AsyncWebServerRequest *request);
 
-   long long _llLastRaceDataBroadcast;
-   long long _llRaceDataBroadcastInterval;
-   long long _llLastSystemDataBroadcast;
-   long long _llSystemDataBroadcastInterval;
+   unsigned long _lLastRaceDataBroadcast;
+   unsigned long _lRaceDataBroadcastInterval;
+   unsigned long _lLastSystemDataBroadcast;
+   unsigned long _lSystemDataBroadcastInterval;
    stSystemData _SystemData;
    char _last_modified[50];
 
    typedef struct
    {
       IPAddress ip;
-      long long timestamp = 0;
+      unsigned long timestamp = 0;
    } ws_ticket_t;
    ws_ticket_t _ticket[WS_TICKET_BUFFER_SIZE];
 

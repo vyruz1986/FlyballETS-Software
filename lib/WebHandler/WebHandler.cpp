@@ -10,9 +10,11 @@
 #include <ArduinoJson.h>
 #include "SettingsManager.h"
 #include "GPSHandler.h"
-#include "BatterySensor.h"
 #include <rom/rtc.h>
 #include "../../src/static/index.html.gz.h"
+#if !JTAG
+#include "BatterySensor.h"
+#endif
 
 void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
 {
@@ -49,7 +51,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
    }
    else if (type == WS_EVT_PONG)
    {
-      ESP_LOGI(__FILE__, "ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len) ? (char *)data : "");
+      //ESP_LOGD(__FILE__, "ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len) ? (char *)data : "");
    }
    else if (type == WS_EVT_DATA)
    {
@@ -221,11 +223,11 @@ void WebHandlerClass::init(int webPort)
 
    _server->begin();
 
-   _llLastRaceDataBroadcast = 0;
-   _llRaceDataBroadcastInterval = 750;
+   _lLastRaceDataBroadcast = 0;
+   _lRaceDataBroadcastInterval = 750;
 
-   _llLastSystemDataBroadcast = 0;
-   _llSystemDataBroadcastInterval = 2000;
+   _lLastSystemDataBroadcast = 0;
+   _lSystemDataBroadcastInterval = 2000;
 
    _SystemData.CPU0ResetReason = rtc_get_reset_reason(0);
    _SystemData.CPU1ResetReason = rtc_get_reset_reason(1);
@@ -237,17 +239,17 @@ void WebHandlerClass::loop()
    if ((RaceHandler.RaceState != RaceHandler.STOPPED || RaceHandler.GetRaceTime() > 0))
    {
       //Send race data each 200ms
-      if (GET_MICROS / 1000 - _llLastRaceDataBroadcast > _llRaceDataBroadcastInterval)
+      if (millis() - _lLastRaceDataBroadcast > _lRaceDataBroadcastInterval)
       {
          _SendRaceData();
-         _llLastRaceDataBroadcast = GET_MICROS / 1000;
+         _lLastRaceDataBroadcast = millis();
       }
    }
-   if (GET_MICROS / 1000 - _llLastSystemDataBroadcast > _llSystemDataBroadcastInterval)
+   if (millis() - _lLastSystemDataBroadcast > _lSystemDataBroadcastInterval)
    {
       _GetSystemData();
       _SendSystemData();
-      _llLastSystemDataBroadcast = GET_MICROS / 1000;
+      _lLastSystemDataBroadcast = millis();
       // ESP_LOGD(__FILE__, "Current websocket clients connected: %i", _ws->count());
       //    for (size_t i = 0; i < _ws->count(); i++)
       //    {
@@ -509,10 +511,12 @@ boolean WebHandlerClass::_GetData(String dataType, JsonObject &Data)
 void WebHandlerClass::_GetSystemData()
 {
    _SystemData.FreeHeap = esp_get_free_heap_size();
-   _SystemData.Uptime = GET_MICROS / 1000;
+   _SystemData.Uptime = millis();
    _SystemData.NumClients = _ws->count();
    _SystemData.UTCSystemTime = GPSHandler.GetUTCTimestamp();
+#if !JTAG
    _SystemData.BatteryPercentage = BatterySensor.GetBatteryPercentage();
+#endif
 }
 
 void WebHandlerClass::_SendSystemData()
@@ -544,7 +548,7 @@ void WebHandlerClass::_onAuth(AsyncWebServerRequest *request)
    if (!_authenticate(request))
       return request->requestAuthentication("", false);
    IPAddress ip = request->client()->remoteIP();
-   long long now = GET_MICROS / 1000;
+   unsigned long now = millis();
    unsigned short index;
    for (index = 0; index < WS_TICKET_BUFFER_SIZE; index++)
    {
@@ -584,7 +588,7 @@ bool WebHandlerClass::_wsAuth(AsyncWebSocketClient *client)
 {
 
    IPAddress ip = client->remoteIP();
-   long long now = GET_MICROS / 1000;
+   unsigned long now = millis();
    unsigned short index = 0;
 
    //TODO: Here be dragons, this way of 'authenticating' is all but secure
@@ -594,7 +598,7 @@ bool WebHandlerClass::_wsAuth(AsyncWebSocketClient *client)
 
    for (index = 0; index < WS_TICKET_BUFFER_SIZE; index++)
    {
-      ESP_LOGI(__FILE__, "Checking ticket: %i, ip: %s, time: %llu", index, _ticket[index].ip.toString().c_str(), _ticket[index].timestamp);
+      ESP_LOGI(__FILE__, "Checking ticket: %i, ip: %s, time: %ul", index, _ticket[index].ip.toString().c_str(), _ticket[index].timestamp);
       if ((_ticket[index].ip == ip) && (now - _ticket[index].timestamp < WS_TIMEOUT))
          break;
    }
