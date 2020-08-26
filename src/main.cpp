@@ -318,6 +318,10 @@ void setup()
 #ifdef ESP32
    mdnsServerSetup();
 #endif //  ESP32
+
+WiFi.mode(WIFI_OFF);
+//btStop();
+
 }
 
 void loop()
