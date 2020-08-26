@@ -2,6 +2,9 @@
 //
 //
 #include "WebHandler.h"
+//#if !JTAG
+#include "BatterySensor.h"
+//#endif
 #include <Hash.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
@@ -12,9 +15,6 @@
 #include "GPSHandler.h"
 #include <rom/rtc.h>
 #include "../../src/static/index.html.gz.h"
-#if !JTAG
-#include "BatterySensor.h"
-#endif
 
 void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
 {
