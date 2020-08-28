@@ -106,7 +106,7 @@ void RaceHandlerClass::Main()
       while (!_QueueEmpty())
       {
          STriggerRecord STempRecord = _QueuePop();
-         ESP_LOGD(__FILE__, "S%i | T:%lld | St:%i", STempRecord.iSensorNumber, STempRecord.llTriggerTime - _llRaceStartTime, STempRecord.iSensorState);
+         ESP_LOGD(__FILE__, "S%i | TT:%lld | T:%lld | St:%i", STempRecord.iSensorNumber, STempRecord.llTriggerTime, STempRecord.llTriggerTime - _llRaceStartTime, STempRecord.iSensorState);
       }
       return;
    }
@@ -126,7 +126,7 @@ void RaceHandlerClass::Main()
          ESP_LOGD(__FILE__, "Gate: CLEAR");
       }
 
-      ESP_LOGD(__FILE__, "S%i | T:%lld | St:%i", STriggerRecord.iSensorNumber, STriggerRecord.llTriggerTime - _llRaceStartTime, STriggerRecord.iSensorState);
+      ESP_LOGD(__FILE__, "S%i | TT:%lld | T:%lld | St:%i", STriggerRecord.iSensorNumber, STriggerRecord.llTriggerTime, STriggerRecord.llTriggerTime - _llRaceStartTime, STriggerRecord.iSensorState);
 
 
       //Calculate what our next dog will be

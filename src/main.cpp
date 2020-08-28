@@ -470,13 +470,13 @@ void loop()
    }
 
    //heap memory monitor
-   long long llCurrentMillis = GET_MICROS / 1000;
+   /*long long llCurrentMillis = GET_MICROS / 1000;
    if (llCurrentMillis - llHeapPreviousMillis > llHeapInterval)
    {
       ESP_LOGI(__FILE__, "Elapsed system time: %llu. Heap caps free size: %i\n", GET_MICROS / 1000, heap_caps_get_free_size(MALLOC_CAP_8BIT));
       llHeapPreviousMillis = llCurrentMillis;
    }
-
+   */
    if (RaceHandler.iCurrentDog != iCurrentDog)
    {
       dtostrf(RaceHandler.GetDogTime(RaceHandler.iPreviousDog, -2), 7, 3, cDogTime);
@@ -572,6 +572,7 @@ void StartStopRace()
        && RaceHandler.GetRaceTime() == 0)           //and timers are zero
    {
       //Then start the race
+      ESP_LOGI(__FILE__, "%s", GPSHandler.GetUTCTimestamp());
       ESP_LOGD(__FILE__, "%llu: START!", GET_MICROS / 1000);
       LightsController.InitiateStartSequence();
       RaceHandler.StartRace();
