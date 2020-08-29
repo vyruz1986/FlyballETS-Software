@@ -100,6 +100,10 @@ void RaceHandlerClass::_ChangeDogNumber(uint8_t iNewDogNumber)
 /// </summary>
 void RaceHandlerClass::Main()
 {
+   //Trigger filterring of sensors interrupts
+   _QueueFilterS1();
+   _QueueFilterS2();
+   
    //Don't handle anything if race is stopped
    if (RaceState == STOPPED)
    {
@@ -444,7 +448,11 @@ void RaceHandlerClass::ResetRace()
       _bFault = false;
       _bRerunBusy = false;
       _iQueueReadIndex = 0;
+      _iQueueReadIndexS1 = 0;
+      _iQueueReadIndexS2 = 0;
       _iQueueWriteIndex = 0;
+      _iQueueWriteIndexS1 = 0;
+      _iQueueWriteIndexS2 = 0;
       _strTransition = "";
       _bGatesClear = true;
 
@@ -553,7 +561,7 @@ void RaceHandlerClass::TriggerSensor1()
    {
       return;
    }
-   _QueuePush({_bRunDirectionInverted ? 2 : 1, GET_MICROS, digitalRead(_iS1Pin)});
+   _QueuePushS1({_bRunDirectionInverted ? 2 : 1, GET_MICROS, digitalRead(_iS1Pin)});
 }
 
 /// <summary>
@@ -566,7 +574,7 @@ void RaceHandlerClass::TriggerSensor2()
    {
       return;
    }
-   _QueuePush({_bRunDirectionInverted ? 1 : 2, GET_MICROS, digitalRead(_iS2Pin)});
+   _QueuePushS2({_bRunDirectionInverted ? 1 : 2, GET_MICROS, digitalRead(_iS2Pin)});
 }
 
 /// <summary>
@@ -981,25 +989,124 @@ boolean RaceHandlerClass::GetRunDirection()
 }
 
 /// <summary>
-///   Pushes an interrupt trigger record to the back of the interrupt buffer.
+///   Pushes an S1 interrupt trigger record to the back of the S1 interrupt buffer.
 /// </summary>
 ///
 /// <param name="_InterruptTrigger">   The interrupt trigger record. </param>
-void RaceHandlerClass::_QueuePush(RaceHandlerClass::STriggerRecord _InterruptTrigger)
+void RaceHandlerClass::_QueuePushS1(RaceHandlerClass::STriggerRecord _InterruptTrigger)
 {
    //Add record to queue
-   _STriggerQueue[_iQueueWriteIndex] = _InterruptTrigger;
+   _S1TriggerQueue[_iQueueWriteIndexS1] = _InterruptTrigger;
 
    //Write index has to be increased, check it we should wrap-around
-   if (_iQueueWriteIndex == TRIGGER_QUEUE_LENGTH - 1) //(sizeof(_STriggerQueue) / sizeof(*_STriggerQueue) - 1))
+   if (_iQueueWriteIndexS1 == TRIGGER_QUEUE_LENGTH - 1) //(sizeof(_STriggerQueue) / sizeof(*_STriggerQueue) - 1))
    {
       //Write index has reached end of array, start at 0 again
-      _iQueueWriteIndex = 0;
+      _iQueueWriteIndexS1 = 0;
    }
    else
    {
       //End of array not yet reached, increase index by 1
-      _iQueueWriteIndex++;
+      _iQueueWriteIndexS1++;
+   }
+}
+
+/// <summary>
+///   Pushes an S2 interrupt trigger record to the back of the S2 interrupt buffer.
+/// </summary>
+///
+/// <param name="_InterruptTrigger">   The interrupt trigger record. </param>
+void RaceHandlerClass::_QueuePushS2(RaceHandlerClass::STriggerRecord _InterruptTrigger)
+{
+   //Add record to queue
+   _S2TriggerQueue[_iQueueWriteIndexS2] = _InterruptTrigger;
+
+   //Write index has to be increased, check it we should wrap-around
+   if (_iQueueWriteIndexS2 == TRIGGER_QUEUE_LENGTH - 1) //(sizeof(_STriggerQueue) / sizeof(*_STriggerQueue) - 1))
+   {
+      //Write index has reached end of array, start at 0 again
+      _iQueueWriteIndexS2 = 0;
+   }
+   else
+   {
+      //End of array not yet reached, increase index by 1
+      _iQueueWriteIndexS2++;
+   }
+}
+
+/// <summary>
+///   Filter S1 interrupt record from the front of the S1 interrupt buffer
+///   and add filterred records to common interrupts records queue
+/// </summary>
+void RaceHandlerClass::_QueueFilterS1()
+{
+   //execute filter function only if new S1 record is available
+   if (_iQueueReadIndexS1 != _iQueueWriteIndexS1)
+   {
+      //This function returns the next record of the interrupt queue
+      _STriggerQueue[_iQueueWriteIndex] = _S1TriggerQueue[_iQueueReadIndexS1];
+
+      //Read index S1 has to be increased, check it we should wrap-around
+      if (_iQueueReadIndexS1 == TRIGGER_QUEUE_LENGTH - 1)
+      {
+         //Read index S1 has reached end of array, start at 0 again
+         _iQueueReadIndexS1 = 0;
+      }
+      else
+      {
+         //End of array not yet reached, increase index by 1
+         _iQueueReadIndexS1++;
+      }
+   
+      //Write index has to be increased, check it we should wrap-around
+      if (_iQueueWriteIndex == TRIGGER_QUEUE_LENGTH - 1)
+      {
+         //Write index has reached end of array, start at 0 again
+         _iQueueWriteIndex = 0;
+      }
+      else
+      {
+         //End of array not yet reached, increase index by 1
+         _iQueueWriteIndex++;
+      }
+   }
+}
+
+/// <summary>
+///   Filter S2 interrupt record from the front of the S2 interrupt buffer
+///   and add filterred records to common interrupts records queue
+/// </summary>
+void RaceHandlerClass::_QueueFilterS2()
+{
+   //execute filter function only if new S2 record is available
+   if (_iQueueReadIndexS2 != _iQueueWriteIndexS2)
+   {
+      //This function returns the next record of the interrupt queue
+      _STriggerQueue[_iQueueWriteIndex] = _S2TriggerQueue[_iQueueReadIndexS2];
+
+         //Read index S2 has to be increased, check it we should wrap-around
+      if (_iQueueReadIndexS2 == TRIGGER_QUEUE_LENGTH - 1)
+      {
+         //Read index S2 has reached end of array, start at 0 again
+         _iQueueReadIndexS2 = 0;
+      }
+      else
+      {
+         //End of array not yet reached, increase index by 1
+         _iQueueReadIndexS2++;
+      }
+      
+      //Write index has to be increased, check it we should wrap-around
+      if (_iQueueWriteIndex == TRIGGER_QUEUE_LENGTH - 1)
+      {
+         //Write index has reached end of array, start at 0 again
+         _iQueueWriteIndex = 0;
+      }
+      else
+      {
+         //End of array not yet reached, increase index by 1
+         _iQueueWriteIndex++;
+      }
    }
 }
 
@@ -1018,7 +1125,7 @@ RaceHandlerClass::STriggerRecord RaceHandlerClass::_QueuePop()
    //Read index has to be increased, check it we should wrap-around
    if (_iQueueReadIndex == TRIGGER_QUEUE_LENGTH - 1) //(sizeof(_STriggerQueue) / sizeof(*_STriggerQueue) - 1))
    {
-      //Write index has reached end of array, start at 0 again
+      //Read index has reached end of array, start at 0 again
       _iQueueReadIndex = 0;
    }
    else

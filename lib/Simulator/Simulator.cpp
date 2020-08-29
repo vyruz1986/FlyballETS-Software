@@ -244,7 +244,14 @@ void SimulatorClass::Main()
       {
          if ((PendingRecord.llTriggerTime < 0 && RaceHandler.RaceState == RaceHandler.STARTING) || (PendingRecord.llTriggerTime > 0 && RaceHandler.RaceState == RaceHandler.RUNNING))
          {
-            RaceHandler._QueuePush({PendingRecord.iSensorNumber, (RaceHandler._llRaceStartTime + PendingRecord.llTriggerTime), PendingRecord.iState});
+            if (PendingRecord.iSensorNumber == 1)
+            {
+               RaceHandler._QueuePushS1({PendingRecord.iSensorNumber, (RaceHandler._llRaceStartTime + PendingRecord.llTriggerTime), PendingRecord.iState});
+            }
+            else if (PendingRecord.iSensorNumber == 2)
+            {
+               RaceHandler._QueuePushS2({PendingRecord.iSensorNumber, (RaceHandler._llRaceStartTime + PendingRecord.llTriggerTime), PendingRecord.iState});
+            }
             //And increase pending record
             _iDataPos++;
             PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);

@@ -82,11 +82,18 @@ private:
       volatile long long llTriggerTime;
       volatile int iSensorState;
    };
-#define TRIGGER_QUEUE_LENGTH 60
+   
+   #define TRIGGER_QUEUE_LENGTH 60
+   STriggerRecord _S1TriggerQueue[TRIGGER_QUEUE_LENGTH];
+   STriggerRecord _S2TriggerQueue[TRIGGER_QUEUE_LENGTH];
    STriggerRecord _STriggerQueue[TRIGGER_QUEUE_LENGTH];
 
-   volatile uint8_t _iQueueReadIndex;
-   volatile uint8_t _iQueueWriteIndex;
+   volatile uint8_t _iQueueReadIndex = 0;
+   volatile uint8_t _iQueueReadIndexS1 = 0;
+   volatile uint8_t _iQueueReadIndexS2 = 0;
+   volatile uint8_t _iQueueWriteIndex = 0;
+   volatile uint8_t _iQueueWriteIndexS1 = 0;
+   volatile uint8_t _iQueueWriteIndexS2 = 0;
 
    bool _bFault;
    bool _bDogFaults[4];
@@ -115,7 +122,10 @@ private:
    void _ChangeRaceState(RaceStates _byNewRaceState);
    void _ChangeDogState(_byDogStates _byNewDogState);
    void _ChangeDogNumber(uint8_t _iNewDogNumber);
-   void _QueuePush(STriggerRecord _InterruptTrigger);
+   void _QueuePushS1(STriggerRecord _InterruptTrigger);
+   void _QueuePushS2(STriggerRecord _InterruptTrigger);
+   void _QueueFilterS1();
+   void _QueueFilterS2();
    STriggerRecord _QueuePop();
    bool _QueueEmpty();
    void _AddToTransitionString(STriggerRecord _InterruptTrigger);
