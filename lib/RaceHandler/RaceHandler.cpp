@@ -100,17 +100,22 @@ void RaceHandlerClass::_ChangeDogNumber(uint8_t iNewDogNumber)
 /// </summary>
 void RaceHandlerClass::Main()
 {
-   //Trigger filterring of sensors interrupts
-   _QueueFilterS1();
-   _QueueFilterS2();
-   
+   //Trigger filterring of sensors interrupts in new records available
+   while (_iQueueReadIndexS1 != _iQueueWriteIndexS1 || _iQueueReadIndexS2 != _iQueueWriteIndexS2)
+   {
+      _QueueFilterS1();
+      _QueueFilterS2();
+      //ESP_LOGD(__FILE__, "RIS1:%d | WIS1:%d | RIS2:%d | WIS2:%d", _iQueueReadIndexS1, _iQueueWriteIndexS1, _iQueueReadIndexS2, _iQueueWriteIndexS2); 
+
+   }
+
    //Don't handle anything if race is stopped
    if (RaceState == STOPPED)
    {
       while (!_QueueEmpty())
       {
          STriggerRecord STempRecord = _QueuePop();
-         ESP_LOGD(__FILE__, "S%i | TT:%lld | T:%lld | St:%i", STempRecord.iSensorNumber, STempRecord.llTriggerTime, STempRecord.llTriggerTime - _llRaceStartTime, STempRecord.iSensorState);
+         ESP_LOGD(__FILE__, "S%i | TT:%lld | T:%lld | St:%i", STempRecord.iSensorNumber, STempRecord.llTriggerTime, STempRecord.llTriggerTime, STempRecord.iSensorState);
       }
       return;
    }
@@ -997,6 +1002,8 @@ void RaceHandlerClass::_QueuePushS1(RaceHandlerClass::STriggerRecord _InterruptT
 {
    //Add record to queue
    _S1TriggerQueue[_iQueueWriteIndexS1] = _InterruptTrigger;
+   ////STriggerRecord inputS1 = _S1TriggerQueue[_iQueueWriteIndexS1];
+   ////ESP_LOGD(__FILE__, "Input S1 with WIS1:%d | S%i | TT:%lld | St:%i", _iQueueWriteIndexS1, inputS1.iSensorNumber, inputS1.llTriggerTime, inputS1.iSensorState);
 
    //Write index has to be increased, check it we should wrap-around
    if (_iQueueWriteIndexS1 == TRIGGER_QUEUE_LENGTH - 1) //(sizeof(_STriggerQueue) / sizeof(*_STriggerQueue) - 1))
@@ -1041,11 +1048,11 @@ void RaceHandlerClass::_QueuePushS2(RaceHandlerClass::STriggerRecord _InterruptT
 void RaceHandlerClass::_QueueFilterS1()
 {
    STriggerRecord _CurrentRecordS1 = _S1TriggerQueue[_iQueueReadIndexS1];
-
-   if (_iQueueReadIndexS1 < _iQueueWriteIndexS1)
+   
+   if (_iQueueReadIndexS1 <= _iQueueWriteIndexS1 - 2)
    {
       STriggerRecord _NextRecordS1 = _S1TriggerQueue[_iQueueReadIndexS1+1];
-
+      ////ESP_LOGD(__FILE__, "We have current and next record and RIS1:%d", _iQueueReadIndexS1); 
       // If 2 records available and delta time below 4ms just ignore them both
       if (_NextRecordS1.llTriggerTime - _CurrentRecordS1.llTriggerTime <= 4000)
       {
@@ -1069,8 +1076,9 @@ void RaceHandlerClass::_QueueFilterS1()
       }
       
       // If 2 records available and delta time is above 4ms copy current record
-      if (_NextRecordS1.llTriggerTime - _CurrentRecordS1.llTriggerTime > 4000)
+      else if (_NextRecordS1.llTriggerTime - _CurrentRecordS1.llTriggerTime > 4000)
       {
+         ////ESP_LOGD(__FILE__, "We have current and next record > 4ms and RIS1:%d", _iQueueReadIndexS1); 
          //This function copy current S1 record to common interrupt queue
          _STriggerQueue[_iQueueWriteIndex] = _S1TriggerQueue[_iQueueReadIndexS1];
          
@@ -1084,6 +1092,7 @@ void RaceHandlerClass::_QueueFilterS1()
          {
             //End of array not yet reached, increase index by 1
             _iQueueReadIndexS1++;
+            ////ESP_LOGD(__FILE__, "Two records with delta > 4ms RIS1:%d", _iQueueReadIndexS1); 
          }   
 
          //Write index has to be increased, check it we should wrap-around
@@ -1101,10 +1110,13 @@ void RaceHandlerClass::_QueueFilterS1()
    }
    
    // If no new record available for 6ms copy current record (quarantine is over)
-   if (_iQueueReadIndexS1 == _iQueueWriteIndexS1 && GET_MICROS - _CurrentRecordS1.llTriggerTime >= 6000)
+   else if (_iQueueReadIndexS1 == (_iQueueWriteIndexS1 - 1) && (GET_MICROS - _CurrentRecordS1.llTriggerTime) >= 6000)
       {
+         ////ESP_LOGD(__FILE__, "6ms passed and RIS1:%d is one below WIS1:%d", _iQueueReadIndexS1, _iQueueWriteIndexS1); 
          //This function copy current S1 record to common interrupt queue
          _STriggerQueue[_iQueueWriteIndex] = _S1TriggerQueue[_iQueueReadIndexS1];
+         ////STriggerRecord inputS1 = _STriggerQueue[_iQueueWriteIndex];
+         ////ESP_LOGD(__FILE__, "Output S1 S%i | TT:%lld | St:%i", inputS1.iSensorNumber, inputS1.llTriggerTime, inputS1.iSensorState);
 
          //Read index S1 has to be increased, check it we should wrap-around
          if (_iQueueReadIndexS1 == TRIGGER_QUEUE_LENGTH - 1)
@@ -1116,6 +1128,7 @@ void RaceHandlerClass::_QueueFilterS1()
          {
             //End of array not yet reached, increase index by 1
             _iQueueReadIndexS1++;
+            ////ESP_LOGD(__FILE__, "Increase RIS1:%d after 6ms", _iQueueReadIndexS1); 
          }   
 
          //Write index has to be increased, check it we should wrap-around
@@ -1140,7 +1153,7 @@ void RaceHandlerClass::_QueueFilterS2()
 {
    STriggerRecord _CurrentRecordS2 = _S2TriggerQueue[_iQueueReadIndexS2];
 
-   if (_iQueueReadIndexS2 < _iQueueWriteIndexS2)
+   if (_iQueueReadIndexS2 <= _iQueueWriteIndexS2 - 2)
    {
       STriggerRecord _NextRecordS2 = _S1TriggerQueue[_iQueueReadIndexS2+1];
 
@@ -1167,7 +1180,7 @@ void RaceHandlerClass::_QueueFilterS2()
       }
       
       // If 2 records available and delta time is above 4ms copy current record
-      if (_NextRecordS2.llTriggerTime - _CurrentRecordS2.llTriggerTime > 4000)
+      else if (_NextRecordS2.llTriggerTime - _CurrentRecordS2.llTriggerTime > 4000)
       {
          //This function copy current S1 record to common interrupt queue
          _STriggerQueue[_iQueueWriteIndex] = _S2TriggerQueue[_iQueueReadIndexS2];
@@ -1199,7 +1212,7 @@ void RaceHandlerClass::_QueueFilterS2()
    }
    
    // If no new record available for 6ms copy current record (quarantine is over)
-   if (_iQueueReadIndexS2 == _iQueueWriteIndexS2 && GET_MICROS - _CurrentRecordS2.llTriggerTime >= 6000)
+   else if (_iQueueReadIndexS2 == (_iQueueWriteIndexS2 - 1) && (GET_MICROS - _CurrentRecordS2.llTriggerTime) >= 6000)
       {
          //This function copy current S2 record to common interrupt queue
          _STriggerQueue[_iQueueWriteIndex] = _S2TriggerQueue[_iQueueReadIndexS2];
