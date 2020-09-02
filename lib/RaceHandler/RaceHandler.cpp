@@ -1041,7 +1041,7 @@ void RaceHandlerClass::_QueuePushS2(RaceHandlerClass::STriggerRecord _InterruptT
 void RaceHandlerClass::_QueueFilterS1()
 {
    //execute filter function only if new S1 record is available
-   if (_iQueueReadIndexS1 != _iQueueWriteIndexS1)
+   if (_iQueueReadIndexS1 < _iQueueWriteIndexS1 && (_S1TriggerQueue.llTriggerTime_[_iQueueReadIndexS1 + 1] - _S1TriggerQueue.llTriggerTime_[_iQueueReadIndexS1]) <= 4000)
    {
       //This function returns the next record of the interrupt queue
       _STriggerQueue[_iQueueWriteIndex] = _S1TriggerQueue[_iQueueReadIndexS1];
