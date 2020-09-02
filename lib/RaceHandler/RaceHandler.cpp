@@ -1040,36 +1040,96 @@ void RaceHandlerClass::_QueuePushS2(RaceHandlerClass::STriggerRecord _InterruptT
 /// </summary>
 void RaceHandlerClass::_QueueFilterS1()
 {
-   //execute filter function only if new S1 record is available
-   if (_iQueueReadIndexS1 < _iQueueWriteIndexS1 && (_S1TriggerQueue.llTriggerTime_[_iQueueReadIndexS1 + 1] - _S1TriggerQueue.llTriggerTime_[_iQueueReadIndexS1]) <= 4000)
-   {
-      //This function returns the next record of the interrupt queue
-      _STriggerQueue[_iQueueWriteIndex] = _S1TriggerQueue[_iQueueReadIndexS1];
+   STriggerRecord _CurrentRecordS1 = _S1TriggerQueue[_iQueueReadIndexS1];
 
-      //Read index S1 has to be increased, check it we should wrap-around
-      if (_iQueueReadIndexS1 == TRIGGER_QUEUE_LENGTH - 1)
+   if (_iQueueReadIndexS1 < _iQueueWriteIndexS1)
+   {
+      STriggerRecord _NextRecordS1 = _S1TriggerQueue[_iQueueReadIndexS1+1];
+
+      // If 2 records available and delta time below 4ms just ignore them both
+      if (_NextRecordS1.llTriggerTime - _CurrentRecordS1.llTriggerTime <= 4000)
       {
-         //Read index S1 has reached end of array, start at 0 again
-         _iQueueReadIndexS1 = 0;
+         ESP_LOGD(__FILE__, "S%i | TT:%lld | T:%lld | St:%i | IGNORED", _CurrentRecordS1.iSensorNumber, _CurrentRecordS1.llTriggerTime,
+         _CurrentRecordS1.llTriggerTime - _llRaceStartTime, _CurrentRecordS1.iSensorState);
+         ESP_LOGD(__FILE__, "S%i | TT:%lld | T:%lld | St:%i | IGNORED", _NextRecordS1.iSensorNumber, _NextRecordS1.llTriggerTime,
+         _NextRecordS1.llTriggerTime - _llRaceStartTime, _NextRecordS1.iSensorState);
+         
+         //Read index S1 has to be increased, check it we should wrap-around
+         if (_iQueueReadIndexS1 == TRIGGER_QUEUE_LENGTH - 2)
+         {
+            //Read index S1 has reached end of array, start at 0 again
+            _iQueueReadIndexS1 = 0;
+         }
+         else
+         {
+             //End of array not yet reached, increase index by 2
+            _iQueueReadIndexS1 = _iQueueReadIndexS1 + 2;
+         }
+         
       }
-      else
+      
+      // If 2 records available and delta time is above 4ms copy current record
+      if (_NextRecordS1.llTriggerTime - _CurrentRecordS1.llTriggerTime > 4000)
       {
-         //End of array not yet reached, increase index by 1
-         _iQueueReadIndexS1++;
-      }
-   
-      //Write index has to be increased, check it we should wrap-around
-      if (_iQueueWriteIndex == TRIGGER_QUEUE_LENGTH - 1)
-      {
-         //Write index has reached end of array, start at 0 again
-         _iQueueWriteIndex = 0;
-      }
-      else
-      {
-         //End of array not yet reached, increase index by 1
-         _iQueueWriteIndex++;
+         //This function copy current S1 record to common interrupt queue
+         _STriggerQueue[_iQueueWriteIndex] = _S1TriggerQueue[_iQueueReadIndexS1];
+         
+         //Read index S1 has to be increased, check it we should wrap-around
+         if (_iQueueReadIndexS1 == TRIGGER_QUEUE_LENGTH - 1)
+         {
+            //Read index S1 has reached end of array, start at 0 again
+            _iQueueReadIndexS1 = 0;
+         }
+         else
+         {
+            //End of array not yet reached, increase index by 1
+            _iQueueReadIndexS1++;
+         }   
+
+         //Write index has to be increased, check it we should wrap-around
+         if (_iQueueWriteIndex == TRIGGER_QUEUE_LENGTH - 1)
+         {
+            //Write index has reached end of array, start at 0 again
+            _iQueueWriteIndex = 0;
+         }
+         else
+         {
+            //End of array not yet reached, increase index by 1
+            _iQueueWriteIndex++;
+         }
       }
    }
+   
+   // If no new record available for 6ms copy current record (quarantine is over)
+   if (_iQueueReadIndexS1 == _iQueueWriteIndexS1 && GET_MICROS - _CurrentRecordS1.llTriggerTime >= 6000)
+      {
+         //This function copy current S1 record to common interrupt queue
+         _STriggerQueue[_iQueueWriteIndex] = _S1TriggerQueue[_iQueueReadIndexS1];
+
+         //Read index S1 has to be increased, check it we should wrap-around
+         if (_iQueueReadIndexS1 == TRIGGER_QUEUE_LENGTH - 1)
+         {
+            //Read index S1 has reached end of array, start at 0 again
+            _iQueueReadIndexS1 = 0;
+         }
+         else
+         {
+            //End of array not yet reached, increase index by 1
+            _iQueueReadIndexS1++;
+         }   
+
+         //Write index has to be increased, check it we should wrap-around
+         if (_iQueueWriteIndex == TRIGGER_QUEUE_LENGTH - 1)
+         {
+            //Write index has reached end of array, start at 0 again
+            _iQueueWriteIndex = 0;
+         }
+         else
+         {
+            //End of array not yet reached, increase index by 1
+            _iQueueWriteIndex++;
+         }
+      }
 }
 
 /// <summary>
@@ -1078,36 +1138,96 @@ void RaceHandlerClass::_QueueFilterS1()
 /// </summary>
 void RaceHandlerClass::_QueueFilterS2()
 {
-   //execute filter function only if new S2 record is available
-   if (_iQueueReadIndexS2 != _iQueueWriteIndexS2)
-   {
-      //This function returns the next record of the interrupt queue
-      _STriggerQueue[_iQueueWriteIndex] = _S2TriggerQueue[_iQueueReadIndexS2];
+   STriggerRecord _CurrentRecordS2 = _S2TriggerQueue[_iQueueReadIndexS2];
 
+   if (_iQueueReadIndexS2 < _iQueueWriteIndexS2)
+   {
+      STriggerRecord _NextRecordS2 = _S1TriggerQueue[_iQueueReadIndexS2+1];
+
+      // If 2 records available and delta time below 4ms just ignore them both
+      if (_NextRecordS2.llTriggerTime - _CurrentRecordS2.llTriggerTime <= 4000)
+      {
+         ESP_LOGD(__FILE__, "S%i | TT:%lld | T:%lld | St:%i | IGNORED", _CurrentRecordS2.iSensorNumber, _CurrentRecordS2.llTriggerTime,
+         _CurrentRecordS2.llTriggerTime - _llRaceStartTime, _CurrentRecordS2.iSensorState);
+         ESP_LOGD(__FILE__, "S%i | TT:%lld | T:%lld | St:%i | IGNORED", _NextRecordS2.iSensorNumber, _NextRecordS2.llTriggerTime,
+         _NextRecordS2.llTriggerTime - _llRaceStartTime, _NextRecordS2.iSensorState);
+         
          //Read index S2 has to be increased, check it we should wrap-around
-      if (_iQueueReadIndexS2 == TRIGGER_QUEUE_LENGTH - 1)
-      {
-         //Read index S2 has reached end of array, start at 0 again
-         _iQueueReadIndexS2 = 0;
-      }
-      else
-      {
-         //End of array not yet reached, increase index by 1
-         _iQueueReadIndexS2++;
+         if (_iQueueReadIndexS2 == TRIGGER_QUEUE_LENGTH - 2)
+         {
+            //Read index S2 has reached end of array, start at 0 again
+            _iQueueReadIndexS2 = 0;
+         }
+         else
+         {
+             //End of array not yet reached, increase index by 2
+            _iQueueReadIndexS2 = _iQueueReadIndexS2 + 2;
+         }
+         
       }
       
-      //Write index has to be increased, check it we should wrap-around
-      if (_iQueueWriteIndex == TRIGGER_QUEUE_LENGTH - 1)
+      // If 2 records available and delta time is above 4ms copy current record
+      if (_NextRecordS2.llTriggerTime - _CurrentRecordS2.llTriggerTime > 4000)
       {
-         //Write index has reached end of array, start at 0 again
-         _iQueueWriteIndex = 0;
-      }
-      else
-      {
-         //End of array not yet reached, increase index by 1
-         _iQueueWriteIndex++;
+         //This function copy current S1 record to common interrupt queue
+         _STriggerQueue[_iQueueWriteIndex] = _S2TriggerQueue[_iQueueReadIndexS2];
+         
+         //Read index S1 has to be increased, check it we should wrap-around
+         if (_iQueueReadIndexS2 == TRIGGER_QUEUE_LENGTH - 1)
+         {
+            //Read index S1 has reached end of array, start at 0 again
+            _iQueueReadIndexS2 = 0;
+         }
+         else
+         {
+            //End of array not yet reached, increase index by 1
+            _iQueueReadIndexS2++;
+         }   
+
+         //Write index has to be increased, check it we should wrap-around
+         if (_iQueueWriteIndex == TRIGGER_QUEUE_LENGTH - 1)
+         {
+            //Write index has reached end of array, start at 0 again
+            _iQueueWriteIndex = 0;
+         }
+         else
+         {
+            //End of array not yet reached, increase index by 1
+            _iQueueWriteIndex++;
+         }
       }
    }
+   
+   // If no new record available for 6ms copy current record (quarantine is over)
+   if (_iQueueReadIndexS2 == _iQueueWriteIndexS2 && GET_MICROS - _CurrentRecordS2.llTriggerTime >= 6000)
+      {
+         //This function copy current S2 record to common interrupt queue
+         _STriggerQueue[_iQueueWriteIndex] = _S2TriggerQueue[_iQueueReadIndexS2];
+
+         //Read index S2 has to be increased, check it we should wrap-around
+         if (_iQueueReadIndexS2 == TRIGGER_QUEUE_LENGTH - 1)
+         {
+            //Read index S2 has reached end of array, start at 0 again
+            _iQueueReadIndexS2 = 0;
+         }
+         else
+         {
+            //End of array not yet reached, increase index by 1
+            _iQueueReadIndexS2++;
+         }   
+
+         //Write index has to be increased, check it we should wrap-around
+         if (_iQueueWriteIndex == TRIGGER_QUEUE_LENGTH - 1)
+         {
+            //Write index has reached end of array, start at 0 again
+            _iQueueWriteIndex = 0;
+         }
+         else
+         {
+            //End of array not yet reached, increase index by 1
+            _iQueueWriteIndex++;
+         }
+      }
 }
 
 /// <summary>
