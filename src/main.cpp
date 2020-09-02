@@ -319,9 +319,8 @@ void setup()
    mdnsServerSetup();
 #endif //  ESP32
 
-WiFi.mode(WIFI_OFF);
-//btStop();
-
+   WiFi.mode(WIFI_OFF);
+   //btStop();
 }
 
 void loop()
@@ -335,12 +334,22 @@ void loop()
    //Check for serial events
    serialEvent();
 
-   //Handle Race main processing
+ #if Simulate
+   //Run simulator
+   Simulator.Main();
+#endif
+
+  //Handle Race main processing
    RaceHandler.Main();
 
 #if !JTAG
    //Handle battery sensor main processing
    BatterySensor.CheckBatteryVoltage();
+#endif
+
+#if Simulate
+   //Run simulator
+   Simulator.Main();
 #endif
 
    //Handle LCD processing
@@ -354,11 +363,6 @@ void loop()
 
    //Handle GPS
    GPSHandler.loop();
-
-#if Simulate
-   //Run simulator
-   Simulator.Main();
-#endif
 
    //Race start/stop button (remote D0 output) or serial command
    if ((digitalRead(iRC0Pin) == HIGH && (GET_MICROS / 1000 - llLastRCPress[0] > 2000)) || (bSerialStringComplete && (strSerialData == "START" || strSerialData == "STOP")))

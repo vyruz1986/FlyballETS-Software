@@ -22,7 +22,7 @@
 #ifndef GLOBALVAR_H
 #define GLOBALVAR_H
 
-#define Simulate false     // Set to true to enable race simulation (see Simulator.h/.cpp)
+#define Simulate true     // Set to true to enable race simulation (see Simulator.h/.cpp)
 #define JTAG false          // when set to true you need converter board with pins remappig and jtag + programing port. It deactite featuers: LSR BTN+LED, battery sensor, switch button
 #define NumSimulatedRaces 3 // number of prepeared simulated races. Sererial interface command to chane interface: e.g. RACE 1
 

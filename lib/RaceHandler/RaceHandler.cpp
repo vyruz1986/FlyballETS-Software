@@ -103,10 +103,10 @@ void RaceHandlerClass::Main()
    //Trigger filterring of sensors interrupts in new records available
    while (_iQueueReadIndexS1 != _iQueueWriteIndexS1 || _iQueueReadIndexS2 != _iQueueWriteIndexS2)
    {
+      ESP_LOGD(__FILE__, "%lld | RIS1:%d | WIS1:%d | RIS2:%d | WIS2:%d", GET_MICROS, _iQueueReadIndexS1, _iQueueWriteIndexS1, _iQueueReadIndexS2, _iQueueWriteIndexS2); 
       _QueueFilterS1();
       _QueueFilterS2();
-      //ESP_LOGD(__FILE__, "RIS1:%d | WIS1:%d | RIS2:%d | WIS2:%d", _iQueueReadIndexS1, _iQueueWriteIndexS1, _iQueueReadIndexS2, _iQueueWriteIndexS2); 
-
+      
    }
 
    //Don't handle anything if race is stopped
@@ -1052,7 +1052,7 @@ void RaceHandlerClass::_QueueFilterS1()
    if (_iQueueReadIndexS1 <= _iQueueWriteIndexS1 - 2)
    {
       STriggerRecord _NextRecordS1 = _S1TriggerQueue[_iQueueReadIndexS1+1];
-      ////ESP_LOGD(__FILE__, "We have current and next record and RIS1:%d", _iQueueReadIndexS1); 
+      ESP_LOGD(__FILE__, "S1 Next %lld - S1 Current %lld = %lld", _NextRecordS1.llTriggerTime, _CurrentRecordS1.llTriggerTime, _NextRecordS1.llTriggerTime - _CurrentRecordS1.llTriggerTime); 
       // If 2 records available and delta time below 4ms just ignore them both
       if (_NextRecordS1.llTriggerTime - _CurrentRecordS1.llTriggerTime <= 4000)
       {
@@ -1112,11 +1112,9 @@ void RaceHandlerClass::_QueueFilterS1()
    // If no new record available for 6ms copy current record (quarantine is over)
    else if (_iQueueReadIndexS1 == (_iQueueWriteIndexS1 - 1) && (GET_MICROS - _CurrentRecordS1.llTriggerTime) >= 6000)
       {
-         ////ESP_LOGD(__FILE__, "6ms passed and RIS1:%d is one below WIS1:%d", _iQueueReadIndexS1, _iQueueWriteIndexS1); 
+         ESP_LOGD(__FILE__, "S1 record %lld passed 6ms quarantine with delta: %lld", _CurrentRecordS1.llTriggerTime, GET_MICROS - _CurrentRecordS1.llTriggerTime); 
          //This function copy current S1 record to common interrupt queue
          _STriggerQueue[_iQueueWriteIndex] = _S1TriggerQueue[_iQueueReadIndexS1];
-         ////STriggerRecord inputS1 = _STriggerQueue[_iQueueWriteIndex];
-         ////ESP_LOGD(__FILE__, "Output S1 S%i | TT:%lld | St:%i", inputS1.iSensorNumber, inputS1.llTriggerTime, inputS1.iSensorState);
 
          //Read index S1 has to be increased, check it we should wrap-around
          if (_iQueueReadIndexS1 == TRIGGER_QUEUE_LENGTH - 1)
@@ -1155,8 +1153,8 @@ void RaceHandlerClass::_QueueFilterS2()
 
    if (_iQueueReadIndexS2 <= _iQueueWriteIndexS2 - 2)
    {
-      STriggerRecord _NextRecordS2 = _S1TriggerQueue[_iQueueReadIndexS2+1];
-
+      STriggerRecord _NextRecordS2 = _S2TriggerQueue[_iQueueReadIndexS2+1];
+      ESP_LOGD(__FILE__, "S2 Next %lld - S2 Current %lld = %lld", _NextRecordS2.llTriggerTime, _CurrentRecordS2.llTriggerTime, _NextRecordS2.llTriggerTime - _CurrentRecordS2.llTriggerTime); 
       // If 2 records available and delta time below 4ms just ignore them both
       if (_NextRecordS2.llTriggerTime - _CurrentRecordS2.llTriggerTime <= 4000)
       {
@@ -1214,6 +1212,7 @@ void RaceHandlerClass::_QueueFilterS2()
    // If no new record available for 6ms copy current record (quarantine is over)
    else if (_iQueueReadIndexS2 == (_iQueueWriteIndexS2 - 1) && (GET_MICROS - _CurrentRecordS2.llTriggerTime) >= 6000)
       {
+         ESP_LOGD(__FILE__, "S2 record %lld passed 6ms quarantine with delta: %lld", _CurrentRecordS2.llTriggerTime, GET_MICROS - _CurrentRecordS2.llTriggerTime); 
          //This function copy current S2 record to common interrupt queue
          _STriggerQueue[_iQueueWriteIndex] = _S2TriggerQueue[_iQueueReadIndexS2];
 

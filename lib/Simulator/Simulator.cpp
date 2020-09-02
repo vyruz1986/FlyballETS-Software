@@ -237,26 +237,28 @@ void SimulatorClass::Main()
       return;
    }
    long long llRaceElapsedTime = GET_MICROS - RaceHandler._llRaceStartTime;
-   //Simulate sensors
-   if (RaceHandler.RaceState != RaceHandler.STOPPED && PendingRecord.llTriggerTime <= (long long)llRaceElapsedTime)
+
+   //Simulate sensors  
+  if (RaceHandler.RaceState != RaceHandler.STOPPED && PendingRecord.llTriggerTime <= (long long)llRaceElapsedTime)
    {
-      if (RaceHandler._QueueEmpty())
-      {
          if ((PendingRecord.llTriggerTime < 0 && RaceHandler.RaceState == RaceHandler.STARTING) || (PendingRecord.llTriggerTime > 0 && RaceHandler.RaceState == RaceHandler.RUNNING))
          {
-            if (PendingRecord.iSensorNumber == 1)
+            while (PendingRecord.llTriggerTime <= (long long)llRaceElapsedTime)
             {
-               RaceHandler._QueuePushS1({PendingRecord.iSensorNumber, (RaceHandler._llRaceStartTime + PendingRecord.llTriggerTime), PendingRecord.iState});
+               ESP_LOGD(__FILE__, "%lld Pending record S%d TriggerTime %lld | %lld", GET_MICROS, PendingRecord.iSensorNumber, RaceHandler._llRaceStartTime + PendingRecord.llTriggerTime, PendingRecord.llTriggerTime);
+               if (PendingRecord.iSensorNumber == 1)
+               {
+                  RaceHandler._QueuePushS1({PendingRecord.iSensorNumber, (RaceHandler._llRaceStartTime + PendingRecord.llTriggerTime), PendingRecord.iState});
+               }
+               else if (PendingRecord.iSensorNumber == 2)
+               {
+                  RaceHandler._QueuePushS2({PendingRecord.iSensorNumber, (RaceHandler._llRaceStartTime + PendingRecord.llTriggerTime), PendingRecord.iState});
+               }
+               //And increase pending record
+               _iDataPos++;
+               PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
             }
-            else if (PendingRecord.iSensorNumber == 2)
-            {
-               RaceHandler._QueuePushS2({PendingRecord.iSensorNumber, (RaceHandler._llRaceStartTime + PendingRecord.llTriggerTime), PendingRecord.iState});
-            }
-            //And increase pending record
-            _iDataPos++;
-            PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
          }
-      }
    }
 }
 
