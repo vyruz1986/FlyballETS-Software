@@ -239,21 +239,14 @@ void SimulatorClass::Main()
    long long llRaceElapsedTime = GET_MICROS - RaceHandler._llRaceStartTime;
 
    //Simulate sensors  
-  if (RaceHandler.RaceState != RaceHandler.STOPPED && PendingRecord.llTriggerTime <= (long long)llRaceElapsedTime)
+   if (RaceHandler.RaceState != RaceHandler.STOPPED && PendingRecord.llTriggerTime <= (long long)llRaceElapsedTime)
    {
          if ((PendingRecord.llTriggerTime < 0 && RaceHandler.RaceState == RaceHandler.STARTING) || (PendingRecord.llTriggerTime > 0 && RaceHandler.RaceState == RaceHandler.RUNNING))
          {
             while (PendingRecord.llTriggerTime <= (long long)llRaceElapsedTime)
             {
                ESP_LOGD(__FILE__, "%lld Pending record S%d TriggerTime %lld | %lld", GET_MICROS, PendingRecord.iSensorNumber, RaceHandler._llRaceStartTime + PendingRecord.llTriggerTime, PendingRecord.llTriggerTime);
-               if (PendingRecord.iSensorNumber == 1)
-               {
-                  RaceHandler._QueuePushS1({PendingRecord.iSensorNumber, (RaceHandler._llRaceStartTime + PendingRecord.llTriggerTime), PendingRecord.iState});
-               }
-               else if (PendingRecord.iSensorNumber == 2)
-               {
-                  RaceHandler._QueuePushS2({PendingRecord.iSensorNumber, (RaceHandler._llRaceStartTime + PendingRecord.llTriggerTime), PendingRecord.iState});
-               }
+               RaceHandler._QueuePush({PendingRecord.iSensorNumber, (RaceHandler._llRaceStartTime + PendingRecord.llTriggerTime), PendingRecord.iState});
                //And increase pending record
                _iDataPos++;
                PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);

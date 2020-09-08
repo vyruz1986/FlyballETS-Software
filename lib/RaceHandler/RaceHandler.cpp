@@ -101,17 +101,10 @@ void RaceHandlerClass::_ChangeDogNumber(uint8_t iNewDogNumber)
 void RaceHandlerClass::Main()
 {
    //Trigger filterring of sensors interrupts in new records available
-   while (_iQueueReadIndexS1 != _iQueueWriteIndexS1)
+   while (_iInputQueueReadIndex != _iInputQueueWriteIndex)
    {
-      ESP_LOGD(__FILE__, "%lld | RIS1:%d | WIS1:%d", GET_MICROS, _iQueueReadIndexS1, _iQueueWriteIndexS1); 
-      _QueueFilterS1();
-      
-   }
-   
-   while (_iQueueReadIndexS2 != _iQueueWriteIndexS2)
-   {
-      ESP_LOGD(__FILE__, "%lld | RIS2:%d | WIS2:%d", GET_MICROS, _iQueueReadIndexS2, _iQueueWriteIndexS2); 
-      _QueueFilterS2();
+      ESP_LOGD(__FILE__, "%lld | IQRI:%d | IQWI1:%d", GET_MICROS, _iInputQueueReadIndex, _iInputQueueWriteIndex); 
+      _QueueFilter();
       
    }
 
@@ -458,12 +451,10 @@ void RaceHandlerClass::ResetRace()
       _ChangeDogNumber(0);
       _bFault = false;
       _bRerunBusy = false;
-      _iQueueReadIndex = 0;
-      _iQueueReadIndexS1 = 0;
-      _iQueueReadIndexS2 = 0;
-      _iQueueWriteIndex = 0;
-      _iQueueWriteIndexS1 = 0;
-      _iQueueWriteIndexS2 = 0;
+      _iOutputQueueReadIndex = 0;
+      _iInputQueueReadIndex = 0;
+      _iOutputQueueWriteIndex = 0;
+      _iInputQueueWriteIndex = 0;
       _strTransition = "";
       _bGatesClear = true;
 
@@ -572,7 +563,7 @@ void RaceHandlerClass::TriggerSensor1()
    {
       return;
    }
-   _QueuePushS1({_bRunDirectionInverted ? 2 : 1, GET_MICROS, digitalRead(_iS1Pin)});
+   _QueuePush({_bRunDirectionInverted ? 2 : 1, GET_MICROS, digitalRead(_iS1Pin)});
 }
 
 /// <summary>
@@ -585,7 +576,7 @@ void RaceHandlerClass::TriggerSensor2()
    {
       return;
    }
-   _QueuePushS2({_bRunDirectionInverted ? 1 : 2, GET_MICROS, digitalRead(_iS2Pin)});
+   _QueuePush({_bRunDirectionInverted ? 1 : 2, GET_MICROS, digitalRead(_iS2Pin)});
 }
 
 /// <summary>
@@ -1004,46 +995,23 @@ boolean RaceHandlerClass::GetRunDirection()
 /// </summary>
 ///
 /// <param name="_InterruptTrigger">   The interrupt trigger record. </param>
-void RaceHandlerClass::_QueuePushS1(RaceHandlerClass::STriggerRecord _InterruptTrigger)
+void RaceHandlerClass::_QueuePush(RaceHandlerClass::STriggerRecord _InterruptTrigger)
 {
    //Add record to queue
-   _S1TriggerQueue[_iQueueWriteIndexS1] = _InterruptTrigger;
-   ////STriggerRecord inputS1 = _S1TriggerQueue[_iQueueWriteIndexS1];
-   ////ESP_LOGD(__FILE__, "Input S1 with WIS1:%d | S%i | TT:%lld | St:%i", _iQueueWriteIndexS1, inputS1.iSensorNumber, inputS1.llTriggerTime, inputS1.iSensorState);
+   _InputTriggerQueue[_iInputQueueWriteIndex] = _InterruptTrigger;
+   ////STriggerRecord inputS1 = _InputTriggerQueue[_iInputQueueWriteIndex];
+   ////ESP_LOGD(__FILE__, "Input S1 with WIS1:%d | S%i | TT:%lld | St:%i", _iInputQueueWriteIndex, inputS1.iSensorNumber, inputS1.llTriggerTime, inputS1.iSensorState);
 
    //Write index has to be increased, check it we should wrap-around
-   if (_iQueueWriteIndexS1 == TRIGGER_QUEUE_LENGTH - 1) //(sizeof(_STriggerQueue) / sizeof(*_STriggerQueue) - 1))
+   if (_iInputQueueWriteIndex == TRIGGER_QUEUE_LENGTH - 1) //(sizeof(_OutputTriggerQueue) / sizeof(*_OutputTriggerQueue) - 1))
    {
       //Write index has reached end of array, start at 0 again
-      _iQueueWriteIndexS1 = 0;
+      _iInputQueueWriteIndex = 0;
    }
    else
    {
       //End of array not yet reached, increase index by 1
-      _iQueueWriteIndexS1++;
-   }
-}
-
-/// <summary>
-///   Pushes an S2 interrupt trigger record to the back of the S2 interrupt buffer.
-/// </summary>
-///
-/// <param name="_InterruptTrigger">   The interrupt trigger record. </param>
-void RaceHandlerClass::_QueuePushS2(RaceHandlerClass::STriggerRecord _InterruptTrigger)
-{
-   //Add record to queue
-   _S2TriggerQueue[_iQueueWriteIndexS2] = _InterruptTrigger;
-
-   //Write index has to be increased, check it we should wrap-around
-   if (_iQueueWriteIndexS2 == TRIGGER_QUEUE_LENGTH - 1) //(sizeof(_STriggerQueue) / sizeof(*_STriggerQueue) - 1))
-   {
-      //Write index has reached end of array, start at 0 again
-      _iQueueWriteIndexS2 = 0;
-   }
-   else
-   {
-      //End of array not yet reached, increase index by 1
-      _iQueueWriteIndexS2++;
+      _iInputQueueWriteIndex++;
    }
 }
 
@@ -1051,202 +1019,134 @@ void RaceHandlerClass::_QueuePushS2(RaceHandlerClass::STriggerRecord _InterruptT
 ///   Filter S1 interrupt record from the front of the S1 interrupt buffer
 ///   and add filterred records to common interrupts records queue
 /// </summary>
-void RaceHandlerClass::_QueueFilterS1()
+void RaceHandlerClass::_QueueFilter()
 {
-   STriggerRecord _CurrentRecordS1 = _S1TriggerQueue[_iQueueReadIndexS1];
+   STriggerRecord _CurrentRecord = _InputTriggerQueue[_iInputQueueReadIndex];
    
-   if (_iQueueReadIndexS1 <= _iQueueWriteIndexS1 - 2)
+   if (_iInputQueueReadIndex <= _iInputQueueWriteIndex - 2)
    {
-      STriggerRecord _NextRecordS1 = _S1TriggerQueue[_iQueueReadIndexS1+1];
-      ESP_LOGD(__FILE__, "S1 Next %lld - S1 Current %lld = %lld", _NextRecordS1.llTriggerTime, _CurrentRecordS1.llTriggerTime, _NextRecordS1.llTriggerTime - _CurrentRecordS1.llTriggerTime); 
-      // If 2 records available and delta time below 4ms just ignore them both
-      if (_NextRecordS1.llTriggerTime - _CurrentRecordS1.llTriggerTime <= 4000)
+      STriggerRecord _NextRecord = _InputTriggerQueue[_iInputQueueReadIndex+1];
+
+      // If 2 records are from the same sensors line and delta time is below 4ms ignore both
+      if (_CurrentRecord.iSensorNumber == _NextRecord.iSensorNumber && _NextRecord.llTriggerTime - _CurrentRecord.llTriggerTime <= 4000)
       {
-         ESP_LOGD(__FILE__, "S%i | TT:%lld | T:%lld | St:%i | IGNORED", _CurrentRecordS1.iSensorNumber, _CurrentRecordS1.llTriggerTime,
-         _CurrentRecordS1.llTriggerTime - _llRaceStartTime, _CurrentRecordS1.iSensorState);
-         ESP_LOGD(__FILE__, "S%i | TT:%lld | T:%lld | St:%i | IGNORED", _NextRecordS1.iSensorNumber, _NextRecordS1.llTriggerTime,
-         _NextRecordS1.llTriggerTime - _llRaceStartTime, _NextRecordS1.iSensorState);
+         ESP_LOGD(__FILE__, "Next record %lld - Current record %lld = %lld < 4ms (4000) ", _NextRecord.llTriggerTime, _CurrentRecord.llTriggerTime, _NextRecord.llTriggerTime - _CurrentRecord.llTriggerTime); 
+         ESP_LOGD(__FILE__, "S%i | TT:%lld | T:%lld | St:%i | IGNORED", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime,
+         _CurrentRecord.llTriggerTime - _llRaceStartTime, _CurrentRecord.iSensorState);
+         ESP_LOGD(__FILE__, "S%i | TT:%lld | T:%lld | St:%i | IGNORED", _NextRecord.iSensorNumber, _NextRecord.llTriggerTime,
+         _NextRecord.llTriggerTime - _llRaceStartTime, _NextRecord.iSensorState);
          
          //Read index S1 has to be increased, check it we should wrap-around
-         if (_iQueueReadIndexS1 == TRIGGER_QUEUE_LENGTH - 2)
+         if (_iInputQueueReadIndex == TRIGGER_QUEUE_LENGTH - 2)
          {
             //Read index S1 has reached end of array, start at 0 again
-            _iQueueReadIndexS1 = 0;
+            _iInputQueueReadIndex = 0;
          }
          else
          {
-             //End of array not yet reached, increase index by 2
-            _iQueueReadIndexS1 = _iQueueReadIndexS1 + 2;
+            //End of array not yet reached, increase index by 2
+            _iInputQueueReadIndex = _iInputQueueReadIndex + 2;
          }
-         
       }
-      
-      // If 2 records available and delta time is above 4ms copy current record
-      else if (_NextRecordS1.llTriggerTime - _CurrentRecordS1.llTriggerTime > 4000)
+      else
       {
-         ESP_LOGD(__FILE__, "S1 Next - Current > 4ms, push Current record %lld to output queue", _CurrentRecordS1.llTriggerTime); 
-         //This function copy current S1 record to common interrupt queue
-         _STriggerQueue[_iQueueWriteIndex] = _S1TriggerQueue[_iQueueReadIndexS1];
+         //Next record is for different sensor line or delta time is higher than 4ms. Push Current record Output Queue.
+         ESP_LOGD(__FILE__, "Next record is for different sensor line or delta time is higher than 4ms. Push Current S%i record %lld to Output Queue.", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime); 
+         //This function copy current record to common interrupt queue
+         _OutputTriggerQueue[_iOutputQueueWriteIndex] = _InputTriggerQueue[_iInputQueueReadIndex];
          
-         //Read index S1 has to be increased, check it we should wrap-around
-         if (_iQueueReadIndexS1 == TRIGGER_QUEUE_LENGTH - 1)
+         //Input Read index has to be increased, check it we should wrap-around
+         if (_iInputQueueReadIndex == TRIGGER_QUEUE_LENGTH - 1)
          {
-            //Read index S1 has reached end of array, start at 0 again
-            _iQueueReadIndexS1 = 0;
+            //Input Read index has reached end of array, start at 0 again
+            _iInputQueueReadIndex = 0;
          }
          else
          {
             //End of array not yet reached, increase index by 1
-            _iQueueReadIndexS1++;
-            ////ESP_LOGD(__FILE__, "Two records with delta > 4ms RIS1:%d", _iQueueReadIndexS1); 
+            _iInputQueueReadIndex++;
          }   
 
-         //Write index has to be increased, check it we should wrap-around
-         if (_iQueueWriteIndex == TRIGGER_QUEUE_LENGTH - 1)
+         //Output Write index has to be increased, check it we should wrap-around
+         if (_iOutputQueueWriteIndex == TRIGGER_QUEUE_LENGTH - 1)
          {
-            //Write index has reached end of array, start at 0 again
-            _iQueueWriteIndex = 0;
+            //Output Write index has reached end of array, start at 0 again
+            _iOutputQueueWriteIndex = 0;
          }
          else
          {
             //End of array not yet reached, increase index by 1
-            _iQueueWriteIndex++;
+            _iOutputQueueWriteIndex++;
          }
+      }
+      
+   }
+   else
+   {
+      //Only one record available in the Input Queue. Push it to Output Queue.
+      ESP_LOGD(__FILE__, "Only one record available in the Input Queue. Push S%i record %lld to Output Queue.", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime); 
+      //This function copy current record to common interrupt queue
+      _OutputTriggerQueue[_iOutputQueueWriteIndex] = _InputTriggerQueue[_iInputQueueReadIndex];
+      
+      //Input Read index has to be increased, check it we should wrap-around
+      if (_iInputQueueReadIndex == TRIGGER_QUEUE_LENGTH - 1)
+      {
+         //Input Read index has reached end of array, start at 0 again
+         _iInputQueueReadIndex = 0;
+      }
+      else
+      {
+         //End of array not yet reached, increase index by 1
+         _iInputQueueReadIndex++;
+      }   
+
+      //Output Write index has to be increased, check it we should wrap-around
+      if (_iOutputQueueWriteIndex == TRIGGER_QUEUE_LENGTH - 1)
+      {
+         //Output Write index has reached end of array, start at 0 again
+         _iOutputQueueWriteIndex = 0;
+      }
+      else
+      {
+         //End of array not yet reached, increase index by 1
+         _iOutputQueueWriteIndex++;
       }
    }
    
-   // If no new record available for 6ms copy current record (quarantine is over)
-   else if (_iQueueReadIndexS1 == (_iQueueWriteIndexS1 - 1) && (GET_MICROS - _CurrentRecordS1.llTriggerTime) >= 6000)
-      {
-         ESP_LOGD(__FILE__, "%lld S1 record %lld passed 6ms quarantine with delta: %lld", GET_MICROS, _CurrentRecordS1.llTriggerTime, GET_MICROS - _CurrentRecordS1.llTriggerTime); 
-         //This function copy current S1 record to common interrupt queue
-         _STriggerQueue[_iQueueWriteIndex] = _S1TriggerQueue[_iQueueReadIndexS1];
+      /*
+      // If no new record available for 6ms copy current record (quarantine is over)
+      else if (_iInputQueueReadIndex == (_iInputQueueWriteIndex - 1) && (GET_MICROS - _CurrentRecord.llTriggerTime) >= 6000)
+         {
+            ESP_LOGD(__FILE__, "%lld S1 record %lld passed 6ms quarantine with delta: %lld", GET_MICROS, _CurrentRecord.llTriggerTime, GET_MICROS - _CurrentRecord.llTriggerTime); 
+            //This function copy current S1 record to common interrupt queue
+            _OutputTriggerQueue[_iOutputQueueWriteIndex] = _InputTriggerQueue[_iInputQueueReadIndex];
 
-         //Read index S1 has to be increased, check it we should wrap-around
-         if (_iQueueReadIndexS1 == TRIGGER_QUEUE_LENGTH - 1)
-         {
-            //Read index S1 has reached end of array, start at 0 again
-            _iQueueReadIndexS1 = 0;
-         }
-         else
-         {
-            //End of array not yet reached, increase index by 1
-            _iQueueReadIndexS1++;
-            ////ESP_LOGD(__FILE__, "Increase RIS1:%d after 6ms", _iQueueReadIndexS1); 
-         }   
+            //Read index S1 has to be increased, check it we should wrap-around
+            if (_iInputQueueReadIndex == TRIGGER_QUEUE_LENGTH - 1)
+            {
+               //Read index S1 has reached end of array, start at 0 again
+               _iInputQueueReadIndex = 0;
+            }
+            else
+            {
+               //End of array not yet reached, increase index by 1
+               _iInputQueueReadIndex++;
+               ////ESP_LOGD(__FILE__, "Increase RIS1:%d after 6ms", _iQueueReadIndexS1); 
+            }   
 
-         //Write index has to be increased, check it we should wrap-around
-         if (_iQueueWriteIndex == TRIGGER_QUEUE_LENGTH - 1)
-         {
-            //Write index has reached end of array, start at 0 again
-            _iQueueWriteIndex = 0;
+            //Write index has to be increased, check it we should wrap-around
+            if (_iOutputQueueWriteIndex == TRIGGER_QUEUE_LENGTH - 1)
+            {
+               //Write index has reached end of array, start at 0 again
+               _iOutputQueueWriteIndex = 0;
+            }
+            else
+            {
+               //End of array not yet reached, increase index by 1
+               _iOutputQueueWriteIndex++;
+            }
          }
-         else
-         {
-            //End of array not yet reached, increase index by 1
-            _iQueueWriteIndex++;
-         }
-      }
-}
-
-/// <summary>
-///   Filter S2 interrupt record from the front of the S2 interrupt buffer
-///   and add filterred records to common interrupts records queue
-/// </summary>
-void RaceHandlerClass::_QueueFilterS2()
-{
-   STriggerRecord _CurrentRecordS2 = _S2TriggerQueue[_iQueueReadIndexS2];
-
-   if (_iQueueReadIndexS2 <= _iQueueWriteIndexS2 - 2)
-   {
-      STriggerRecord _NextRecordS2 = _S2TriggerQueue[_iQueueReadIndexS2+1];
-      ESP_LOGD(__FILE__, "S2 Next %lld - S2 Current %lld = %lld", _NextRecordS2.llTriggerTime, _CurrentRecordS2.llTriggerTime, _NextRecordS2.llTriggerTime - _CurrentRecordS2.llTriggerTime); 
-      // If 2 records available and delta time below 4ms just ignore them both
-      if (_NextRecordS2.llTriggerTime - _CurrentRecordS2.llTriggerTime <= 4000)
-      {
-         ESP_LOGD(__FILE__, "S%i | TT:%lld | T:%lld | St:%i | IGNORED", _CurrentRecordS2.iSensorNumber, _CurrentRecordS2.llTriggerTime,
-         _CurrentRecordS2.llTriggerTime - _llRaceStartTime, _CurrentRecordS2.iSensorState);
-         ESP_LOGD(__FILE__, "S%i | TT:%lld | T:%lld | St:%i | IGNORED", _NextRecordS2.iSensorNumber, _NextRecordS2.llTriggerTime,
-         _NextRecordS2.llTriggerTime - _llRaceStartTime, _NextRecordS2.iSensorState);
-         
-         //Read index S2 has to be increased, check it we should wrap-around
-         if (_iQueueReadIndexS2 == TRIGGER_QUEUE_LENGTH - 2)
-         {
-            //Read index S2 has reached end of array, start at 0 again
-            _iQueueReadIndexS2 = 0;
-         }
-         else
-         {
-             //End of array not yet reached, increase index by 2
-            _iQueueReadIndexS2 = _iQueueReadIndexS2 + 2;
-         }
-         
-      }
-      
-      // If 2 records available and delta time is above 4ms copy current record
-      else if (_NextRecordS2.llTriggerTime - _CurrentRecordS2.llTriggerTime > 4000)
-      {
-         ESP_LOGD(__FILE__, "S2 Next - Current > 4ms, push Current record %lld to output queue", _CurrentRecordS2.llTriggerTime); 
-         //This function copy current S1 record to common interrupt queue
-         _STriggerQueue[_iQueueWriteIndex] = _S2TriggerQueue[_iQueueReadIndexS2];
-         
-         //Read index S1 has to be increased, check it we should wrap-around
-         if (_iQueueReadIndexS2 == TRIGGER_QUEUE_LENGTH - 1)
-         {
-            //Read index S1 has reached end of array, start at 0 again
-            _iQueueReadIndexS2 = 0;
-         }
-         else
-         {
-            //End of array not yet reached, increase index by 1
-            _iQueueReadIndexS2++;
-         }   
-
-         //Write index has to be increased, check it we should wrap-around
-         if (_iQueueWriteIndex == TRIGGER_QUEUE_LENGTH - 1)
-         {
-            //Write index has reached end of array, start at 0 again
-            _iQueueWriteIndex = 0;
-         }
-         else
-         {
-            //End of array not yet reached, increase index by 1
-            _iQueueWriteIndex++;
-         }
-      }
-   }
-   
-   // If no new record available for 6ms copy current record (quarantine is over)
-   else if (_iQueueReadIndexS2 == (_iQueueWriteIndexS2 - 1) && (GET_MICROS - _CurrentRecordS2.llTriggerTime) >= 6000)
-      {
-         ESP_LOGD(__FILE__, "%lld S2 record %lld passed 6ms quarantine with delta: %lld", GET_MICROS, _CurrentRecordS2.llTriggerTime, GET_MICROS - _CurrentRecordS2.llTriggerTime); 
-         //This function copy current S2 record to common interrupt queue
-         _STriggerQueue[_iQueueWriteIndex] = _S2TriggerQueue[_iQueueReadIndexS2];
-
-         //Read index S2 has to be increased, check it we should wrap-around
-         if (_iQueueReadIndexS2 == TRIGGER_QUEUE_LENGTH - 1)
-         {
-            //Read index S2 has reached end of array, start at 0 again
-            _iQueueReadIndexS2 = 0;
-         }
-         else
-         {
-            //End of array not yet reached, increase index by 1
-            _iQueueReadIndexS2++;
-         }   
-
-         //Write index has to be increased, check it we should wrap-around
-         if (_iQueueWriteIndex == TRIGGER_QUEUE_LENGTH - 1)
-         {
-            //Write index has reached end of array, start at 0 again
-            _iQueueWriteIndex = 0;
-         }
-         else
-         {
-            //End of array not yet reached, increase index by 1
-            _iQueueWriteIndex++;
-         }
-      }
+      */
 }
 
 /// <summary>
@@ -1259,18 +1159,18 @@ void RaceHandlerClass::_QueueFilterS2()
 RaceHandlerClass::STriggerRecord RaceHandlerClass::_QueuePop()
 {
    //This function returns the next record of the interrupt queue
-   STriggerRecord NextRecord = _STriggerQueue[_iQueueReadIndex];
+   STriggerRecord NextRecord = _OutputTriggerQueue[_iOutputQueueReadIndex];
 
    //Read index has to be increased, check it we should wrap-around
-   if (_iQueueReadIndex == TRIGGER_QUEUE_LENGTH - 1) //(sizeof(_STriggerQueue) / sizeof(*_STriggerQueue) - 1))
+   if (_iOutputQueueReadIndex == TRIGGER_QUEUE_LENGTH - 1) //(sizeof(_OutputTriggerQueue) / sizeof(*_OutputTriggerQueue) - 1))
    {
       //Read index has reached end of array, start at 0 again
-      _iQueueReadIndex = 0;
+      _iOutputQueueReadIndex = 0;
    }
    else
    {
       //End of array not yet reached, increase index by 1
-      _iQueueReadIndex++;
+      _iOutputQueueReadIndex++;
    }
    return NextRecord;
 }
@@ -1287,7 +1187,7 @@ bool RaceHandlerClass::_QueueEmpty()
    //This function checks if queue is empty.
    //This is determined by comparing the read and write index.
    //If they are equal, it means we have cought up reading and the queue is 'empty' (the array is not really emmpty...)
-   if (_iQueueReadIndex == _iQueueWriteIndex)
+   if (_iOutputQueueReadIndex == _iOutputQueueWriteIndex)
    {
       return true;
    }

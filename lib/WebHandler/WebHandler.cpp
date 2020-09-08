@@ -491,7 +491,7 @@ boolean WebHandlerClass::_GetData(String dataType, JsonObject &Data)
    {
       JsonArray &triggerQueue = Data.createNestedArray("triggerQueue");
 
-      for (auto &trigger : RaceHandler._STriggerQueue)
+      for (auto &trigger : RaceHandler._OutputTriggerQueue)
       {
          JsonObject &triggerObj = triggerQueue.createNestedObject();
          triggerObj["sensorNum"] = trigger.iSensorNumber;
