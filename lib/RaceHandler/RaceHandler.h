@@ -70,7 +70,6 @@ private:
    long long _llRaceTime;
    long long _llPerfectCrossingTime;
    long long _llLastTransitionStringUpdate;
-   long long _llFalseStartTime = 0;
 
    uint8_t  _iS1Pin;
    uint8_t  _iS2Pin;

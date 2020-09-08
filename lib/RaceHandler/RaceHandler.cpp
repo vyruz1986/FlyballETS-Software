@@ -103,7 +103,7 @@ void RaceHandlerClass::Main()
    //Trigger filterring of sensors interrupts in new records available
    while (_iInputQueueReadIndex != _iInputQueueWriteIndex)
    {
-      ESP_LOGD(__FILE__, "%lld | IQRI:%d | IQWI1:%d", GET_MICROS, _iInputQueueReadIndex, _iInputQueueWriteIndex); 
+      ESP_LOGD(__FILE__, "%lld | IQRI:%d | IQWI:%d", GET_MICROS, _iInputQueueReadIndex, _iInputQueueWriteIndex); 
       _QueueFilter();
       
    }
@@ -170,7 +170,6 @@ void RaceHandlerClass::Main()
             ESP_LOGD(__FILE__, "Fault! Dog: %i!", iCurrentDog);
             _llCrossingTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = STriggerRecord.llTriggerTime - _llPerfectCrossingTime;
             _llDogEnterTimes[iCurrentDog] = STriggerRecord.llTriggerTime;
-            _llFalseStartTime = STriggerRecord.llTriggerTime - _llPerfectCrossingTime;
          }
          //Check if this is a next dog which is too early (we are expecting a dog to come back)
          else if (_byDogState == COMINGBACK)
@@ -234,7 +233,7 @@ void RaceHandlerClass::Main()
             _llDogTimes[iPreviousDog][_iDogRunCounters[iPreviousDog]] = _llDogExitTimes[iPreviousDog] - _llDogEnterTimes[iPreviousDog]; //SIMON: delete
 
             //And update crossing time of this dog (who is in fault)
-            _llCrossingTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = _llDogEnterTimes[iCurrentDog] - STriggerRecord.llTriggerTime;  //SIMON: this is OK
+            _llCrossingTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = _llDogEnterTimes[iCurrentDog] - _llDogExitTimes[iPreviousDog];  //SIMON: this is OK
          }
          else if ((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) > 2000000) //Filter out S2 HIGH signals that are < 2 seconds after dog enter time
          {
@@ -247,7 +246,7 @@ void RaceHandlerClass::Main()
             if ((iCurrentDog == 3 && _bFault == false && _bRerunBusy == false) //If this is the 4th dog and there is no fault we have to stop the race
                 || (_bRerunBusy == true && _bFault == false))                  //Or if the rerun sequence was started but no faults exist anymore
             {
-               StopRace(STriggerRecord.llTriggerTime - _llFalseStartTime);
+               StopRace(STriggerRecord.llTriggerTime);
                ESP_LOGD(__FILE__, "Last Dog: %i | ENT:%lld | EXIT:%lld | TOT:%lld", iCurrentDog, _llDogEnterTimes[iCurrentDog], _llDogExitTimes[iCurrentDog], _llDogTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]]);
             }
             else if ((iCurrentDog == 3 && _bFault == true && _bRerunBusy == false) //If current dog is dog 4 and a fault exists, we have to initiate rerun sequence
@@ -370,7 +369,7 @@ void RaceHandlerClass::Main()
    {
       if (GET_MICROS > _llRaceStartTime)
       {
-         _llRaceTime = GET_MICROS - _llFalseStartTime - _llRaceStartTime;
+         _llRaceTime = GET_MICROS - _llRaceStartTime;
       }
    }
 
@@ -412,7 +411,7 @@ void RaceHandlerClass::StartRace()
 /// </summary>
 void RaceHandlerClass::StopRace()
 {
-   this->StopRace(GET_MICROS - _llFalseStartTime);
+   this->StopRace(GET_MICROS);
 }
 
 /// <summary>
@@ -445,7 +444,6 @@ void RaceHandlerClass::ResetRace()
       _llRaceStartTime = 0;
       _llRaceEndTime = 0;
       _llRaceTime = 0;
-      _llFalseStartTime = 0;
       _llPerfectCrossingTime = 0;
       _byDogState = GOINGIN;
       _ChangeDogNumber(0);
@@ -1016,8 +1014,8 @@ void RaceHandlerClass::_QueuePush(RaceHandlerClass::STriggerRecord _InterruptTri
 }
 
 /// <summary>
-///   Filter S1 interrupt record from the front of the S1 interrupt buffer
-///   and add filterred records to common interrupts records queue
+///   Filter input interrupt record(s) from the front of the interrupts buffer
+///   and push filtered records to output interrupts records queue
 /// </summary>
 void RaceHandlerClass::_QueueFilter()
 {
@@ -1036,10 +1034,10 @@ void RaceHandlerClass::_QueueFilter()
          ESP_LOGD(__FILE__, "S%i | TT:%lld | T:%lld | St:%i | IGNORED", _NextRecord.iSensorNumber, _NextRecord.llTriggerTime,
          _NextRecord.llTriggerTime - _llRaceStartTime, _NextRecord.iSensorState);
          
-         //Read index S1 has to be increased, check it we should wrap-around
+         //Input Read index has to be increased, check it we should wrap-around
          if (_iInputQueueReadIndex == TRIGGER_QUEUE_LENGTH - 2)
          {
-            //Read index S1 has reached end of array, start at 0 again
+            //Input Read index has reached end of array, start at 0 again
             _iInputQueueReadIndex = 0;
          }
          else

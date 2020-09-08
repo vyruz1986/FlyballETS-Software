@@ -347,11 +347,6 @@ void loop()
    BatterySensor.CheckBatteryVoltage();
 #endif
 
-#if Simulate
-   //Run simulator
-   Simulator.Main();
-#endif
-
    //Handle LCD processing
    LCDController.Main();
 
