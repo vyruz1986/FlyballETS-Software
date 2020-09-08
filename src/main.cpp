@@ -462,8 +462,9 @@ void loop()
       {
          //Race is finished, put final data on screen
          dtostrf(RaceHandler.GetDogTime(RaceHandler.iCurrentDog, -2), 7, 3, cDogTime);
-         ESP_LOGI(__FILE__, "D%i: %s|CR: %s", RaceHandler.iCurrentDog, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iCurrentDog, -2).c_str());
-         ESP_LOGI(__FILE__, "RT:%s", cElapsedRaceTime);
+         ESP_LOGI(__FILE__, "D%i: %s|CR: %s", RaceHandler.iCurrentDog+1, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iCurrentDog, -2).c_str());
+         ESP_LOGI(__FILE__, "Team:%s", cElapsedRaceTime);
+         ESP_LOGI(__FILE__, "Net:%s", cTeamNetTime);
       }
       ESP_LOGI(__FILE__, "RS: %s", RaceHandler.GetRaceStateString());
    }
@@ -480,8 +481,8 @@ void loop()
    {
       dtostrf(RaceHandler.GetDogTime(RaceHandler.iPreviousDog, -2), 7, 3, cDogTime);
 
-      ESP_LOGI(__FILE__, "Dog %i: %s|CR: %s", RaceHandler.iPreviousDog, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
-      ESP_LOGI(__FILE__, "Next dog: %i", RaceHandler.iCurrentDog);
+      ESP_LOGI(__FILE__, "Dog %i: %s|CR: %s", RaceHandler.iPreviousDog+1, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
+      ESP_LOGI(__FILE__, "Next dog: %i", RaceHandler.iCurrentDog+1);
       ESP_LOGI(__FILE__, "RT:%s", cElapsedRaceTime);
    }
 

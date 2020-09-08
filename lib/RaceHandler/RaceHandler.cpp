@@ -88,7 +88,7 @@ void RaceHandlerClass::_ChangeDogNumber(uint8_t iNewDogNumber)
    {
       iPreviousDog = iCurrentDog;
       iCurrentDog = iNewDogNumber;
-      ESP_LOGD(__FILE__, "Dog: %i | ENT:%lld | EXIT:%lld | TOT:%lld", iPreviousDog, _llDogEnterTimes[iPreviousDog], _llDogExitTimes[iPreviousDog], _llDogTimes[iPreviousDog][_iDogRunCounters[iPreviousDog]]);
+      ESP_LOGD(__FILE__, "Dog: %i | ENT:%lld | EXIT:%lld | TOT:%lld", iPreviousDog+1, _llDogEnterTimes[iPreviousDog], _llDogExitTimes[iPreviousDog], _llDogTimes[iPreviousDog][_iDogRunCounters[iPreviousDog]]);
    }
 }
 
@@ -167,7 +167,7 @@ void RaceHandlerClass::Main()
          {
             //Dog 0 is too early!
             SetDogFault(iCurrentDog, ON);
-            ESP_LOGD(__FILE__, "Fault! Dog: %i!", iCurrentDog);
+            ESP_LOGD(__FILE__, "Fault! Dog: %i!", iCurrentDog+1);
             _llCrossingTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = STriggerRecord.llTriggerTime - _llPerfectCrossingTime;
             _llDogEnterTimes[iCurrentDog] = STriggerRecord.llTriggerTime;
          }
@@ -186,7 +186,7 @@ void RaceHandlerClass::Main()
 
             //Handle next dog
             _llDogEnterTimes[iNextDog] = STriggerRecord.llTriggerTime;
-            ESP_LOGD(__FILE__, "Fault! Dog: %i!", iNextDog);
+            ESP_LOGD(__FILE__, "Fault! Dog: %i!", iNextDog+1);
          }
 
          //Normal race handling (no faults)
@@ -247,7 +247,7 @@ void RaceHandlerClass::Main()
                 || (_bRerunBusy == true && _bFault == false))                  //Or if the rerun sequence was started but no faults exist anymore
             {
                StopRace(STriggerRecord.llTriggerTime);
-               ESP_LOGD(__FILE__, "Last Dog: %i | ENT:%lld | EXIT:%lld | TOT:%lld", iCurrentDog, _llDogEnterTimes[iCurrentDog], _llDogExitTimes[iCurrentDog], _llDogTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]]);
+               ESP_LOGD(__FILE__, "Last Dog: %i | ENT:%lld | EXIT:%lld | TOT:%lld", iCurrentDog+1, _llDogEnterTimes[iCurrentDog], _llDogExitTimes[iCurrentDog], _llDogTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]]);
             }
             else if ((iCurrentDog == 3 && _bFault == true && _bRerunBusy == false) //If current dog is dog 4 and a fault exists, we have to initiate rerun sequence
                      || _bRerunBusy == true)                                       //Or if rerun is busy (and faults still exist)
@@ -259,7 +259,7 @@ void RaceHandlerClass::Main()
                _llDogExitTimes[iNextDog] = 0;
                //Increase run counter for this dog
                _iDogRunCounters[iNextDog]++;
-               ESP_LOGI(__FILE__, "Re-run for dog %i", iNextDog);
+               ESP_LOGI(__FILE__, "Re-run for dog %i", iNextDog+1);
             }
             else
             {
@@ -360,7 +360,7 @@ void RaceHandlerClass::Main()
       else
       {
          _bGatesClear = false;
-         ESP_LOGD(__FILE__, "Gate: DOG");
+         ESP_LOGD(__FILE__, "Gate: DOG(s)");
       }
    }
 
@@ -541,13 +541,13 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
    {
       LightsController.ToggleFaultLight(iDogNumber, LightsController.ON);
       _bFault = true;
-      ESP_LOGI(__FILE__, "Dog%i fault ON", iDogNumber);
+      ESP_LOGI(__FILE__, "Dog%i fault ON", iDogNumber+1);
    }
    else
    {
       //If fault is false, turn off fault light for this dog
       LightsController.ToggleFaultLight(iDogNumber, LightsController.OFF);
-      ESP_LOGI(__FILE__, "Dog%i fault OFF", iDogNumber);
+      ESP_LOGI(__FILE__, "Dog%i fault OFF", iDogNumber+1);
    }
 }
 
@@ -1049,7 +1049,7 @@ void RaceHandlerClass::_QueueFilter()
       else
       {
          //Next record is for different sensor line or delta time is higher than 4ms. Push Current record Output Queue.
-         ESP_LOGD(__FILE__, "Next record is for different sensor line or delta time is higher than 4ms. Push Current S%i record %lld to Output Queue.", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime); 
+         ESP_LOGD(__FILE__, "Next record > 4ms or for different sensors line. Push Current S%i record %lld to Output Queue.", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime); 
          //This function copy current record to common interrupt queue
          _OutputTriggerQueue[_iOutputQueueWriteIndex] = _InputTriggerQueue[_iInputQueueReadIndex];
          
@@ -1082,7 +1082,7 @@ void RaceHandlerClass::_QueueFilter()
    else
    {
       //Only one record available in the Input Queue. Push it to Output Queue.
-      ESP_LOGD(__FILE__, "Only one record available in the Input Queue. Push S%i record %lld to Output Queue.", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime); 
+      ESP_LOGD(__FILE__, "One record in the Input Queue. Push S%i record %lld to Output Queue.", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime); 
       //This function copy current record to common interrupt queue
       _OutputTriggerQueue[_iOutputQueueWriteIndex] = _InputTriggerQueue[_iInputQueueReadIndex];
       
