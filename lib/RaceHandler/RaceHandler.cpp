@@ -336,23 +336,34 @@ void RaceHandlerClass::Main()
                ESP_LOGI(__FILE__, "Spat ball detected?!");
                SetDogFault(iCurrentDog, ON);
             }
-            else //Transition string indicated something other than dog coming back or dog going in, it means 2 dogs must have passed
+            else 
             {
-               //Transition string indicates more than 1 dog passed
-               //We increase the dog number
-               _ChangeDogNumber(iNextDog);
-
-               //If this is Re-run and dog had fault active we need to turn it OFF if this is perfect crossing case during re-run
-               if ((_bRerunBusy == true && _bFault == true))
+               //If Transition string indicated something else and we expect coming back dog, it means 2 dogs must have passed
+               if (_byDogState == COMINGBACK)
                {
-                  SetDogFault(iCurrentDog, OFF);
-               }
+                  //Transition string indicates more than 1 dog passed
+                  //We increase the dog number
+                  _ChangeDogNumber(iNextDog);
 
-               // and set perfect crossing time for new dog
-               _ChangeDogState(COMINGBACK);
-               ESP_LOGD(__FILE__, "New dog state: COMINGBACK");
-               _llCrossingTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = 0;
-               _llDogEnterTimes[iCurrentDog] = _llDogExitTimes[iPreviousDog];
+                  //If this is Re-run and dog had fault active we need to turn it OFF if this is perfect crossing case during re-run
+                  if ((_bRerunBusy == true && _bFault == true))
+                  {
+                     SetDogFault(iCurrentDog, OFF);
+                  }
+
+                  // and set perfect crossing time for new dog
+                  _ChangeDogState(COMINGBACK);
+                  ESP_LOGD(__FILE__, "New dog state: COMINGBACK");
+                  _llCrossingTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = 0;
+                  _llDogEnterTimes[iCurrentDog] = _llDogExitTimes[iPreviousDog];
+               }
+               else
+               //It has to be dog going in + sensors noise
+               {
+                  _ChangeDogState(COMINGBACK);
+                  ESP_LOGD(__FILE__, "New dog state: COMINGBACK");
+               }
+               
             }
          }
          _strTransition = "";
