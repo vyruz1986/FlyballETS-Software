@@ -70,7 +70,6 @@ private:
    long long _llRaceTime;
    long long _llPerfectCrossingTime;
    long long _llLastTransitionStringUpdate;
-   long long _llFalseStartTime = 0;
 
    uint8_t  _iS1Pin;
    uint8_t  _iS2Pin;
@@ -82,11 +81,15 @@ private:
       volatile long long llTriggerTime;
       volatile int iSensorState;
    };
-#define TRIGGER_QUEUE_LENGTH 60
-   STriggerRecord _STriggerQueue[TRIGGER_QUEUE_LENGTH];
+   
+   #define TRIGGER_QUEUE_LENGTH 60
+   STriggerRecord _InputTriggerQueue[TRIGGER_QUEUE_LENGTH];
+   STriggerRecord _OutputTriggerQueue[TRIGGER_QUEUE_LENGTH];
 
-   volatile uint8_t _iQueueReadIndex;
-   volatile uint8_t _iQueueWriteIndex;
+   volatile uint8_t _iOutputQueueReadIndex = 0;
+   volatile uint8_t _iInputQueueReadIndex = 0;
+   volatile uint8_t _iOutputQueueWriteIndex = 0;
+   volatile uint8_t _iInputQueueWriteIndex = 0;
 
    bool _bFault;
    bool _bDogFaults[4];
@@ -96,7 +99,6 @@ private:
    uint8_t _iLastReturnedRunNumber[4];
    long long _llDogEnterTimes[4];
    long long _llDogExitTimes[4];
-
    long long _llDogTimes[4][4];
    long long _llCrossingTimes[4][4];
 
@@ -116,6 +118,7 @@ private:
    void _ChangeDogState(_byDogStates _byNewDogState);
    void _ChangeDogNumber(uint8_t _iNewDogNumber);
    void _QueuePush(STriggerRecord _InterruptTrigger);
+   void _QueueFilter();
    STriggerRecord _QueuePop();
    bool _QueueEmpty();
    void _AddToTransitionString(STriggerRecord _InterruptTrigger);

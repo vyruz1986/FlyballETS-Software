@@ -318,6 +318,11 @@ void setup()
 #ifdef ESP32
    mdnsServerSetup();
 #endif //  ESP32
+
+#if !WiFiActivation
+   WiFi.mode(WIFI_OFF);
+   //btStop();
+#endif
 }
 
 void loop()
@@ -331,7 +336,12 @@ void loop()
    //Check for serial events
    serialEvent();
 
-   //Handle Race main processing
+ #if Simulate
+   //Run simulator
+   Simulator.Main();
+#endif
+
+  //Handle Race main processing
    RaceHandler.Main();
 
 #if !JTAG
@@ -350,11 +360,6 @@ void loop()
 
    //Handle GPS
    GPSHandler.loop();
-
-#if Simulate
-   //Run simulator
-   Simulator.Main();
-#endif
 
    //Race start/stop button (remote D0 output) or serial command
    if ((digitalRead(iRC0Pin) == HIGH && (GET_MICROS / 1000 - llLastRCPress[0] > 2000)) || (bSerialStringComplete && (strSerialData == "START" || strSerialData == "STOP")))
@@ -459,26 +464,27 @@ void loop()
       {
          //Race is finished, put final data on screen
          dtostrf(RaceHandler.GetDogTime(RaceHandler.iCurrentDog, -2), 7, 3, cDogTime);
-         ESP_LOGI(__FILE__, "D%i: %s|CR: %s", RaceHandler.iCurrentDog, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iCurrentDog, -2).c_str());
-         ESP_LOGI(__FILE__, "RT:%s", cElapsedRaceTime);
+         ESP_LOGI(__FILE__, "D%i: %s|CR: %s", RaceHandler.iCurrentDog+1, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iCurrentDog, -2).c_str());
+         ESP_LOGI(__FILE__, "Team:%s", cElapsedRaceTime);
+         ESP_LOGI(__FILE__, "Net:%s", cTeamNetTime);
       }
       ESP_LOGI(__FILE__, "RS: %s", RaceHandler.GetRaceStateString());
    }
 
    //heap memory monitor
-   long long llCurrentMillis = GET_MICROS / 1000;
+   /*long long llCurrentMillis = GET_MICROS / 1000;
    if (llCurrentMillis - llHeapPreviousMillis > llHeapInterval)
    {
       ESP_LOGI(__FILE__, "Elapsed system time: %llu. Heap caps free size: %i\n", GET_MICROS / 1000, heap_caps_get_free_size(MALLOC_CAP_8BIT));
       llHeapPreviousMillis = llCurrentMillis;
    }
-
+   */
    if (RaceHandler.iCurrentDog != iCurrentDog)
    {
       dtostrf(RaceHandler.GetDogTime(RaceHandler.iPreviousDog, -2), 7, 3, cDogTime);
 
-      ESP_LOGI(__FILE__, "Dog %i: %s|CR: %s", RaceHandler.iPreviousDog, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
-      ESP_LOGI(__FILE__, "Next dog: %i", RaceHandler.iCurrentDog);
+      ESP_LOGI(__FILE__, "Dog %i: %s|CR: %s", RaceHandler.iPreviousDog+1, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
+      ESP_LOGI(__FILE__, "Next dog: %i", RaceHandler.iCurrentDog+1);
       ESP_LOGI(__FILE__, "RT:%s", cElapsedRaceTime);
    }
 
@@ -568,6 +574,7 @@ void StartStopRace()
        && RaceHandler.GetRaceTime() == 0)           //and timers are zero
    {
       //Then start the race
+      ESP_LOGI(__FILE__, "%s", GPSHandler.GetUTCTimestamp());
       ESP_LOGD(__FILE__, "%llu: START!", GET_MICROS / 1000);
       LightsController.InitiateStartSequence();
       RaceHandler.StartRace();

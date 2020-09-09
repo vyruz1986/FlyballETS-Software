@@ -88,7 +88,7 @@ void RaceHandlerClass::_ChangeDogNumber(uint8_t iNewDogNumber)
    {
       iPreviousDog = iCurrentDog;
       iCurrentDog = iNewDogNumber;
-      ESP_LOGD(__FILE__, "Dog: %i | ENT:%lld | EXIT:%lld | TOT:%lld", iPreviousDog, _llDogEnterTimes[iPreviousDog], _llDogExitTimes[iPreviousDog], _llDogTimes[iPreviousDog][_iDogRunCounters[iPreviousDog]]);
+      ESP_LOGD(__FILE__, "Dog: %i | ENT:%lld | EXIT:%lld | TOT:%lld", iPreviousDog+1, _llDogEnterTimes[iPreviousDog], _llDogExitTimes[iPreviousDog], _llDogTimes[iPreviousDog][_iDogRunCounters[iPreviousDog]]);
    }
 }
 
@@ -100,13 +100,21 @@ void RaceHandlerClass::_ChangeDogNumber(uint8_t iNewDogNumber)
 /// </summary>
 void RaceHandlerClass::Main()
 {
+   //Trigger filterring of sensors interrupts in new records available
+   while (_iInputQueueReadIndex != _iInputQueueWriteIndex)
+   {
+      ESP_LOGD(__FILE__, "%lld | IQRI:%d | IQWI:%d", GET_MICROS, _iInputQueueReadIndex, _iInputQueueWriteIndex); 
+      _QueueFilter();
+      
+   }
+
    //Don't handle anything if race is stopped
    if (RaceState == STOPPED)
    {
       while (!_QueueEmpty())
       {
          STriggerRecord STempRecord = _QueuePop();
-         ESP_LOGD(__FILE__, "S%i | T:%lld | St:%i", STempRecord.iSensorNumber, STempRecord.llTriggerTime - _llRaceStartTime, STempRecord.iSensorState);
+         ESP_LOGD(__FILE__, "S%i | TT:%lld | T:%lld | St:%i", STempRecord.iSensorNumber, STempRecord.llTriggerTime, STempRecord.llTriggerTime - _llRaceStartTime, STempRecord.iSensorState);
       }
       return;
    }
@@ -126,7 +134,7 @@ void RaceHandlerClass::Main()
          ESP_LOGD(__FILE__, "Gate: CLEAR");
       }
 
-      ESP_LOGD(__FILE__, "S%i | T:%lld | St:%i", STriggerRecord.iSensorNumber, STriggerRecord.llTriggerTime - _llRaceStartTime, STriggerRecord.iSensorState);
+      ESP_LOGD(__FILE__, "S%i | TT:%lld | T:%lld | St:%i", STriggerRecord.iSensorNumber, STriggerRecord.llTriggerTime, STriggerRecord.llTriggerTime - _llRaceStartTime, STriggerRecord.iSensorState);
 
 
       //Calculate what our next dog will be
@@ -159,10 +167,9 @@ void RaceHandlerClass::Main()
          {
             //Dog 0 is too early!
             SetDogFault(iCurrentDog, ON);
-            ESP_LOGD(__FILE__, "Fault! Dog: %i!", iCurrentDog);
+            ESP_LOGD(__FILE__, "Fault! Dog: %i!", iCurrentDog+1);
             _llCrossingTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = STriggerRecord.llTriggerTime - _llPerfectCrossingTime;
             _llDogEnterTimes[iCurrentDog] = STriggerRecord.llTriggerTime;
-            _llFalseStartTime = STriggerRecord.llTriggerTime - _llPerfectCrossingTime;
          }
          //Check if this is a next dog which is too early (we are expecting a dog to come back)
          else if (_byDogState == COMINGBACK)
@@ -179,7 +186,7 @@ void RaceHandlerClass::Main()
 
             //Handle next dog
             _llDogEnterTimes[iNextDog] = STriggerRecord.llTriggerTime;
-            ESP_LOGD(__FILE__, "Fault! Dog: %i!", iNextDog);
+            ESP_LOGD(__FILE__, "Fault! Dog: %i!", iNextDog+1);
          }
 
          //Normal race handling (no faults)
@@ -239,8 +246,8 @@ void RaceHandlerClass::Main()
             if ((iCurrentDog == 3 && _bFault == false && _bRerunBusy == false) //If this is the 4th dog and there is no fault we have to stop the race
                 || (_bRerunBusy == true && _bFault == false))                  //Or if the rerun sequence was started but no faults exist anymore
             {
-               StopRace(STriggerRecord.llTriggerTime - _llFalseStartTime);
-               ESP_LOGD(__FILE__, "Last Dog: %i | ENT:%lld | EXIT:%lld | TOT:%lld", iCurrentDog, _llDogEnterTimes[iCurrentDog], _llDogExitTimes[iCurrentDog], _llDogTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]]);
+               StopRace(STriggerRecord.llTriggerTime);
+               ESP_LOGD(__FILE__, "Last Dog: %i | ENT:%lld | EXIT:%lld | TOT:%lld", iCurrentDog+1, _llDogEnterTimes[iCurrentDog], _llDogExitTimes[iCurrentDog], _llDogTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]]);
             }
             else if ((iCurrentDog == 3 && _bFault == true && _bRerunBusy == false) //If current dog is dog 4 and a fault exists, we have to initiate rerun sequence
                      || _bRerunBusy == true)                                       //Or if rerun is busy (and faults still exist)
@@ -252,7 +259,7 @@ void RaceHandlerClass::Main()
                _llDogExitTimes[iNextDog] = 0;
                //Increase run counter for this dog
                _iDogRunCounters[iNextDog]++;
-               ESP_LOGI(__FILE__, "Re-run for dog %i", iNextDog);
+               ESP_LOGI(__FILE__, "Re-run for dog %i", iNextDog+1);
             }
             else
             {
@@ -329,23 +336,34 @@ void RaceHandlerClass::Main()
                ESP_LOGI(__FILE__, "Spat ball detected?!");
                SetDogFault(iCurrentDog, ON);
             }
-            else //Transition string indicated something other than dog coming back or dog going in, it means 2 dogs must have passed
+            else 
             {
-               //Transition string indicates more than 1 dog passed
-               //We increase the dog number
-               _ChangeDogNumber(iNextDog);
-
-               //If this is Re-run and dog had fault active we need to turn it OFF if this is perfect crossing case during re-run
-               if ((_bRerunBusy == true && _bFault == true))
+               //If Transition string indicated something else and we expect coming back dog, it means 2 dogs must have passed
+               if (_byDogState == COMINGBACK)
                {
-                  SetDogFault(iCurrentDog, OFF);
-               }
+                  //Transition string indicates more than 1 dog passed
+                  //We increase the dog number
+                  _ChangeDogNumber(iNextDog);
 
-               // and set perfect crossing time for new dog
-               _ChangeDogState(COMINGBACK);
-               ESP_LOGD(__FILE__, "New dog state: COMINGBACK");
-               _llCrossingTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = 0;
-               _llDogEnterTimes[iCurrentDog] = _llDogExitTimes[iPreviousDog];
+                  //If this is Re-run and dog had fault active we need to turn it OFF if this is perfect crossing case during re-run
+                  if ((_bRerunBusy == true && _bFault == true))
+                  {
+                     SetDogFault(iCurrentDog, OFF);
+                  }
+
+                  // and set perfect crossing time for new dog
+                  _ChangeDogState(COMINGBACK);
+                  ESP_LOGD(__FILE__, "New dog state: COMINGBACK");
+                  _llCrossingTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = 0;
+                  _llDogEnterTimes[iCurrentDog] = _llDogExitTimes[iPreviousDog];
+               }
+               else
+               //It has to be dog going in + sensors noise
+               {
+                  _ChangeDogState(COMINGBACK);
+                  ESP_LOGD(__FILE__, "New dog state: COMINGBACK");
+               }
+               
             }
          }
          _strTransition = "";
@@ -353,7 +371,7 @@ void RaceHandlerClass::Main()
       else
       {
          _bGatesClear = false;
-         ESP_LOGD(__FILE__, "Gate: DOG");
+         ESP_LOGD(__FILE__, "Gate: DOG(s)");
       }
    }
 
@@ -362,7 +380,7 @@ void RaceHandlerClass::Main()
    {
       if (GET_MICROS > _llRaceStartTime)
       {
-         _llRaceTime = GET_MICROS - _llFalseStartTime - _llRaceStartTime;
+         _llRaceTime = GET_MICROS - _llRaceStartTime;
       }
    }
 
@@ -404,7 +422,7 @@ void RaceHandlerClass::StartRace()
 /// </summary>
 void RaceHandlerClass::StopRace()
 {
-   this->StopRace(GET_MICROS - _llFalseStartTime);
+   this->StopRace(GET_MICROS);
 }
 
 /// <summary>
@@ -432,19 +450,28 @@ void RaceHandlerClass::ResetRace()
 {
    if (RaceState == STOPPED)
    {
+      uint8_t iRecordToPrintIndex = 0;
+      while (iRecordToPrintIndex < _iInputQueueWriteIndex)
+      {
+         STriggerRecord RecordToPrint = _InputTriggerQueue[iRecordToPrintIndex];
+         printf("{%i, %lld, %i},\n", RecordToPrint.iSensorNumber, RecordToPrint.llTriggerTime - _llRaceStartTime, RecordToPrint.iSensorState);
+         iRecordToPrintIndex++;
+      }
+
       iCurrentDog = 0;
       iPreviousDog = 0;
       _llRaceStartTime = 0;
       _llRaceEndTime = 0;
       _llRaceTime = 0;
-      _llFalseStartTime = 0;
       _llPerfectCrossingTime = 0;
       _byDogState = GOINGIN;
       _ChangeDogNumber(0);
       _bFault = false;
       _bRerunBusy = false;
-      _iQueueReadIndex = 0;
-      _iQueueWriteIndex = 0;
+      _iOutputQueueReadIndex = 0;
+      _iInputQueueReadIndex = 0;
+      _iOutputQueueWriteIndex = 0;
+      _iInputQueueWriteIndex = 0;
       _strTransition = "";
       _bGatesClear = true;
 
@@ -533,13 +560,13 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
    {
       LightsController.ToggleFaultLight(iDogNumber, LightsController.ON);
       _bFault = true;
-      ESP_LOGI(__FILE__, "Dog%i fault ON", iDogNumber);
+      ESP_LOGI(__FILE__, "Dog%i fault ON", iDogNumber+1);
    }
    else
    {
       //If fault is false, turn off fault light for this dog
       LightsController.ToggleFaultLight(iDogNumber, LightsController.OFF);
-      ESP_LOGI(__FILE__, "Dog%i fault OFF", iDogNumber);
+      ESP_LOGI(__FILE__, "Dog%i fault OFF", iDogNumber+1);
    }
 }
 
@@ -981,25 +1008,124 @@ boolean RaceHandlerClass::GetRunDirection()
 }
 
 /// <summary>
-///   Pushes an interrupt trigger record to the back of the interrupt buffer.
+///   Pushes an Sensor interrupt trigger record to the back of the input interrupts buffer.
 /// </summary>
 ///
 /// <param name="_InterruptTrigger">   The interrupt trigger record. </param>
 void RaceHandlerClass::_QueuePush(RaceHandlerClass::STriggerRecord _InterruptTrigger)
 {
    //Add record to queue
-   _STriggerQueue[_iQueueWriteIndex] = _InterruptTrigger;
+   _InputTriggerQueue[_iInputQueueWriteIndex] = _InterruptTrigger;
 
    //Write index has to be increased, check it we should wrap-around
-   if (_iQueueWriteIndex == TRIGGER_QUEUE_LENGTH - 1) //(sizeof(_STriggerQueue) / sizeof(*_STriggerQueue) - 1))
+   if (_iInputQueueWriteIndex == TRIGGER_QUEUE_LENGTH - 1) //(sizeof(_OutputTriggerQueue) / sizeof(*_OutputTriggerQueue) - 1))
    {
       //Write index has reached end of array, start at 0 again
-      _iQueueWriteIndex = 0;
+      _iInputQueueWriteIndex = 0;
    }
    else
    {
       //End of array not yet reached, increase index by 1
-      _iQueueWriteIndex++;
+      _iInputQueueWriteIndex++;
+   }
+}
+
+/// <summary>
+///   Filter input interrupt record(s) from the front of the interrupts buffer
+///   and push filtered records to output interrupts records queue
+/// </summary>
+void RaceHandlerClass::_QueueFilter()
+{
+   STriggerRecord _CurrentRecord = _InputTriggerQueue[_iInputQueueReadIndex];
+   
+   if (_iInputQueueReadIndex <= _iInputQueueWriteIndex - 2)
+   {
+      STriggerRecord _NextRecord = _InputTriggerQueue[_iInputQueueReadIndex+1];
+
+      // If 2 records are from the same sensors line and delta time is below 4ms ignore both
+      if (_CurrentRecord.iSensorNumber == _NextRecord.iSensorNumber && _NextRecord.llTriggerTime - _CurrentRecord.llTriggerTime <= 4000)
+      {
+         ESP_LOGD(__FILE__, "Next record %lld - Current record %lld = %lld < 4ms (4000) ", _NextRecord.llTriggerTime, _CurrentRecord.llTriggerTime, _NextRecord.llTriggerTime - _CurrentRecord.llTriggerTime); 
+         ESP_LOGD(__FILE__, "S%i | TT:%lld | T:%lld | St:%i | IGNORED", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime,
+         _CurrentRecord.llTriggerTime - _llRaceStartTime, _CurrentRecord.iSensorState);
+         ESP_LOGD(__FILE__, "S%i | TT:%lld | T:%lld | St:%i | IGNORED", _NextRecord.iSensorNumber, _NextRecord.llTriggerTime,
+         _NextRecord.llTriggerTime - _llRaceStartTime, _NextRecord.iSensorState);
+         
+         //Input Read index has to be increased, check it we should wrap-around
+         if (_iInputQueueReadIndex == TRIGGER_QUEUE_LENGTH - 2)
+         {
+            //Input Read index has reached end of array, start at 0 again
+            _iInputQueueReadIndex = 0;
+         }
+         else
+         {
+            //End of array not yet reached, increase index by 2
+            _iInputQueueReadIndex = _iInputQueueReadIndex + 2;
+         }
+      }
+      else
+      {
+         //Next record is for different sensor line or delta time is higher than 4ms. Push Current record Output Queue.
+         ESP_LOGD(__FILE__, "Next record > 4ms or for different sensors line. Push Current S%i record %lld to Output Queue.", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime); 
+         //This function copy current record to common interrupt queue
+         _OutputTriggerQueue[_iOutputQueueWriteIndex] = _InputTriggerQueue[_iInputQueueReadIndex];
+         
+         //Input Read index has to be increased, check it we should wrap-around
+         if (_iInputQueueReadIndex == TRIGGER_QUEUE_LENGTH - 1)
+         {
+            //Input Read index has reached end of array, start at 0 again
+            _iInputQueueReadIndex = 0;
+         }
+         else
+         {
+            //End of array not yet reached, increase index by 1
+            _iInputQueueReadIndex++;
+         }   
+
+         //Output Write index has to be increased, check it we should wrap-around
+         if (_iOutputQueueWriteIndex == TRIGGER_QUEUE_LENGTH - 1)
+         {
+            //Output Write index has reached end of array, start at 0 again
+            _iOutputQueueWriteIndex = 0;
+         }
+         else
+         {
+            //End of array not yet reached, increase index by 1
+            _iOutputQueueWriteIndex++;
+         }
+      }
+      
+   }
+   else
+   {
+      //Only one record available in the Input Queue. Push it to Output Queue.
+      ESP_LOGD(__FILE__, "One record in the Input Queue. Push S%i record %lld to Output Queue.", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime); 
+      //This function copy current record to common interrupt queue
+      _OutputTriggerQueue[_iOutputQueueWriteIndex] = _InputTriggerQueue[_iInputQueueReadIndex];
+      
+      //Input Read index has to be increased, check it we should wrap-around
+      if (_iInputQueueReadIndex == TRIGGER_QUEUE_LENGTH - 1)
+      {
+         //Input Read index has reached end of array, start at 0 again
+         _iInputQueueReadIndex = 0;
+      }
+      else
+      {
+         //End of array not yet reached, increase index by 1
+         _iInputQueueReadIndex++;
+      }   
+
+      //Output Write index has to be increased, check it we should wrap-around
+      if (_iOutputQueueWriteIndex == TRIGGER_QUEUE_LENGTH - 1)
+      {
+         //Output Write index has reached end of array, start at 0 again
+         _iOutputQueueWriteIndex = 0;
+      }
+      else
+      {
+         //End of array not yet reached, increase index by 1
+         _iOutputQueueWriteIndex++;
+      }
    }
 }
 
@@ -1013,18 +1139,18 @@ void RaceHandlerClass::_QueuePush(RaceHandlerClass::STriggerRecord _InterruptTri
 RaceHandlerClass::STriggerRecord RaceHandlerClass::_QueuePop()
 {
    //This function returns the next record of the interrupt queue
-   STriggerRecord NextRecord = _STriggerQueue[_iQueueReadIndex];
+   STriggerRecord NextRecord = _OutputTriggerQueue[_iOutputQueueReadIndex];
 
    //Read index has to be increased, check it we should wrap-around
-   if (_iQueueReadIndex == TRIGGER_QUEUE_LENGTH - 1) //(sizeof(_STriggerQueue) / sizeof(*_STriggerQueue) - 1))
+   if (_iOutputQueueReadIndex == TRIGGER_QUEUE_LENGTH - 1) //(sizeof(_OutputTriggerQueue) / sizeof(*_OutputTriggerQueue) - 1))
    {
-      //Write index has reached end of array, start at 0 again
-      _iQueueReadIndex = 0;
+      //Read index has reached end of array, start at 0 again
+      _iOutputQueueReadIndex = 0;
    }
    else
    {
       //End of array not yet reached, increase index by 1
-      _iQueueReadIndex++;
+      _iOutputQueueReadIndex++;
    }
    return NextRecord;
 }
@@ -1041,7 +1167,7 @@ bool RaceHandlerClass::_QueueEmpty()
    //This function checks if queue is empty.
    //This is determined by comparing the read and write index.
    //If they are equal, it means we have cought up reading and the queue is 'empty' (the array is not really emmpty...)
-   if (_iQueueReadIndex == _iQueueWriteIndex)
+   if (_iOutputQueueReadIndex == _iOutputQueueWriteIndex)
    {
       return true;
    }

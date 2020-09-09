@@ -237,19 +237,21 @@ void SimulatorClass::Main()
       return;
    }
    long long llRaceElapsedTime = GET_MICROS - RaceHandler._llRaceStartTime;
-   //Simulate sensors
+
+   //Simulate sensors  
    if (RaceHandler.RaceState != RaceHandler.STOPPED && PendingRecord.llTriggerTime <= (long long)llRaceElapsedTime)
    {
-      if (RaceHandler._QueueEmpty())
-      {
          if ((PendingRecord.llTriggerTime < 0 && RaceHandler.RaceState == RaceHandler.STARTING) || (PendingRecord.llTriggerTime > 0 && RaceHandler.RaceState == RaceHandler.RUNNING))
          {
-            RaceHandler._QueuePush({PendingRecord.iSensorNumber, (RaceHandler._llRaceStartTime + PendingRecord.llTriggerTime), PendingRecord.iState});
-            //And increase pending record
-            _iDataPos++;
-            PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
+            while (PendingRecord.llTriggerTime <= (long long)llRaceElapsedTime)
+            {
+               ESP_LOGD(__FILE__, "%lld Pending record S%d TriggerTime %lld | %lld", GET_MICROS, PendingRecord.iSensorNumber, RaceHandler._llRaceStartTime + PendingRecord.llTriggerTime, PendingRecord.llTriggerTime);
+               RaceHandler._QueuePush({PendingRecord.iSensorNumber, (RaceHandler._llRaceStartTime + PendingRecord.llTriggerTime), PendingRecord.iState});
+               //And increase pending record
+               _iDataPos++;
+               PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
+            }
          }
-      }
    }
 }
 

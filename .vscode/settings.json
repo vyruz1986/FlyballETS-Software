@@ -9,7 +9,9 @@
       "fstream": "cpp",
       "istream": "cpp",
       "ostream": "cpp",
-      "sstream": "cpp"
+      "sstream": "cpp",
+      "cstddef": "cpp",
+      "type_traits": "cpp"
    },
    "C_Cpp.dimInactiveRegions": true
 }
