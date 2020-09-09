@@ -114,7 +114,7 @@ void RaceHandlerClass::Main()
       while (!_QueueEmpty())
       {
          STriggerRecord STempRecord = _QueuePop();
-         ESP_LOGD(__FILE__, "S%i | TT:%lld | T:%lld | St:%i", STempRecord.iSensorNumber, STempRecord.llTriggerTime, STempRecord.llTriggerTime, STempRecord.iSensorState);
+         ESP_LOGD(__FILE__, "S%i | TT:%lld | T:%lld | St:%i", STempRecord.iSensorNumber, STempRecord.llTriggerTime, STempRecord.llTriggerTime - _llRaceStartTime, STempRecord.iSensorState);
       }
       return;
    }
@@ -233,7 +233,7 @@ void RaceHandlerClass::Main()
             _llDogTimes[iPreviousDog][_iDogRunCounters[iPreviousDog]] = _llDogExitTimes[iPreviousDog] - _llDogEnterTimes[iPreviousDog]; //SIMON: delete
 
             //And update crossing time of this dog (who is in fault)
-            _llCrossingTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = _llDogEnterTimes[iCurrentDog] - _llDogExitTimes[iPreviousDog];  //SIMON: this is OK
+            _llCrossingTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = _llDogEnterTimes[iCurrentDog] - STriggerRecord.llTriggerTime;  //SIMON: this is OK
          }
          else if ((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) > 2000000) //Filter out S2 HIGH signals that are < 2 seconds after dog enter time
          {
@@ -1008,7 +1008,7 @@ boolean RaceHandlerClass::GetRunDirection()
 }
 
 /// <summary>
-///   Pushes an S1 interrupt trigger record to the back of the S1 interrupt buffer.
+///   Pushes an Sensor interrupt trigger record to the back of the input interrupts buffer.
 /// </summary>
 ///
 /// <param name="_InterruptTrigger">   The interrupt trigger record. </param>
@@ -1016,8 +1016,6 @@ void RaceHandlerClass::_QueuePush(RaceHandlerClass::STriggerRecord _InterruptTri
 {
    //Add record to queue
    _InputTriggerQueue[_iInputQueueWriteIndex] = _InterruptTrigger;
-   ////STriggerRecord inputS1 = _InputTriggerQueue[_iInputQueueWriteIndex];
-   ////ESP_LOGD(__FILE__, "Input S1 with WIS1:%d | S%i | TT:%lld | St:%i", _iInputQueueWriteIndex, inputS1.iSensorNumber, inputS1.llTriggerTime, inputS1.iSensorState);
 
    //Write index has to be increased, check it we should wrap-around
    if (_iInputQueueWriteIndex == TRIGGER_QUEUE_LENGTH - 1) //(sizeof(_OutputTriggerQueue) / sizeof(*_OutputTriggerQueue) - 1))
@@ -1129,41 +1127,6 @@ void RaceHandlerClass::_QueueFilter()
          _iOutputQueueWriteIndex++;
       }
    }
-   
-      /*
-      // If no new record available for 6ms copy current record (quarantine is over)
-      else if (_iInputQueueReadIndex == (_iInputQueueWriteIndex - 1) && (GET_MICROS - _CurrentRecord.llTriggerTime) >= 6000)
-         {
-            ESP_LOGD(__FILE__, "%lld S1 record %lld passed 6ms quarantine with delta: %lld", GET_MICROS, _CurrentRecord.llTriggerTime, GET_MICROS - _CurrentRecord.llTriggerTime); 
-            //This function copy current S1 record to common interrupt queue
-            _OutputTriggerQueue[_iOutputQueueWriteIndex] = _InputTriggerQueue[_iInputQueueReadIndex];
-
-            //Read index S1 has to be increased, check it we should wrap-around
-            if (_iInputQueueReadIndex == TRIGGER_QUEUE_LENGTH - 1)
-            {
-               //Read index S1 has reached end of array, start at 0 again
-               _iInputQueueReadIndex = 0;
-            }
-            else
-            {
-               //End of array not yet reached, increase index by 1
-               _iInputQueueReadIndex++;
-               ////ESP_LOGD(__FILE__, "Increase RIS1:%d after 6ms", _iQueueReadIndexS1); 
-            }   
-
-            //Write index has to be increased, check it we should wrap-around
-            if (_iOutputQueueWriteIndex == TRIGGER_QUEUE_LENGTH - 1)
-            {
-               //Write index has reached end of array, start at 0 again
-               _iOutputQueueWriteIndex = 0;
-            }
-            else
-            {
-               //End of array not yet reached, increase index by 1
-               _iOutputQueueWriteIndex++;
-            }
-         }
-      */
 }
 
 /// <summary>
