@@ -450,6 +450,14 @@ void RaceHandlerClass::ResetRace()
 {
    if (RaceState == STOPPED)
    {
+      uint8_t iRecordToPrintIndex = 0;
+      while (iRecordToPrintIndex < _iInputQueueWriteIndex)
+      {
+         STriggerRecord RecordToPrint = _InputTriggerQueue[iRecordToPrintIndex];
+         printf("{%i, %lld, %i},\n", RecordToPrint.iSensorNumber, RecordToPrint.llTriggerTime - _llRaceStartTime, RecordToPrint.iSensorState);
+         iRecordToPrintIndex++;
+      }
+
       iCurrentDog = 0;
       iPreviousDog = 0;
       _llRaceStartTime = 0;
