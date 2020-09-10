@@ -176,7 +176,7 @@ void LightsControllerClass::InitiateStartSequence()
 /// </summary>
 void LightsControllerClass::ResetLights()
 {
-   byOverallState = STOPPED;
+   byOverallState = RESET;
 
    //Set all lights off
 #ifdef WS281x

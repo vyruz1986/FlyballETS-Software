@@ -235,8 +235,8 @@ void WebHandlerClass::init(int webPort)
 
 void WebHandlerClass::loop()
 {
-   //When race is starting or running, or time > 0 (stopped but not reset)
-   if ((RaceHandler.RaceState != RaceHandler.STOPPED || RaceHandler.GetRaceTime() > 0))
+   //When race is starting, running or stopped (race time > 0)
+   if ((RaceHandler.RaceState != RaceHandler.RESET))
    {
       //Send race data each 200ms
       if (millis() - _lLastRaceDataBroadcast > _lRaceDataBroadcastInterval)
@@ -294,14 +294,9 @@ boolean WebHandlerClass::_DoAction(JsonObject &ActionObj, String *ReturnError)
    String ActionType = ActionObj["actionType"];
    if (ActionType == "StartRace")
    {
-      if (RaceHandler.RaceState != RaceHandler.STOPPED)
+      if (RaceHandler.RaceState != RaceHandler.RESET)
       {
-         //ReturnError = String("Race was not stopped, stop it first!");
-         return false;
-      }
-      else if (RaceHandler.GetRaceTime() != 0)
-      {
-         //ReturnError = "Race was not reset, reset race first!";
+         //ReturnError = String("Race was not reset, stop and reset it first!");
          return false;
       }
       else
@@ -313,7 +308,7 @@ boolean WebHandlerClass::_DoAction(JsonObject &ActionObj, String *ReturnError)
    }
    else if (ActionType == "StopRace")
    {
-      if (RaceHandler.RaceState == RaceHandler.STOPPED)
+      if (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)
       {
          //ReturnError = "Race was already stopped!";
          return false;
@@ -327,12 +322,12 @@ boolean WebHandlerClass::_DoAction(JsonObject &ActionObj, String *ReturnError)
    }
    else if (ActionType == "ResetRace")
    {
-      if (RaceHandler.RaceState != RaceHandler.STOPPED)
+      if (RaceHandler.RaceState == RaceHandler.STARTING || RaceHandler.RaceState == RaceHandler.RUNNING)
       {
          //ReturnError = "Race was not stopped, first stop it before resetting!";
          return false;
       }
-      else if (RaceHandler._llRaceStartTime == 0)
+      else if (RaceHandler.RaceState == RaceHandler.RESET)
       {
          //ReturnError = "Race was already reset!";
          return false;

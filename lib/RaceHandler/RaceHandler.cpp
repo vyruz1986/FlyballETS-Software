@@ -31,15 +31,13 @@
 /// <param name="iS2Pin">  Zero-based index of the S2 pin. </param>
 void RaceHandlerClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
 {
-   //Start in stopped state
-   _ChangeRaceState(STOPPED);
+   //Start in ready/reset state
    _iS1Pin = iS1Pin;
    _iS2Pin = iS2Pin;
-
    ResetRace();
-
    _iCurrentRaceId = 0;
    Serial.printf("Run Direction from settings: %s", SettingsManager.getSetting("RunDirectionInverted").c_str());
+   
    if (SettingsManager.getSetting("RunDirectionInverted").equals("1"))
    {
       ToggleRunDirection();
@@ -108,8 +106,8 @@ void RaceHandlerClass::Main()
       
    }
 
-   //Don't handle anything if race is stopped
-   if (RaceState == STOPPED)
+   //Don't handle anything if race is stopped or reset
+   if (RaceState == STOPPED || RaceState == RESET)
    {
       while (!_QueueEmpty())
       {
@@ -513,6 +511,7 @@ void RaceHandlerClass::ResetRace()
       {
          iCounter = 0;
       }
+      _ChangeRaceState(RESET);
    }
 
    if (_iCurrentRaceId == NUM_HISTORIC_RACE_RECORDS)
@@ -537,7 +536,7 @@ void RaceHandlerClass::ResetRace()
 void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
 {
    //Don't process any faults when race is not running
-   if (RaceState == STOPPED)
+   if (RaceState == STOPPED || RaceState == RESET)
    {
       return;
    }
@@ -576,7 +575,7 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
 /// </summary>
 void RaceHandlerClass::TriggerSensor1()
 {
-   if (RaceState == STOPPED)
+   if (RaceState == STOPPED && GET_MICROS > _llRaceEndTime + 2000000)
    {
       return;
    }
@@ -589,7 +588,7 @@ void RaceHandlerClass::TriggerSensor1()
 /// </summary>
 void RaceHandlerClass::TriggerSensor2()
 {
-   if (RaceState == STOPPED)
+   if (RaceState == STOPPED && GET_MICROS > _llRaceEndTime + 2000000)
    {
       return;
    }
@@ -912,6 +911,9 @@ String RaceHandlerClass::GetRaceStateString()
       break;
    case RaceHandlerClass::RUNNING:
       strRaceState = "RUNNING";
+      break;
+   case RaceHandlerClass::RESET:
+      strRaceState = " READY ";
       break;
    default:
       break;

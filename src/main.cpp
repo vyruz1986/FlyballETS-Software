@@ -464,7 +464,7 @@ void loop()
       {
          //Race is finished, put final data on screen
          dtostrf(RaceHandler.GetDogTime(RaceHandler.iCurrentDog, -2), 7, 3, cDogTime);
-         ESP_LOGI(__FILE__, "D%i: %s|CR: %s", RaceHandler.iCurrentDog+1, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iCurrentDog, -2).c_str());
+         ESP_LOGI(__FILE__, "Dog %i: %s|CR: %s", RaceHandler.iCurrentDog+1, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iCurrentDog, -2).c_str());
          ESP_LOGI(__FILE__, "Team:%s", cElapsedRaceTime);
          ESP_LOGI(__FILE__, "Net:%s", cTeamNetTime);
       }
@@ -570,8 +570,7 @@ void Sensor1Wrapper()
 void StartStopRace()
 {
    llLastRCPress[0] = GET_MICROS / 1000;
-   if (RaceHandler.RaceState == RaceHandler.STOPPED //If race is stopped
-       && RaceHandler.GetRaceTime() == 0)           //and timers are zero
+   if (RaceHandler.RaceState == RaceHandler.RESET) //If race is reset
    {
       //Then start the race
       ESP_LOGI(__FILE__, "%s", GPSHandler.GetUTCTimestamp());
@@ -598,6 +597,8 @@ void ResetRace()
    llLastRCPress[1] = GET_MICROS / 1000;
    LightsController.ResetLights();
    RaceHandler.ResetRace();
+   iCurrentDog = RaceHandler.iCurrentDog;
+   iCurrentRaceState = RaceHandler.RaceState;
 }
 
 void WiFiEvent(WiFiEvent_t event)

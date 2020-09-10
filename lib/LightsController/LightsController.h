@@ -37,11 +37,11 @@ public:
    //Overal state of this class
    enum OverallStates
    {
-      STOPPED,
+      RESET,
       STARTING,
       STARTED
    };
-   OverallStates byOverallState = STOPPED;
+   OverallStates byOverallState = RESET;
 
    //Decimal values of lights connected to 74HC595
    enum Lights

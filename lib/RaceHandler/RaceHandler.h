@@ -21,12 +21,13 @@ class RaceHandlerClass
  public:
 	void init(uint8_t iS1Pin, uint8_t iS2Pin);
    enum RaceStates {
-      STOPPED,
+      RESET,
       STARTING,
-      RUNNING
+      RUNNING,
+      STOPPED
    };
-   RaceStates RaceState = STOPPED;
-   RaceStates PreviousRaceState = STOPPED;
+   RaceStates RaceState = RESET;
+   RaceStates PreviousRaceState = RESET;
 
    uint8_t iCurrentDog;
    uint8_t iPreviousDog;

@@ -221,11 +221,11 @@ void SimulatorClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
 /// </summary>
 void SimulatorClass::Main()
 {
-   if (RaceHandler.RaceState == RaceHandler.STOPPED)
+   if (RaceHandler.RaceState == RaceHandler.RESET)
    {
       if (_iDataPos != _iDataStartPos)
       {
-         //We've stopped a race, reset data position to 0
+         //We've reset a race, reset data position to 0
          _iDataPos = _iDataStartPos;
          PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
       }
@@ -239,11 +239,12 @@ void SimulatorClass::Main()
    long long llRaceElapsedTime = GET_MICROS - RaceHandler._llRaceStartTime;
 
    //Simulate sensors  
-   if (RaceHandler.RaceState != RaceHandler.STOPPED && PendingRecord.llTriggerTime <= (long long)llRaceElapsedTime)
+   if (RaceHandler.RaceState != RaceHandler.RESET && PendingRecord.llTriggerTime <= (long long)llRaceElapsedTime && PendingRecord.llTriggerTime != 0)
    {
-         if ((PendingRecord.llTriggerTime < 0 && RaceHandler.RaceState == RaceHandler.STARTING) || (PendingRecord.llTriggerTime > 0 && RaceHandler.RaceState == RaceHandler.RUNNING))
+         if ((PendingRecord.llTriggerTime < 0 && RaceHandler.RaceState == RaceHandler.STARTING) || (PendingRecord.llTriggerTime > 0 && RaceHandler.RaceState == RaceHandler.RUNNING)
+            || (RaceHandler.RaceState == RaceHandler.STOPPED && GET_MICROS <= RaceHandler._llRaceEndTime + 2000000))
          {
-            while (PendingRecord.llTriggerTime <= (long long)llRaceElapsedTime)
+            while (PendingRecord.llTriggerTime <= (long long)llRaceElapsedTime && PendingRecord.llTriggerTime != 0)
             {
                ESP_LOGD(__FILE__, "%lld Pending record S%d TriggerTime %lld | %lld", GET_MICROS, PendingRecord.iSensorNumber, RaceHandler._llRaceStartTime + PendingRecord.llTriggerTime, PendingRecord.llTriggerTime);
                RaceHandler._QueuePush({PendingRecord.iSensorNumber, (RaceHandler._llRaceStartTime + PendingRecord.llTriggerTime), PendingRecord.iState});
@@ -257,7 +258,7 @@ void SimulatorClass::Main()
 
 void SimulatorClass::ChangeSimulatedRaceID(uint iSimulatedRaceID)
 {
-   if (RaceHandler.RaceState == RaceHandler.STOPPED)
+   if (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)
    {
       _iDataStartPos = 60 * iSimulatedRaceID;
       _iDataPos = _iDataStartPos;
@@ -612,43 +613,43 @@ Race3 (GT Team 4):
    {1,14641081,0}
 
     // Race 31 (Dog 2 non measureable fault --> NOK test):
-    {1, 2000, 1},
-    {2, 17000, 1},
-    {2, 24000, 0},
-    {2, 26000, 1},
-    {1, 133000, 0},
-    {2, 149000, 0},
-    {1, 4469000, 1},
-    {2, 4485672, 1},
-    {2, 4623600, 0},
-    {1, 4642452, 0},
-    {2, 9449000, 1},
-    {1, 9466000, 1},
-    {1, 9657000, 0},
-    {2, 9680000, 0},
-    {2, 15582000, 1},
-    {1, 15599000, 1},
-    {1, 15654000, 0},
-    {1, 15668000, 1},
-    {2, 15685000, 0},
-    {1, 15699000, 0},
-    {1, 16014000, 1},
-    {2, 16030000, 1},
-    {1, 16147000, 0},
-    {2, 16165000, 0},
-    {2, 20779000, 1},
-    {1, 20795000, 1},
-    {2, 20900000, 0},
-    {1, 20908000, 0},
-    {1, 21440000, 1},
-    {2, 21460000, 1},
-    {2, 21574000, 0},
-    {2, 21578000, 1},
-    {1, 21602000, 0},
-    {2, 21626000, 0},
-    {2, 26549000, 1},
-    {1, 26566000, 1},
-    {2, 26687000, 0},
-    {1, 26705000, 0}
-    };
+   {1, 2000, 1},
+   {2, 17000, 1},
+   {2, 24000, 0},
+   {2, 26000, 1},
+   {1, 133000, 0},
+   {2, 149000, 0},
+   {1, 4469000, 1},
+   {2, 4485672, 1},
+   {2, 4623600, 0},
+   {1, 4642452, 0},
+   {2, 9449000, 1},
+   {1, 9466000, 1},
+   {1, 9657000, 0},
+   {2, 9680000, 0},
+   {2, 15582000, 1},
+   {1, 15599000, 1},
+   {1, 15654000, 0},
+   {1, 15668000, 1},
+   {2, 15685000, 0},
+   {1, 15699000, 0},
+   {1, 16014000, 1},
+   {2, 16030000, 1},
+   {1, 16147000, 0},
+   {2, 16165000, 0},
+   {2, 20779000, 1},
+   {1, 20795000, 1},
+   {2, 20900000, 0},
+   {1, 20908000, 0},
+   {1, 21440000, 1},
+   {2, 21460000, 1},
+   {2, 21574000, 0},
+   {2, 21578000, 1},
+   {1, 21602000, 0},
+   {2, 21626000, 0},
+   {2, 26549000, 1},
+   {1, 26566000, 1},
+   {2, 26687000, 0},
+   {1, 26705000, 0}
+   };
 */
