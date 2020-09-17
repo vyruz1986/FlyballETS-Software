@@ -155,7 +155,8 @@ void RaceHandlerClass::Main()
          iNextDog = iCurrentDog + 1;
       }
 
-      //Handle sensor 1 events (handlers side)
+
+      //Handle sensor 1 events (handlers side) with gates CLEAR 
       if (STriggerRecord.iSensorNumber == 1 && _bGatesClear //Only if gates are clear
           && STriggerRecord.iSensorState == 1)              //And act on HIGH events (beam broken)
       {
@@ -202,44 +203,20 @@ void RaceHandlerClass::Main()
          }
       }
 
-      //Handle sensor 2 (box side)
-      if (STriggerRecord.iSensorNumber == 2 && _bGatesClear //Only if gates are clear
+      ////Handle sensor 1 events (handlers side) with gates state DOG IN
+      if (STriggerRecord.iSensorNumber == 1 && !_bGatesClear && _bSafeCross //Only if gates are busy / dog in and we have safe cross active (S2 crossed while gates clear)
           && STriggerRecord.iSensorState == 1)              //And only if sensor is HIGH
       {
-         if (_byDogState != COMINGBACK)
+         if ((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) > 2000000) //Filter out S2 HIGH signals that are < 2 seconds after dog enter time
          {
-            /* Gates were clear, we weren't expecting a dog back, but one came back.
-            This means we missed the dog going in,
-            most likely due to perfect crossing were next dog was faster than previous dog,
-            and thus passed through sensors unseen */
-            //Set enter time for this dog to exit time of previous dog
-            _llDogEnterTimes[iCurrentDog] = _llDogExitTimes[iPreviousDog];
-            ESP_LOGD(__FILE__, "Invisible dog came back!");
-         }
-
-         //Check if current dog has a fault
-         //TODO: The current dog could also have a fault which is not caused by being too early (manually triggered fault).
-         //We should store the fault type also so we can check if the dog was too early or not.
-         if (iCurrentDog != 0                                                           //If dog is not 1st dog
-             && _bDogFaults[iCurrentDog]                                                //and current dog has fault
-             && (STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) < 2000000) //And S2 is trigger less than 2s after current dog's enter time
-                                                                                        //Then we know It's actually the previous dog who's still coming back (current dog was way too early).
-         {
-            //Current dog had a fault (was too early), so we need to modify the previous dog crossing time (we didn't know this before)
-            //Update exit and total time of previous dog
-            _llDogExitTimes[iPreviousDog] = STriggerRecord.llTriggerTime; //SIMON: delete
-            _llDogTimes[iPreviousDog][_iDogRunCounters[iPreviousDog]] = _llDogExitTimes[iPreviousDog] - _llDogEnterTimes[iPreviousDog]; //SIMON: delete
-
-            //And update crossing time of this dog (who is in fault)
-            _llCrossingTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = _llDogEnterTimes[iCurrentDog] - STriggerRecord.llTriggerTime;  //SIMON: this is OK
-         }
-         else if ((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) > 2000000) //Filter out S2 HIGH signals that are < 2 seconds after dog enter time
-         {
+            //_llPerfectCrossingTime = STriggerRecord.llTriggerTime;
+            //_llS2CrossingTime = STriggerRecord.llTriggerTime;
+            //_bSafeCross = true;
             //Normal handling for dog coming back
-            _llDogExitTimes[iCurrentDog] = STriggerRecord.llTriggerTime; //SIMON: not true, this need to be handle by S1
-            _llDogTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]; //SIMON: not true, this need to be handle by S1
+            _llDogExitTimes[iCurrentDog] = STriggerRecord.llTriggerTime;
+            _llDogTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog];
             //The time the dog came in is also the perfect crossing time
-            _llPerfectCrossingTime = STriggerRecord.llTriggerTime; //SIMON: this is OK
+            //_llPerfectCrossingTime = STriggerRecord.llTriggerTime; // handled so far by sensor 2
 
             if ((iCurrentDog == 3 && _bFault == false && _bRerunBusy == false) //If this is the 4th dog and there is no fault we have to stop the race
                 || (_bRerunBusy == true && _bFault == false))                  //Or if the rerun sequence was started but no faults exist anymore
@@ -264,6 +241,71 @@ void RaceHandlerClass::Main()
                //Store next dog enter time
                _llDogEnterTimes[iNextDog] = STriggerRecord.llTriggerTime;
             }
+         }
+      }
+
+
+      //Handle sensor 2 (box side)
+      if (STriggerRecord.iSensorNumber == 2 && _bGatesClear //Only if gates are clear
+          && STriggerRecord.iSensorState == 1)              //And only if sensor is HIGH
+      {
+         if (_byDogState = GOINGIN)
+         {
+            /* Gates were clear, we weren't expecting a dog back, but one came back.
+            This means we missed the dog going in,
+            most likely due to perfect crossing were next dog was faster than previous dog,
+            and thus passed through sensors unseen */
+            //Set enter time for this dog to exit time of previous dog
+            _llDogEnterTimes[iCurrentDog] = _llDogExitTimes[iPreviousDog];
+            ESP_LOGD(__FILE__, "Invisible dog came back!");
+         }
+
+         //Check if current dog has a fault
+         //TODO: The current dog could also have a fault which is not caused by being too early (manually triggered fault).
+         //We should store the fault type also so we can check if the dog was too early or not.
+         if (iCurrentDog != 0                                                           //If dog is not 1st dog
+             && _bDogFaults[iCurrentDog]                                                //and current dog has fault
+             && (STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) < 2000000) //And S2 is trigger less than 2s after current dog's enter time
+                                                                                        //Then we know It's actually the previous dog who's still coming back (current dog was way too early).
+         {
+            //Update crossing time (negative) of previous dog (who is in fault)
+            _llCrossingTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = _llDogEnterTimes[iCurrentDog] - STriggerRecord.llTriggerTime;  //SIMON: this is OK
+         }
+         else if ((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) > 2000000) //Filter out S2 HIGH signals that are < 2 seconds after dog enter time
+         {
+            _llPerfectCrossingTime = STriggerRecord.llTriggerTime;
+            _llS2CrossingTime = STriggerRecord.llTriggerTime;
+            _bSafeCross = true;
+         /* //Normal handling for dog coming back
+            _llDogExitTimes[iCurrentDog] = STriggerRecord.llTriggerTime; //SIMON: not true, this need to be handle by S1
+            _llDogTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]; //SIMON: not true, this need to be handle by S1
+            //The time the dog came in is also the perfect crossing time
+            _llPerfectCrossingTime = STriggerRecord.llTriggerTime;
+
+            if ((iCurrentDog == 3 && _bFault == false && _bRerunBusy == false) //If this is the 4th dog and there is no fault we have to stop the race
+                || (_bRerunBusy == true && _bFault == false))                  //Or if the rerun sequence was started but no faults exist anymore
+            {
+               StopRace(STriggerRecord.llTriggerTime);
+               ESP_LOGD(__FILE__, "Last Dog: %i | ENT:%lld | EXIT:%lld | TOT:%lld", iCurrentDog+1, _llDogEnterTimes[iCurrentDog], _llDogExitTimes[iCurrentDog], _llDogTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]]);
+            }
+            else if ((iCurrentDog == 3 && _bFault == true && _bRerunBusy == false) //If current dog is dog 4 and a fault exists, we have to initiate rerun sequence
+                     || _bRerunBusy == true)                                       //Or if rerun is busy (and faults still exist)
+            {
+               //Dog 3 came in but there is a fault, we have to initiate the rerun sequence
+               _bRerunBusy = true;
+               //Reset timers for this dog
+               _llDogEnterTimes[iNextDog] = STriggerRecord.llTriggerTime;
+               _llDogExitTimes[iNextDog] = 0;
+               //Increase run counter for this dog
+               _iDogRunCounters[iNextDog]++;
+               ESP_LOGI(__FILE__, "Re-run for dog %i", iNextDog+1);
+            }
+            else
+            {
+               //Store next dog enter time
+               _llDogEnterTimes[iNextDog] = STriggerRecord.llTriggerTime;
+            }
+         */
          }
       }
 
