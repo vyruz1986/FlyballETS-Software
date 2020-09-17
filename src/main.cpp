@@ -35,6 +35,8 @@
 #include <ArduinoOTA.h>
 #include <EEPROM.h>
 #include <WiFiUdp.h>
+//#include <time.h>
+
 
 //Private libs
 #include <GPSHandler.h>
@@ -192,6 +194,8 @@ void WiFiEvent(WiFiEvent_t event);
 void ResetRace();
 void mdnsServerSetup();
 void StartStopRace();
+void StopRaceMain();
+void StartRaceMain();
 void serialEvent();
 
 void setup()
@@ -361,10 +365,22 @@ void loop()
    //Handle GPS
    GPSHandler.loop();
 
-   //Race start/stop button (remote D0 output) or serial command
-   if ((digitalRead(iRC0Pin) == HIGH && (GET_MICROS / 1000 - llLastRCPress[0] > 2000)) || (bSerialStringComplete && (strSerialData == "START" || strSerialData == "STOP")))
+   //Race start/stop button (remote D0 output)
+   if (digitalRead(iRC0Pin) == HIGH && (GET_MICROS / 1000 - llLastRCPress[0]) > 2000)
    {
       StartStopRace();
+   }
+
+   //Race start (serial command only)
+   if (bSerialStringComplete && strSerialData == "START")
+   {
+      StartRaceMain();
+   }
+
+   //Race stop (serial command only)
+   if (bSerialStringComplete && strSerialData == "STOP")
+   {
+      StopRaceMain();
    }
 
    //Race reset button (remote D1 output)
@@ -573,16 +589,32 @@ void StartStopRace()
    if (RaceHandler.RaceState == RaceHandler.RESET) //If race is reset
    {
       //Then start the race
-      ESP_LOGI(__FILE__, "%s", GPSHandler.GetUTCTimestamp());
-      ESP_LOGD(__FILE__, "%llu: START!", GET_MICROS / 1000);
-      LightsController.InitiateStartSequence();
-      RaceHandler.StartRace();
+      StartRaceMain();
    }
    else //If race state is running or starting, we should stop it
    {
-      RaceHandler.StopRace();
-      LightsController.DeleteSchedules();
+      StopRaceMain();
    }
+}
+
+/// <summary>
+///   Start a race.
+/// </summary>
+void StartRaceMain()
+{
+   ESP_LOGI(__FILE__, "%s", GPSHandler.GetUTCTimestamp());
+   ESP_LOGD(__FILE__, "%llu: START!", GET_MICROS / 1000);
+   LightsController.InitiateStartSequence();
+   RaceHandler.StartRace();
+}
+
+/// <summary>
+///   Stop a race.
+/// </summary>
+void StopRaceMain()
+{
+   RaceHandler.StopRace();
+   LightsController.DeleteSchedules();
 }
 
 /// <summary>
