@@ -170,7 +170,7 @@ void RaceHandlerClass::Main()
             _llDogEnterTimes[iCurrentDog] = STriggerRecord.llTriggerTime;
          }
          //Check if this is a next dog which is too early (we are expecting a dog to come back)
-         else if (_byDogState == COMINGBACK)
+         else if (_byDogState == COMINGBACK && (STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) > 1500000) //Filter out S1 HIGH signals that are < 1.5 seconds after dog enter time
          {
             //This dog is too early!
             //We don't increase the dog number at this point. The transition string further down in the code will determine whether current dog came in or not.
@@ -575,7 +575,7 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
 /// </summary>
 void RaceHandlerClass::TriggerSensor1()
 {
-   if (RaceState == STOPPED && GET_MICROS > _llRaceEndTime + 2000000)
+   if (RaceState == RESET || (RaceState == STOPPED && GET_MICROS > (_llRaceEndTime + 1500000)))
    {
       return;
    }
@@ -588,7 +588,7 @@ void RaceHandlerClass::TriggerSensor1()
 /// </summary>
 void RaceHandlerClass::TriggerSensor2()
 {
-   if (RaceState == STOPPED && GET_MICROS > _llRaceEndTime + 2000000)
+   if (RaceState == RESET || (RaceState == STOPPED && GET_MICROS > (_llRaceEndTime + 1500000)))
    {
       return;
    }
