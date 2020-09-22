@@ -185,7 +185,7 @@ void RaceHandlerClass::Main()
 
             //Handle next dog
             _llDogEnterTimes[iNextDog] = STriggerRecord.llTriggerTime;
-            ESP_LOGD(__FILE__, "Fault! Dog: %i!", iNextDog+1);
+            ESP_LOGD(__FILE__, "Fault! Dog: %i! as commingback dog expected and filter 1.5 second expired", iNextDog+1);
          }
 
          //Normal race handling (no faults)
@@ -343,7 +343,7 @@ void RaceHandlerClass::Main()
       {
          //The gates are clear, set boolean
          _bGatesClear = true;
-         ESP_LOGD(__FILE__, "Gate: CLEAR");
+         ESP_LOGD(__FILE__, "Gate: CLEAR as ab/ba detected");
 
          //Print the transition string up til now for debugging purposes
          ESP_LOGD(__FILE__, "Tstring: %s", _strTransition.c_str());
@@ -358,13 +358,13 @@ void RaceHandlerClass::Main()
             {
                //Change dog state to coming back
                _ChangeDogState(COMINGBACK);
-               ESP_LOGD(__FILE__, "New dog state: COMINGBACK");
+               ESP_LOGD(__FILE__, "New dog state: COMINGBACK. String was ABab.");
             }
             else if (_strTransition == "BAba") //Dog coming back
             {
                //Normal handling, change dog state to GOING IN
                _ChangeDogState(GOINGIN);
-               ESP_LOGD(__FILE__, "New dog state: GOINGING");
+               ESP_LOGD(__FILE__, "New dog state: GOINGING. String was BAba");
                //Set next dog active
                _ChangeDogNumber(iNextDog);
                
@@ -389,11 +389,12 @@ void RaceHandlerClass::Main()
                   if ((_bRerunBusy == true && _bFault == true))
                   {
                      SetDogFault(iCurrentDog, OFF);
+                     ESP_LOGD(__FILE__, "Set current dog fault. String was unclear");
                   }
 
                   // and set perfect crossing time for new dog
                   _ChangeDogState(COMINGBACK);
-                  ESP_LOGD(__FILE__, "New dog state: COMINGBACK");
+                  ESP_LOGD(__FILE__, "New dog state: COMINGBACK. String was unclear");
                   _llCrossingTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = 0;
                   _llDogEnterTimes[iCurrentDog] = _llDogExitTimes[iPreviousDog];
                }
@@ -401,7 +402,7 @@ void RaceHandlerClass::Main()
                //It has to be dog going in + sensors noise
                {
                   _ChangeDogState(COMINGBACK);
-                  ESP_LOGD(__FILE__, "New dog state: COMINGBACK");
+                  ESP_LOGD(__FILE__, "New dog state: COMINGBACK with sensors noise");
                }
                
             }
