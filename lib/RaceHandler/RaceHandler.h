@@ -70,7 +70,7 @@ private:
    long long _llRaceEndTime;
    long long _llRaceTime;
    long long _llPerfectCrossingTime;
-   long long _llS2CrossingTime;
+   long long _llS2PerfectCrossingTime;
    long long _llLastTransitionStringUpdate;
 
    uint8_t  _iS1Pin;
@@ -97,6 +97,7 @@ private:
    bool _bDogFaults[4];
    bool _bRerunBusy;
    bool _bSafeCross;
+   bool _bNegativeCross;
    uint8_t _iDogRunCounters[4];  //Number of (re-)runs for each dog
    long long _llLastDogTimeReturnTimeStamp[4];
    uint8_t _iLastReturnedRunNumber[4];
