@@ -17,12 +17,9 @@
 #ifndef _LCDCONTROLLER_h
 #define _LCDCONTROLLER_h
 
-#if defined(ARDUINO) && ARDUINO >= 100
 #include "Arduino.h"
-#else
-#include "WProgram.h"
-#endif
 #include <LiquidCrystal.h>
+
 class LCDControllerClass
 {
 protected:

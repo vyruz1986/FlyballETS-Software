@@ -3,12 +3,7 @@
 #ifndef _WEBHANDLER_h
 #define _WEBHANDLER_h
 
-#if defined(ARDUINO) && ARDUINO >= 100
 #include "Arduino.h"
-#else
-#include "WProgram.h"
-#endif
-
 #include "SettingsManager.h"
 //#include <Hash.h>
 //#include <AsyncTCP.h>

@@ -16,8 +16,8 @@
 
 #ifndef _LIGHTSCONTROLLER_h
 #define _LIGHTSCONTROLLER_h
-#include "Arduino.h"
 
+#include "Arduino.h"
 #include <NeoPixelBus.h>
 #include "config.h"
 #include "Structs.h"

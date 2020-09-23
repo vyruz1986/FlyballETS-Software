@@ -6,12 +6,7 @@
 #define _SIMULATOR_h
 
 #include "config.h"
-
-#if defined(ARDUINO) && ARDUINO >= 100
-   #include "Arduino.h"
-#else
-   #include "WProgram.h"
-#endif
+#include "Arduino.h"
 
 class SimulatorClass
 {

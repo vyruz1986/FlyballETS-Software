@@ -1,13 +1,10 @@
 // RaceHandler.h
-#include "Structs.h"
 #ifndef _RACEHANDLER_h
 #define _RACEHANDLER_h
 
-#if defined(ARDUINO) && ARDUINO >= 100
-	#include "Arduino.h"
-#else
-	#include "WProgram.h"
-#endif
+#include "Structs.h"
+#include "Arduino.h"
+
 
 #define NUM_HISTORIC_RACE_RECORDS 100
 

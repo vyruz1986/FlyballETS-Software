@@ -21,7 +21,6 @@
 #include "config.h"
 #include "Structs.h"
 #include "WebHandler.h"
-//#include <Adafruit_NeoPixel.h>
 #include <NeoPixelBus.h>
 
 /// <summary>
