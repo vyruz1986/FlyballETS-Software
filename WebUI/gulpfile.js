@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 const fs = require("fs");
 const gulp = require("gulp");
 const htmlmin = require("gulp-htmlmin");
-const cleancss = require("gulp-clean-css");
+const crass = require("gulp-crass");
 const uglify = require("gulp-uglify-es");
 const gzip = require("gulp-gzip");
 const inline = require("gulp-inline");
@@ -37,15 +37,15 @@ const gutil = require("gulp-util");
 
 const sourceFolder = "dist/";
 const staticFolder = sourceFolder;
-const outputFolder = "../Firmware/src/static/";
+const outputFolder = "../Firmware/include/";
 
 String.prototype.replaceAll = function (search, replacement) {
    var target = this;
    return target.split(search).join(replacement);
 };
 
-gulp.task("toHeader", function () {
-   var filename = "index.gz.h";
+gulp.task("toHeader", function (done) {
+   var filename = "index.html.gz";
    var source = staticFolder + filename;
    var destination = outputFolder + filename + ".h";
    var safename = filename.replaceAll(".", "_");
@@ -71,6 +71,7 @@ gulp.task("toHeader", function () {
 
    wstream.write("\n};");
    wstream.end();
+   done();
 });
 
 function htmllintReporter(filepath, issues) {
@@ -107,8 +108,8 @@ gulp.task("buildfs_inline", function () {
       .pipe(
          inline({
             base: sourceFolder,
-            js: [uglify],
-            css: [cleancss, inlineImages],
+            js: [],
+            css: [crass, inlineImages],
             disabledTypes: ["svg", "img"],
          })
       )
@@ -120,7 +121,7 @@ gulp.task("buildfs_inline", function () {
             minifyJS: true,
          })
       )
-      .pipe(gzip())
+      .pipe(gzip({ gzipOptions: { level: 9 } }))
       .pipe(gulp.dest(staticFolder));
 });
 

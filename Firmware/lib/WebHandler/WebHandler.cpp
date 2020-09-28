@@ -1,19 +1,4 @@
-//
-//
-//
-
 #include "WebHandler.h"
-#include <Hash.h>
-#include <AsyncTCP.h>
-#include <ESPAsyncWebServer.h>
-#include <FS.h>
-#include <SPIFFS.h>
-#include <ArduinoJson.h>
-#include "SettingsManager.h"
-#include "GPSHandler.h"
-#include "BatterySensor.h"
-#include <rom/rtc.h>
-#include "../../src/static/index.html.gz.h"
 
 void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
 {

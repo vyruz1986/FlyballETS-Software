@@ -6,6 +6,7 @@
       "ng": "ng",
       "start": "ng serve --proxy-config proxy.conf.json",
       "build": "ng build --prod --output-hashing=none --aot && gulp",
+      "gulp": "gulp",
       "test": "ng test",
       "lint": "ng lint",
       "e2e": "ng e2e"
@@ -46,7 +47,7 @@
       "del": "^5.1.0",
       "gulp": "^4.0.0",
       "gulp-base64-favicon": "^1.0.2",
-      "gulp-clean-css": "^4.3.0",
+      "gulp-crass": "^0.2.2",
       "gulp-css-base64": "^1.3.4",
       "gulp-gzip": "^1.4.1",
       "gulp-htmllint": "0.0.16",
