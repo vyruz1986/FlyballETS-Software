@@ -27,7 +27,7 @@ const fs = require("fs");
 const gulp = require("gulp");
 const htmlmin = require("gulp-htmlmin");
 const cleancss = require("gulp-clean-css");
-const uglify = require("gulp-uglify");
+const uglify = require("gulp-uglify-es");
 const gzip = require("gulp-gzip");
 const inline = require("gulp-inline");
 const inlineImages = require("gulp-css-base64");
@@ -40,93 +40,88 @@ const staticFolder = sourceFolder;
 const outputFolder = "../Firmware/src/static/";
 
 String.prototype.replaceAll = function (search, replacement) {
-  var target = this;
-  return target.split(search).join(replacement);
+   var target = this;
+   return target.split(search).join(replacement);
 };
 
-var toHeader = function (filename) {
-  var source = staticFolder + filename;
-  var destination = outputFolder + filename + ".h";
-  var safename = filename.replaceAll(".", "_");
-  if (!fs.existsSync(outputFolder)) {
-    fs.mkdirSync(outputFolder);
-  }
+gulp.task("toHeader", function () {
+   var filename = "index.gz.h";
+   var source = staticFolder + filename;
+   var destination = outputFolder + filename + ".h";
+   var safename = filename.replaceAll(".", "_");
+   if (!fs.existsSync(outputFolder)) {
+      fs.mkdirSync(outputFolder);
+   }
 
-  var wstream = fs.createWriteStream(destination);
-  wstream.on("error", function (err) {
-    console.log(err);
-  });
+   var wstream = fs.createWriteStream(destination);
+   wstream.on("error", function (err) {
+      console.log(err);
+   });
 
-  var data = fs.readFileSync(source);
+   var data = fs.readFileSync(source);
 
-  wstream.write("#define " + safename + "_len " + data.length + "\n");
-  wstream.write("const uint8_t " + safename + "[] PROGMEM = {");
+   wstream.write("#define " + safename + "_len " + data.length + "\n");
+   wstream.write("const uint8_t " + safename + "[] PROGMEM = {");
 
-  for (i = 0; i < data.length; i++) {
-    if (i % 20 == 0) wstream.write("\n");
-    wstream.write("0x" + ("00" + data[i].toString(16)).slice(-2));
-    if (i < data.length - 1) wstream.write(",");
-  }
+   for (i = 0; i < data.length; i++) {
+      if (i % 20 == 0) wstream.write("\n");
+      wstream.write("0x" + ("00" + data[i].toString(16)).slice(-2));
+      if (i < data.length - 1) wstream.write(",");
+   }
 
-  wstream.write("\n};");
-  wstream.end();
-};
+   wstream.write("\n};");
+   wstream.end();
+});
 
 function htmllintReporter(filepath, issues) {
-  if (issues.length > 0) {
-    issues.forEach(function (issue) {
-      gutil.log(
-        gutil.colors.cyan("[gulp-htmllint] ") +
-          gutil.colors.white(
-            filepath + " [" + issue.line + "," + issue.column + "]: "
-          ) +
-          gutil.colors.red("(" + issue.code + ") " + issue.msg)
-      );
-    });
-    process.exitCode = 1;
-  }
+   if (issues.length > 0) {
+      issues.forEach(function (issue) {
+         gutil.log(
+            gutil.colors.cyan("[gulp-htmllint] ") +
+               gutil.colors.white(filepath + " [" + issue.line + "," + issue.column + "]: ") +
+               gutil.colors.red("(" + issue.code + ") " + issue.msg)
+         );
+      });
+      process.exitCode = 1;
+   }
 }
 
-gulp.task("buildfs_embeded", ["buildfs_inline"], function () {
-  toHeader("index.html.gz");
-});
-
 gulp.task("buildfs_inline", function () {
-  return gulp
-    .src(sourceFolder + "*.html")
-    .pipe(
-      htmllint(
-        {
-          failOnError: true,
-          rules: {
-            "id-class-style": false,
-            "label-req-for": false,
-            "line-end-style": false,
-            "indent-width": false,
-          },
-        },
-        htmllintReporter
+   return gulp
+      .src(sourceFolder + "*.html")
+      .pipe(
+         htmllint(
+            {
+               failOnError: true,
+               rules: {
+                  "id-class-style": false,
+                  "label-req-for": false,
+                  "line-end-style": false,
+                  "indent-width": false,
+               },
+            },
+            htmllintReporter
+         )
       )
-    )
-    .pipe(favicon())
-    .pipe(
-      inline({
-        base: sourceFolder,
-        js: [uglify],
-        css: [cleancss, inlineImages],
-        disabledTypes: ["svg", "img"],
-      })
-    )
-    .pipe(
-      htmlmin({
-        collapseWhitespace: true,
-        removeComments: true,
-        minifyCSS: true,
-        minifyJS: true,
-      })
-    )
-    .pipe(gzip())
-    .pipe(gulp.dest(staticFolder));
+      .pipe(favicon())
+      .pipe(
+         inline({
+            base: sourceFolder,
+            js: [uglify],
+            css: [cleancss, inlineImages],
+            disabledTypes: ["svg", "img"],
+         })
+      )
+      .pipe(
+         htmlmin({
+            collapseWhitespace: true,
+            removeComments: true,
+            minifyCSS: true,
+            minifyJS: true,
+         })
+      )
+      .pipe(gzip())
+      .pipe(gulp.dest(staticFolder));
 });
 
-gulp.task("default", ["buildfs_embeded"]);
+gulp.task("default", gulp.series("buildfs_inline", "toHeader"));
