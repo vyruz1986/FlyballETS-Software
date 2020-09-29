@@ -9,11 +9,7 @@
 #define GET_MICROS micros()
 #endif
 
-#if defined(ARDUINO) && ARDUINO >= 100
-	#include "Arduino.h"
-#else
-	#include "WProgram.h"
-#endif
+#include "Arduino.h"
 
 #define NUM_HISTORIC_RACE_RECORDS 100
 
@@ -21,12 +17,12 @@ class RaceHandlerClass
 {
    friend class SimulatorClass;
    friend class WebHandlerClass;
- protected:
 
-
- public:
-	void init(uint8_t iS1Pin, uint8_t iS2Pin);
-   enum RaceStates {
+protected:
+public:
+   void init(uint8_t iS1Pin, uint8_t iS2Pin);
+   enum RaceStates
+   {
       STOPPED,
       STARTING,
       RUNNING
@@ -37,7 +33,7 @@ class RaceHandlerClass
    uint8_t iCurrentDog;
    uint8_t iPreviousDog;
    uint8_t iNextDog;
-   
+
    void Main();
    void StartTimers();
    void StartRace();
@@ -47,7 +43,8 @@ class RaceHandlerClass
    void TriggerSensor1();
    void TriggerSensor2();
 
-   enum DogFaults {
+   enum DogFaults
+   {
       OFF,
       ON,
       TOGGLE
@@ -71,20 +68,20 @@ class RaceHandlerClass
    boolean GetRunDirection();
 
 private:
-   unsigned long _lRaceStartTime;
-   unsigned long _lRaceEndTime;
-   unsigned long _lRaceTime;
+   unsigned long long _lRaceStartTime;
+   unsigned long long _lRaceEndTime;
+   unsigned long long _lRaceTime;
    unsigned long _lPerfectCrossingTime;
    unsigned long _lLastTransitionStringUpdate;
 
-   uint8_t  _iS1Pin;
-   uint8_t  _iS2Pin;
+   uint8_t _iS1Pin;
+   uint8_t _iS2Pin;
    boolean _bRunDirectionInverted = false;
 
    struct STriggerRecord
    {
       volatile uint8_t iSensorNumber;
-      volatile unsigned long lTriggerTime;
+      volatile long long lTriggerTime;
       volatile int iSensorState;
    };
 #define TRIGGER_QUEUE_LENGTH 50
@@ -96,7 +93,7 @@ private:
    bool _bFault;
    bool _bDogFaults[4];
    bool _bRerunBusy;
-   uint8_t _iDogRunCounters[4];  //Number of (re-)runs for each dog
+   uint8_t _iDogRunCounters[4]; //Number of (re-)runs for each dog
    unsigned long _lLastDogTimeReturnTimeStamp[4];
    uint8_t _iLastReturnedRunNumber[4];
    unsigned long _lDogEnterTimes[4];
@@ -106,8 +103,9 @@ private:
    long _lCrossingTimes[4][4];
 
    String _strTransition;
-   
-   enum _byDogStates {
+
+   enum _byDogStates
+   {
       GOINGIN,
       COMINGBACK
    };
@@ -129,4 +127,3 @@ private:
 extern RaceHandlerClass RaceHandler;
 
 #endif
-
