@@ -24,7 +24,8 @@ export class RacedisplayComponent implements OnInit {
       this.etsDataService.dataStream.subscribe(
          (data) => {
             if (data.RaceData) {
-               this.HandleCurrentRaceData(data.RaceData);
+               // Temporary fix to deal with response from ETS which does not send multiple race data
+               this.HandleCurrentRaceData([data.RaceData]);
             } else if (data.LightsData) {
                this.lightStates[0].State = data.LightsData;
             }
@@ -56,17 +57,8 @@ export class RacedisplayComponent implements OnInit {
       this.etsDataService.sendAction(action);
    }
 
-   onSetDogFault(dogFault: {
-      raceNum: number;
-      dogNum: number;
-      fault: boolean;
-   }) {
-      console.log(
-         "Setting fault for race %i, dog %i to value: %o",
-         dogFault.raceNum,
-         dogFault.dogNum,
-         dogFault.fault
-      );
+   onSetDogFault(dogFault: { raceNum: number; dogNum: number; fault: boolean }) {
+      console.log("Setting fault for race %i, dog %i to value: %o", dogFault.raceNum, dogFault.dogNum, dogFault.fault);
       let StopAction: WebsocketAction = {
          actionType: "SetDogFault",
          actionData: {
