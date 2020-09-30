@@ -21,8 +21,29 @@
 //
 // You should have received a copy of the GNU General Public License along with this program.If not,
 // see <http://www.gnu.org/licenses/>
-#include "main.h"
-#include "WifiManager.h"
+#include "Arduino.h"
+
+//Includes
+#include "Structs.h"
+#include "config.h"
+
+//Public libs
+#include <LiquidCrystal.h>
+#include <WiFi.h>
+#include <WiFiMulti.h>
+#include <ESPmDNS.h>
+#include <ArduinoOTA.h>
+#include <EEPROM.h>
+#include <WiFiUdp.h>
+
+//Private libs
+#include <GPSHandler.h>
+#include <SettingsManager.h>
+#include <WebHandler.h>
+#include <LCDController.h>
+#include <RaceHandler.h>
+#include <LightsController.h>
+#include <BatterySensor.h>
 
 /*List of pins and the ones used (Lolin32 board):
    - 34: S1 (handler side) photoelectric sensor
@@ -31,7 +52,7 @@
    - 27: LCD Data7
    - 14: LCD Data6
    - 26: LCD Data5
-   - 12: LCD Data4
+   - 13: LCD Data4
    -  2: LCD1 (line 1&2) enable pin
    - 15: LCD2 (line 3&4) enable pin
    - 25: LCD RS Pin
@@ -78,7 +99,7 @@ uint16_t iBatteryVoltage = 0;
 //Initialise Lights stuff
 #ifdef WS281x
 uint8_t iLightsDataPin = 0;
-NeoPixelBus<NeoRgbFeature, WS_METHOD> LightsStrip(5, iLightsDataPin);
+NeoPixelBus<NeoRgbFeature, WS_METHOD> LightsStrip(5 * LIGHTSCHAINS, iLightsDataPin);
 
 #else
 uint8_t iLightsClockPin = 8;
@@ -103,6 +124,7 @@ int iRC2Pin = 18;
 int iRC3Pin = 17;
 int iRC4Pin = 16;
 int iRC5Pin = 4;
+
 //Array to hold last time button presses
 unsigned long lLastRCPress[6] = {0, 0, 0, 0, 0, 0};
 
@@ -214,7 +236,7 @@ void setup()
    ArduinoOTA.setPort(3232);
    ArduinoOTA.onStart([]() {
       String type;
-      if (ArduinoOTA.getCommand() == U_FLASH)
+      if (ArduinoOTA.getCommand() == 0) //VSCode constantly can't read properly value of U_FLASH, therefore replacing with "0"
          type = "sketch";
       else // U_SPIFFS
          type = "filesystem";

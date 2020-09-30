@@ -8,11 +8,7 @@
 #define GET_MICROS micros()
 #endif
 
-#if defined(ARDUINO) && ARDUINO >= 100
 #include "Arduino.h"
-#else
-#include "WProgram.h"
-#endif
 
 #define NUM_HISTORIC_RACE_RECORDS 100
 #include "Structs.h"
@@ -74,21 +70,21 @@ public:
    boolean GetRunDirection();
 
 private:
-   unsigned long _lSchduledRaceStartTime;
-   unsigned long _lRaceStartTime;
-   unsigned long _lRaceEndTime;
-   unsigned long _lRaceTime;
+   unsigned long long _lSchduledRaceStartTime;
+   unsigned long long _lRaceStartTime;
+   unsigned long long _lRaceEndTime;
+   unsigned long long _lRaceTime;
    unsigned long _lPerfectCrossingTime;
    unsigned long _lLastTransitionStringUpdate;
 
-   int _iS1Pin;
-   int _iS2Pin;
+   uint8_t _iS1Pin;
+   uint8_t _iS2Pin;
    boolean _bRunDirectionInverted = false;
 
    struct STriggerRecord
    {
       volatile uint8_t iSensorNumber;
-      volatile int64_t lTriggerTime;
+      volatile long long lTriggerTime;
       volatile int iSensorState;
    };
 #define TRIGGER_QUEUE_LENGTH 50

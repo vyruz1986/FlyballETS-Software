@@ -1,0 +1,21 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+   <a class="navbar-brand" [routerLink]="['/']" (click)="navbarCollapsed = true">FlyballETS</a>  
+   <button class="navbar-toggler navbar-toggler-right" type="button" (click)="navbarCollapsed = !navbarCollapsed"  
+            [attr.aria-expanded]="!navbarCollapsed" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">  
+         <span class="navbar-toggler-icon"></span>  
+      </button> 
+   <div class="navbar-collapse" [ngbCollapse]="navbarCollapsed"  id="navbarSupportedContent">
+      <ul class="navbar-nav mr-auto">
+         <li class="nav-item" [routerLinkActive]="['active']" [routerLinkActiveOptions]= "{exact: true}">  
+            <a class="nav-link" [routerLink]="['']" (click)="navbarCollapsed = true">Home</a>  
+         </li>  
+         <li class="nav-item" [routerLinkActive]="['active']" [routerLinkActiveOptions]= "{exact: true}">  
+            <a class="nav-link" [routerLink]="['racedisplay']" (click)="navbarCollapsed = true">Race Display</a>  
+         </li> 
+         <li class="nav-item" [routerLinkActive]="['active']" [routerLinkActiveOptions]= "{exact: true}">  
+            <a class="nav-link" [routerLink]="['config']" (click)="navbarCollapsed = true">Configuration</a>  
+         </li> 
+      </ul>
+   </div>
+</nav>

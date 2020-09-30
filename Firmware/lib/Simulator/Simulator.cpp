@@ -12,6 +12,7 @@
 /// </summary>
 const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60] PROGMEM = {
     //See the end of this file for a collection of races
+    // Race3 (GT Team 4):
     {1, -102316, 1},
     {2, -87824, 1},
     {2, -80456, 0},
@@ -110,8 +111,9 @@ void SimulatorClass::Main()
       //Pending record doesn't contain valid data, this means we've reched the end of our queue
       return;
    }
+   long long lRaceElapsedTime = GET_MICROS - RaceHandler._lRaceStartTime;
    //Simulate sensors
-   if (RaceHandler.RaceState != RaceHandler.STOPPED && PendingRecord.lTriggerTime <= (long)RaceHandler._lRaceTime)
+   if (RaceHandler.RaceState != RaceHandler.STOPPED && PendingRecord.lTriggerTime <= RaceHandler._lRaceTime)
    {
       if (RaceHandler._QueueEmpty())
       {
@@ -324,7 +326,6 @@ Race3 (GT Team 4):
    //Code has been implemented to filter these out.
    , { 2, 9370240, 1 }
    , { 2, 9373992, 0 }
-
    , { 2, 14112436, 1 }
    , { 1, 14127916, 1 }
    , { 2, 14233032, 0 }

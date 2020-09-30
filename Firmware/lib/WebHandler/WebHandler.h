@@ -10,15 +10,18 @@
 #endif
 
 #include "Structs.h"
-#include "config.h"
-#include "ArduinoJson.h"
-#include "ESPAsyncWebServer.h"
-
-// class AsyncWebServer;
-// class AsyncWebSocket;
-// class AsyncWebSocketClient;
-// class AwsEventType;
-// class AsyncWebServerRequest;
+#include "LightsController.h"
+//#include <Hash.h>
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
+// #include <FS.h>
+// #include <SPIFFS.h>
+#include <ArduinoJson.h>
+#include "SettingsManager.h"
+#include "GPSHandler.h"
+#include "BatterySensor.h"
+#include <rom/rtc.h>
+#include "index.html.gz.h"
 
 class WebHandlerClass
 {

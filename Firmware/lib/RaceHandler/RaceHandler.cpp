@@ -589,7 +589,8 @@ void RaceHandlerClass::TriggerSensor2()
    {
       return;
    }
-   _QueuePush({_bRunDirectionInverted ? 1 : 2, GET_MICROS, digitalRead(_iS2Pin)});
+   uint8_t sensorNumber = _bRunDirectionInverted ? 1 : 2;
+   _QueuePush({sensorNumber, GET_MICROS, digitalRead(_iS2Pin)});
 }
 
 /// <summary>
