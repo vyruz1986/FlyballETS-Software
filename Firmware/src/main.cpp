@@ -21,29 +21,7 @@
 //
 // You should have received a copy of the GNU General Public License along with this program.If not,
 // see <http://www.gnu.org/licenses/>
-#include "Arduino.h"
-
-//Includes
-#include "Structs.h"
-#include "config.h"
-
-//Public libs
-#include <LiquidCrystal.h>
-#include <WiFi.h>
-#include <WiFiMulti.h>
-#include <ESPmDNS.h>
-#include <ArduinoOTA.h>
-#include <EEPROM.h>
-#include <WiFiUdp.h>
-
-//Private libs
-#include <GPSHandler.h>
-#include <SettingsManager.h>
-#include <WebHandler.h>
-#include <LCDController.h>
-#include <RaceHandler.h>
-#include <LightsController.h>
-#include <BatterySensor.h>
+#include "main.h"
 
 /*List of pins and the ones used (Lolin32 board):
    - 34: S1 (handler side) photoelectric sensor

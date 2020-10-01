@@ -1,11 +1,4 @@
-//
-//
-//
 #include <SlaveHandler.h>
-#include "WebSocketsClient.h"
-#include <SettingsManager.h>
-#include <enums.h>
-#include <global.h>
 
 void SlaveHandlerClass::init()
 {
@@ -245,7 +238,8 @@ JsonObject SlaveHandlerClass::getSlaveRaceData1()
 
 char *SlaveHandlerClass::getSlaveRaceData2()
 {
-   char *strJsonRaceData;
+
+   char strJsonRaceData[measureJson(_jsonRaceData)];
    serializeJson(_jsonRaceData, strJsonRaceData, measureJson(_jsonRaceData));
    ESP_LOGD(__FILE__, "Returning slave racedata: %s\r\n\r\n", strJsonRaceData);
    return strJsonRaceData;

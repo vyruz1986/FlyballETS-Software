@@ -3,25 +3,29 @@
 #ifndef _WEBHANDLER_h
 #define _WEBHANDLER_h
 
-#if defined(ARDUINO) && ARDUINO >= 100
-#include "Arduino.h"
-#else
-#include "WProgram.h"
-#endif
+#include <Arduino.h>
 
-#include "Structs.h"
-#include "LightsController.h"
+#include <Structs.h>
+#include <LightsController.h>
 //#include <Hash.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 // #include <FS.h>
 // #include <SPIFFS.h>
 #include <ArduinoJson.h>
-#include "SettingsManager.h"
-#include "GPSHandler.h"
-#include "BatterySensor.h"
+#include <SettingsManager.h>
+#include <GPSHandler.h>
+#include <BatterySensor.h>
 #include <rom/rtc.h>
-#include "index.html.gz.h"
+#include <index.html.gz.h>
+
+#include <RaceHandler.h>
+#include <Hash.h>
+#include <FS.h>
+#include <SPIFFS.h>
+#include <SlaveHandler.h>
+#include <SystemManager.h>
+#include <global.h>
 
 class WebHandlerClass
 {

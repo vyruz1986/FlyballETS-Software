@@ -3,10 +3,14 @@
 #ifndef _SLAVEHANDLER_h
 #define _SLAVEHANDLER_h
 
-#include "Arduino.h"
-#include "global.h"
-#include "ArduinoJson.h"
-#include "WebSocketsClient.h"
+#include <Arduino.h>
+#include <global.h>
+#include <ArduinoJson.h>
+#include <WiFi.h>
+#include <WiFiMulti.h>
+#include <WebSocketsClient.h>
+#include <SettingsManager.h>
+#include <enums.h>
 #define CONNECT_CHECK 1000
 
 class SlaveHandlerClass

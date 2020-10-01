@@ -3,11 +3,12 @@
 #ifndef _SYSTEMMANAGER_h
 #define _SYSTEMMANAGER_h
 
-#if defined(ARDUINO) && ARDUINO >= 100
-#include "arduino.h"
-#else
-#include "WProgram.h"
-#endif
+#include "Arduino.h"
+
+#include <SettingsManager.h>
+#include <SlaveHandler.h>
+#include <WebHandler.h>
+#include <enums.h>
 
 class SystemManagerClass
 {

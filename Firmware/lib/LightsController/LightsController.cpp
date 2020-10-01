@@ -16,13 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.If not, see <http://www.gnu.org/licenses/>
 
-#include "LightsController.h"
-#include "NeoPixelBus.h"
-
-#include <RaceHandler.h>
-#include <config.h>
-#include <Structs.h>
-#include "WebHandler.h"
+#include <LightsController.h>
 
 /// <summary>
 ///   Initialises this object. This function needs to be passed the pin numbers for the shift
@@ -230,10 +224,10 @@ void LightsControllerClass::ToggleLightState(Lights byLight, LightStates byLight
    {
       LightConfig.iColor = RgbColor(0);
    }
-   
-   for(int lightschain=0; lightschain<LIGHTSCHAINS; lightschain++)
+
+   for (int lightschain = 0; lightschain < LIGHTSCHAINS; lightschain++)
    {
-      _LightsStrip->SetPixelColor(LightConfig.iPixelNumber+5*lightschain, LightConfig.iColor);
+      _LightsStrip->SetPixelColor(LightConfig.iPixelNumber + 5 * lightschain, LightConfig.iColor);
    }
 
 #endif // WS281x

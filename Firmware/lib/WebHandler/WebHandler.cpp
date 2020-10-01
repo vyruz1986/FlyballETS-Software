@@ -1,25 +1,4 @@
-//
-//
-//
-
-#include "WebHandler.h"
-#include <RaceHandler.h>
-#include <Structs.h>
-#include <LightsController.h>
-#include <Hash.h>
-#include <AsyncTCP.h>
-#include <ESPAsyncWebServer.h>
-#include <FS.h>
-#include <SPIFFS.h>
-#include <ArduinoJson.h>
-#include <SettingsManager.h>
-#include <GPSHandler.h>
-#include <BatterySensor.h>
-#include <SlaveHandler.h>
-#include <SystemManager.h>
-#include "global.h"
-#include <rom/rtc.h>
-#include "static\index.html.gz.h"
+#include <WebHandler.h>
 
 void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
 {

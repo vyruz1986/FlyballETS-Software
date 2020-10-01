@@ -18,6 +18,7 @@
 #include <BatterySensor.h>
 #include <SystemManager.h>
 #include <SlaveHandler.h>
+#include <WifiManager.h>
 
 //Includes
 #include <Structs.h>

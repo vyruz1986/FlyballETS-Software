@@ -17,9 +17,13 @@
 #ifndef _LIGHTSCONTROLLER_h
 #define _LIGHTSCONTROLLER_h
 
+#include <Arduino.h>
 #include <config.h>
-#include "NeoPixelBus.h"
-#include "Structs.h"
+#include <NeoPixelBus.h>
+#include <Structs.h>
+#include <RaceHandler.h>
+#include <WebHandler.h>
+
 class LightsControllerClass
 {
 protected:
