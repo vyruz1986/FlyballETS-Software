@@ -50,12 +50,15 @@ void BatterySensorClass::CheckBatteryVoltage()
       _iAverageBatteryReading = iBatteryReadingsTotal / _iNumberOfBatteryReadings;
 
 #ifdef ESP32
-      //For ESP32 we're using +12V--R33K--PIN--R10K--GND circuit
+      //For ESP32 we're using +12V--R33K--PIN--R10K--GND circuit so divider is 3.3
       //This voltage divider allows reading 0-14.19V
-      //Also ESP32 has 12-bit ADC, so 3.3V = 4095 analogRead value
+      //Assumptions for 12.6V battery:
+      //Max: 12.60V --> 2.93V --> 100%
+      //Min: 10.88V --> 2.53V -->   0%
+      //Also ESP32 has 12-bit ADC, so 3.3V (true is 3.31V) = 4095 analogRead value
       //First calculate voltage at ADC pin
-      int iPinVoltage = map(_iAverageBatteryReading, 0, 4095, 0, 315);
-      _iBatteryVoltage = iPinVoltage * 4.3;  // 14.19/3.3=4.3
+      int iPinVoltage = map(_iAverageBatteryReading, 0, 4095, 0, 3310);
+      _iBatteryVoltage = iPinVoltage * 4.515;  // 14.19/3.3=4.3 but calibrated is 4.515
 #else
       float fMeasuredVoltage = iAverageBatteryReading * 0.0048828125;
       _iBatteryVoltage = fMeasuredVoltage * 2.5 * 100;
@@ -85,17 +88,17 @@ uint16_t BatterySensorClass::GetBatteryVoltage()
 /// </returns>
 uint16_t BatterySensorClass::GetBatteryPercentage()
 {
-   if (_iBatteryVoltage < 960)
+   if (_iBatteryVoltage < 10880)
    {
       return 0;
    }
-   else if (_iBatteryVoltage > 1260)
+   else if (_iBatteryVoltage > 12600)
    {
       return 100;
    }
    else
    {
-      uint16_t iBatteryPercentage = map(_iBatteryVoltage, 960, 1260, 0, 100);
+      uint16_t iBatteryPercentage = map(_iBatteryVoltage, 10880, 12600, 0, 100);
       return iBatteryPercentage;
    }
 }

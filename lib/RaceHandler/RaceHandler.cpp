@@ -219,13 +219,19 @@ void RaceHandlerClass::Main()
       if (STriggerRecord.iSensorNumber == 1 && !_bGatesClear && _bSafeCross //Only if gates are busy (dog in) and we have safe cross active (S2 crossed while gates clear)
           && STriggerRecord.iSensorState == 1)              //And only if sensor is HIGH
       {
-         //Normal handling for dog coming back
+         //Normal handling for dog coming back or dog going after S2 crossed safely
          _bSafeCross = false;
          _llDogExitTimes[iCurrentDog] = STriggerRecord.llTriggerTime;
          _llDogTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog];
          //The time the dog came in is also the perfect crossing time
          _llPerfectCrossingTime = STriggerRecord.llTriggerTime;
          ESP_LOGI(__FILE__, "S1 line crossed while being safe. Calculate dog %i time. Start counting crossing time for dog %i.", iCurrentDog+1, iNextDog+1);
+         if (_llPerfectCrossingTime - _llS2PerfectCrossingTime < 10000) // If S1 (safe) crossing time is below 10ms after S2 crossing means S1 was crossed by going in dog and we have true perfect crossing --> big OK case
+         {
+            _bDogPerfectCross = true;
+            ESP_LOGI(__FILE__, "Perfect cross below 10ms detected for dog %i.", iNextDog+1);
+         } 
+
 
          if ((iCurrentDog == 3 && _bFault == false && _bRerunBusy == false) //If this is the 4th dog and there is no fault we have to stop the race
                || (_bRerunBusy == true && _bFault == false))                  //Or if the rerun sequence was started but no faults exist anymore
@@ -409,6 +415,12 @@ void RaceHandlerClass::Main()
                   ESP_LOGD(__FILE__, "Perfect crossing (string unclear) for dog %i. New state: COMINGBACK.", iCurrentDog+1);
                   _llCrossingTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = 0;
                   _llDogEnterTimes[iCurrentDog] = _llDogExitTimes[iPreviousDog];
+                  if (_bDogPerfectCross) // if this dog crossingn time was below 10ms, flag for this dog Big OK and clear dog perfect cross
+                  {
+                     _bDogBigOK[iCurrentDog][_iDogRunCounters[iCurrentDog]] = true;
+                     _bDogPerfectCross = false;
+                     ESP_LOGD(__FILE__, "Big OK stored for dog %i.", iCurrentDog+1);
+                  }
                }
                else
                //It has to be dog going in + sensors noise
@@ -528,6 +540,7 @@ void RaceHandlerClass::ResetRace()
       _strTransition = "";
       _bGatesClear = true;
       _bSafeCross = false;
+      _bDogPerfectCross = false;
 
       for (auto &bFault : _bDogFaults)
       {
@@ -549,6 +562,13 @@ void RaceHandlerClass::ResetRace()
          }
       }
       for (auto &Dog : _llCrossingTimes)
+      {
+         for (auto &llTime : Dog)
+         {
+            llTime = 0;
+         }
+      }
+      for (auto &Dog : _bDogBigOK)
       {
          for (auto &llTime : Dog)
          {
@@ -817,26 +837,30 @@ String RaceHandlerClass::GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber)
       dtostrf(dCrossingTime, 7, 3, cCrossingTime);
       strCrossingTime += cCrossingTime;
    }
+   else if (_bDogBigOK[iDogNumber][iRunNumber] = 1)
+   {
+      strCrossingTime = "      OK";
+   }
    else
    {
       if (_llDogTimes[iDogNumber][iRunNumber] > 0)
       {
          if ((_iDogRunCounters[iDogNumber] > 0 && _iDogRunCounters[iDogNumber] != iRunNumber) || (_iDogRunCounters[iDogNumber] == 0 && _bDogFaults[iDogNumber] == true))
          {
-            strCrossingTime = "     NOK";
+            strCrossingTime = "   fault";
          }
          else
          {
-            strCrossingTime = "      OK";
+            strCrossingTime = "      ok";
          }
       }
       else if ((RaceState == RUNNING && iCurrentDog == iDogNumber && _byDogState == COMINGBACK) && iRunNumber <= _iDogRunCounters[iDogNumber] && _bDogFaults[iDogNumber] == true) //If still running and fault active
       {
-         strCrossingTime = "     NOK";
+         strCrossingTime = "   fault";
       }
       else if ((RaceState == RUNNING && iCurrentDog == iDogNumber && _byDogState == COMINGBACK) && iRunNumber <= _iDogRunCounters[iDogNumber] && _bDogFaults[iDogNumber] == false) //If still running and no active fault
       {
-         strCrossingTime = "      OK";
+         strCrossingTime = "      ok";
       }
       else
       {

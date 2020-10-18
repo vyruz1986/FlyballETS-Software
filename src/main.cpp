@@ -505,13 +505,13 @@ void loop()
    }
 
    //Enable (uncomment) the following if you want periodic status updates on the serial port
-   if ((GET_MICROS / 1000 - llLastSerialOutput) > 500)
+   if ((GET_MICROS / 1000 - llLastSerialOutput) > 20000)
    {
-      //ESP_LOGI(__FILE__, "%llu: ping! analog: %i ,voltage is: %i, this is %i%%", GET_MICROS / 1000, BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
+      ESP_LOGI(__FILE__, "Battery: analog: %i ,voltage: %i, level: %i%%", BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
       //ESP_LOGI(__FILE__, "%llu: Elapsed time: %s", GET_MICROS / 1000, cElapsedRaceTime);
       //ESP_LOGI(__FILE__, "Free heap: %i", system_get_free_heap_size());
       /*
-      if (RaceHandler.RaceState == RaceHandler.RUNNING)
+      if (RaceHandler.RaceState == RaceHandler.RUNNING)Ś
       {
          dtostrf(RaceHandler.GetDogTime(RaceHandler.iCurrentDog), 7, 3, cDogTime);
          ESP_LOGI(__FILE__, "Dog %i: %ss", RaceHandler.iCurrentDog, cDogTime);

@@ -92,6 +92,8 @@ private:
 
    bool _bFault;
    bool _bDogFaults[4];
+   bool _bDogPerfectCross;
+   bool _bDogBigOK[4][4];
    bool _bRerunBusy;
    bool _bSafeCross;
    bool _bNegativeCross;
