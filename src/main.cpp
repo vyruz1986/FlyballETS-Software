@@ -505,7 +505,7 @@ void loop()
    }
 
    //Enable (uncomment) the following if you want periodic status updates on the serial port
-   if ((GET_MICROS / 1000 - llLastSerialOutput) > 20000)
+   if ((GET_MICROS / 1000 - llLastSerialOutput) > 30000)
    {
       ESP_LOGI(__FILE__, "Battery: analog: %i ,voltage: %i, level: %i%%", BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
       //ESP_LOGI(__FILE__, "%llu: Elapsed time: %s", GET_MICROS / 1000, cElapsedRaceTime);

@@ -837,7 +837,7 @@ String RaceHandlerClass::GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber)
       dtostrf(dCrossingTime, 7, 3, cCrossingTime);
       strCrossingTime += cCrossingTime;
    }
-   else if (_bDogBigOK[iDogNumber][iRunNumber] = 1)
+   else if (_bDogBigOK[iDogNumber][iRunNumber] == 1)
    {
       strCrossingTime = "      OK";
    }

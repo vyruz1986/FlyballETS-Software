@@ -49,20 +49,31 @@ void BatterySensorClass::CheckBatteryVoltage()
       }
       _iAverageBatteryReading = iBatteryReadingsTotal / _iNumberOfBatteryReadings;
 
-#ifdef ESP32
-      //For ESP32 we're using +12V--R33K--PIN--R10K--GND circuit so divider is 3.3
-      //This voltage divider allows reading 0-14.19V
-      //Assumptions for 12.6V battery:
-      //Max: 12.60V --> 2.93V --> 100%
-      //Min: 10.88V --> 2.53V -->   0%
-      //Also ESP32 has 12-bit ADC, so 3.3V (true is 3.31V) = 4095 analogRead value
+      //For ESP32 we're using +12V--R33k--PIN--R10k--GND circuit so divider is 3.3
+      //ESP32 has 12-bit ADC (0-4095), theoretically 3.3V = 4095 in analogRead value
+      //Theoreticallly this voltage divider allows reading 0-14.19V,
+      //In practice 4095 analogRead is for 3.15V measured on R10k what correspond with 13,618V of battery
+      //Minimum measurable value (ESP32 powered by USB) is 3.96V (battery) what correspond with 0,916V on R10k
+      //I use 12.6V battery with operating range 10.8V-12.6V, but I assume OK range as 10.9V(0%)-12.6V(100%)
+      //
+      // battery     -->   R10k/pin35    --> analogRead   -> battery %
+      //  3.961V              0.9164V               958
+      //  9.901V              2.2915V              2638
+      // 10.899V              2.5215V              2934             0%
+      // 12.601V              2.9154V              3572           100%
+      // 13.618V              3.1500V              4095
+      //
+      //Theoretical voltage multplier would be 14.19/3.3=4.3, but calculated based on measurements is 4.3223
+      //For easy mapping of analogRead to R10k/pin35 voltage function map() can be used,
+      //but in practice characteristic is not linear so for more accurate values calculated function should be used
+      //I read equation from trend line of Excel X-Y chart for 4 highest measurements from the table above
+      //(9.901V measurement was done explicitly for this purpose)
+ 
       //First calculate voltage at ADC pin
-      int iPinVoltage = map(_iAverageBatteryReading, 0, 4095, 0, 3310);
-      _iBatteryVoltage = iPinVoltage * 4.515;  // 14.19/3.3=4.3 but calibrated is 4.515
-#else
-      float fMeasuredVoltage = iAverageBatteryReading * 0.0048828125;
-      _iBatteryVoltage = fMeasuredVoltage * 2.5 * 100;
-#endif
+      //int iPinVoltage = map(_iAverageBatteryReading, 958, 4095, 916, 3150);
+      double dPinVoltage = (-0.0001525)*pow(_iAverageBatteryReading,2) + 1.6155*_iAverageBatteryReading - 907.64;
+      int iPinVoltage = dPinVoltage;
+      _iBatteryVoltage = iPinVoltage * 4.3223;
       _iNumberOfBatteryReadings = 0;
    }
 }
@@ -88,7 +99,7 @@ uint16_t BatterySensorClass::GetBatteryVoltage()
 /// </returns>
 uint16_t BatterySensorClass::GetBatteryPercentage()
 {
-   if (_iBatteryVoltage < 10880)
+   if (_iBatteryVoltage < 10900)
    {
       return 0;
    }
@@ -98,7 +109,7 @@ uint16_t BatterySensorClass::GetBatteryPercentage()
    }
    else
    {
-      uint16_t iBatteryPercentage = map(_iBatteryVoltage, 10880, 12600, 0, 100);
+      uint16_t iBatteryPercentage = map(_iBatteryVoltage, 10900, 12600, 0, 100);
       return iBatteryPercentage;
    }
 }
