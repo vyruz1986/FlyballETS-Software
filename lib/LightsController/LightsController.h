@@ -67,6 +67,7 @@ public:
    void ResetLights();
    void DeleteSchedules();
    void ToggleFaultLight(uint8_t iDogNumber, LightStates byLightState);
+   void ReaceReadyFault(LightStates byLightState);
 
    stLightsState GetLightsState();
 

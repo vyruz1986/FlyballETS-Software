@@ -651,10 +651,22 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
 /// </summary>
 void RaceHandlerClass::TriggerSensor1()
 {
-   if (RaceState == RESET || (RaceState == STOPPED && GET_MICROS > (_llRaceEndTime + 1500000)))
+   if (RaceState == STOPPED && GET_MICROS > (_llRaceEndTime + 1500000))
    {
       return;
    }
+   else if (RaceState == RESET)
+   {
+      if (digitalRead(_iS1Pin) == 1)
+      {
+         LightsController.ReaceReadyFault(LightsController.ON);
+      }
+      else
+      {
+         LightsController.ReaceReadyFault(LightsController.OFF);
+      }
+   }
+   else
    _QueuePush({_bRunDirectionInverted ? 2 : 1, GET_MICROS, digitalRead(_iS1Pin)});
 }
 
@@ -664,10 +676,22 @@ void RaceHandlerClass::TriggerSensor1()
 /// </summary>
 void RaceHandlerClass::TriggerSensor2()
 {
-   if (RaceState == RESET || (RaceState == STOPPED && GET_MICROS > (_llRaceEndTime + 1500000)))
+   if (RaceState == STOPPED && GET_MICROS > (_llRaceEndTime + 1500000))
    {
       return;
    }
+   else if (RaceState == RESET)
+   {
+      if (digitalRead(_iS2Pin) == 1)
+      {
+         LightsController.ReaceReadyFault(LightsController.ON);
+      }
+      else
+      {
+         LightsController.ReaceReadyFault(LightsController.OFF);
+      }
+   }
+   else
    _QueuePush({_bRunDirectionInverted ? 1 : 2, GET_MICROS, digitalRead(_iS2Pin)});
 }
 

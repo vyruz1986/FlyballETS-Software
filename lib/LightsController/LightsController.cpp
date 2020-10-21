@@ -277,6 +277,15 @@ void LightsControllerClass::ToggleFaultLight(uint8_t DogNumber, LightStates byLi
    //ESP_LOGD(__FILE__, "Fault light for dog %i: %i", DogNumber, byLightState);
 }
 
+/// <summary>
+///   Switch white fault light ON/OFF to indicate unexpected sensor read while in READY/RESET state.
+/// </summary>
+void LightsControllerClass::ReaceReadyFault(LightStates byLightState)
+{
+   Lights byLight = _byLightsArray[0];
+   ToggleLightState(byLight, byLightState);
+}
+
 stLightsState LightsControllerClass::GetLightsState()
 {
    stLightsState CurrentLightsState;
