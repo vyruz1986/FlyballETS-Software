@@ -443,7 +443,12 @@ void loop()
    //Update battery percentage to display
    iBatteryVoltage = BatterySensor.GetBatteryVoltage();
    uint16_t iBatteryPercentage = BatterySensor.GetBatteryPercentage();
-   LCDController.UpdateField(LCDController.BattLevel, String(iBatteryPercentage));
+   String sBatteryPercentage = String(iBatteryPercentage);
+   while (sBatteryPercentage.length() < 3)
+   {
+      sBatteryPercentage = " " + sBatteryPercentage;
+   }
+   LCDController.UpdateField(LCDController.BattLevel, sBatteryPercentage);
 #endif
 
    //Update team netto time

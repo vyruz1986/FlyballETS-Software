@@ -59,8 +59,8 @@ void BatterySensorClass::CheckBatteryVoltage()
       // battery     -->   R10k/pin35    --> analogRead   -> battery %
       //  3.961V              0.9164V               958
       //  9.901V              2.2915V              2638
-      // 10.899V              2.5215V              2934             0%
-      // 12.601V              2.9154V              3572           100%
+      // 10.899V              2.5215V              2934            ~0%
+      // 12.601V              2.9154V              3572          ~100%
       // 13.618V              3.1500V              4095
       //
       //Theoretical voltage multplier would be 14.19/3.3=4.3, but calculated based on measurements is 4.3223
@@ -99,17 +99,17 @@ uint16_t BatterySensorClass::GetBatteryVoltage()
 /// </returns>
 uint16_t BatterySensorClass::GetBatteryPercentage()
 {
-   if (_iBatteryVoltage < 10900)
+   if (_iBatteryVoltage < 10850)
    {
-      return 0;
+      return 1;
    }
-   else if (_iBatteryVoltage > 12600)
+   else if (_iBatteryVoltage > 12550)
    {
       return 100;
    }
    else
    {
-      uint16_t iBatteryPercentage = map(_iBatteryVoltage, 10900, 12600, 0, 100);
+      uint16_t iBatteryPercentage = map(_iBatteryVoltage, 10850, 12550, 1, 100);
       return iBatteryPercentage;
    }
 }
