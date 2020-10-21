@@ -372,13 +372,13 @@ void loop()
    }
 
    //Race start (serial command only)
-   if (bSerialStringComplete && strSerialData == "START")
+   if (bSerialStringComplete && strSerialData == "START" && (RaceHandler.RaceState == RaceHandler.RESET))
    {
       StartRaceMain();
    }
 
    //Race stop (serial command only)
-   if (bSerialStringComplete && strSerialData == "STOP")
+   if (bSerialStringComplete && strSerialData == "STOP" && ((RaceHandler.RaceState == RaceHandler.STARTING) || (RaceHandler.RaceState == RaceHandler.RUNNING)))
    {
       StopRaceMain();
    }
@@ -510,7 +510,7 @@ void loop()
    }
 
    //Enable (uncomment) the following if you want periodic status updates on the serial port
-   if ((GET_MICROS / 1000 - llLastSerialOutput) > 30000)
+   if ((GET_MICROS / 1000 - llLastSerialOutput) > 60000)
    {
       ESP_LOGI(__FILE__, "Battery: analog: %i ,voltage: %i, level: %i%%", BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
       //ESP_LOGI(__FILE__, "%llu: Elapsed time: %s", GET_MICROS / 1000, cElapsedRaceTime);
@@ -586,23 +586,6 @@ void Sensor1Wrapper()
 }
 
 /// <summary>
-///   Starts (if stopped) or stops (if started) a race. Start is only allowed if race is stopped and reset.
-/// </summary>
-void StartStopRace()
-{
-   llLastRCPress[0] = GET_MICROS / 1000;
-   if (RaceHandler.RaceState == RaceHandler.RESET) //If race is reset
-   {
-      //Then start the race
-      StartRaceMain();
-   }
-   else //If race state is running or starting, we should stop it
-   {
-      StopRaceMain();
-   }
-}
-
-/// <summary>
 ///   Start a race.
 /// </summary>
 void StartRaceMain()
@@ -620,6 +603,23 @@ void StopRaceMain()
 {
    RaceHandler.StopRace();
    LightsController.DeleteSchedules();
+}
+
+/// <summary>
+///   Starts (if stopped) or stops (if started) a race. Start is only allowed if race is stopped and reset.
+/// </summary>
+void StartStopRace()
+{
+   llLastRCPress[0] = GET_MICROS / 1000;
+   if (RaceHandler.RaceState == RaceHandler.RESET) //If race is reset
+   {
+      //Then start the race
+      StartRaceMain();
+   }
+   else //If race state is running or starting, we should stop it
+   {
+      StopRaceMain();
+   }
 }
 
 /// <summary>
