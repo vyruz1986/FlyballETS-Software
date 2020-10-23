@@ -68,10 +68,10 @@ void BatterySensorClass::CheckBatteryVoltage()
       //but in practice characteristic is not linear so for more accurate values calculated function should be used
       //I read equation from trend line of Excel X-Y chart for 4 highest measurements from the table above
       //(9.901V measurement was done explicitly for this purpose)
- 
+      
       //First calculate voltage at ADC pin
       //int iPinVoltage = map(_iAverageBatteryReading, 958, 4095, 916, 3150);
-      double dPinVoltage = (-0.0001525)*pow(_iAverageBatteryReading,2) + 1.6155*_iAverageBatteryReading - 907.64;
+      double dPinVoltage = (-0.0001525)*pow(_iAverageBatteryReading,2) + 1.6155*_iAverageBatteryReading - 907.6;
       int iPinVoltage = dPinVoltage;
       _iBatteryVoltage = iPinVoltage * 4.3223;
       _iNumberOfBatteryReadings = 0;
@@ -99,17 +99,17 @@ uint16_t BatterySensorClass::GetBatteryVoltage()
 /// </returns>
 uint16_t BatterySensorClass::GetBatteryPercentage()
 {
-   if (_iBatteryVoltage < 10850)
+   if (_iBatteryVoltage < 11000)
    {
-      return 1;
+      return 0;
    }
-   else if (_iBatteryVoltage > 12550)
+   else if (_iBatteryVoltage > 12520)
    {
       return 100;
    }
    else
    {
-      uint16_t iBatteryPercentage = map(_iBatteryVoltage, 10850, 12550, 1, 100);
+      uint16_t iBatteryPercentage = map(_iBatteryVoltage, 11000, 12520, 1, 100);
       return iBatteryPercentage;
    }
 }

@@ -443,7 +443,15 @@ void loop()
    //Update battery percentage to display
    iBatteryVoltage = BatterySensor.GetBatteryVoltage();
    uint16_t iBatteryPercentage = BatterySensor.GetBatteryPercentage();
-   String sBatteryPercentage = String(iBatteryPercentage);
+   String sBatteryPercentage;
+   if (iBatteryPercentage == 0)
+   {
+      sBatteryPercentage = "LOW";
+   }
+   else
+   {
+      sBatteryPercentage = String(iBatteryPercentage);
+   }
    while (sBatteryPercentage.length() < 3)
    {
       sBatteryPercentage = " " + sBatteryPercentage;
