@@ -99,17 +99,17 @@ uint16_t BatterySensorClass::GetBatteryVoltage()
 /// </returns>
 uint16_t BatterySensorClass::GetBatteryPercentage()
 {
-   if (_iBatteryVoltage < 11000)
+   if (_iBatteryVoltage < 10900)
    {
       return 0;
    }
-   else if (_iBatteryVoltage > 12520)
+   else if (_iBatteryVoltage > 12460)
    {
       return 100;
    }
    else
    {
-      uint16_t iBatteryPercentage = map(_iBatteryVoltage, 11000, 12520, 1, 100);
+      uint16_t iBatteryPercentage = map(_iBatteryVoltage, 10900, 12460, 1, 100);
       return iBatteryPercentage;
    }
 }
