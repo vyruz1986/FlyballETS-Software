@@ -26,6 +26,7 @@
 #define JTAG false          // when set to true you need converter board with pins remappig and jtag + programing port. It deactite featuers: LSR BTN+LED, battery sensor, switch button
 #define NumSimulatedRaces 3 // number of prepeared simulated races. Sererial interface command to chane interface: e.g. RACE 1
 #define WiFiActivation false // change to true to activate WiFi AP. Please keep in mind inteferences between WiFi and remote contol board
+#define BatteryCalibration false // after setting to true LCD will display analog read value from battery pin (range 0-4095). This is handfull for battery volate curve definition (dPinVoltage)
 
 #define LIGHTSCHAINS 1 // Numer of WS281x lights chains. 1 - one chain of 5 pixels/lights, 2 - two chains --> 10 pixels/lights, etc.
 

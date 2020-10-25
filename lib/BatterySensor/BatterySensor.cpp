@@ -52,26 +52,33 @@ void BatterySensorClass::CheckBatteryVoltage()
       //For ESP32 we're using +12V--R33k--PIN--R10k--GND circuit so divider is 3.3
       //ESP32 has 12-bit ADC (0-4095), theoretically 3.3V = 4095 in analogRead value
       //Theoreticallly this voltage divider allows reading 0-14.19V,
-      //In practice 4095 analogRead is for 3.15V measured on R10k what correspond with 13,618V of battery
-      //Minimum measurable value (ESP32 powered by USB) is 3.96V (battery) what correspond with 0,916V on R10k
-      //I use 12.6V battery with operating range 10.8V-12.6V, but I assume OK range as 10.9V(0%)-12.6V(100%)
+      //In order to measure true range I recommend to activate in conifg.h "BatteryCalibration" and build table
+      //of true ready by ESP32 analogRead value for different power supply (lab power supply) points. In my case it was
+      // power supply (V)   -->  analogRead from LCD
+      //  9,5                       2497
+      // 10,5                       2768
+      // 11,5                       3071
+      // 12,0                       3251
+      // 12,5                       3456
+      // 13,0                       3683
+      // 13,5                       3952
+      // 13,75                      4094
+      //Theoretical voltage multplier would be 14.19/3.3=4.3, but calculated based on comparision of
+      //supply voltage and pin35/R10K voltage was 4.3223
       //
-      // battery     -->   R10k/pin35    --> analogRead   -> battery %
-      //  3.961V              0.9164V               958
-      //  9.901V              2.2915V              2638
-      // 10.899V              2.5215V              2934            ~0%
-      // 12.601V              2.9154V              3572          ~100%
-      // 13.618V              3.1500V              4095
-      //
-      //Theoretical voltage multplier would be 14.19/3.3=4.3, but calculated based on measurements is 4.3223
-      //For easy mapping of analogRead to R10k/pin35 voltage function map() can be used,
-      //but in practice characteristic is not linear so for more accurate values calculated function should be used
-      //I read equation from trend line of Excel X-Y chart for 4 highest measurements from the table above
-      //(9.901V measurement was done explicitly for this purpose)
+      //For easy simplification of analogRead mapping to R10k/pin35 voltage linear function map() can be used,
+      //but in practice characteristic is not linear so for more accurate values calculated function should be used.
+      //I use Excel for that with first selecting best maching trend line and later calucate it using this fucntion
+      //where y is range of cells (in one row, not column!) with values of R10k/pin35 voltage (supply voltage divided by 3.3223)
+      //and x is range of cells (in one row, not column!) with analogRead values
+      // equation: y = c2 * x^2 + c1 * x + b
+      // c2: =INDEKS(REGLINP(y; x^{1;2});1)
+      // c1: =INDEKS(REGLINP(y; x^{1;2});1;2)
+      //  b: =INDEKS(REGLINP(y; x^{1;2});1;3)
       
       //First calculate voltage at ADC pin
       //int iPinVoltage = map(_iAverageBatteryReading, 958, 4095, 916, 3150);
-      double dPinVoltage = (-0.0001525)*pow(_iAverageBatteryReading,2) + 1.6155*_iAverageBatteryReading - 907.6;
+      double dPinVoltage = (-0.00017784)*pow(_iAverageBatteryReading,2) + 1.783677*_iAverageBatteryReading - 1145.2;
       int iPinVoltage = dPinVoltage;
       _iBatteryVoltage = iPinVoltage * 4.3223;
       _iNumberOfBatteryReadings = 0;
@@ -99,6 +106,9 @@ uint16_t BatterySensorClass::GetBatteryVoltage()
 /// </returns>
 uint16_t BatterySensorClass::GetBatteryPercentage()
 {
+   #if BatteryCalibration
+      return _iAverageBatteryReading;
+   #else
    if (_iBatteryVoltage < 10900)
    {
       return 0;
@@ -112,6 +122,7 @@ uint16_t BatterySensorClass::GetBatteryPercentage()
       uint16_t iBatteryPercentage = map(_iBatteryVoltage, 10900, 12460, 1, 100);
       return iBatteryPercentage;
    }
+   #endif
 }
 
 /// <summary>
