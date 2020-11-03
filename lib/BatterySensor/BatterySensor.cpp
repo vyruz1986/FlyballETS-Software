@@ -49,9 +49,9 @@ void BatterySensorClass::CheckBatteryVoltage()
       }
       _iAverageBatteryReading = iBatteryReadingsTotal / _iNumberOfBatteryReadings;
 
-      //For ESP32 we're using +12V--R33k--PIN--R10k--GND circuit so divider is 3.3
+      //For ESP32 we're using +12V--R33k--PIN--R10k--GND circuit, from equation Uo/10000 = (Ui - Uo)/33000 --> we have divider value Ui/Uo = 4.3
       //ESP32 has 12-bit ADC (0-4095), theoretically 3.3V = 4095 in analogRead value
-      //Theoreticallly this voltage divider allows reading 0-14.19V,
+      //Theoreticallly this voltage divider allows reading 0-14.19V (3.3V multplied by divider 4.3),
       //In order to measure true range I recommend to activate in conifg.h "BatteryCalibration" and build table
       //of true ready by ESP32 analogRead value for different power supply (lab power supply) points. In my case it was
       // power supply (V)   -->  analogRead from LCD
@@ -63,13 +63,13 @@ void BatterySensorClass::CheckBatteryVoltage()
       // 13,0                       3683
       // 13,5                       3952
       // 13,75                      4094
-      //Theoretical voltage multplier would be 14.19/3.3=4.3, but calculated based on comparision of
-      //supply voltage and pin35/R10K voltage was 4.3223
+      //Theoretical voltage divider is 4.3, but true one based on comparision of
+      //supply voltage and pin35/R10K voltage was in my case 4.3223
       //
       //For easy simplification of analogRead mapping to R10k/pin35 voltage linear function map() can be used,
       //but in practice characteristic is not linear so for more accurate values calculated function should be used.
       //I use Excel for that with first selecting best maching trend line and later calucate it using this fucntion
-      //where y is range of cells (in one row, not column!) with values of R10k/pin35 voltage (supply voltage divided by 3.3223)
+      //where y is range of cells (in one row, not column!) with values of R10k/pin35 voltage (supply voltage divided by 4.3223)
       //and x is range of cells (in one row, not column!) with analogRead values
       // equation: y = c2 * x^2 + c1 * x + b
       // c2: =INDEKS(REGLINP(y; x^{1;2});1)

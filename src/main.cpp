@@ -48,7 +48,7 @@
 #include <BatterySensor.h>
 
 /*List of pins and the ones used (Lolin32 board):
-   - 34: S1 (handler side) photoelectric sensor
+   - 34: S1 (handler side) photoelectric sensor. ESP32 has no pull-down resistor on 34 pin, but pull-down anyway by 1kohm resistor on sensor board
    - 33: S2 (box side) photoelectric sensor | with jtag port used for LCD Data4
 
    - 27: LCD Data7
