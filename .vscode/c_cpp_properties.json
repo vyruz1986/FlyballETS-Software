@@ -1,11 +1,12 @@
+//
+// !!! WARNING !!! AUTO-GENERATED FILE!
+// PLEASE DO NOT MODIFY IT AND USE "platformio.ini":
+// https://docs.platformio.org/page/projectconf/section_env_build.html#build-flags
+//
 {
     "configurations": [
         {
-            "name": "!!! WARNING !!! AUTO-GENERATED FILE, PLEASE DO NOT MODIFY IT AND USE https://docs.platformio.org/page/projectconf/section_env_build.html#build-flags"
-        },
-        {
-            "name": "Mac",
-            "macFrameworkPath": [],
+            "name": "PlatformIO",
             "includePath": [
                 "/Users/simon/Repositories/FlyballETS-Software/include",
                 "/Users/simon/Repositories/FlyballETS-Software/src",
@@ -26,7 +27,7 @@
                 "/Users/simon/Repositories/FlyballETS-Software/.pio/libdeps/lolin32/Embedis/src",
                 "/Users/simon/Repositories/FlyballETS-Software/.pio/libdeps/lolin32/LiquidCrystal/src",
                 "/Users/simon/Repositories/FlyballETS-Software/.pio/libdeps/lolin32/TinyGPSPlus/src",
-                "/Users/simon/Repositories/FlyballETS-Software/.pio/libdeps/lolin32/NeoPixelBus_ID547/src",
+                "/Users/simon/Repositories/FlyballETS-Software/.pio/libdeps/lolin32/NeoPixelBus/src",
                 "/Users/simon/.platformio/packages/framework-arduinoespressif32/libraries/SPI/src",
                 "/Users/simon/Repositories/FlyballETS-Software/.pio/libdeps/lolin32/ESP Async WebServer_ID306/src",
                 "/Users/simon/Repositories/FlyballETS-Software/.pio/libdeps/lolin32/ArduinoJson_ID64@5.13.4/src",
@@ -43,6 +44,7 @@
                 "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/coap",
                 "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/console",
                 "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/driver",
+                "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/efuse",
                 "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/esp-tls",
                 "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/esp32",
                 "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/esp_adc_cal",
@@ -50,7 +52,10 @@
                 "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/esp_http_client",
                 "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/esp_http_server",
                 "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/esp_https_ota",
+                "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/esp_https_server",
                 "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/esp_ringbuf",
+                "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/esp_websocket_client",
+                "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/espcoredump",
                 "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/ethernet",
                 "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/expat",
                 "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/fatfs",
@@ -82,6 +87,7 @@
                 "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/tcp_transport",
                 "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/tcpip_adapter",
                 "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/ulp",
+                "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/unity",
                 "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/vfs",
                 "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/wear_levelling",
                 "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/wifi_provisioning",
@@ -93,6 +99,9 @@
                 "/Users/simon/.platformio/packages/framework-arduinoespressif32/cores/esp32",
                 "/Users/simon/.platformio/packages/framework-arduinoespressif32/variants/lolin32",
                 "/Users/simon/Repositories/FlyballETS-Software/.pio/libdeps/lolin32/LiquidCrystal_ID887/src",
+                "/Users/simon/Repositories/FlyballETS-Software/.pio/libdeps/lolin32/Streaming",
+                "/Users/simon/Repositories/FlyballETS-Software/.pio/libdeps/lolin32/Time",
+                "/Users/simon/Repositories/FlyballETS-Software/.pio/libdeps/lolin32/Timezone/src",
                 "/Users/simon/Repositories/FlyballETS-Software/.pio/libdeps/lolin32/TinyGPSPlus_ID1655/src",
                 "/Users/simon/.platformio/lib/ArduinoJson/src",
                 "/Users/simon/.platformio/packages/framework-arduinoespressif32/libraries/AsyncUDP/src",
@@ -104,6 +113,7 @@
                 "/Users/simon/.platformio/packages/framework-arduinoespressif32/libraries/FFat/src",
                 "/Users/simon/.platformio/packages/framework-arduinoespressif32/libraries/HTTPClient/src",
                 "/Users/simon/.platformio/packages/framework-arduinoespressif32/libraries/HTTPUpdate/src",
+                "/Users/simon/.platformio/packages/framework-arduinoespressif32/libraries/HTTPUpdateServer/src",
                 "/Users/simon/.platformio/packages/framework-arduinoespressif32/libraries/NetBIOS/src",
                 "/Users/simon/.platformio/packages/framework-arduinoespressif32/libraries/Preferences/src",
                 "/Users/simon/.platformio/packages/framework-arduinoespressif32/libraries/SD/src",
@@ -112,6 +122,7 @@
                 "/Users/simon/.platformio/packages/framework-arduinoespressif32/libraries/Ticker/src",
                 "/Users/simon/.platformio/packages/framework-arduinoespressif32/libraries/WebServer/src",
                 "/Users/simon/.platformio/packages/framework-arduinoespressif32/libraries/WiFiClientSecure/src",
+                "/Users/simon/.platformio/packages/framework-arduinoespressif32/libraries/WiFiProv/src",
                 "/Users/simon/.platformio/packages/framework-arduinoespressif32/libraries/Wire/src",
                 "/Users/simon/.platformio/packages/tool-unity",
                 ""
@@ -138,7 +149,7 @@
                     "/Users/simon/Repositories/FlyballETS-Software/.pio/libdeps/lolin32/Embedis/src",
                     "/Users/simon/Repositories/FlyballETS-Software/.pio/libdeps/lolin32/LiquidCrystal/src",
                     "/Users/simon/Repositories/FlyballETS-Software/.pio/libdeps/lolin32/TinyGPSPlus/src",
-                    "/Users/simon/Repositories/FlyballETS-Software/.pio/libdeps/lolin32/NeoPixelBus_ID547/src",
+                    "/Users/simon/Repositories/FlyballETS-Software/.pio/libdeps/lolin32/NeoPixelBus/src",
                     "/Users/simon/.platformio/packages/framework-arduinoespressif32/libraries/SPI/src",
                     "/Users/simon/Repositories/FlyballETS-Software/.pio/libdeps/lolin32/ESP Async WebServer_ID306/src",
                     "/Users/simon/Repositories/FlyballETS-Software/.pio/libdeps/lolin32/ArduinoJson_ID64@5.13.4/src",
@@ -155,6 +166,7 @@
                     "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/coap",
                     "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/console",
                     "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/driver",
+                    "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/efuse",
                     "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/esp-tls",
                     "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/esp32",
                     "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/esp_adc_cal",
@@ -162,7 +174,10 @@
                     "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/esp_http_client",
                     "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/esp_http_server",
                     "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/esp_https_ota",
+                    "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/esp_https_server",
                     "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/esp_ringbuf",
+                    "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/esp_websocket_client",
+                    "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/espcoredump",
                     "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/ethernet",
                     "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/expat",
                     "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/fatfs",
@@ -194,6 +209,7 @@
                     "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/tcp_transport",
                     "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/tcpip_adapter",
                     "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/ulp",
+                    "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/unity",
                     "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/vfs",
                     "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/wear_levelling",
                     "/Users/simon/.platformio/packages/framework-arduinoespressif32/tools/sdk/include/wifi_provisioning",
@@ -219,6 +235,7 @@
                     "/Users/simon/.platformio/packages/framework-arduinoespressif32/libraries/FFat/src",
                     "/Users/simon/.platformio/packages/framework-arduinoespressif32/libraries/HTTPClient/src",
                     "/Users/simon/.platformio/packages/framework-arduinoespressif32/libraries/HTTPUpdate/src",
+                    "/Users/simon/.platformio/packages/framework-arduinoespressif32/libraries/HTTPUpdateServer/src",
                     "/Users/simon/.platformio/packages/framework-arduinoespressif32/libraries/NetBIOS/src",
                     "/Users/simon/.platformio/packages/framework-arduinoespressif32/libraries/Preferences/src",
                     "/Users/simon/.platformio/packages/framework-arduinoespressif32/libraries/SD/src",
@@ -227,13 +244,14 @@
                     "/Users/simon/.platformio/packages/framework-arduinoespressif32/libraries/Ticker/src",
                     "/Users/simon/.platformio/packages/framework-arduinoespressif32/libraries/WebServer/src",
                     "/Users/simon/.platformio/packages/framework-arduinoespressif32/libraries/WiFiClientSecure/src",
+                    "/Users/simon/.platformio/packages/framework-arduinoespressif32/libraries/WiFiProv/src",
                     "/Users/simon/.platformio/packages/framework-arduinoespressif32/libraries/Wire/src",
                     "/Users/simon/.platformio/packages/tool-unity",
                     ""
                 ]
             },
             "defines": [
-                "PLATFORMIO=50001",
+                "PLATFORMIO=50100",
                 "ARDUINO_LOLIN32",
                 "CORE_DEBUG_LEVEL=5",
                 "ESP32",
@@ -247,7 +265,6 @@
                 "ARDUINO_BOARD=\"WEMOS LOLIN32\"",
                 ""
             ],
-            "intelliSenseMode": "clang-x64",
             "cStandard": "c99",
             "cppStandard": "c++11",
             "compilerPath": "/Users/simon/.platformio/packages/toolchain-xtensa32/bin/xtensa-esp32-elf-gcc",
