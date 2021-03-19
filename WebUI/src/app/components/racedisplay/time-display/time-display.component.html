@@ -1,0 +1,5 @@
+<h4>Race Time</h4>
+<div class="teamTime">
+   {{elapsedTime | date: 'mm:ss.SSS'}} s<br />
+   ({{(elapsedTime - totalCrossingTime) | date: 'ss.SSS'}} {{totalCrossingTime | crossingTime}})
+</div>
