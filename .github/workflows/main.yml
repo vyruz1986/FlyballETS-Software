@@ -36,6 +36,7 @@ jobs:
           pip install platformio
 
       - name: Run PlatformIO
+        working-directory: ./Firmware
         run: platformio run
 
       - name: Upload build artifact
