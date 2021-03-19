@@ -14,7 +14,7 @@
 #include "SettingsManager.h"
 #include "GPSHandler.h"
 #include <rom/rtc.h>
-#include "../../src/static/index.html.gz.h"
+#include "../../include/index.html.gz.h"
 
 void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
 {
