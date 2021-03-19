@@ -1,19 +1,26 @@
 ## FlyballETS-Software
 
-The FlyballETS-Software project is a subproject of the [Flyball ETS project](https://sparkydevices.wordpress.com/tag/flyball-ets/).
-It contains the sources for the Arduino Pro Mini microcontroller which can be considere the heart of the system.
+The [Flyball ETS project](https://sparkydevices.wordpress.com/tag/flyball-ets/) contains the sources for the microcontroller software.
 
 ## Source files
 
-The source files consist of a 'central' FlyballETS-Software.ino file, and several _.cpp/_.h files.
-The ino file is left in place for Arduino IDE compatibility, the other files contain classes which are used throughout the project.
+The source files are divided into 2 subdirectories:
 
-You will see there are also 2 Visual Studio files, FlyballETS-Software.sln and .vcxproj, these are designed to be used for people who (like me) use Visual Studio to code.
+### Firmware
 
-## Requirements
+This folder contains the sources for compiling the firmware which is to be flashed onto the ESP32 MCU.
+It uses [PlatformIO](https://platformio.org/) to manage the board library, as well as other libraries needed.
 
-The source files are 100% Arduino compatible, this means you can compile them by just installing the latest Arduino IDE and opening the FlyballETS-Software.ino file.
-You do need the ESP32-Arduino SDK however, see [this link](https://github.com/espressif/arduino-esp32) for details and instructions.
+### WebUI
+
+This folder contains the angular sources for building the web interface used to control the system.
+They need to be built first because they output a header file to the `Firmware` folder which is needed in order to compile the firmware.
+Make sure you have [NodeJS](https://nodejs.org/en/download/) installed, then run the following commands in the `WebUI` folder:
+
+```bash
+npm install
+npm run build
+```
 
 ## Thanks
 
