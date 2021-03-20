@@ -36,8 +36,7 @@ private:
    int _iBatteryReadings[10];
    int _iNumberOfBatteryReadings = 0;
    uint16_t _iBatteryVoltage = 0;
-   uint16_t _iAverageBatteryReading;
-   
+   uint16_t _iAverageBatteryReading;  
 };
 
 extern BatterySensorClass BatterySensor;

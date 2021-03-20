@@ -141,6 +141,9 @@ stInputSignal SideSwitch = {iSideSwitchPin, 0, 500};
 //Set last serial output variable
 long long llLastSerialOutput = 0;
 
+//Battery % update on LCD timer variable
+long long llLastBatteryLCDupdate = 0;
+
 //remote control pins
 int iRC0Pin = 19;
 int iRC1Pin = 23;
@@ -331,39 +334,43 @@ void setup()
 
 void loop()
 {
-   //Handle OTA update if incoming
-   ArduinoOTA.handle();
+   //Handle settings manager loop
+   //why this is needed in the loop???
+   //SettingsManager.loop();
 
-   //Handle lights main processing
-   LightsController.Main();
+   if (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)
+      {
+         //Handle OTA update if incoming
+         ArduinoOTA.handle();
+
+         //Handle GPS
+         GPSHandler.loop();
+
+         #if !JTAG
+         //Handle battery sensor main processing
+         BatterySensor.CheckBatteryVoltage();
+         #endif
+      }
 
    //Check for serial events
    serialEvent();
 
- #if Simulate
+#if Simulate
    //Run simulator
    Simulator.Main();
 #endif
 
-  //Handle Race main processing
-   RaceHandler.Main();
+   //Handle lights main processing
+   LightsController.Main();
 
-#if !JTAG
-   //Handle battery sensor main processing
-   BatterySensor.CheckBatteryVoltage();
-#endif
+   //Handle Race main processing
+   RaceHandler.Main();
 
    //Handle LCD processing
    LCDController.Main();
 
    //Handle WebSocket server
    WebHandler.loop();
-
-   //Handle settings manager loop
-   SettingsManager.loop();
-
-   //Handle GPS
-   GPSHandler.loop();
 
    //Race start/stop button (remote D0 output)
    if (digitalRead(iRC0Pin) == HIGH && (GET_MICROS / 1000 - llLastRCPress[0]) > 2000)
@@ -441,22 +448,27 @@ void loop()
 
 #if !JTAG
    //Update battery percentage to display
-   iBatteryVoltage = BatterySensor.GetBatteryVoltage();
-   uint16_t iBatteryPercentage = BatterySensor.GetBatteryPercentage();
-   String sBatteryPercentage;
-   if (iBatteryPercentage == 0)
-   {
-      sBatteryPercentage = "LOW";
-   }
-   else
-   {
-      sBatteryPercentage = String(iBatteryPercentage);
-   }
-   while (sBatteryPercentage.length() < 3)
-   {
-      sBatteryPercentage = " " + sBatteryPercentage;
-   }
-   LCDController.UpdateField(LCDController.BattLevel, sBatteryPercentage);
+   if (GET_MICROS / 1000 < 2000 || ((GET_MICROS / 1000 - llLastBatteryLCDupdate) > 30000))
+      {
+         iBatteryVoltage = BatterySensor.GetBatteryVoltage();
+         uint16_t iBatteryPercentage = BatterySensor.GetBatteryPercentage();
+         String sBatteryPercentage;
+         if (iBatteryPercentage == 0)
+         {
+            sBatteryPercentage = "LOW";
+         }
+         else
+         {
+            sBatteryPercentage = String(iBatteryPercentage);
+         }
+         while (sBatteryPercentage.length() < 3)
+         {
+            sBatteryPercentage = " " + sBatteryPercentage;
+         }
+         LCDController.UpdateField(LCDController.BattLevel, sBatteryPercentage);
+         ESP_LOGI(__FILE__, "Battery: analog: %i ,voltage: %i, level: %i%%", BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
+         llLastBatteryLCDupdate = GET_MICROS / 1000;
+      }
 #endif
 
    //Update team netto time
@@ -518,20 +530,20 @@ void loop()
    }
 
    //Enable (uncomment) the following if you want periodic status updates on the serial port
+   /*
    if ((GET_MICROS / 1000 - llLastSerialOutput) > 60000)
    {
-      ESP_LOGI(__FILE__, "Battery: analog: %i ,voltage: %i, level: %i%%", BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
       //ESP_LOGI(__FILE__, "%llu: Elapsed time: %s", GET_MICROS / 1000, cElapsedRaceTime);
       //ESP_LOGI(__FILE__, "Free heap: %i", system_get_free_heap_size());
-      /*
       if (RaceHandler.RaceState == RaceHandler.RUNNING)Ś
       {
          dtostrf(RaceHandler.GetDogTime(RaceHandler.iCurrentDog), 7, 3, cDogTime);
          ESP_LOGI(__FILE__, "Dog %i: %ss", RaceHandler.iCurrentDog, cDogTime);
       }
-      */
       llLastSerialOutput = GET_MICROS / 1000;
    }
+   */
+
    //Cleanup variables used for checking if something changed
    iCurrentDog = RaceHandler.iCurrentDog;
    iCurrentRaceState = RaceHandler.RaceState;

@@ -75,10 +75,10 @@ void BatterySensorClass::CheckBatteryVoltage()
       // c2: =INDEKS(REGLINP(y; x^{1;2});1)
       // c1: =INDEKS(REGLINP(y; x^{1;2});1;2)
       //  b: =INDEKS(REGLINP(y; x^{1;2});1;3)
-      
+
       //First calculate voltage at ADC pin
       //int iPinVoltage = map(_iAverageBatteryReading, 958, 4095, 916, 3150);
-      double dPinVoltage = (-0.00017784)*pow(_iAverageBatteryReading,2) + 1.783677*_iAverageBatteryReading - 1145.2;
+      double dPinVoltage = (-0.00017784) * pow(_iAverageBatteryReading, 2) + 1.783677 * _iAverageBatteryReading - 1145.2;
       int iPinVoltage = dPinVoltage;
       _iBatteryVoltage = iPinVoltage * 4.3223;
       _iNumberOfBatteryReadings = 0;
@@ -106,9 +106,9 @@ uint16_t BatterySensorClass::GetBatteryVoltage()
 /// </returns>
 uint16_t BatterySensorClass::GetBatteryPercentage()
 {
-   #if BatteryCalibration
-      return _iAverageBatteryReading;
-   #else
+#if BatteryCalibration
+   return _iAverageBatteryReading;
+#else
    if (_iBatteryVoltage < 10900)
    {
       return 0;
@@ -122,7 +122,7 @@ uint16_t BatterySensorClass::GetBatteryPercentage()
       uint16_t iBatteryPercentage = map(_iBatteryVoltage, 10900, 12460, 1, 100);
       return iBatteryPercentage;
    }
-   #endif
+#endif
 }
 
 /// <summary>

@@ -6,6 +6,7 @@
 
 void SettingsManagerClass::loop()
 {
+   // do we really need to check in loop if there is something to write???
    if (_settings_save)
    {
       ESP_LOGD(__FILE__, "[SETTINGS] Saving");
@@ -53,8 +54,10 @@ bool SettingsManagerClass::setSetting(const String &key, String value)
 
 void SettingsManagerClass::saveSettings()
 {
-   _settings_save = true;
-   Serial.printf("Saving settings\r\n");
+   //_settings_save = true;
+   //Serial.printf("Saving settings\r\n");
+   ESP_LOGD(__FILE__, "Saving settings to EEPROM");
+   EEPROM.commit();
 }
 
 bool SettingsManagerClass::hasSetting(const String &key)
