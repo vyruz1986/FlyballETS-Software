@@ -37,7 +37,6 @@
 #include <WiFiUdp.h>
 //#include <time.h>
 
-
 //Private libs
 #include <GPSHandler.h>
 #include <SettingsManager.h>
@@ -334,23 +333,22 @@ void setup()
 
 void loop()
 {
-   //Handle settings manager loop
-   //why this is needed in the loop???
-   //SettingsManager.loop();
-
    if (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)
-      {
-         //Handle OTA update if incoming
-         ArduinoOTA.handle();
+   {
+      //Handle settings manager loop
+      SettingsManager.loop();
+   
+      //Handle OTA update if incoming
+      ArduinoOTA.handle();
 
-         //Handle GPS
-         GPSHandler.loop();
+      //Handle GPS
+      GPSHandler.loop();
 
-         #if !JTAG
-         //Handle battery sensor main processing
-         BatterySensor.CheckBatteryVoltage();
-         #endif
-      }
+   #if !JTAG
+      //Handle battery sensor main processing
+      BatterySensor.CheckBatteryVoltage();
+   #endif
+   }
 
    //Check for serial events
    serialEvent();
@@ -411,7 +409,7 @@ void loop()
 #endif
 
    //Dog0 fault RC button
-   if ((digitalRead(iRC2Pin) == HIGH && (GET_MICROS / 1000 - llLastRCPress[2] > 2000)) || (bSerialStringComplete && strSerialData == "D0F"))
+   if ((digitalRead(iRC2Pin) == HIGH && (GET_MICROS / 1000 - llLastRCPress[2] > 2000)) || (bSerialStringComplete && strSerialData == "D1F"))
    {
       llLastRCPress[2] = GET_MICROS / 1000;
       //Toggle fault for dog
@@ -419,14 +417,14 @@ void loop()
    }
 
    //Dog1 fault RC button
-   if ((digitalRead(iRC3Pin) == HIGH && (GET_MICROS / 1000 - llLastRCPress[3] > 2000)) || (bSerialStringComplete && strSerialData == "D1F"))
+   if ((digitalRead(iRC3Pin) == HIGH && (GET_MICROS / 1000 - llLastRCPress[3] > 2000)) || (bSerialStringComplete && strSerialData == "D2F"))
    {
       llLastRCPress[3] = GET_MICROS / 1000;
       //Toggle fault for dog
       RaceHandler.SetDogFault(1);
    }
    //Dog2 fault RC button
-   if ((digitalRead(iRC4Pin) == HIGH && (GET_MICROS / 1000 - llLastRCPress[4] > 2000)) || (bSerialStringComplete && strSerialData == "D2F"))
+   if ((digitalRead(iRC4Pin) == HIGH && (GET_MICROS / 1000 - llLastRCPress[4] > 2000)) || (bSerialStringComplete && strSerialData == "D3F"))
    {
       llLastRCPress[4] = GET_MICROS / 1000;
       //Toggle fault for dog
@@ -434,7 +432,7 @@ void loop()
    }
 
    //Dog3 fault RC button
-   if ((digitalRead(iRC5Pin) == HIGH && (GET_MICROS / 1000 - llLastRCPress[5] > 2000)) || (bSerialStringComplete && strSerialData == "D3F"))
+   if ((digitalRead(iRC5Pin) == HIGH && (GET_MICROS / 1000 - llLastRCPress[5] > 2000)) || (bSerialStringComplete && strSerialData == "D4F"))
    {
       llLastRCPress[5] = GET_MICROS / 1000;
       //Toggle fault for dog
@@ -449,26 +447,26 @@ void loop()
 #if !JTAG
    //Update battery percentage to display
    if (GET_MICROS / 1000 < 2000 || ((GET_MICROS / 1000 - llLastBatteryLCDupdate) > 30000))
+   {
+      iBatteryVoltage = BatterySensor.GetBatteryVoltage();
+      uint16_t iBatteryPercentage = BatterySensor.GetBatteryPercentage();
+      String sBatteryPercentage;
+      if (iBatteryPercentage == 0)
       {
-         iBatteryVoltage = BatterySensor.GetBatteryVoltage();
-         uint16_t iBatteryPercentage = BatterySensor.GetBatteryPercentage();
-         String sBatteryPercentage;
-         if (iBatteryPercentage == 0)
-         {
-            sBatteryPercentage = "LOW";
-         }
-         else
-         {
-            sBatteryPercentage = String(iBatteryPercentage);
-         }
-         while (sBatteryPercentage.length() < 3)
-         {
-            sBatteryPercentage = " " + sBatteryPercentage;
-         }
-         LCDController.UpdateField(LCDController.BattLevel, sBatteryPercentage);
-         ESP_LOGI(__FILE__, "Battery: analog: %i ,voltage: %i, level: %i%%", BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
-         llLastBatteryLCDupdate = GET_MICROS / 1000;
+         sBatteryPercentage = "LOW";
       }
+      else
+      {
+         sBatteryPercentage = String(iBatteryPercentage);
+      }
+      while (sBatteryPercentage.length() < 3)
+      {
+         sBatteryPercentage = " " + sBatteryPercentage;
+      }
+      LCDController.UpdateField(LCDController.BattLevel, sBatteryPercentage);
+      ESP_LOGI(__FILE__, "Battery: analog: %i ,voltage: %i, level: %i%%", BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
+      llLastBatteryLCDupdate = GET_MICROS / 1000;
+   }
 #endif
 
    //Update team netto time
@@ -505,7 +503,7 @@ void loop()
       {
          //Race is finished, put final data on screen
          dtostrf(RaceHandler.GetDogTime(RaceHandler.iCurrentDog, -2), 7, 3, cDogTime);
-         ESP_LOGI(__FILE__, "Dog %i: %s|CR: %s", RaceHandler.iCurrentDog+1, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iCurrentDog, -2).c_str());
+         ESP_LOGI(__FILE__, "Dog %i: %s|CR: %s", RaceHandler.iCurrentDog + 1, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iCurrentDog, -2).c_str());
          ESP_LOGI(__FILE__, "Team:%s", cElapsedRaceTime);
          ESP_LOGI(__FILE__, "Net:%s", cTeamNetTime);
       }
@@ -524,8 +522,8 @@ void loop()
    {
       dtostrf(RaceHandler.GetDogTime(RaceHandler.iPreviousDog, -2), 7, 3, cDogTime);
 
-      ESP_LOGI(__FILE__, "Dog %i: %s|CR: %s", RaceHandler.iPreviousDog+1, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
-      ESP_LOGI(__FILE__, "Next dog: %i", RaceHandler.iCurrentDog+1);
+      ESP_LOGI(__FILE__, "Dog %i: %s|CR: %s", RaceHandler.iPreviousDog + 1, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
+      ESP_LOGI(__FILE__, "Next dog: %i", RaceHandler.iCurrentDog + 1);
       ESP_LOGI(__FILE__, "RT:%s", cElapsedRaceTime);
    }
 
