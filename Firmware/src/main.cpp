@@ -333,6 +333,7 @@ void setup()
 
 void loop()
 {
+   //Exclude handling of those services in loop while race is running
    if (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)
    {
       //Handle settings manager loop
@@ -446,7 +447,8 @@ void loop()
 
 #if !JTAG
    //Update battery percentage to display
-   if (GET_MICROS / 1000 < 2000 || ((GET_MICROS / 1000 - llLastBatteryLCDupdate) > 30000))
+   if ((GET_MICROS / 1000 < 2000 || ((GET_MICROS / 1000 - llLastBatteryLCDupdate) > 30000))
+      && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
    {
       iBatteryVoltage = BatterySensor.GetBatteryVoltage();
       uint16_t iBatteryPercentage = BatterySensor.GetBatteryPercentage();
@@ -464,7 +466,7 @@ void loop()
          sBatteryPercentage = " " + sBatteryPercentage;
       }
       LCDController.UpdateField(LCDController.BattLevel, sBatteryPercentage);
-      ESP_LOGI(__FILE__, "Battery: analog: %i ,voltage: %i, level: %i%%", BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
+      //ESP_LOGD(__FILE__, "Battery: analog: %i ,voltage: %i, level: %i%%", BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
       llLastBatteryLCDupdate = GET_MICROS / 1000;
    }
 #endif
@@ -503,7 +505,7 @@ void loop()
       {
          //Race is finished, put final data on screen
          dtostrf(RaceHandler.GetDogTime(RaceHandler.iCurrentDog, -2), 7, 3, cDogTime);
-         ESP_LOGI(__FILE__, "Dog %i: %s|CR: %s", RaceHandler.iCurrentDog + 1, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iCurrentDog, -2).c_str());
+         ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", RaceHandler.iCurrentDog + 1, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iCurrentDog, -2).c_str());
          ESP_LOGI(__FILE__, "Team:%s", cElapsedRaceTime);
          ESP_LOGI(__FILE__, "Net:%s", cTeamNetTime);
       }
@@ -522,8 +524,8 @@ void loop()
    {
       dtostrf(RaceHandler.GetDogTime(RaceHandler.iPreviousDog, -2), 7, 3, cDogTime);
 
-      ESP_LOGI(__FILE__, "Dog %i: %s|CR: %s", RaceHandler.iPreviousDog + 1, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
-      ESP_LOGI(__FILE__, "Next dog: %i", RaceHandler.iCurrentDog + 1);
+      ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", RaceHandler.iPreviousDog + 1, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
+      ESP_LOGI(__FILE__, "Running dog: %i", RaceHandler.iCurrentDog + 1);
       ESP_LOGI(__FILE__, "RT:%s", cElapsedRaceTime);
    }
 

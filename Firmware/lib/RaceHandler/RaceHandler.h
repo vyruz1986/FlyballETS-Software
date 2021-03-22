@@ -97,6 +97,7 @@ private:
    bool _bRerunBusy;
    bool _bSafeCross;
    bool _bNegativeCross;
+   bool _bS1CrossedUnsafe;
    uint8_t _iDogRunCounters[4];  //Number of (re-)runs for each dog
    long long _llLastDogTimeReturnTimeStamp[4];
    uint8_t _iLastReturnedRunNumber[4];
@@ -109,7 +110,7 @@ private:
    
    enum _byDogStates {
       GOINGIN,
-      COMINGBACK
+      RETURNING
    };
    _byDogStates _byDogState;
    bool _bGatesClear = true;
