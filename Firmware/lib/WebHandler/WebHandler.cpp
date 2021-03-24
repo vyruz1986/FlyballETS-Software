@@ -322,14 +322,9 @@ boolean WebHandlerClass::_DoAction(JsonObject &ActionObj, String *ReturnError)
    }
    else if (ActionType == "ResetRace")
    {
-      if (RaceHandler.RaceState == RaceHandler.STARTING || RaceHandler.RaceState == RaceHandler.RUNNING)
+      if (RaceHandler.RaceState != RaceHandler.STOPPED)
       {
-         //ReturnError = "Race was not stopped, first stop it before resetting!";
-         return false;
-      }
-      else if (RaceHandler.RaceState == RaceHandler.RESET)
-      {
-         //ReturnError = "Race was already reset!";
+         //ReturnError = "Race was not stopped, or already in RESET state.";
          return false;
       }
       else

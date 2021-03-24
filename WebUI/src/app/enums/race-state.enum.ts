@@ -1,7 +1,8 @@
 export enum RaceStateEnum {
-    STATE_STOPPED = 0,
+    STATE_RESET = 0,
     STATE_STARTING = 1,
-    STATE_RUNNING = 2
+    STATE_RUNNING = 2,
+    STATE_STOPPED = 3
 }
 
 export enum RaceCommandEnum {
