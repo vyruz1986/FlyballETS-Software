@@ -14,19 +14,18 @@ export class RaceControlComponent implements OnChanges, OnInit {
    stopDisabled: boolean = true;
    resetDisabled: boolean = true;
 
-   overallMaxState:number;
-   overallMaxStartTime:number;
+   overallMaxState: number;
 
    constructor() { }
 
    ngOnInit() {
-      if(this.raceStates === undefined){
+      if (this.raceStates === undefined) {
          return;
       }
       this.UpdateDisabled();
    }
 
-   ngOnChanges(changes: SimpleChanges){
+   ngOnChanges(changes: SimpleChanges) {
       const changedRaceStates: SimpleChange = changes.raceStates;
       this.raceStates = changedRaceStates.currentValue;
       this.UpdateDisabled();
@@ -34,14 +33,13 @@ export class RaceControlComponent implements OnChanges, OnInit {
 
    UpdateDisabled() {
       this.overallMaxState = Math.max(...this.raceStates.RaceStates);
-      this.overallMaxStartTime = Math.max(...this.raceStates.StartTimes);
 
-      this.startDisabled = !(this.overallMaxState == 0 && this.overallMaxStartTime == 0);
-      this.stopDisabled = (this.overallMaxState == 0);
-      this.resetDisabled = !(this.overallMaxState == 0 && this.overallMaxStartTime != 0);
+      this.startDisabled = !(this.overallMaxState == 0);
+      this.stopDisabled = (this.overallMaxState == 0 || this.overallMaxState == 3);
+      this.resetDisabled = !(this.overallMaxState == 3);
    }
 
-   EmitCommand(command:RaceCommandEnum){
+   EmitCommand(command: RaceCommandEnum) {
       this.raceCommand.emit(command);
    }
 }

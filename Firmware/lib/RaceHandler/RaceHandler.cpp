@@ -146,8 +146,7 @@ void RaceHandlerClass::Main()
          iNextDog = iCurrentDog + 1;
          if (iNextDog > 3)
          {
-            ESP_LOGE(__FILE__, "Fatal error. NextDog > 4. Race stopped.");
-            StopRace();
+            ESP_LOGD(__FILE__, "Last dog is running. NextDog set to dummy value %i.", iNextDog + 1);
          }
       }
 
