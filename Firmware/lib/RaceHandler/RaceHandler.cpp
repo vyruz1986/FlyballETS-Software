@@ -142,12 +142,12 @@ void RaceHandlerClass::Main()
       }
       else
       {
-         //Not the last dog, and no rerun busy, just increase number
+         //No rerun busy, just increase number
          iNextDog = iCurrentDog + 1;
-         if (iNextDog > 3)
-         {
-            ESP_LOGD(__FILE__, "Last dog is running. NextDog set to dummy value %i.", iNextDog + 1);
-         }
+         //if (iNextDog > 3)
+         //{
+         //   ESP_LOGD(__FILE__, "Dog 4 is running as last dog.");
+         //}
       }
 
 
@@ -224,7 +224,7 @@ void RaceHandlerClass::Main()
          _llDogTimes[iCurrentDog][_iDogRunCounters[iCurrentDog]] = STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog];
          //The time the dog came in is also the perfect crossing time
          _llPerfectCrossingTime = STriggerRecord.llTriggerTime;
-         ESP_LOGI(__FILE__, "S1 line crossed while being safe. Calculate time for dog %i. Start counting crossing time for dog %i.", iCurrentDog+1, iNextDog+1);
+         ESP_LOGI(__FILE__, "S1 line crossed while being safe. Calculate time for dog %i. If not last dog start counting crossing time for next dog.", iCurrentDog+1);
          if (_llPerfectCrossingTime - _llS2PerfectCrossingTime < 10000) // If S1 (safe) crossing time is below 10ms after S2 crossing means S1 was crossed
                                                                         // by going in dog and we have true perfect crossing --> big OK case
          {
@@ -344,7 +344,7 @@ void RaceHandlerClass::Main()
                ESP_LOGI(__FILE__, "Early crossing of dog %i (Tstring ABab detected with active fault). Changing running dog. State remain RETURNING.", iNextDog + 1);
                _ChangeDogNumber(iNextDog);
             }
-            else if (_strTransition == "BAba" && !_bS1CrossedUnsafe) //Typical returning dog case
+            else if (_strTransition == "BAba" && !_bS1CrossedUnsafe && RaceState != STOPPED) //Typical returning dog case
             {
                //Normal handling, change dog state to GOING IN
                _ChangeDogState(GOINGIN);
@@ -353,6 +353,10 @@ void RaceHandlerClass::Main()
                _ChangeDogNumber(iNextDog);
                
             }
+            else if (_strTransition == "BAba" && !_bS1CrossedUnsafe && RaceState == STOPPED) //Last returning dog
+            {
+               ESP_LOGI(__FILE__, "Last dog returning. Tstring BAba detected.");
+            }            
             else if (_strTransition == "BAba" && _bS1CrossedUnsafe) //Returning dog after previous dog early (negative) cross
             {
                //No running dog change. No dog state change. Only flag clearing.
@@ -477,7 +481,6 @@ void RaceHandlerClass::StopRace(long long llStopTime)
       _llRaceTime = _llRaceEndTime - _llRaceStartTime;
    }
    _ChangeRaceState(STOPPED);
-
    _HistoricRaceData[_iCurrentRaceId] = GetRaceData(_iCurrentRaceId);
 }
 
@@ -489,14 +492,6 @@ void RaceHandlerClass::ResetRace()
 {
    if (RaceState == STOPPED)
    {
-      uint8_t iRecordToPrintIndex = 0;
-      while (iRecordToPrintIndex < _iInputQueueWriteIndex)
-      {
-         STriggerRecord RecordToPrint = _InputTriggerQueue[iRecordToPrintIndex];
-         printf("{%i, %lld, %i},\n", RecordToPrint.iSensorNumber, RecordToPrint.llTriggerTime - _llRaceStartTime, RecordToPrint.iSensorState);
-         iRecordToPrintIndex++;
-      }
-
       iCurrentDog = 0;
       iPreviousDog = 0;
       _llRaceStartTime = 0;
@@ -575,6 +570,20 @@ void RaceHandlerClass::ResetRace()
    ESP_LOGD(__FILE__, "Reset Race: DONE");
    //Send updated racedata to any web clients
    WebHandler._SendRaceData();
+}
+
+/// <summary>
+///   After race is ended/stopped print trigger records to console
+/// </summary>
+void RaceHandlerClass::PrintRaceTriggerRecords()
+{
+   uint8_t iRecordToPrintIndex = 0;
+   while (iRecordToPrintIndex < _iInputQueueWriteIndex)
+   {
+      STriggerRecord RecordToPrint = _InputTriggerQueue[iRecordToPrintIndex];
+      printf("{%i, %lld, %i},\n", RecordToPrint.iSensorNumber, RecordToPrint.llTriggerTime - _llRaceStartTime, RecordToPrint.iSensorState);
+      iRecordToPrintIndex++;
+   }
 }
 
 /// <summary>

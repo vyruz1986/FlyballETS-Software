@@ -36,6 +36,7 @@ class RaceHandlerClass
    void StopRace();
    void StopRace(long long lStopTime);
    void ResetRace();
+   void PrintRaceTriggerRecords();
    void TriggerSensor1();
    void TriggerSensor2();
 
