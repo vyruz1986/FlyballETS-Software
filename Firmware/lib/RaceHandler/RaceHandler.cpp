@@ -305,7 +305,7 @@ void RaceHandlerClass::Main()
          //Check if current dog has a fault
          //TODO: The current dog could also have a fault which is not caused by being too early (manually triggered fault).
          //We should store the fault type also so we can check if the dog was too early or not.
-         if (iCurrentDog != 0                                                           //If dog is not 1st dog
+         if ((iCurrentDog != 0 || (iCurrentDog == 0 && _bRerunBusy))                    //If this is not false start
              && _bDogFaults[iCurrentDog]                                                //and current dog has fault
              && (STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) < 2000000) //And S2 is trigger less than 2s after current dog's enter time
                                                                                         //Then we know It's actually the previous dog who's still returning (current dog was way too early).
@@ -402,7 +402,7 @@ void RaceHandlerClass::Main()
             else if (_strTransition == "BAba" && _bS1CrossedUnsafe) //Returning dog after previous dog early (negative) cross
             {
                //No running dog change. No dog state change. Only flag clearing.
-               ESP_LOGI(__FILE__, "Returning dog after early cross of previous dog %i. NegativeCrossDetected flag leared. Tstring BAba detected.", iCurrentDog + 1);
+               ESP_LOGI(__FILE__, "Returning dog after early cross of previous dog %i. NegativeCrossDetected flag cleared. Tstring BAba detected.", iCurrentDog + 1);
                _bS1CrossedUnsafe = false;
             }
             else if (_strTransition == "BbAa")
