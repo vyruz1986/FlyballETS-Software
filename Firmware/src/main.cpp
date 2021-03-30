@@ -511,11 +511,32 @@ void loop()
       //Race has been stopped 1 second ago: print race summary to console
       for (uint8_t i = 0; i < 4; i++)
       {
-         dtostrf(RaceHandler.GetDogTime(i, -2), 7, 3, cDogTime);
-         ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", i + 1, cDogTime, RaceHandler.GetCrossingTime(i, -2).c_str());
+         //ESP_LOGD(__FILE__, "Dog %i -> %i run(s).", i + 1, RaceHandler.iDogRunCounters[i] + 1);
+         if (RaceHandler.iDogRunCounters[i] > 1)
+         {
+            dtostrf(RaceHandler.GetStoredDogTimes(i, 0), 7, 3, cDogTime);
+            ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", i + 1, cDogTime, RaceHandler.TransformCrossingTime(i, 0).c_str());
+            dtostrf(RaceHandler.GetStoredDogTimes(i, 1), 7, 3, cDogTime);
+            ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", i + 1, cDogTime, RaceHandler.TransformCrossingTime(i, 1).c_str());
+            dtostrf(RaceHandler.GetStoredDogTimes(i, 2), 7, 3, cDogTime);
+            ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", i + 1, cDogTime, RaceHandler.TransformCrossingTime(i, 2).c_str());
+         }
+         else if (RaceHandler.iDogRunCounters[i] == 1)
+         {
+            dtostrf(RaceHandler.GetStoredDogTimes(i, 0), 7, 3, cDogTime);
+            ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", i + 1, cDogTime, RaceHandler.TransformCrossingTime(i, 0).c_str());
+            dtostrf(RaceHandler.GetStoredDogTimes(i, 1), 7, 3, cDogTime);            
+            ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", i + 1, cDogTime, RaceHandler.TransformCrossingTime(i, 1).c_str());
+
+         }
+         else if (RaceHandler.iDogRunCounters[i] == 0)
+         {
+            dtostrf(RaceHandler.GetStoredDogTimes(i, 0), 7, 3, cDogTime);
+            ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", i + 1, cDogTime, RaceHandler.TransformCrossingTime(i, 0).c_str());
+         }
       }
-      ESP_LOGI(__FILE__, "Team:  %s", cElapsedRaceTime);
-      ESP_LOGI(__FILE__, "Net:   %s", cTeamNetTime);
+      ESP_LOGI(__FILE__, " Team: %s", cElapsedRaceTime);
+      ESP_LOGI(__FILE__, "  Net: %s", cTeamNetTime);
       RaceHandler.PrintRaceTriggerRecords();
       bRaceSummaryPrinted = true;
    }
@@ -530,6 +551,8 @@ void loop()
    */
    if (RaceHandler.iCurrentDog != iCurrentDog)
    {
+      dtostrf(RaceHandler.GetDogTime(RaceHandler.iPreviousDog, -2), 7, 3, cDogTime);
+      ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", RaceHandler.iPreviousDog+1, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
       ESP_LOGI(__FILE__, "Running dog: %i", RaceHandler.iCurrentDog + 1);
    }
 

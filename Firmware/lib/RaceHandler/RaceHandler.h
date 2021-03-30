@@ -29,7 +29,8 @@ class RaceHandlerClass
    uint8_t iCurrentDog;
    uint8_t iPreviousDog;
    uint8_t iNextDog;
-   
+   uint8_t iDogRunCounters[4];  //Number of (re-)runs for each dog
+
    void Main();
    void StartTimers();
    void StartRace();
@@ -49,8 +50,10 @@ class RaceHandlerClass
 
    double GetRaceTime();
    double GetDogTime(uint8_t iDogNumber, int8_t iRunNumber = -1);
+   double GetStoredDogTimes(uint8_t iDogNumber, int8_t iRunNumber);
    unsigned long GetDogTimeMillis(uint8_t iDogNumber, int8_t iRunNumber = -1);
    String GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber = -1);
+   String TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNumber);
    long GetCrossingTimeMillis(uint8_t iDogNumber, int8_t iRunNumber = -1);
    String GetRerunInfo(uint8_t iDogNumber);
    long GetTotalCrossingTimeMillis();
@@ -74,6 +77,7 @@ private:
    uint8_t  _iS1Pin;
    uint8_t  _iS2Pin;
    boolean _bRunDirectionInverted = false;
+   boolean _bNextDogFound = false;
 
    struct STriggerRecord
    {
@@ -97,9 +101,8 @@ private:
    bool _bDogBigOK[4][4];
    bool _bRerunBusy;
    bool _bSafeCross;
-   bool _bNegativeCross;
+   bool _bS2CrossedAfterNegativeCross;
    bool _bS1CrossedUnsafe;
-   uint8_t _iDogRunCounters[4];  //Number of (re-)runs for each dog
    long long _llLastDogTimeReturnTimeStamp[4];
    uint8_t _iLastReturnedRunNumber[4];
    long long _llDogEnterTimes[4];
