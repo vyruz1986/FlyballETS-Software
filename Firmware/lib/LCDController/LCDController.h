@@ -23,6 +23,8 @@
 class LCDControllerClass
 {
 protected:
+
+
 public:
    void init(LiquidCrystal *Clcd1, LiquidCrystal *Clcd2);
    void Main();
@@ -53,8 +55,8 @@ private:
    void _UpdateLCD(int iLine, int iPosition, String strText, int iFieldLength);
    LiquidCrystal *_Clcd1;
    LiquidCrystal *_Clcd2;
-   long long _llLastLCDUpdate = 0;
-   long long _llLCDUpdateInterval = 500; //500ms update interval
+   unsigned long _lLastLCDUpdate = 0;
+   unsigned long _lLCDUpdateInterval = 500; //500ms update interval
 
    struct SLCDField
    {

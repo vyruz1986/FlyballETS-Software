@@ -139,10 +139,10 @@ stInputSignal SideSwitch = {iSideSwitchPin, 0, 500};
 #endif
 
 //Set last serial output variable
-long long llLastSerialOutput = 0;
+unsigned long lLastSerialOutput = 0;
 
 //Battery % update on LCD timer variable
-long long llLastBatteryLCDupdate = 0;
+unsigned long lLastBatteryLCDupdate = 0;
 
 //remote control pins
 int iRC0Pin = 19;
@@ -153,7 +153,7 @@ int iRC4Pin = 16;
 int iRC5Pin = 4;
 
 //Array to hold last time button presses
-long long llLastRCPress[6] = {0, 0, 0, 0, 0, 0};
+unsigned long lLastRCPress[6] = {0, 0, 0, 0, 0, 0};
 
 #if !JTAG
 uint8_t iLCDData4Pin = 13;
@@ -293,7 +293,7 @@ void setup()
    ArduinoOTA.setPort(3232);
    ArduinoOTA.onStart([]() {
       String type;
-      if (ArduinoOTA.getCommand() == 0) //Instead of 0 it was U_FLASH
+      if (ArduinoOTA.getCommand() == 0) //VSCode constantly can't read properly value of U_FLASH, therefore replacing with "0"
          type = "sketch";
       else // U_SPIFFS
          type = "filesystem";
@@ -374,7 +374,7 @@ void loop()
    WebHandler.loop();
 
    //Race start/stop button (remote D0 output)
-   if (digitalRead(iRC0Pin) == HIGH && (GET_MICROS / 1000 - llLastRCPress[0]) > 2000)
+   if (digitalRead(iRC0Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[0]) > 2000)
    {
       StartStopRace();
    }
@@ -392,7 +392,7 @@ void loop()
    }
 
    //Race reset button (remote D1 output)
-   if ((digitalRead(iRC1Pin) == HIGH && (GET_MICROS / 1000 - llLastRCPress[1] > 2000)) || (bSerialStringComplete && strSerialData == "RESET"))
+   if ((digitalRead(iRC1Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[1] > 2000)) || (bSerialStringComplete && strSerialData == "RESET"))
    {
       ResetRace();
    }
@@ -412,32 +412,32 @@ void loop()
 #endif
 
    //Dog0 fault RC button
-   if ((digitalRead(iRC2Pin) == HIGH && (GET_MICROS / 1000 - llLastRCPress[2] > 2000)) || (bSerialStringComplete && strSerialData == "D1F"))
+   if ((digitalRead(iRC2Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[2] > 2000)) || (bSerialStringComplete && strSerialData == "D1F"))
    {
-      llLastRCPress[2] = GET_MICROS / 1000;
+      lLastRCPress[2] = GET_MICROS / 1000;
       //Toggle fault for dog
       RaceHandler.SetDogFault(0);
    }
 
    //Dog1 fault RC button
-   if ((digitalRead(iRC3Pin) == HIGH && (GET_MICROS / 1000 - llLastRCPress[3] > 2000)) || (bSerialStringComplete && strSerialData == "D2F"))
+   if ((digitalRead(iRC3Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[3] > 2000)) || (bSerialStringComplete && strSerialData == "D2F"))
    {
-      llLastRCPress[3] = GET_MICROS / 1000;
+      lLastRCPress[3] = GET_MICROS / 1000;
       //Toggle fault for dog
       RaceHandler.SetDogFault(1);
    }
    //Dog2 fault RC button
-   if ((digitalRead(iRC4Pin) == HIGH && (GET_MICROS / 1000 - llLastRCPress[4] > 2000)) || (bSerialStringComplete && strSerialData == "D3F"))
+   if ((digitalRead(iRC4Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[4] > 2000)) || (bSerialStringComplete && strSerialData == "D3F"))
    {
-      llLastRCPress[4] = GET_MICROS / 1000;
+      lLastRCPress[4] = GET_MICROS / 1000;
       //Toggle fault for dog
       RaceHandler.SetDogFault(2);
    }
 
    //Dog3 fault RC button
-   if ((digitalRead(iRC5Pin) == HIGH && (GET_MICROS / 1000 - llLastRCPress[5] > 2000)) || (bSerialStringComplete && strSerialData == "D4F"))
+   if ((digitalRead(iRC5Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[5] > 2000)) || (bSerialStringComplete && strSerialData == "D4F"))
    {
-      llLastRCPress[5] = GET_MICROS / 1000;
+      lLastRCPress[5] = GET_MICROS / 1000;
       //Toggle fault for dog
       RaceHandler.SetDogFault(3);
    }
@@ -449,7 +449,7 @@ void loop()
 
 #if !JTAG
    //Update battery percentage to display
-   if ((GET_MICROS / 1000 < 2000 || ((GET_MICROS / 1000 - llLastBatteryLCDupdate) > 30000))
+   if ((GET_MICROS / 1000 < 2000 || ((GET_MICROS / 1000 - lLastBatteryLCDupdate) > 30000))
       && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
    {
       iBatteryVoltage = BatterySensor.GetBatteryVoltage();
@@ -469,7 +469,7 @@ void loop()
       }
       LCDController.UpdateField(LCDController.BattLevel, sBatteryPercentage);
       //ESP_LOGD(__FILE__, "Battery: analog: %i ,voltage: %i, level: %i%%", BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
-      llLastBatteryLCDupdate = GET_MICROS / 1000;
+      lLastBatteryLCDupdate = GET_MICROS / 1000;
    }
 #endif
 
@@ -558,16 +558,16 @@ void loop()
 
    //Enable (uncomment) the following if you want periodic status updates on the serial port
    /*
-   if ((GET_MICROS / 1000 - llLastSerialOutput) > 60000)
+   if ((GET_MICROS / 1000 - lLastSerialOutput) > 60000)
    {
       //ESP_LOGI(__FILE__, "%llu: Elapsed time: %s", GET_MICROS / 1000, cElapsedRaceTime);
       //ESP_LOGI(__FILE__, "Free heap: %i", system_get_free_heap_size());
-      if (RaceHandler.RaceState == RaceHandler.RUNNING)Ś
+      if (RaceHandler.RaceState == RaceHandler.RUNNING)
       {
          dtostrf(RaceHandler.GetDogTime(RaceHandler.iCurrentDog), 7, 3, cDogTime);
          ESP_LOGI(__FILE__, "Dog %i: %ss", RaceHandler.iCurrentDog, cDogTime);
       }
-      llLastSerialOutput = GET_MICROS / 1000;
+      lLastSerialOutput = GET_MICROS / 1000;
    }
    */
 
@@ -659,7 +659,7 @@ void StopRaceMain()
 /// </summary>
 void StartStopRace()
 {
-   llLastRCPress[0] = GET_MICROS / 1000;
+   lLastRCPress[0] = GET_MICROS / 1000;
    if (RaceHandler.RaceState == RaceHandler.RESET) //If race is reset
    {
       //Then start the race
@@ -680,7 +680,7 @@ void ResetRace()
    {
       return;
    }
-   llLastRCPress[1] = GET_MICROS / 1000;
+   lLastRCPress[1] = GET_MICROS / 1000;
    LightsController.ResetLights();
    RaceHandler.ResetRace();
    iCurrentDog = RaceHandler.iCurrentDog;

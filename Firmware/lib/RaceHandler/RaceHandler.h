@@ -12,10 +12,10 @@ class RaceHandlerClass
 {
    friend class SimulatorClass;
    friend class WebHandlerClass;
- protected:
+protected:
 
 
- public:
+public:
 	void init(uint8_t iS1Pin, uint8_t iS2Pin);
    enum RaceStates {
       RESET,
@@ -35,7 +35,7 @@ class RaceHandlerClass
    void StartTimers();
    void StartRace();
    void StopRace();
-   void StopRace(long long lStopTime);
+   void StopRace(long long llStopTime);
    void ResetRace();
    void PrintRaceTriggerRecords();
    void TriggerSensor1();
@@ -114,7 +114,7 @@ private:
    
    enum _byDogStates {
       GOINGIN,
-      RETURNING
+      COMINGBACK
    };
    _byDogStates _byDogState;
    bool _bGatesClear = true;
@@ -135,4 +135,3 @@ private:
 extern RaceHandlerClass RaceHandler;
 
 #endif
-
