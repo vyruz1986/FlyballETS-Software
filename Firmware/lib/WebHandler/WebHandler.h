@@ -6,7 +6,6 @@
 #include "Arduino.h"
 #include "SettingsManager.h"
 //#include <Hash.h>
-//#include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 //#include <FS.h>
 //#include <SPIFFS.h>
@@ -14,15 +13,11 @@
 #include "RaceHandler.h"
 #include "Structs.h"
 #include "LightsController.h"
-//#include <Hash.h>
-#include <AsyncTCP.h>
-#include <ESPAsyncWebServer.h>
-// #include <FS.h>
-// #include <SPIFFS.h>
-#include <ArduinoJson.h>
-#include "SettingsManager.h"
-#include "GPSHandler.h"
+//#if !JTAG
 #include "BatterySensor.h"
+//#endif
+#include <AsyncTCP.h>
+#include "GPSHandler.h"
 #include <rom/rtc.h>
 #include "index.html.gz.h"
 
