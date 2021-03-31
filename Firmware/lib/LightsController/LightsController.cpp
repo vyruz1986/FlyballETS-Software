@@ -73,15 +73,15 @@ void LightsControllerClass::Main()
    //Check if we have to toggle any lights
    for (int i = 0; i < 6; i++)
    {
-      if (GET_MICROS / 1000 > _llLightsOnSchedule[i] && _llLightsOnSchedule[i] != 0)
+      if (GET_MICROS / 1000 > _lLightsOnSchedule[i] && _lLightsOnSchedule[i] != 0)
       {
          ToggleLightState(_byLightsArray[i], ON);
-         _llLightsOnSchedule[i] = 0; //Delete schedule
+         _lLightsOnSchedule[i] = 0; //Delete schedule
       }
-      if (GET_MICROS / 1000 > _llLightsOutSchedule[i] && _llLightsOutSchedule[i] != 0)
+      if (GET_MICROS / 1000 > _lLightsOutSchedule[i] && _lLightsOutSchedule[i] != 0)
       {
          ToggleLightState(_byLightsArray[i], OFF);
-         _llLightsOutSchedule[i] = 0; //Delete schedule
+         _lLightsOutSchedule[i] = 0; //Delete schedule
       }
    }
 #ifdef WS281x
@@ -122,20 +122,20 @@ void LightsControllerClass::HandleStartSequence()
          //Start sequence is not yet started, we need to schedule the lights on/off times
 
          //Set schedule for RED light
-         _llLightsOnSchedule[1] = GET_MICROS / 1000;         //Turn on NOW
-         _llLightsOutSchedule[1] = GET_MICROS / 1000 + 1000; //keep on for 1 second
+         _lLightsOnSchedule[1] = GET_MICROS / 1000;         //Turn on NOW
+         _lLightsOutSchedule[1] = GET_MICROS / 1000 + 1000; //keep on for 1 second
 
          //Set schedule for YELLOW1 light
-         _llLightsOnSchedule[2] = GET_MICROS / 1000 + 1000;  //Turn on after 1 second
-         _llLightsOutSchedule[2] = GET_MICROS / 1000 + 2000; //Turn off after 2 seconds
+         _lLightsOnSchedule[2] = GET_MICROS / 1000 + 1000;  //Turn on after 1 second
+         _lLightsOutSchedule[2] = GET_MICROS / 1000 + 2000; //Turn off after 2 seconds
 
          //Set schedule for YELLOW2 light
-         _llLightsOnSchedule[4] = GET_MICROS / 1000 + 2000;  //Turn on after 2 seconds
-         _llLightsOutSchedule[4] = GET_MICROS / 1000 + 3000; //Turn off after 3 seconds
+         _lLightsOnSchedule[4] = GET_MICROS / 1000 + 2000;  //Turn on after 2 seconds
+         _lLightsOutSchedule[4] = GET_MICROS / 1000 + 3000; //Turn off after 3 seconds
 
          //Set schedule for GREEN light
-         _llLightsOnSchedule[5] = GET_MICROS / 1000 + 3000;  //Turn on after 3 seconds
-         _llLightsOutSchedule[5] = GET_MICROS / 1000 + 4000; //Turn off after 4 seconds
+         _lLightsOnSchedule[5] = GET_MICROS / 1000 + 3000;  //Turn on after 3 seconds
+         _lLightsOutSchedule[5] = GET_MICROS / 1000 + 4000; //Turn off after 4 seconds
 
          _bStartSequenceStarted = true;
       }
@@ -143,7 +143,7 @@ void LightsControllerClass::HandleStartSequence()
       bool bStartSequenceBusy = false;
       for (int i = 0; i < 6; i++)
       {
-         if (_llLightsOnSchedule[i] > 0 || _llLightsOutSchedule[i] > 0)
+         if (_lLightsOnSchedule[i] > 0 || _lLightsOutSchedule[i] > 0)
          {
             bStartSequenceBusy = true;
          }
@@ -196,8 +196,8 @@ void LightsControllerClass::DeleteSchedules()
    //Delete any set schedules
    for (int i = 0; i < 6; i++)
    {
-      _llLightsOnSchedule[i] = 0;  //Delete schedule
-      _llLightsOutSchedule[i] = 0; //Delete schedule
+      _lLightsOnSchedule[i] = 0;  //Delete schedule
+      _lLightsOutSchedule[i] = 0; //Delete schedule
    }
 }
 
@@ -270,8 +270,8 @@ void LightsControllerClass::ToggleFaultLight(uint8_t DogNumber, LightStates byLi
    {
       //If a fault lamp is turned on we have to light the white light for 1 sec
       //Set schedule for WHITE light
-      _llLightsOnSchedule[0] = GET_MICROS / 1000;         //Turn on NOW
-      _llLightsOutSchedule[0] = GET_MICROS / 1000 + 1000; //keep on for 1 second
+      _lLightsOnSchedule[0] = GET_MICROS / 1000;         //Turn on NOW
+      _lLightsOutSchedule[0] = GET_MICROS / 1000 + 1000; //keep on for 1 second
    }
    ToggleLightState(byLight, byLightState);
    //ESP_LOGD(__FILE__, "Fault light for dog %i: %i", DogNumber, byLightState);

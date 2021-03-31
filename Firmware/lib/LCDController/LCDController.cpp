@@ -75,7 +75,7 @@ void LCDControllerClass::init(LiquidCrystal *Clcd1, LiquidCrystal *Clcd2)
 void LCDControllerClass::Main()
 {
    //This is the main loop which handles LCD updates
-   if ((GET_MICROS / 1000 - _llLastLCDUpdate) > _llLCDUpdateInterval)
+   if ((GET_MICROS / 1000 - _lLastLCDUpdate) > _lLCDUpdateInterval)
    {
 
       for (const SLCDField &lcdField : _SlcdfieldFields)
@@ -83,7 +83,7 @@ void LCDControllerClass::Main()
          _UpdateLCD(lcdField.iLine, lcdField.iStartingPosition, lcdField.strText, lcdField.iFieldLength);
       }
 
-      _llLastLCDUpdate = GET_MICROS / 1000;
+      _lLastLCDUpdate = GET_MICROS / 1000;
    }
 }
 
