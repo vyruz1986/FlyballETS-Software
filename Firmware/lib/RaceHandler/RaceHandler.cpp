@@ -220,14 +220,12 @@ void RaceHandlerClass::Main()
                ESP_LOGI(__FILE__, "Re-run for dog %i", iNextDog+1);
             }
          }
-
          //Normal race handling (no faults)
          if (_byDogState == GOINGIN)
          {
             //Store crossing time
             _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = STriggerRecord.llTriggerTime - _llPerfectCrossingTime;
             ESP_LOGI(__FILE__, "Dog %i going in crossed S1 safely. Calculate crossing time. Clear fault if rerun.", iCurrentDog+1);
-
             //If this dog is doing a rerun we have to turn the error light for this dog off
             if (_bRerunBusy)
             {
@@ -277,7 +275,7 @@ void RaceHandlerClass::Main()
          else if ((iCurrentDog == 3 && _bFault == true && _bRerunBusy == false) //If current dog is dog 4 and a fault exists, we have to initiate rerun sequence
                   || _bRerunBusy == true)                                       //Or if rerun is busy (and faults still exist)
          {
-            //Dog 3 came in but there is a fault, we have to initiate the rerun sequence
+            //Dog 4 came in but there is a fault, we have to initiate the rerun sequence
             _bRerunBusy = true;
             //Reset timers for this dog
             _llDogEnterTimes[iNextDog] = STriggerRecord.llTriggerTime;
@@ -297,6 +295,16 @@ void RaceHandlerClass::Main()
       if (STriggerRecord.iSensorNumber == 2 && _bGatesClear //Only if gates are clear
           && STriggerRecord.iSensorState == 1)              //And only if sensor is HIGH (B)
       {
+         if (_byDogState == GOINGIN)
+         {
+            /* Gates were clear, we weren't expecting a dog back, but one came back.
+            This means we missed the dog going in,
+            most likely due to perfect crossing were next dog was faster than previous dog (Tstring --> BAba),
+            and thus passed through sensors unseen */
+            //Set enter time for this dog to exit time of previous dog
+            _llDogEnterTimes[iCurrentDog] = _llDogExitTimes[iPreviousDog];
+            ESP_LOGI(__FILE__, "Invisible dog came back!. Update his enter time.");
+         }
          //Check if current dog has a fault
          //TODO: The current dog could also have a fault which is not caused by being too early (manually triggered fault).
          //We should store the fault type also so we can check if the dog was too early or not.
@@ -494,7 +502,7 @@ void RaceHandlerClass::StartRace()
    _ChangeRaceState(STARTING);
    _llRaceStartTime = GET_MICROS + 3000000;
    _llPerfectCrossingTime = _llRaceStartTime;
-   _llDogEnterTimes[0] = _llRaceStartTime;
+   _llDogEnterTimes[0] = _llRaceStartTime; // I'm quite sure this is wrong. Enter time should be equal to S1 Trigger time
 }
 
 /// <summary>

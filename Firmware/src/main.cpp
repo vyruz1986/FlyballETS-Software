@@ -380,26 +380,26 @@ void loop()
    }
 
    //Race start (serial command only)
-   if (bSerialStringComplete && strSerialData == "START" && (RaceHandler.RaceState == RaceHandler.RESET))
+   if (bSerialStringComplete && strSerialData == "start" && (RaceHandler.RaceState == RaceHandler.RESET))
    {
       StartRaceMain();
    }
 
    //Race stop (serial command only)
-   if (bSerialStringComplete && strSerialData == "STOP" && ((RaceHandler.RaceState == RaceHandler.STARTING) || (RaceHandler.RaceState == RaceHandler.RUNNING)))
+   if (bSerialStringComplete && strSerialData == "stop" && ((RaceHandler.RaceState == RaceHandler.STARTING) || (RaceHandler.RaceState == RaceHandler.RUNNING)))
    {
       StopRaceMain();
    }
 
    //Race reset button (remote D1 output)
-   if ((digitalRead(iRC1Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[1] > 2000)) || (bSerialStringComplete && strSerialData == "RESET"))
+   if ((digitalRead(iRC1Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[1] > 2000)) || (bSerialStringComplete && strSerialData == "reset"))
    {
       ResetRace();
    }
 
 #if Simulate
-   //Change Race ID (only serial command), e.g. RACE 1 or RACE 2
-   if (bSerialStringComplete && strSerialData.startsWith("RACE"))
+   //Change Race ID (only serial command), e.g. race 1 or race 2
+   if (bSerialStringComplete && strSerialData.startsWith("race"))
    {
       strSerialData.remove(0, 5);
       iSimulatedRaceID = strSerialData.toInt();
@@ -411,31 +411,31 @@ void loop()
    }
 #endif
 
-   //Dog0 fault RC button
-   if ((digitalRead(iRC2Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[2] > 2000)) || (bSerialStringComplete && strSerialData == "D1F"))
+   //Dog 1 fault RC button
+   if ((digitalRead(iRC2Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[2] > 2000)) || (bSerialStringComplete && strSerialData == "d1f"))
    {
       lLastRCPress[2] = GET_MICROS / 1000;
       //Toggle fault for dog
       RaceHandler.SetDogFault(0);
    }
 
-   //Dog1 fault RC button
-   if ((digitalRead(iRC3Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[3] > 2000)) || (bSerialStringComplete && strSerialData == "D2F"))
+   //Dog 2 fault RC button
+   if ((digitalRead(iRC3Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[3] > 2000)) || (bSerialStringComplete && strSerialData == "d2f"))
    {
       lLastRCPress[3] = GET_MICROS / 1000;
       //Toggle fault for dog
       RaceHandler.SetDogFault(1);
    }
-   //Dog2 fault RC button
-   if ((digitalRead(iRC4Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[4] > 2000)) || (bSerialStringComplete && strSerialData == "D3F"))
+   //Dog 3 fault RC button
+   if ((digitalRead(iRC4Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[4] > 2000)) || (bSerialStringComplete && strSerialData == "d3f"))
    {
       lLastRCPress[4] = GET_MICROS / 1000;
       //Toggle fault for dog
       RaceHandler.SetDogFault(2);
    }
 
-   //Dog3 fault RC button
-   if ((digitalRead(iRC5Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[5] > 2000)) || (bSerialStringComplete && strSerialData == "D4F"))
+   //Dog 4 fault RC button
+   if ((digitalRead(iRC5Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[5] > 2000)) || (bSerialStringComplete && strSerialData == "d4f"))
    {
       lLastRCPress[5] = GET_MICROS / 1000;
       //Toggle fault for dog
@@ -506,7 +506,7 @@ void loop()
       ESP_LOGI(__FILE__, "RS: %s", RaceHandler.GetRaceStateString());
    }
 
-   if (RaceHandler.RaceState == RaceHandler.STOPPED && ((GET_MICROS / 1000 - (3000 + llRaceStarted + RaceHandler.GetRaceTime() * 1000)) > 1000) && !bRaceSummaryPrinted)
+   if (RaceHandler.RaceState == RaceHandler.STOPPED && ((GET_MICROS / 1000 - (3000 + llRaceStarted + RaceHandler.GetRaceTime() * 1000)) > 1500) && !bRaceSummaryPrinted)
    {
       //Race has been stopped 1 second ago: print race summary to console
       for (uint8_t i = 0; i < 4; i++)
@@ -537,7 +537,9 @@ void loop()
       }
       ESP_LOGI(__FILE__, " Team: %s", cElapsedRaceTime);
       ESP_LOGI(__FILE__, "  Net: %s", cTeamNetTime);
-      RaceHandler.PrintRaceTriggerRecords();
+      #if !Simulate
+         RaceHandler.PrintRaceTriggerRecords();
+      #endif
       bRaceSummaryPrinted = true;
    }
 
