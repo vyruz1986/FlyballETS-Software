@@ -259,6 +259,7 @@ void setup()
 
    strSerialData[0] = 0;
 
+   #ifndef WiFiOFF
    //Setup AP
    WiFi.onEvent(WiFiEvent);
    WiFi.mode(WIFI_MODE_AP);
@@ -279,6 +280,7 @@ void setup()
 
    //configure webserver
    WebHandler.init(80);
+   #endif
 
    //Initialize RaceHandler class with S1 and S2 pins
    RaceHandler.init(iS1Pin, iS2Pin);
@@ -288,6 +290,7 @@ void setup()
    Simulator.init(iS1Pin, iS2Pin);
 #endif
 
+#ifndef WiFiOFF
    //Ota setup
    ArduinoOTA.setPassword("FlyballETS.1234");
    ArduinoOTA.setPort(3232);
@@ -319,18 +322,14 @@ void setup()
    });
    ArduinoOTA.begin();
 
-   //Initialize GPS Serial port and class
-   GPSSerial.begin(9600, SERIAL_8N1, 39, 36);
-   GPSHandler.init(&GPSSerial);
-
 #ifdef ESP32
    mdnsServerSetup();
 #endif //  ESP32
-
-#if !WiFiActivation
-   WiFi.mode(WIFI_OFF);
-   //btStop();
 #endif
+
+   //Initialize GPS Serial port and class
+   GPSSerial.begin(9600, SERIAL_8N1, 39, 36);
+   GPSHandler.init(&GPSSerial);
 }
 
 void loop()
@@ -341,8 +340,10 @@ void loop()
       //Handle settings manager loop
       SettingsManager.loop();
    
+      #ifndef WiFiOFF
       //Handle OTA update if incoming
       ArduinoOTA.handle();
+      #endif
 
       //Handle GPS
       GPSHandler.loop();
@@ -370,8 +371,10 @@ void loop()
    //Handle LCD processing
    LCDController.Main();
 
+   #ifndef WiFiOFF
    //Handle WebSocket server
    WebHandler.loop();
+   #endif
 
    //Race start/stop button (remote D0 output)
    if (digitalRead(iRC0Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[0]) > 2000)
@@ -690,6 +693,7 @@ void ResetRace()
    bRaceSummaryPrinted = false;
 }
 
+#ifndef WiFiOFF
 void WiFiEvent(WiFiEvent_t event)
 {
    Serial.printf("Wifi event %i\r\n", event);
@@ -723,4 +727,5 @@ void mdnsServerSetup()
    MDNS.addServiceTxt("arduino", "tcp", "app_version", APP_VER);
    MDNS.begin("FlyballETS");
 }
+#endif
 #endif
