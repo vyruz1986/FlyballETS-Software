@@ -557,8 +557,11 @@ void loop()
    if (RaceHandler.iCurrentDog != iCurrentDog)
    {
       dtostrf(RaceHandler.GetDogTime(RaceHandler.iPreviousDog, -2), 7, 3, cDogTime);
-      ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", RaceHandler.iPreviousDog+1, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
-      ESP_LOGI(__FILE__, "Running dog: %i", RaceHandler.iCurrentDog + 1);
+      ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", RaceHandler.iPreviousDog + 1, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
+      if (RaceHandler.RaceState != RaceHandler.STOPPED)
+      {
+      ESP_LOGI(__FILE__, "Running dog: %i.", RaceHandler.iCurrentDog + 1);
+      }
    }
 
    //Enable (uncomment) the following if you want periodic status updates on the serial port

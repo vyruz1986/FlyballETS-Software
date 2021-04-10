@@ -50,7 +50,8 @@ public:
 
    double GetRaceTime();
    double GetDogTime(uint8_t iDogNumber, int8_t iRunNumber = -1);
-   double GetStoredDogTimes(uint8_t iDogNumber, int8_t iRunNumber);
+   double GetStoredDogTimes(uint8_t iDogNumber, int8_t iRunNumber = -1);
+   int8_t SelectRunNumber(uint8_t iDogNumber, int8_t iRunNumber = -1);
    unsigned long GetDogTimeMillis(uint8_t iDogNumber, int8_t iRunNumber = -1);
    String GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber = -1);
    String TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNumber);
