@@ -821,6 +821,11 @@ unsigned long RaceHandlerClass::GetDogTimeMillis(uint8_t iDogNumber, int8_t iRun
    {
       ulDogTimeMillis = (_llDogTimes[iDogNumber][iRunNumber] + 500) / 1000;
    }
+   //If next dog didn't enter yet (e.g. positive cross) just show zero
+   else if (_llDogTimes[iDogNumber][iRunNumber] == 0)
+   {
+      ulDogTimeMillis = 0;
+   }
    //Then check if the requested dog is perhaps running (and coming back) so we can return the time so far
    else if ((RaceState == RUNNING && iCurrentDog == iDogNumber && _byDogState == COMINGBACK) && iRunNumber <= iDogRunCounters[iDogNumber]) //And if requested run number is lower then number of times dog has run
    {
