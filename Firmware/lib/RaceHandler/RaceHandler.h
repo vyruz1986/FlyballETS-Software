@@ -50,7 +50,8 @@ public:
 
    double GetRaceTime();
    double GetDogTime(uint8_t iDogNumber, int8_t iRunNumber = -1);
-   double GetStoredDogTimes(uint8_t iDogNumber, int8_t iRunNumber);
+   double GetStoredDogTimes(uint8_t iDogNumber, int8_t iRunNumber = -1);
+   int8_t SelectRunNumber(uint8_t iDogNumber, int8_t iRunNumber = -1);
    unsigned long GetDogTimeMillis(uint8_t iDogNumber, int8_t iRunNumber = -1);
    String GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber = -1);
    String TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNumber);
@@ -70,9 +71,10 @@ private:
    long long _llRaceStartTime;
    long long _llRaceEndTime;
    long long _llRaceTime;
-   long long _llPerfectCrossingTime;
-   long long _llS2PerfectCrossingTime;
+   long long _llLastDogExitTime;
+   long long _llS2CrossedSafeTime;
    long long _llLastTransitionStringUpdate;
+   long long _llRaceElapsedTime;
 
    uint8_t  _iS1Pin;
    uint8_t  _iS2Pin;
@@ -97,12 +99,11 @@ private:
 
    bool _bFault;
    bool _bDogFaults[4];
-   bool _bDogPerfectCross;
    bool _bDogBigOK[4][4];
    bool _bRerunBusy;
-   bool _bSafeCross;
-   bool _bS2CrossedAfterNegativeCross;
-   bool _bS1CrossedUnsafe;
+   bool _bS1isSafe;
+   bool _bS1StillSafe;
+   bool _bNegativeCrossDetected;
    long long _llLastDogTimeReturnTimeStamp[4];
    uint8_t _iLastReturnedRunNumber[4];
    long long _llDogEnterTimes[4];

@@ -1,8 +1,9 @@
 // WebHandler.h
-
 #ifndef _WEBHANDLER_h
 #define _WEBHANDLER_h
 
+#include "config.h"
+#ifndef WiFiOFF
 #include "Arduino.h"
 #include "SettingsManager.h"
 //#include <Hash.h>
@@ -19,7 +20,8 @@
 #include <AsyncTCP.h>
 #include "GPSHandler.h"
 #include <rom/rtc.h>
-#include "index.html.gz.h"
+#include "index.html.gz.h" 
+
 
 class WebHandlerClass
 {
@@ -68,4 +70,5 @@ public:
 
 extern WebHandlerClass WebHandler;
 
+#endif
 #endif

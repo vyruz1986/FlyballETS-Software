@@ -101,8 +101,10 @@ void LightsControllerClass::Main()
       shiftOut(_iDataPin, _iClockPin, MSBFIRST, _byCurrentLightsState);
       digitalWrite(_iLatchPin, HIGH);
 #endif // WS281x
+#ifndef WiFiOFF
       //Send data to websocket clients
       WebHandler.SendLightsData(GetLightsState());
+#endif
    }
 }
 

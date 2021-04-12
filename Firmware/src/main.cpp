@@ -259,6 +259,7 @@ void setup()
 
    strSerialData[0] = 0;
 
+   #ifndef WiFiOFF
    //Setup AP
    WiFi.onEvent(WiFiEvent);
    WiFi.mode(WIFI_MODE_AP);
@@ -279,6 +280,7 @@ void setup()
 
    //configure webserver
    WebHandler.init(80);
+   #endif
 
    //Initialize RaceHandler class with S1 and S2 pins
    RaceHandler.init(iS1Pin, iS2Pin);
@@ -288,6 +290,7 @@ void setup()
    Simulator.init(iS1Pin, iS2Pin);
 #endif
 
+#ifndef WiFiOFF
    //Ota setup
    ArduinoOTA.setPassword("FlyballETS.1234");
    ArduinoOTA.setPort(3232);
@@ -319,18 +322,14 @@ void setup()
    });
    ArduinoOTA.begin();
 
-   //Initialize GPS Serial port and class
-   GPSSerial.begin(9600, SERIAL_8N1, 39, 36);
-   GPSHandler.init(&GPSSerial);
-
 #ifdef ESP32
    mdnsServerSetup();
 #endif //  ESP32
-
-#if !WiFiActivation
-   WiFi.mode(WIFI_OFF);
-   //btStop();
 #endif
+
+   //Initialize GPS Serial port and class
+   GPSSerial.begin(9600, SERIAL_8N1, 39, 36);
+   GPSHandler.init(&GPSSerial);
 }
 
 void loop()
@@ -341,8 +340,10 @@ void loop()
       //Handle settings manager loop
       SettingsManager.loop();
    
+      #ifndef WiFiOFF
       //Handle OTA update if incoming
       ArduinoOTA.handle();
+      #endif
 
       //Handle GPS
       GPSHandler.loop();
@@ -370,8 +371,10 @@ void loop()
    //Handle LCD processing
    LCDController.Main();
 
+   #ifndef WiFiOFF
    //Handle WebSocket server
    WebHandler.loop();
+   #endif
 
    //Race start/stop button (remote D0 output)
    if (digitalRead(iRC0Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[0]) > 2000)
@@ -380,26 +383,26 @@ void loop()
    }
 
    //Race start (serial command only)
-   if (bSerialStringComplete && strSerialData == "START" && (RaceHandler.RaceState == RaceHandler.RESET))
+   if (bSerialStringComplete && strSerialData == "start" && (RaceHandler.RaceState == RaceHandler.RESET))
    {
       StartRaceMain();
    }
 
    //Race stop (serial command only)
-   if (bSerialStringComplete && strSerialData == "STOP" && ((RaceHandler.RaceState == RaceHandler.STARTING) || (RaceHandler.RaceState == RaceHandler.RUNNING)))
+   if (bSerialStringComplete && strSerialData == "stop" && ((RaceHandler.RaceState == RaceHandler.STARTING) || (RaceHandler.RaceState == RaceHandler.RUNNING)))
    {
       StopRaceMain();
    }
 
    //Race reset button (remote D1 output)
-   if ((digitalRead(iRC1Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[1] > 2000)) || (bSerialStringComplete && strSerialData == "RESET"))
+   if ((digitalRead(iRC1Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[1] > 2000)) || (bSerialStringComplete && strSerialData == "reset"))
    {
       ResetRace();
    }
 
 #if Simulate
-   //Change Race ID (only serial command), e.g. RACE 1 or RACE 2
-   if (bSerialStringComplete && strSerialData.startsWith("RACE"))
+   //Change Race ID (only serial command), e.g. race 1 or race 2
+   if (bSerialStringComplete && strSerialData.startsWith("race"))
    {
       strSerialData.remove(0, 5);
       iSimulatedRaceID = strSerialData.toInt();
@@ -411,31 +414,31 @@ void loop()
    }
 #endif
 
-   //Dog0 fault RC button
-   if ((digitalRead(iRC2Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[2] > 2000)) || (bSerialStringComplete && strSerialData == "D1F"))
+   //Dog 1 fault RC button
+   if ((digitalRead(iRC2Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[2] > 2000)) || (bSerialStringComplete && strSerialData == "d1f"))
    {
       lLastRCPress[2] = GET_MICROS / 1000;
       //Toggle fault for dog
       RaceHandler.SetDogFault(0);
    }
 
-   //Dog1 fault RC button
-   if ((digitalRead(iRC3Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[3] > 2000)) || (bSerialStringComplete && strSerialData == "D2F"))
+   //Dog 2 fault RC button
+   if ((digitalRead(iRC3Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[3] > 2000)) || (bSerialStringComplete && strSerialData == "d2f"))
    {
       lLastRCPress[3] = GET_MICROS / 1000;
       //Toggle fault for dog
       RaceHandler.SetDogFault(1);
    }
-   //Dog2 fault RC button
-   if ((digitalRead(iRC4Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[4] > 2000)) || (bSerialStringComplete && strSerialData == "D3F"))
+   //Dog 3 fault RC button
+   if ((digitalRead(iRC4Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[4] > 2000)) || (bSerialStringComplete && strSerialData == "d3f"))
    {
       lLastRCPress[4] = GET_MICROS / 1000;
       //Toggle fault for dog
       RaceHandler.SetDogFault(2);
    }
 
-   //Dog3 fault RC button
-   if ((digitalRead(iRC5Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[5] > 2000)) || (bSerialStringComplete && strSerialData == "D4F"))
+   //Dog 4 fault RC button
+   if ((digitalRead(iRC5Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[5] > 2000)) || (bSerialStringComplete && strSerialData == "d4f"))
    {
       lLastRCPress[5] = GET_MICROS / 1000;
       //Toggle fault for dog
@@ -506,7 +509,7 @@ void loop()
       ESP_LOGI(__FILE__, "RS: %s", RaceHandler.GetRaceStateString());
    }
 
-   if (RaceHandler.RaceState == RaceHandler.STOPPED && ((GET_MICROS / 1000 - (3000 + llRaceStarted + RaceHandler.GetRaceTime() * 1000)) > 1000) && !bRaceSummaryPrinted)
+   if (RaceHandler.RaceState == RaceHandler.STOPPED && ((GET_MICROS / 1000 - (3000 + llRaceStarted + RaceHandler.GetRaceTime() * 1000)) > 1500) && !bRaceSummaryPrinted)
    {
       //Race has been stopped 1 second ago: print race summary to console
       for (uint8_t i = 0; i < 4; i++)
@@ -537,7 +540,9 @@ void loop()
       }
       ESP_LOGI(__FILE__, " Team: %s", cElapsedRaceTime);
       ESP_LOGI(__FILE__, "  Net: %s", cTeamNetTime);
-      RaceHandler.PrintRaceTriggerRecords();
+      #if !Simulate
+         RaceHandler.PrintRaceTriggerRecords();
+      #endif
       bRaceSummaryPrinted = true;
    }
 
@@ -552,8 +557,11 @@ void loop()
    if (RaceHandler.iCurrentDog != iCurrentDog)
    {
       dtostrf(RaceHandler.GetDogTime(RaceHandler.iPreviousDog, -2), 7, 3, cDogTime);
-      ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", RaceHandler.iPreviousDog+1, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
-      ESP_LOGI(__FILE__, "Running dog: %i", RaceHandler.iCurrentDog + 1);
+      ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", RaceHandler.iPreviousDog + 1, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
+      if (RaceHandler.RaceState != RaceHandler.STOPPED)
+      {
+      ESP_LOGI(__FILE__, "Running dog: %i.", RaceHandler.iCurrentDog + 1);
+      }
    }
 
    //Enable (uncomment) the following if you want periodic status updates on the serial port
@@ -688,6 +696,7 @@ void ResetRace()
    bRaceSummaryPrinted = false;
 }
 
+#ifndef WiFiOFF
 void WiFiEvent(WiFiEvent_t event)
 {
    Serial.printf("Wifi event %i\r\n", event);
@@ -721,4 +730,5 @@ void mdnsServerSetup()
    MDNS.addServiceTxt("arduino", "tcp", "app_version", APP_VER);
    MDNS.begin("FlyballETS");
 }
+#endif
 #endif

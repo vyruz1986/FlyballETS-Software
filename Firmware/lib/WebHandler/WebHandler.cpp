@@ -2,6 +2,7 @@
 //
 //
 #include "WebHandler.h"
+#ifndef WiFiOFF
 
 void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
 {
@@ -609,3 +610,4 @@ void WebHandlerClass::_onHome(AsyncWebServerRequest *request)
 }
 
 WebHandlerClass WebHandler;
+#endif
