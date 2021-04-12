@@ -166,6 +166,10 @@ void RaceHandlerClass::Main()
          }
          _bNextDogFound = false;
       }
+      else if ((!_bFault && iCurrentDog == 3) || (!_bFault && _bRerunBusy))
+      {
+         iNextDog = iCurrentDog;
+      }
       else
       {
          //First runs of every dog, just increase number
@@ -181,7 +185,7 @@ void RaceHandlerClass::Main()
       {
          //Update race elapsed time
          _llRaceElapsedTime = STriggerRecord.llTriggerTime - _llRaceStartTime;
-         //Special handling for dog 0 during race start (excluding possible re-run)
+         //Special handling for first dog during race start (excluding possible re-run)
          if (_byDogState == GOINGIN && iCurrentDog == 0 && !_bRerunBusy)
          {
             _llDogEnterTimes[iCurrentDog] = STriggerRecord.llTriggerTime;
@@ -218,7 +222,7 @@ void RaceHandlerClass::Main()
             //We assume no negative cross (if that would be the case it will be updated later) so current dog exit time is same as next dog enter time
             _llDogExitTimes[iCurrentDog] = STriggerRecord.llTriggerTime;
             _llLastDogExitTime = _llDogExitTimes[iCurrentDog];
-            _llDogTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = _llDogExitTimes[iCurrentDog] - _llDogEnterTimes[iCurrentDog];
+            _llDogTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = _llLastDogExitTime - _llDogEnterTimes[iCurrentDog];
             //Handle next dog
             _llDogEnterTimes[iNextDog] = STriggerRecord.llTriggerTime;
             ESP_LOGI(__FILE__, "Dog %i FAULT as coming back dog was expected.", iNextDog + 1);
@@ -226,7 +230,7 @@ void RaceHandlerClass::Main()
             if ((iCurrentDog == 3 && _bFault == true && _bRerunBusy == false) //If current dog is dog 4 and a fault exists, we have to initiate rerun sequence
                 || _bRerunBusy == true)                                       //Or if rerun is busy (and faults still exist)
             {
-               //Dog 3 came in but there is a fault, we have to initiate the rerun sequence
+               //Dog 4 came in but there is a fault, we have to initiate the rerun sequence
                _bRerunBusy = true;
                //Reset timers for this dog
                _llDogExitTimes[iNextDog] = 0;
@@ -253,7 +257,7 @@ void RaceHandlerClass::Main()
             //_bNegativeCrossDetected = false; // moved to Tstring section and used as "if" condition in BAba scenario
             //
             ESP_LOGI(__FILE__, "Calculate negative cross time for dog %i and update times for previous dog %i.", iCurrentDog + 1, iPreviousDog + 1);
-            ESP_LOGI(__FILE__, "Dog %i updated time [ms]: %lld", iPreviousDog + 1, (_llDogTimes[iPreviousDog][iDogRunCounters[iPreviousDog]] / 1000));
+            ESP_LOGI(__FILE__, "Dog %i updated time [ms]: %lld", iPreviousDog + 1, ((_llDogTimes[iPreviousDog][iDogRunCounters[iPreviousDog]] + 500) / 1000));
          }
          if (_bS1isSafe) //If S2 crossed before S1 (ok or positive cross scenarios)
          {
@@ -270,15 +274,15 @@ void RaceHandlerClass::Main()
                _bDogBigOK[iNextDog][iDogRunCounters[iNextDog]] = true;
                ESP_LOGI(__FILE__, "Perfect cross below 10ms detected for dog %i. Big OK.", iNextDog + 1);
             }
-            if ((iCurrentDog == 3 && _bFault == false && _bRerunBusy == false) //If this is the 4th dog and there is no fault we have to stop the race
-                || (_bRerunBusy == true && _bFault == false))                  //Or if the rerun sequence was started but no faults exist anymore
+            if ((iCurrentDog == 3 && !_bFault && !_bRerunBusy) //If this is the 4th dog and there is no fault we have to stop the race
+                || (_bRerunBusy && !_bFault))                  //Or if the rerun sequence was started but no faults exist anymore
             {
                StopRace(STriggerRecord.llTriggerTime);
             }
-            else if ((iCurrentDog == 3 && _bFault == true && _bRerunBusy == false) //If current dog is dog 4 and a fault exists, we have to initiate rerun sequence
-                     || _bRerunBusy == true)                                       //Or if rerun is busy (and faults still exist)
+            else if ((iCurrentDog == 3 && _bFault && !_bRerunBusy) //If current dog is dog 4 and a fault exists, we have to initiate rerun sequence
+                     || _bRerunBusy)                               //Or if rerun is busy (and faults still exist)
             {
-               //Dog 3 came in but there is a fault, we have to initiate the rerun sequence
+               //Dog 4 came in but there is a fault, we have to initiate the rerun sequence
                _bRerunBusy = true;
                //Reset timers for this dog
                _llDogEnterTimes[iNextDog] = STriggerRecord.llTriggerTime;
@@ -304,7 +308,6 @@ void RaceHandlerClass::Main()
             _llDogEnterTimes[iCurrentDog] = _llLastDogExitTime;
             //Set crossing time to zero (ok)
             _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = 0;
-            _ChangeDogNumber(iNextDog);
             _bS1isSafe = true;
             _bS1StillSafe = true;
             _llS2CrossedSafeTime = STriggerRecord.llTriggerTime;
@@ -325,7 +328,10 @@ void RaceHandlerClass::Main()
                   _llDogEnterTimes[iCurrentDog] = _llLastDogExitTime;
                   _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = 0;
                   SetDogFault(iNextDog, ON);
-                  iDogRunCounters[iNextDog]++; //Increase run counter for next dog
+                  if (_bRerunBusy)
+                  {
+                     iDogRunCounters[iNextDog]++; //Increase run counter for next dog
+                  }
                   _ChangeDogNumber(iNextDog);
                   ESP_LOGI(__FILE__, "Invisible dog %i came back! Dog times updated.", iPreviousDog + 1);
                }
