@@ -29,18 +29,23 @@
 
 //Public libs
 #include <LiquidCrystal.h>
-#include <WiFi.h>
-#include <WiFiMulti.h>
-#include <ESPmDNS.h>
-#include <ArduinoOTA.h>
+#ifndef WiFiOFF
+   #include <WiFi.h>
+   #include <WiFiMulti.h>
+   #include <ESPmDNS.h>
+   #include <ArduinoOTA.h>
+   #include <WiFiUdp.h>
+#endif
 #include <EEPROM.h>
-#include <WiFiUdp.h>
+
 //#include <time.h>
 
 //Private libs
 #include <GPSHandler.h>
 #include <SettingsManager.h>
-#include <WebHandler.h>
+#ifndef WiFiOFF
+   #include <WebHandler.h>
+#endif
 #include <LCDController.h>
 #include <RaceHandler.h>
 #include <LightsController.h>
@@ -194,7 +199,9 @@ unsigned int uiLastProgress = 0;
 //Function prototypes
 void Sensor1Wrapper();
 void Sensor2Wrapper();
-void WiFiEvent(WiFiEvent_t event);
+#ifndef WiFiOFF
+   void WiFiEvent(WiFiEvent_t event);
+#endif
 void ResetRace();
 void mdnsServerSetup();
 void StartStopRace();

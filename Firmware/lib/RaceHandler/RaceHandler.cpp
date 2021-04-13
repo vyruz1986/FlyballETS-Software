@@ -130,7 +130,7 @@ void RaceHandlerClass::Main()
          //In case dog 4 is running and fault flag is active we have to check which the next offending dog is starting from dog 1
          for (uint8_t i = 0; i < 4; i++)
          {
-            if (_bDogFaults[i])
+            if (_bDogFaults[i] || _bDogManualFaults[i])
             {
                //Set dognumber to next/first offending dog
                iNextDog = i;
@@ -143,7 +143,7 @@ void RaceHandlerClass::Main()
          //In case we have re-runs in progress we have to check which the next offending dog with proper order
          for (uint8_t i = (iCurrentDog + 1); i < 4; i++)
          {
-            if (_bDogFaults[i])
+            if (_bDogFaults[i] || _bDogManualFaults[i])
             {
                //Set dognumber to next offending dog
                iNextDog = i;
@@ -155,7 +155,7 @@ void RaceHandlerClass::Main()
          {
             for (uint8_t i = 0; (iCurrentDog + 1); i++)
             {
-               if (_bDogFaults[i])
+               if (_bDogFaults[i] || _bDogManualFaults[i])
                {
                   //Set dognumber to next offending dog
                   iNextDog = i;
@@ -227,8 +227,8 @@ void RaceHandlerClass::Main()
             _llDogEnterTimes[iNextDog] = STriggerRecord.llTriggerTime;
             ESP_LOGI(__FILE__, "Dog %i FAULT as coming back dog was expected.", iNextDog + 1);
 
-            if ((iCurrentDog == 3 && _bFault == true && _bRerunBusy == false) //If current dog is dog 4 and a fault exists, we have to initiate rerun sequence
-                || _bRerunBusy == true)                                       //Or if rerun is busy (and faults still exist)
+            if ((iCurrentDog == 3 && _bFault && !_bRerunBusy) //If current dog is dog 4 and a fault exists, we have to initiate rerun sequence
+                || _bRerunBusy)                               //Or if rerun is busy (and faults still exist)
             {
                //Dog 4 came in but there is a fault, we have to initiate the rerun sequence
                _bRerunBusy = true;
@@ -466,7 +466,16 @@ void RaceHandlerClass::Main()
    {
       if (bFault)
       {
-         //At least one dog with fault is found, set general fault value to true
+         //At least one dog with fault has been found, set general fault value to true
+         _bFault = true;
+         break;
+      }
+   }
+   for (auto bManualFault : _bDogManualFaults)
+   {
+      if (bManualFault)
+      {
+         //At least one dog with manual fault has been found, set general fault value to true
          _bFault = true;
          break;
       }
@@ -548,6 +557,10 @@ void RaceHandlerClass::ResetRace()
       for (auto &bFault : _bDogFaults)
       {
          bFault = false;
+      }
+      for (auto &bManualFault : _bDogManualFaults)
+      {
+         bManualFault = false;
       }
       for (auto &llTime : _llDogEnterTimes)
       {
@@ -636,29 +649,30 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
       return;
    }
    bool bFault;
-   //Check if we have to toggle
+   //Check if we have to toggle. Assumed only manual faults use TOGGLE option
    if (State == TOGGLE)
    {
-      bFault = !_bDogFaults[iDogNumber];
+      bFault = !_bDogManualFaults[iDogNumber];
+      _bDogManualFaults[iDogNumber] = bFault;
    }
    else
    {
       bFault = State;
+      //Set fault to specified value for relevant dog (automatic faults)
+      _bDogFaults[iDogNumber] = bFault;
    }
 
-   //Set fault to specified value for relevant dog
-   _bDogFaults[iDogNumber] = bFault;
-
-   //If fault is true, set light to on and set general value fault variable to true
    if (bFault)
    {
+      //If fault is true, set light to on and set general value fault variable to true
       LightsController.ToggleFaultLight(iDogNumber, LightsController.ON);
       _bFault = true;
       ESP_LOGI(__FILE__, "Dog %i fault ON", iDogNumber + 1);
    }
    else
    {
-      //If fault is false, turn off fault light for this dog
+      //If fault is false, turn off fault light for this dog and reset also manual fault state
+      _bDogManualFaults[iDogNumber] = bFault;
       LightsController.ToggleFaultLight(iDogNumber, LightsController.OFF);
       ESP_LOGI(__FILE__, "Dog %i fault OFF", iDogNumber + 1);
    }
@@ -926,7 +940,7 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
    {
       if (_llDogTimes[iDogNumber][iRunNumber] > 0)
       {
-         if ((iDogRunCounters[iDogNumber] > 0 && iDogRunCounters[iDogNumber] != iRunNumber) || (iDogRunCounters[iDogNumber] == 0 && _bDogFaults[iDogNumber] == true))
+         if ((iDogRunCounters[iDogNumber] > 0 && iDogRunCounters[iDogNumber] != iRunNumber) || (iDogRunCounters[iDogNumber] == 0 && (_bDogFaults[iDogNumber] || _bDogManualFaults[iDogNumber])))
          {
             strCrossingTime = "   fault";
          }
@@ -935,11 +949,13 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
             strCrossingTime = "      ok";
          }
       }
-      else if ((RaceState == RUNNING && iCurrentDog == iDogNumber && _byDogState == COMINGBACK) && iRunNumber <= iDogRunCounters[iDogNumber] && _bDogFaults[iDogNumber] == true) //If still running and fault active
+      //If still running and fault active
+      else if ((RaceState == RUNNING && iCurrentDog == iDogNumber && _byDogState == COMINGBACK) && iRunNumber <= iDogRunCounters[iDogNumber] && (_bDogFaults[iDogNumber] || _bDogManualFaults[iDogNumber]))
       {
          strCrossingTime = "   fault";
       }
-      else if ((RaceState == RUNNING && iCurrentDog == iDogNumber && _byDogState == COMINGBACK) && iRunNumber <= iDogRunCounters[iDogNumber] && _bDogFaults[iDogNumber] == false) //If still running and no active fault
+      //If still running and no active fault
+      else if ((RaceState == RUNNING && iCurrentDog == iDogNumber && _byDogState == COMINGBACK) && iRunNumber <= iDogRunCounters[iDogNumber] && (!_bDogFaults[iDogNumber] || !_bDogManualFaults[iDogNumber]))
       {
          strCrossingTime = "      ok";
       }
@@ -1122,7 +1138,7 @@ stRaceData RaceHandlerClass::GetRaceData(uint iRaceId)
             RequestedRaceData.DogData[i].Timing[i2].Time = GetDogTimeMillis(i, i2);
             RequestedRaceData.DogData[i].Timing[i2].CrossingTime = GetCrossingTimeMillis(i, i2);
          }
-         RequestedRaceData.DogData[i].Fault = _bDogFaults[i];
+         RequestedRaceData.DogData[i].Fault = (_bDogFaults[i] || _bDogManualFaults[i]);
          RequestedRaceData.DogData[i].Running = (iCurrentDog == i);
       }
    }
