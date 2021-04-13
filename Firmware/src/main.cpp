@@ -37,7 +37,6 @@
    #include <WiFiUdp.h>
 #endif
 #include <EEPROM.h>
-
 //#include <time.h>
 
 //Private libs
@@ -270,8 +269,6 @@ void setup()
    //Setup AP
    WiFi.onEvent(WiFiEvent);
    WiFi.mode(WIFI_MODE_AP);
-   //SettingsManager.setSetting("APName", "FlyballETS");
-   //SettingsManager.setSetting("APPass", "FlyballETS.1234");
    String strAPName = SettingsManager.getSetting("APName");
    String strAPPass = SettingsManager.getSetting("APPass");
 
@@ -405,6 +402,12 @@ void loop()
    if ((digitalRead(iRC1Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[1] > 2000)) || (bSerialStringComplete && strSerialData == "reset"))
    {
       ResetRace();
+   }
+
+   //Reboot ESP32
+   if (bSerialStringComplete && strSerialData == "reboot")
+   {
+      ESP.restart();
    }
 
 #if Simulate

@@ -269,10 +269,10 @@ void RaceHandlerClass::Main()
             _bS1isSafe = false;
             ESP_LOGI(__FILE__, "S1 line crossed while being safe. Calculate dog %i time.", iCurrentDog + 1);
             if (_llDogExitTimes[iCurrentDog] - _llS2CrossedSafeTime < 10000) // If S1 (safe) crossing time is below 10ms after S2 crossing means S1 was crossed
-                                                                             // by going in dog and we have true perfect crossing --> big OK case
+                                                                             // by going in dog and we have true PERFECT crossing
             {
-               _bDogBigOK[iNextDog][iDogRunCounters[iNextDog]] = true;
-               ESP_LOGI(__FILE__, "Perfect cross below 10ms detected for dog %i. Big OK.", iNextDog + 1);
+               _bDogPerfectCross[iNextDog][iDogRunCounters[iNextDog]] = true;
+               ESP_LOGI(__FILE__, "PERFECT cross below 10ms detected for dog %i.", iNextDog + 1);
             }
             if ((iCurrentDog == 3 && !_bFault && !_bRerunBusy) //If this is the 4th dog and there is no fault we have to stop the race
                 || (_bRerunBusy && !_bFault))                  //Or if the rerun sequence was started but no faults exist anymore
@@ -308,11 +308,12 @@ void RaceHandlerClass::Main()
             _llDogEnterTimes[iCurrentDog] = _llLastDogExitTime;
             //Set crossing time to zero (ok)
             _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = 0;
+            _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
             _bS1isSafe = true;
             _bS1StillSafe = true;
             _llS2CrossedSafeTime = STriggerRecord.llTriggerTime;
             _ChangeDogState(COMINGBACK);
-            ESP_LOGI(__FILE__, "Invisible dog %i came back!. Update enter and crossing time.", iPreviousDog + 1);
+            ESP_LOGI(__FILE__, "Invisible dog %i came back!. Update enter and crossing time. Big OK.", iCurrentDog + 1);
          }
          else //Dog state is COMINGBACK
          {
@@ -327,13 +328,14 @@ void RaceHandlerClass::Main()
                   _llDogEnterTimes[iNextDog] = _llDogEnterTimes[iCurrentDog];
                   _llDogEnterTimes[iCurrentDog] = _llLastDogExitTime;
                   _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = 0;
+                  _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
                   SetDogFault(iNextDog, ON);
                   if (_bRerunBusy)
                   {
                      iDogRunCounters[iNextDog]++; //Increase run counter for next dog
                   }
+                  ESP_LOGI(__FILE__, "Invisible dog %i came back! Dog times updated. Big OK.", iNextDog + 1);
                   _ChangeDogNumber(iNextDog);
-                  ESP_LOGI(__FILE__, "Invisible dog %i came back! Dog times updated.", iPreviousDog + 1);
                }
                ESP_LOGI(__FILE__, "Dog %i negative cross detected. Previous dog %i just crossed S2.", iCurrentDog + 1, iPreviousDog + 1);
             }
@@ -428,9 +430,17 @@ void RaceHandlerClass::Main()
                   _bS1StillSafe = false;
                   _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = 0;
                   _llDogEnterTimes[iCurrentDog] = _llDogExitTimes[iPreviousDog];
-                  ESP_LOGI(__FILE__, "Perfect crossing for dog %i.", iCurrentDog + 1);
+                  if (_strTransition == "BAab") //Big OK scenario
+                  {
+                     _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+                     ESP_LOGI(__FILE__, "Unmeasurable OK crossing for dog %i. BAab.", iCurrentDog + 1);
+                  }
+                  else
+                  {
+                  ESP_LOGI(__FILE__, "Unmeasurable ok crossing for dog %i.", iCurrentDog + 1);
+                  }
                }
-               if (_byDogState == COMINGBACK && strFirstTransitionChar == "A")
+               else if (_byDogState == COMINGBACK && strFirstTransitionChar == "A")
                {
                   //ESP_LOGD(__FILE__, "Dog %i fault. Tstring starting with A.", iCurrentDog + 1);
                }
@@ -562,6 +572,20 @@ void RaceHandlerClass::ResetRace()
       {
          bManualFault = false;
       }
+      for (auto &Dog : _bDogPerfectCross)
+      {
+         for (auto &bDogPerfectCross : Dog)
+         {
+            bDogPerfectCross = false;
+         }
+      }
+      for (auto &Dog : _bDogBigOK)
+      {
+         for (auto &bDogBigOK : Dog)
+         {
+            bDogBigOK = false;
+         }
+      }
       for (auto &llTime : _llDogEnterTimes)
       {
          llTime = 0;
@@ -578,13 +602,6 @@ void RaceHandlerClass::ResetRace()
          }
       }
       for (auto &Dog : _llCrossingTimes)
-      {
-         for (auto &llTime : Dog)
-         {
-            llTime = 0;
-         }
-      }
-      for (auto &Dog : _bDogBigOK)
       {
          for (auto &llTime : Dog)
          {
@@ -932,7 +949,11 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
       dtostrf(dCrossingTime, 7, 3, cCrossingTime);
       strCrossingTime += cCrossingTime;
    }
-   else if (_bDogBigOK[iDogNumber][iRunNumber] == 1)
+   else if (_bDogPerfectCross[iDogNumber][iRunNumber])
+   {
+      strCrossingTime = " Perfect";
+   }
+   else if (_bDogBigOK[iDogNumber][iRunNumber])
    {
       strCrossingTime = "      OK";
    }
