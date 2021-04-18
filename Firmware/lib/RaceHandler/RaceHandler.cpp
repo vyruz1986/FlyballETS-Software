@@ -226,7 +226,6 @@ void RaceHandlerClass::Main()
             //Handle next dog
             _llDogEnterTimes[iNextDog] = STriggerRecord.llTriggerTime;
             ESP_LOGI(__FILE__, "Dog %i FAULT as coming back dog was expected.", iNextDog + 1);
-
             if ((iCurrentDog == 3 && _bFault && !_bRerunBusy) //If current dog is dog 4 and a fault exists, we have to initiate rerun sequence
                 || _bRerunBusy)                               //Or if rerun is busy (and faults still exist)
             {
@@ -308,7 +307,14 @@ void RaceHandlerClass::Main()
             _llDogEnterTimes[iCurrentDog] = _llLastDogExitTime;
             //Set crossing time to zero (ok)
             _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = 0;
-            _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+            if (_bDogManualFaults[iCurrentDog]) // If dog has manual fault we assume it's due to he missed gate while entering
+            {
+               _bDogMissedGateGoingin[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+            }
+            else // This is true invisible dog case so treated as big OK cross
+            {
+               _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+            }
             _bS1isSafe = true;
             _bS1StillSafe = true;
             _llS2CrossedSafeTime = STriggerRecord.llTriggerTime;
@@ -322,14 +328,25 @@ void RaceHandlerClass::Main()
             if ((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) < 2000000)
             {
                _bNegativeCrossDetected = true;
+               if (_bDogMissedGateComingback[iPreviousDog][iDogRunCounters[iPreviousDog]]) // Clear flag if set as previous dog is comming back so he didn't missed the gate
+               {
+                  _bDogMissedGateComingback[iPreviousDog][iDogRunCounters[iPreviousDog]] = false;
+               }
                //If current dog has no fault it has to be invisible dog coming back and it's next dog who did negative cross
                if (!_bDogFaults[iCurrentDog])
                {
                   _llDogEnterTimes[iNextDog] = _llDogEnterTimes[iCurrentDog];
+                  SetDogFault(iNextDog, ON);
                   _llDogEnterTimes[iCurrentDog] = _llLastDogExitTime;
                   _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = 0;
-                  _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
-                  SetDogFault(iNextDog, ON);
+                  if (_bDogManualFaults[iCurrentDog]) // If dog has manual fault we assume it's due to he missed gate while entering
+                  {
+                     _bDogMissedGateGoingin[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+                  }
+                  else // This is true invisible dog case so treated as big OK cross
+                  {
+                     _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+                  }
                   if (_bRerunBusy)
                   {
                      iDogRunCounters[iNextDog]++; //Increase run counter for next dog
@@ -398,6 +415,11 @@ void RaceHandlerClass::Main()
                //Change dog state to coming back
                _ChangeDogState(COMINGBACK);
                ESP_LOGI(__FILE__, "New dog state: COMINGBACK. ABab.");
+               if (_bDogManualFaults[iPreviousDog])   // If previous dog has manual fault we assume it's because he missed gate while coming back
+                                                      // If however this will be negative cross scenario flag will be deactivated in S2 sensor section
+               {
+                  _bDogMissedGateComingback[iPreviousDog][iDogRunCounters[iPreviousDog]] = true;
+               }
             }
             else if (_strTransition == "BAba" && !_bNegativeCrossDetected && RaceState != STOPPED) //Typical dog coming back case
             {
@@ -430,7 +452,7 @@ void RaceHandlerClass::Main()
                   _bS1StillSafe = false;
                   _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = 0;
                   _llDogEnterTimes[iCurrentDog] = _llDogExitTimes[iPreviousDog];
-                  if (_strTransition == "BAab") //Big OK scenario
+                  if (_strTransition == "BAab") //Big OK cross
                   {
                      _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
                      ESP_LOGI(__FILE__, "Unmeasurable OK crossing for dog %i. BAab.", iCurrentDog + 1);
@@ -584,6 +606,20 @@ void RaceHandlerClass::ResetRace()
          for (auto &bDogBigOK : Dog)
          {
             bDogBigOK = false;
+         }
+      }
+      for (auto &Dog : _bDogMissedGateGoingin)
+      {
+         for (auto &bDogMissedGateGoingin : Dog)
+         {
+            bDogMissedGateGoingin = false;
+         }
+      }
+      for (auto &Dog : _bDogMissedGateComingback)
+      {
+         for (auto &bDogMissedGateComingback : Dog)
+         {
+            bDogMissedGateComingback = false;
          }
       }
       for (auto &llTime : _llDogEnterTimes)
@@ -827,11 +863,13 @@ int8_t RaceHandlerClass::SelectRunNumber(uint8_t iDogNumber, int8_t iRunNumber)
 ///   Dog time in seconds with miliseconds accuracy rounded up or down.
 ///   If multiple dog times alternate between them every 2 seconds.
 /// </returns>
-double RaceHandlerClass::GetDogTime(uint8_t iDogNumber, int8_t iRunNumber)
+String RaceHandlerClass::GetDogTime(uint8_t iDogNumber, int8_t iRunNumber)
 {
-   unsigned long ulDogTimeMillis = GetDogTimeMillis(iDogNumber, iRunNumber);
-   double dDogTime = ulDogTimeMillis / 1000.0;
-   return dDogTime;
+   //unsigned long ulDogTimeMillis = GetDogTimeMillis(iDogNumber, iRunNumber);
+   //double dDogTime = ulDogTimeMillis / 1000.0;
+   String strDogTime;
+   strDogTime = TransformDogTime(iDogNumber, iRunNumber);
+   return strDogTime;
 }
 
 /// <summary>
@@ -881,10 +919,56 @@ unsigned long RaceHandlerClass::GetDogTimeMillis(uint8_t iDogNumber, int8_t iRun
 /// <returns>
 ///   The dog time in seconds with miliseconds accuracy and rounded up or down.
 /// </returns>
-double RaceHandlerClass::GetStoredDogTimes(uint8_t iDogNumber, int8_t iRunNumber)
+String RaceHandlerClass::GetStoredDogTimes(uint8_t iDogNumber, int8_t iRunNumber)
 {
+   char cDogTime[8];
+   String strDogTime;
    double dDogTime = ((long long)(_llDogTimes[iDogNumber][iRunNumber] + 500) / 1000) / 1000.0;
-   return dDogTime;
+   dtostrf(dDogTime, 7, 3, cDogTime);
+   strDogTime = cDogTime;
+   if (_bDogMissedGateGoingin[iDogNumber][iRunNumber])
+   {
+      strDogTime = " run in";
+   }
+   else if (_bDogMissedGateComingback[iDogNumber][iRunNumber])
+   {
+      strDogTime = "outside";
+   }
+   return strDogTime;
+}
+
+/// <summary>
+///   Transform dog time to string.
+/// </summary>
+///
+/// <param name="iDogNumber"> Zero-based index of the dog number. </param>
+/// <param name="iRunNumber"> Zero-based index of the run number. </param>
+///
+/// <returns>
+///   String with following options:
+///   * dog time if available
+///   * 0.000 - if no dog time
+///   * partial dog time if dog is running
+///   * " run in" - if manual fault active and "invisible dog" detected (assumed gate was missed while entering)
+///   * "outside" - if manual fault active and ABab string detected for next dog (assumed gate was missed while exiting)
+/// </returns>
+String RaceHandlerClass::TransformDogTime(uint8_t iDogNumber, int8_t iRunNumber)
+{
+   char cDogTime[8];
+   String strDogTime;
+   unsigned long ulDogTimeMillis = GetDogTimeMillis(iDogNumber, iRunNumber);
+   double dDogTime = ulDogTimeMillis / 1000.0;
+   dtostrf(dDogTime, 7, 3, cDogTime);
+   strDogTime = cDogTime;
+   if (_bDogMissedGateGoingin[iDogNumber][iRunNumber])
+   {
+      strDogTime = " run in";
+   }
+   else if (_bDogMissedGateComingback[iDogNumber][iRunNumber])
+   {
+      strDogTime = "outside";
+   }
+   return strDogTime;
 }
 
 /// <summary>
@@ -919,9 +1003,11 @@ String RaceHandlerClass::GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber)
 ///   String with following options:
 ///   * positive cross value rounded up or down
 ///   * ok - good un-measurable cross
-///   * OK - perfect cross with S1 crossed below 10ms after S2 have been crossed
+///   * Perfect - perfect cross with S1 crossed below 10ms after S2 have been crossed
+///   * OK - goon un-measurable cross with string BAab or invisible dog run in secnario (BAba)
 ///   * negative cross value - measurable fault rounded up or down
 ///   * fault - un-measurable fault
+///   * "empty" - if no crossing time available / possible
 /// </returns>
 String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNumber)
 {
@@ -936,6 +1022,7 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
    {
       dCrossingTime = ((long long)(_llCrossingTimes[iDogNumber][iRunNumber] + 500) / 1000) / 1000.0;
    }
+   
    if (dCrossingTime < 0)
    {
       dCrossingTime = fabs(dCrossingTime);
@@ -949,6 +1036,10 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
       dtostrf(dCrossingTime, 7, 3, cCrossingTime);
       strCrossingTime += cCrossingTime;
    }
+   else if (_bDogMissedGateGoingin[iDogNumber][iRunNumber])
+   {
+      strCrossingTime = " ";
+   }
    else if (_bDogPerfectCross[iDogNumber][iRunNumber])
    {
       strCrossingTime = " Perfect";
@@ -957,9 +1048,8 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
    {
       strCrossingTime = "      OK";
    }
-   else
-   {
-      if (_llDogTimes[iDogNumber][iRunNumber] > 0)
+   //We have dog time (crossing time is zero)
+   else if (_llDogTimes[iDogNumber][iRunNumber] > 0)
       {
          if ((iDogRunCounters[iDogNumber] > 0 && iDogRunCounters[iDogNumber] != iRunNumber) || (iDogRunCounters[iDogNumber] == 0 && (_bDogFaults[iDogNumber] || _bDogManualFaults[iDogNumber])))
          {
@@ -970,20 +1060,21 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
             strCrossingTime = "      ok";
          }
       }
-      //If still running and fault active
-      else if ((RaceState == RUNNING && iCurrentDog == iDogNumber && _byDogState == COMINGBACK) && iRunNumber <= iDogRunCounters[iDogNumber] && (_bDogFaults[iDogNumber] || _bDogManualFaults[iDogNumber]))
+   //If dog is still running
+   else if ((RaceState == RUNNING && iCurrentDog == iDogNumber && _byDogState == COMINGBACK) && iRunNumber <= iDogRunCounters[iDogNumber])
+   {
+      if (_bDogFaults[iDogNumber] || _bDogManualFaults[iDogNumber])
       {
          strCrossingTime = "   fault";
       }
-      //If still running and no active fault
-      else if ((RaceState == RUNNING && iCurrentDog == iDogNumber && _byDogState == COMINGBACK) && iRunNumber <= iDogRunCounters[iDogNumber] && (!_bDogFaults[iDogNumber] || !_bDogManualFaults[iDogNumber]))
+      else
       {
          strCrossingTime = "      ok";
       }
-      else
-      {
-         strCrossingTime = " ";
-      }
+   }
+   else
+   {
+      strCrossingTime = " ";
    }
    return strCrossingTime;
 }

@@ -110,7 +110,6 @@ uint8_t iS2Pin = 35;
 uint8_t iCurrentDog;
 uint8_t iCurrentRaceState;
 
-char cDogTime[8];
 char cDogCrossingTime[8];
 char cElapsedRaceTime[8];
 char cTeamNetTime[8];
@@ -494,23 +493,19 @@ void loop()
    LCDController.UpdateField(LCDController.RaceState, RaceHandler.GetRaceStateString());
 
    //Handle individual dog info
-   dtostrf(RaceHandler.GetDogTime(0), 7, 3, cDogTime);
-   LCDController.UpdateField(LCDController.D1Time, cDogTime);
+   LCDController.UpdateField(LCDController.D1Time, RaceHandler.GetDogTime(0));
    LCDController.UpdateField(LCDController.D1CrossTime, RaceHandler.GetCrossingTime(0));
    LCDController.UpdateField(LCDController.D1RerunInfo, RaceHandler.GetRerunInfo(0));
 
-   dtostrf(RaceHandler.GetDogTime(1), 7, 3, cDogTime);
-   LCDController.UpdateField(LCDController.D2Time, cDogTime);
+   LCDController.UpdateField(LCDController.D2Time, RaceHandler.GetDogTime(1));
    LCDController.UpdateField(LCDController.D2CrossTime, RaceHandler.GetCrossingTime(1));
    LCDController.UpdateField(LCDController.D2RerunInfo, RaceHandler.GetRerunInfo(1));
 
-   dtostrf(RaceHandler.GetDogTime(2), 7, 3, cDogTime);
-   LCDController.UpdateField(LCDController.D3Time, cDogTime);
+   LCDController.UpdateField(LCDController.D3Time, RaceHandler.GetDogTime(2));
    LCDController.UpdateField(LCDController.D3CrossTime, RaceHandler.GetCrossingTime(2));
    LCDController.UpdateField(LCDController.D3RerunInfo, RaceHandler.GetRerunInfo(2));
 
-   dtostrf(RaceHandler.GetDogTime(3), 7, 3, cDogTime);
-   LCDController.UpdateField(LCDController.D4Time, cDogTime);
+   LCDController.UpdateField(LCDController.D4Time, RaceHandler.GetDogTime(3));
    LCDController.UpdateField(LCDController.D4CrossTime, RaceHandler.GetCrossingTime(3));
    LCDController.UpdateField(LCDController.D4RerunInfo, RaceHandler.GetRerunInfo(3));
 
@@ -527,25 +522,19 @@ void loop()
          //ESP_LOGD(__FILE__, "Dog %i -> %i run(s).", i + 1, RaceHandler.iDogRunCounters[i] + 1);
          if (RaceHandler.iDogRunCounters[i] > 1)
          {
-            dtostrf(RaceHandler.GetStoredDogTimes(i, 0), 7, 3, cDogTime);
-            ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", i + 1, cDogTime, RaceHandler.TransformCrossingTime(i, 0).c_str());
-            dtostrf(RaceHandler.GetStoredDogTimes(i, 1), 7, 3, cDogTime);
-            ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", i + 1, cDogTime, RaceHandler.TransformCrossingTime(i, 1).c_str());
-            dtostrf(RaceHandler.GetStoredDogTimes(i, 2), 7, 3, cDogTime);
-            ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", i + 1, cDogTime, RaceHandler.TransformCrossingTime(i, 2).c_str());
+            ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", i + 1, RaceHandler.GetStoredDogTimes(i, 0), RaceHandler.TransformCrossingTime(i, 0).c_str());
+            ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", i + 1, RaceHandler.GetStoredDogTimes(i, 1), RaceHandler.TransformCrossingTime(i, 1).c_str());
+            ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", i + 1, RaceHandler.GetStoredDogTimes(i, 2), RaceHandler.TransformCrossingTime(i, 2).c_str());
          }
          else if (RaceHandler.iDogRunCounters[i] == 1)
          {
-            dtostrf(RaceHandler.GetStoredDogTimes(i, 0), 7, 3, cDogTime);
-            ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", i + 1, cDogTime, RaceHandler.TransformCrossingTime(i, 0).c_str());
-            dtostrf(RaceHandler.GetStoredDogTimes(i, 1), 7, 3, cDogTime);            
-            ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", i + 1, cDogTime, RaceHandler.TransformCrossingTime(i, 1).c_str());
+            ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", i + 1, RaceHandler.GetStoredDogTimes(i, 0), RaceHandler.TransformCrossingTime(i, 0).c_str());           
+            ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", i + 1, RaceHandler.GetStoredDogTimes(i, 1), RaceHandler.TransformCrossingTime(i, 1).c_str());
 
          }
          else if (RaceHandler.iDogRunCounters[i] == 0)
          {
-            dtostrf(RaceHandler.GetStoredDogTimes(i, 0), 7, 3, cDogTime);
-            ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", i + 1, cDogTime, RaceHandler.TransformCrossingTime(i, 0).c_str());
+            ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", i + 1, RaceHandler.GetStoredDogTimes(i, 0), RaceHandler.TransformCrossingTime(i, 0).c_str());
          }
       }
       ESP_LOGI(__FILE__, " Team: %s", cElapsedRaceTime);
@@ -566,8 +555,7 @@ void loop()
    */
    if (RaceHandler.iCurrentDog != iCurrentDog)
    {
-      dtostrf(RaceHandler.GetDogTime(RaceHandler.iPreviousDog, -2), 7, 3, cDogTime);
-      ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", RaceHandler.iPreviousDog + 1, cDogTime, RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
+      ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", RaceHandler.iPreviousDog + 1, RaceHandler.GetDogTime(RaceHandler.iPreviousDog, -2), RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
       if (RaceHandler.RaceState != RaceHandler.STOPPED)
       {
       ESP_LOGI(__FILE__, "Running dog: %i.", RaceHandler.iCurrentDog + 1);
@@ -582,8 +570,7 @@ void loop()
       //ESP_LOGI(__FILE__, "Free heap: %i", system_get_free_heap_size());
       if (RaceHandler.RaceState == RaceHandler.RUNNING)
       {
-         dtostrf(RaceHandler.GetDogTime(RaceHandler.iCurrentDog), 7, 3, cDogTime);
-         ESP_LOGI(__FILE__, "Dog %i: %ss", RaceHandler.iCurrentDog, cDogTime);
+         ESP_LOGI(__FILE__, "Dog %i: %ss", RaceHandler.iCurrentDog, RaceHandler.GetDogTime(RaceHandler.iCurrentDog));
       }
       lLastSerialOutput = GET_MICROS / 1000;
    }

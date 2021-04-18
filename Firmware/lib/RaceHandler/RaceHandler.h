@@ -49,10 +49,11 @@ public:
    void SetDogFault(uint8_t iDogNumber, DogFaults State = TOGGLE);
 
    double GetRaceTime();
-   double GetDogTime(uint8_t iDogNumber, int8_t iRunNumber = -1);
-   double GetStoredDogTimes(uint8_t iDogNumber, int8_t iRunNumber = -1);
+   String GetDogTime(uint8_t iDogNumber, int8_t iRunNumber = -1);
+   String GetStoredDogTimes(uint8_t iDogNumber, int8_t iRunNumber = -1);
    int8_t SelectRunNumber(uint8_t iDogNumber, int8_t iRunNumber = -1);
    unsigned long GetDogTimeMillis(uint8_t iDogNumber, int8_t iRunNumber = -1);
+   String TransformDogTime(uint8_t iDogNumber, int8_t iRunNumber);
    String GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber = -1);
    String TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNumber);
    long GetCrossingTimeMillis(uint8_t iDogNumber, int8_t iRunNumber = -1);
@@ -102,6 +103,8 @@ private:
    bool _bDogManualFaults[4];
    bool _bDogPerfectCross[4][4];
    bool _bDogBigOK[4][4];
+   bool _bDogMissedGateGoingin[4][4];
+   bool _bDogMissedGateComingback[4][4];
    bool _bRerunBusy;
    bool _bS1isSafe;
    bool _bS1StillSafe;
