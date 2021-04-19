@@ -3,8 +3,8 @@
 
 struct stDogTimeData
 {
-   unsigned long Time;
-   long CrossingTime;
+   String Time;
+   String CrossingTime;
 };
 
 struct stDogData

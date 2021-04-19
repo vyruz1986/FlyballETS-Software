@@ -865,8 +865,6 @@ int8_t RaceHandlerClass::SelectRunNumber(uint8_t iDogNumber, int8_t iRunNumber)
 /// </returns>
 String RaceHandlerClass::GetDogTime(uint8_t iDogNumber, int8_t iRunNumber)
 {
-   //unsigned long ulDogTimeMillis = GetDogTimeMillis(iDogNumber, iRunNumber);
-   //double dDogTime = ulDogTimeMillis / 1000.0;
    String strDogTime;
    strDogTime = TransformDogTime(iDogNumber, iRunNumber);
    return strDogTime;
@@ -1247,8 +1245,8 @@ stRaceData RaceHandlerClass::GetRaceData(uint iRaceId)
 
          for (uint8_t i2 = 0; i2 < 4; i2++)
          {
-            RequestedRaceData.DogData[i].Timing[i2].Time = GetDogTimeMillis(i, i2);
-            RequestedRaceData.DogData[i].Timing[i2].CrossingTime = GetCrossingTimeMillis(i, i2);
+            RequestedRaceData.DogData[i].Timing[i2].Time = GetDogTime(i, i2);
+            RequestedRaceData.DogData[i].Timing[i2].CrossingTime = GetCrossingTime(i, i2);
          }
          RequestedRaceData.DogData[i].Fault = (_bDogFaults[i] || _bDogManualFaults[i]);
          RequestedRaceData.DogData[i].Running = (iCurrentDog == i);

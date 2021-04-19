@@ -9,7 +9,7 @@
       </div>
       <div *ngFor="let dogTime of dog.timing; let i = index">
          <ng-container *ngIf="dogTime.crossingTime != 0 || dogTime.time != 0 || i == 0">
-         {{dogTime.time | date: 's.SSS'}} {{dogTime.crossingTime | crossingTime}}<br>
+         {{dogTime.time}} {{dogTime.crossingTime}}<br>
          </ng-container>
       </div>
    </li>
