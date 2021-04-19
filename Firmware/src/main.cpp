@@ -520,21 +520,9 @@ void loop()
       for (uint8_t i = 0; i < 4; i++)
       {
          //ESP_LOGD(__FILE__, "Dog %i -> %i run(s).", i + 1, RaceHandler.iDogRunCounters[i] + 1);
-         if (RaceHandler.iDogRunCounters[i] > 1)
+         for (uint8_t i2 = 0; i2 < (RaceHandler.iDogRunCounters[i] + 1); i2++)
          {
-            ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", i + 1, RaceHandler.GetStoredDogTimes(i, 0), RaceHandler.TransformCrossingTime(i, 0).c_str());
-            ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", i + 1, RaceHandler.GetStoredDogTimes(i, 1), RaceHandler.TransformCrossingTime(i, 1).c_str());
-            ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", i + 1, RaceHandler.GetStoredDogTimes(i, 2), RaceHandler.TransformCrossingTime(i, 2).c_str());
-         }
-         else if (RaceHandler.iDogRunCounters[i] == 1)
-         {
-            ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", i + 1, RaceHandler.GetStoredDogTimes(i, 0), RaceHandler.TransformCrossingTime(i, 0).c_str());           
-            ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", i + 1, RaceHandler.GetStoredDogTimes(i, 1), RaceHandler.TransformCrossingTime(i, 1).c_str());
-
-         }
-         else if (RaceHandler.iDogRunCounters[i] == 0)
-         {
-            ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", i + 1, RaceHandler.GetStoredDogTimes(i, 0), RaceHandler.TransformCrossingTime(i, 0).c_str());
+            ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", i + 1, RaceHandler.GetStoredDogTimes(i, i2), RaceHandler.TransformCrossingTime(i, i2).c_str());
          }
       }
       ESP_LOGI(__FILE__, " Team: %s", cElapsedRaceTime);
