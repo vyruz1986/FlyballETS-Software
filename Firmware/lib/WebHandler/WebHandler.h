@@ -3,7 +3,6 @@
 #define _WEBHANDLER_h
 
 #include "config.h"
-#ifndef WiFiOFF
 #include "Arduino.h"
 #include "SettingsManager.h"
 //#include <Hash.h>
@@ -70,5 +69,4 @@ public:
 
 extern WebHandlerClass WebHandler;
 
-#endif
 #endif
