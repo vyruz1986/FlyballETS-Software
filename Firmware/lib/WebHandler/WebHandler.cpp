@@ -329,8 +329,8 @@ boolean WebHandlerClass::_DoAction(JsonObject &ActionObj, String *ReturnError)
          return false;
       }
       uint8_t iDogNum = ActionObj["actionData"]["dogNumber"];
-      boolean bFaultState = ActionObj["actionData"]["faultState"];
-      RaceHandler.SetDogFault(iDogNum, (bFaultState ? RaceHandler.ON : RaceHandler.OFF));
+      //boolean bFaultState = ActionObj["actionData"]["faultState"];
+      RaceHandler.SetDogFault(iDogNum);
       return true;
    }
    else
@@ -472,7 +472,7 @@ boolean WebHandlerClass::_GetData(String dataType, JsonObject &Data)
       {
          JsonObject &triggerObj = triggerQueue.createNestedObject();
          triggerObj["sensorNum"] = trigger.iSensorNumber;
-         triggerObj["triggerTime"] = trigger.llTriggerTime - RaceHandler._llRaceStartTime;
+         triggerObj["triggerTime"] = trigger.llTriggerTime - RaceHandler.llRaceStartTime;
          triggerObj["state"] = trigger.iSensorState;
       }
    }

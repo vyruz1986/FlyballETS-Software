@@ -6,7 +6,7 @@ import { Component, OnInit, Input } from '@angular/core';
    styleUrls: ['./time-display.component.scss']
 })
 export class TimeDisplayComponent implements OnInit {
-   @Input() elapsedTime:number;
+   @Input() elapsedTime: number;
    @Input() totalCrossingTime: number;
    constructor() { }
 

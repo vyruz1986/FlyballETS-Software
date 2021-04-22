@@ -1,7 +1,8 @@
 <div class="text-center">
-  <h4>Lights</h4>
+  <!-- <h4>Lights</h4> -->
   <div class="lightsContainer">
-    <span [ngClass]="{'white': (lightsState.State[0] == 1)}"></span>
+    <br />
+    <span [ngClass]="{'white': lightsState.State[0] == 1}"></span>
     <span [ngClass]="{'red': lightsState.State[1] == 1}"></span>
     <span [ngClass]="{'orange': lightsState.State[2] == 1, 'blue': lightsState.State[2] == 2}"></span>
     <span [ngClass]="{'orange': lightsState.State[3] == 1}"></span>

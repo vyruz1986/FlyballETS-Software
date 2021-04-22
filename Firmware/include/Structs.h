@@ -21,10 +21,10 @@ struct stRaceData
    uint Id;
    unsigned long StartTime;
    unsigned long EndTime;
-   unsigned long ElapsedTime;
+   double ElapsedTime;
    uint8_t RaceState;
    stDogData DogData[4];
-   long TotalCrossingTime;
+   double TotalCrossingTime;
 };
 
 struct stSystemData

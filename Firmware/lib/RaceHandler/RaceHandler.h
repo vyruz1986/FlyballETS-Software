@@ -30,6 +30,7 @@ public:
    uint8_t iPreviousDog;
    uint8_t iNextDog;
    uint8_t iDogRunCounters[4];  //Number of (re-)runs for each dog
+   long long llRaceStartTime;
 
    void Main();
    void StartTimers();
@@ -69,11 +70,11 @@ public:
    boolean GetRunDirection();
 
 private:
-   long long _llRaceStartTime;
    long long _llRaceEndTime;
    long long _llRaceTime;
    long long _llLastDogExitTime;
    long long _llS2CrossedSafeTime;
+   long long _llS2CrossedUnsafeTime;
    long long _llLastTransitionStringUpdate;
    long long _llRaceElapsedTime;
 
@@ -109,6 +110,7 @@ private:
    bool _bS1isSafe;
    bool _bS1StillSafe;
    bool _bNegativeCrossDetected;
+   bool _bPotentialNegativeCrossDetected;
    long long _llLastDogTimeReturnTimeStamp[4];
    uint8_t _iLastReturnedRunNumber[4];
    long long _llDogEnterTimes[4];
