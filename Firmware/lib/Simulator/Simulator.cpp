@@ -1292,7 +1292,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
-   // TestCase 21: Training 21.04.2021
+   // TestCase 21: Training 21.04.2021 lot of sensor noise
    {1, 58718, 1},
    {2, 79076, 1},
    {1, 160867, 0},

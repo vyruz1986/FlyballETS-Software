@@ -129,7 +129,7 @@ void RaceHandlerClass::Main()
       if (_bPotentialNegativeCrossDetected && (GET_MICROS - _llS2CrossedUnsafeTime) > 100000)
       {
          _bPotentialNegativeCrossDetected = false;
-         ESP_LOGD(__FILE__, "Potential negative cross flag reset as S1 not crssed for 100ms");
+         ESP_LOGD(__FILE__, "Potential negative cross flag reset as S1 not crossed for 100ms");
       }
       
       ESP_LOGI(__FILE__, "S%i | TT:%lld | T:%lld | St:%i", STriggerRecord.iSensorNumber, STriggerRecord.llTriggerTime, STriggerRecord.llTriggerTime - llRaceStartTime, STriggerRecord.iSensorState);
@@ -283,7 +283,7 @@ void RaceHandlerClass::Main()
                {
                   iDogRunCounters[iNextDog]++; //Increase run counter for next dog
                }
-               ESP_LOGI(__FILE__, "Invisible dog %i came back! Dog times updated. Big OK.", iNextDog + 1);
+               ESP_LOGI(__FILE__, "Invisible dog %i came back! Dog times updated. OK or Perfect crossing.", iNextDog + 1);
                _ChangeDogNumber(iNextDog);
             }
             //And previous dog time (who just crossed S1)
@@ -306,11 +306,11 @@ void RaceHandlerClass::Main()
             _llRaceElapsedTime = STriggerRecord.llTriggerTime - llRaceStartTime;
             _bS1isSafe = false;
             ESP_LOGI(__FILE__, "S1 line crossed while being safe. Calculate dog %i time.", iCurrentDog + 1);
-            if (_llDogExitTimes[iCurrentDog] - _llS2CrossedSafeTime < 10000) // If S1 (safe) crossing time is below 10ms after S2 crossing means S1 was crossed
+            if (_llDogExitTimes[iCurrentDog] - _llS2CrossedSafeTime < 5000) // If S1 (safe) crossing time is below 5ms after S2 crossing means S1 was crossed
                                                                              // by going in dog and we have true PERFECT crossing
             {
                _bDogPerfectCross[iNextDog][iDogRunCounters[iNextDog]] = true;
-               ESP_LOGI(__FILE__, "PERFECT cross below 10ms detected for dog %i.", iNextDog + 1);
+               ESP_LOGI(__FILE__, "PERFECT cross below 5ms detected for dog %i.", iNextDog + 1);
             }
             if ((iCurrentDog == 3 && !_bFault && !_bRerunBusy) //If this is the 4th dog and there is no fault we have to stop the race
                 || (_bRerunBusy && !_bFault))                  //Or if the rerun sequence was started but no faults exist anymore
@@ -358,7 +358,7 @@ void RaceHandlerClass::Main()
             _bS1StillSafe = true;
             _llS2CrossedSafeTime = STriggerRecord.llTriggerTime;
             _ChangeDogState(COMINGBACK);
-            ESP_LOGI(__FILE__, "Invisible dog %i came back!. Update enter and crossing time. Big OK.", iCurrentDog + 1);
+            ESP_LOGI(__FILE__, "Invisible dog %i came back!. Update enter time. OK or Perfect crossing.", iCurrentDog + 1);
          }
          else if (_byDogState == COMINGBACK)
          {
@@ -1018,7 +1018,7 @@ String RaceHandlerClass::GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber)
 ///   String with following options:
 ///   * positive cross value rounded up or down
 ///   * ok - good un-measurable cross
-///   * Perfect - perfect cross with S1 crossed below 10ms after S2 have been crossed
+///   * Perfect - perfect cross with S1 crossed below 5ms after S2 have been crossed
 ///   * OK - goon un-measurable cross with string BAab or invisible dog run in secnario (BAba)
 ///   * negative cross value - measurable fault rounded up or down
 ///   * fault - un-measurable fault

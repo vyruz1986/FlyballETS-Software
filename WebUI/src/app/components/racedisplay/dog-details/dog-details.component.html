@@ -2,7 +2,19 @@
 <ul class="list-group">
    <li *ngFor="let dog of dogData" [ngClass]="{'list-group-item': true, 'active': dog.running}">
       Dog {{dog.dogNumber + 1}}
-      <div class="form-check checkbox-slider--a checkbox-slider-danger checkbox-slider-md">
+      &nbsp;
+      &nbsp;
+      &nbsp;
+      &nbsp;
+      &nbsp;
+      &nbsp;
+      &nbsp;
+      &nbsp;
+      &nbsp;
+      &nbsp;
+      &nbsp;
+      <div class="form-check checkbox-slider--c-weight checkbox-slider-danger checkbox-slider-md d-inline">
+         
          <label>
             <input type="checkbox" [(ngModel)]="dog.fault" (click)="EmitDogFault(dog.dogNumber, !dog.fault)"><span>Fault state</span>
          </label>           
