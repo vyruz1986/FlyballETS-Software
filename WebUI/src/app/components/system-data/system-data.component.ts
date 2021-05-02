@@ -11,7 +11,7 @@ export class SystemDataComponent implements OnInit {
 
   hmsTime:string;
 
-  systemData:SystemData = {uptime: 0, freeHeap: 0, CPU0ResetReason: 0, CPU1ResetReason: 0, numClients: 0, systemTimestamp: null, batteryPercentage: 0};
+  systemData:SystemData = {batteryPercentage: 0, systemTimestamp: null, uptime: 0, numClients: 0, freeHeap: 0, CPU0ResetReason: 0, CPU1ResetReason: 0};
   constructor(private etsDataService:EtsdataService) {
     this.etsDataService.dataStream.subscribe((data) => {
       if(data.SystemData) {

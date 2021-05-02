@@ -115,7 +115,6 @@ char cElapsedRaceTime[8];
 char cTeamNetTime[8];
 long long llHeapPreviousMillis = 0;
 long long llHeapInterval = 30000;
-long long llRaceStarted = 0;
 
 //Initialise Lights stuff
 #ifdef WS281x
@@ -379,6 +378,14 @@ void loop()
    WebHandler.loop();
    #endif
 
+   //Reset variables when state RESET
+   if (RaceHandler.RaceState == RaceHandler.RESET)
+   {
+      iCurrentDog = RaceHandler.iCurrentDog;
+      iCurrentRaceState = RaceHandler.RaceState;
+      bRaceSummaryPrinted = false;
+   }
+
    //Race start/stop button (remote D0 output)
    if (digitalRead(iRC0Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[0]) > 2000)
    {
@@ -514,7 +521,7 @@ void loop()
       ESP_LOGI(__FILE__, "RS: %s", RaceHandler.GetRaceStateString());
    }
 
-   if (RaceHandler.RaceState == RaceHandler.STOPPED && ((GET_MICROS / 1000 - (3000 + llRaceStarted + RaceHandler.GetRaceTime() * 1000)) > 1500) && !bRaceSummaryPrinted)
+   if (RaceHandler.RaceState == RaceHandler.STOPPED && ((GET_MICROS / 1000 - (RaceHandler.llRaceStartTime / 1000 + RaceHandler.GetRaceTime() * 1000)) > 1500) && !bRaceSummaryPrinted)
    {
       //Race has been stopped 1 second ago: print race summary to console
       for (uint8_t i = 0; i < 4; i++)
@@ -526,7 +533,7 @@ void loop()
          }
       }
       ESP_LOGI(__FILE__, " Team: %s", cElapsedRaceTime);
-      ESP_LOGI(__FILE__, "  Net: %s", cTeamNetTime);
+      ESP_LOGI(__FILE__, "  Net: %s\n", cTeamNetTime);
       #if !Simulate
          RaceHandler.PrintRaceTriggerRecords();
       #endif
@@ -541,13 +548,10 @@ void loop()
       llHeapPreviousMillis = llCurrentMillis;
    }
    */
-   if (RaceHandler.iCurrentDog != iCurrentDog)
+   if (RaceHandler.iCurrentDog != iCurrentDog && RaceHandler.RaceState == RaceHandler.RUNNING)
    {
       ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", RaceHandler.iPreviousDog + 1, RaceHandler.GetDogTime(RaceHandler.iPreviousDog, -2), RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
-      if (RaceHandler.RaceState != RaceHandler.STOPPED)
-      {
       ESP_LOGI(__FILE__, "Running dog: %i.", RaceHandler.iCurrentDog + 1);
-      }
    }
 
    //Enable (uncomment) the following if you want periodic status updates on the serial port
@@ -630,12 +634,8 @@ void Sensor1Wrapper()
 /// </summary>
 void StartRaceMain()
 {
-   
-   ESP_LOGI(__FILE__, "%s", GPSHandler.GetUTCTimestamp());
-   llRaceStarted = GET_MICROS / 1000;
    LightsController.InitiateStartSequence();
    RaceHandler.StartRace();
-   ESP_LOGD(__FILE__, "%llu: START!", llRaceStarted);
 }
 
 /// <summary>
@@ -676,9 +676,6 @@ void ResetRace()
    lLastRCPress[1] = GET_MICROS / 1000;
    LightsController.ResetLights();
    RaceHandler.ResetRace();
-   iCurrentDog = RaceHandler.iCurrentDog;
-   iCurrentRaceState = RaceHandler.RaceState;
-   bRaceSummaryPrinted = false;
 }
 
 #ifndef WiFiOFF

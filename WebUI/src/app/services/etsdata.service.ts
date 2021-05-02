@@ -8,6 +8,7 @@ import { WebsocketDataRequest } from '../interfaces/websocket-data-request';
 @Injectable()
 export class EtsdataService {
    ETS_URL:string = "ws://"+ window.location.host +"/ws";
+   //ETS_URL:string = "ws://192.168.20.1/ws";
    wsObservable:Observable<any>;
    wsObserver:Observer<any>;
    private ws;
@@ -30,9 +31,9 @@ export class EtsdataService {
 
          this.ws.onclose = (e) => {
             if (e.wasClean) {
-              observer.complete();
+               observer.complete();
             } else {
-              observer.error(e);
+               observer.error(e);
             }
             this.isConnected = false;
          };

@@ -18,8 +18,8 @@ export class SecureEtsDataService {
    public isAuthenticated: Observable<boolean> = this._isAuthenticated.asObservable();
 
    public setAuthenticated(authenticated:boolean): void {
-     console.log('authenticated: ' + authenticated);
-     this._isAuthenticated.next(authenticated);
+      console.log('authenticated: ' + authenticated);
+      this._isAuthenticated.next(authenticated);
    }
 
    constructor() {
@@ -39,9 +39,9 @@ export class SecureEtsDataService {
 
          this.ws.onclose = (e) => {
             if (e.wasClean) {
-              observer.complete();
+               observer.complete();
             } else {
-              observer.error(e);
+               observer.error(e);
             }
             this.isConnected = false;
             console.log('onClose');

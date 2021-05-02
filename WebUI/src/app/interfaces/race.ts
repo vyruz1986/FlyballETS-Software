@@ -1,6 +1,6 @@
 import { RaceStateEnum } from '../enums/race-state.enum';
 export interface DogTimingData{
-   time: number, crossingTime: number
+   time: String, crossingTime: String
 }
 export interface DogData{
    dogNumber: number
