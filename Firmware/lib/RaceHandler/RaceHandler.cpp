@@ -542,10 +542,11 @@ void RaceHandlerClass::StartTimers()
 /// </summary>
 void RaceHandlerClass::StartRace()
 {
-   _ChangeRaceState(STARTING);
-   ESP_LOGI(__FILE__, "%s", GPSHandler.GetUTCTimestamp());
    llRaceStartTime = GET_MICROS + 3000000;
+   _ChangeRaceState(STARTING);
    ESP_LOGD(__FILE__, "%llu: STARTING!", (llRaceStartTime - 3000000) / 1000);
+   ESP_LOGI(__FILE__, "%s", GPSHandler.GetUTCTimestamp());
+   
 }
 
 /// <summary>

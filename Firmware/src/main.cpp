@@ -359,16 +359,16 @@ void loop()
    //Check for serial events
    serialEvent();
 
-#if Simulate
-   //Run simulator
-   Simulator.Main();
-#endif
-
    //Handle lights main processing
    LightsController.Main();
 
    //Handle Race main processing
    RaceHandler.Main();
+
+#if Simulate
+   //Run simulator
+   Simulator.Main();
+#endif
 
    //Handle LCD processing
    LCDController.Main();

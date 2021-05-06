@@ -1456,23 +1456,19 @@ void SimulatorClass::Main()
       //Pending record doesn't contain valid data, this means we've reched the end of our queue
       return;
    }
-   long long llRaceElapsedTime = GET_MICROS - RaceHandler.llRaceStartTime;
 
    //Simulate sensors  
-   if (RaceHandler.RaceState != RaceHandler.RESET && PendingRecord.llTriggerTime <= (long long)llRaceElapsedTime && PendingRecord.llTriggerTime != 0)
+   if ((PendingRecord.llTriggerTime < 0 && RaceHandler.RaceState == RaceHandler.STARTING) || (PendingRecord.llTriggerTime > 0 && RaceHandler.RaceState == RaceHandler.RUNNING)
+      || (RaceHandler.RaceState == RaceHandler.STOPPED && GET_MICROS <= RaceHandler._llRaceEndTime + 2000000))
    {
-         if ((PendingRecord.llTriggerTime < 0 && RaceHandler.RaceState == RaceHandler.STARTING) || (PendingRecord.llTriggerTime > 0 && RaceHandler.RaceState == RaceHandler.RUNNING)
-            || (RaceHandler.RaceState == RaceHandler.STOPPED && GET_MICROS <= RaceHandler._llRaceEndTime + 2000000))
-         {
-            while (PendingRecord.llTriggerTime <= (long long)llRaceElapsedTime && PendingRecord.llTriggerTime != 0)
-            {
-               //ESP_LOGD(__FILE__, "%lld Pending record S%d TriggerTime %lld | %lld", GET_MICROS, PendingRecord.iSensorNumber, RaceHandler.llRaceStartTime + PendingRecord.llTriggerTime, PendingRecord.llTriggerTime);
-               RaceHandler._QueuePush({PendingRecord.iSensorNumber, (RaceHandler.llRaceStartTime + PendingRecord.llTriggerTime), PendingRecord.iState});
-               //And increase pending record
-               _iDataPos++;
-               PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
-            }
-         }
+      while (PendingRecord.llTriggerTime != 0 && PendingRecord.llTriggerTime <= (long long)(GET_MICROS - (RaceHandler.llRaceStartTime - 10000))) //10ms advance added
+      {
+         //ESP_LOGD(__FILE__, "%lld Pending record S%d TriggerTime %lld | %lld", GET_MICROS, PendingRecord.iSensorNumber, RaceHandler.llRaceStartTime + PendingRecord.llTriggerTime, PendingRecord.llTriggerTime);
+         RaceHandler._QueuePush({PendingRecord.iSensorNumber, (RaceHandler.llRaceStartTime + PendingRecord.llTriggerTime), PendingRecord.iState});
+         //And increase pending record
+         _iDataPos++;
+         PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
+      }
    }
 }
 
