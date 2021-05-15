@@ -53,13 +53,9 @@ public:
    String GetDogTime(uint8_t iDogNumber, int8_t iRunNumber = -1);
    String GetStoredDogTimes(uint8_t iDogNumber, int8_t iRunNumber = -1);
    int8_t SelectRunNumber(uint8_t iDogNumber, int8_t iRunNumber = -1);
-   unsigned long GetDogTimeMillis(uint8_t iDogNumber, int8_t iRunNumber = -1);
-   String TransformDogTime(uint8_t iDogNumber, int8_t iRunNumber);
    String GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber = -1);
    String TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNumber);
-   long GetCrossingTimeMillis(uint8_t iDogNumber, int8_t iRunNumber = -1);
    String GetRerunInfo(uint8_t iDogNumber);
-   long GetTotalCrossingTimeMillis();
    double GetNetTime();
 
    String GetRaceStateString();

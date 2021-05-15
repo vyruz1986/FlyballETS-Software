@@ -359,16 +359,16 @@ void loop()
    //Check for serial events
    serialEvent();
 
-#if Simulate
-   //Run simulator
-   Simulator.Main();
-#endif
-
    //Handle lights main processing
    LightsController.Main();
 
    //Handle Race main processing
    RaceHandler.Main();
+
+#if Simulate
+   //Run simulator
+   Simulator.Main();
+#endif
 
    //Handle LCD processing
    LCDController.Main();
@@ -463,9 +463,17 @@ void loop()
 
    //Update LCD Display fields
    //Update team time to display
-   dtostrf(RaceHandler.GetRaceTime(), 7, 3, cElapsedRaceTime);
+   #if Accuracy2digits
+   {
+      dtostrf(RaceHandler.GetRaceTime(), 6, 2, cElapsedRaceTime);
+   }
+   #else
+   {
+      dtostrf(RaceHandler.GetRaceTime(), 7, 3, cElapsedRaceTime);
+   }
+   #endif
    LCDController.UpdateField(LCDController.TeamTime, cElapsedRaceTime);
-
+   
 #if !JTAG
    //Update battery percentage to display
    if ((GET_MICROS / 1000 < 2000 || ((GET_MICROS / 1000 - lLastBatteryLCDupdate) > 30000))
@@ -493,7 +501,15 @@ void loop()
 #endif
 
    //Update team netto time
-   dtostrf(RaceHandler.GetNetTime(), 7, 3, cTeamNetTime);
+   #if Accuracy2digits
+   {
+      dtostrf(RaceHandler.GetNetTime(), 6, 2, cTeamNetTime);
+   }
+   #else
+   {
+      dtostrf(RaceHandler.GetNetTime(), 7, 3, cTeamNetTime);
+   }
+   #endif
    LCDController.UpdateField(LCDController.NetTime, cTeamNetTime);
 
    //Update race status to display

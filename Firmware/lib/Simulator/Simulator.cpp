@@ -194,7 +194,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
-   // TestCase 3: Clean race dog 3 with big OK
+   // TestCase 3: Clean race dog 3 with Perfect crossing
    {1, 49140, 1},
    {2, 90878, 1},
    {1, 128477, 0},
@@ -206,9 +206,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {1, 4451008, 0},
    {2, 4519336, 0},
    {2, 8547315, 1},
-   {1, 8556315, 1},
-   {2, 8652902, 0},
-   {2, 8678511, 1},
+   {1, 8551815, 1},
    {1, 8723025, 0},
    {2, 8773945, 0},
    {2, 12570143, 1},
@@ -255,7 +253,9 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
-   // TestCase 4: Clean race dog 4 with big OK
+   {0, 0, 0},
+   {0, 0, 0},
+   // TestCase 4: Clean race dog 4 with Perfect crossing
    {1, 49140, 1},
    {2, 90878, 1},
    {1, 128477, 0},
@@ -274,14 +274,14 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {2, 8773945, 0},
    {2, 12570143, 1},
    {1, 12573143, 1},
-   {2, 12655106, 0},
-   {2, 12718378, 1},
    {1, 12780337, 0},
    {2, 12851298, 0},
    {2, 16420845, 1},
    {1, 16478985, 1},
    {2, 16529890, 0},
    {1, 16573259, 0},
+   {0, 0, 0},
+   {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
@@ -1353,63 +1353,63 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
-   // TestCase 22: Big OK and fault??? Training 21.04.2021
-   {1, 175961, 1},
-   {2, 199205, 1},
-   {1, 283298, 0},
-   {1, 286702, 1},
-   {1, 303619, 0},
-   {2, 319923, 0},
-   {2, 320656, 1},
-   {2, 329274, 0},
-   {2, 8127280, 1},
-   {2, 8136969, 0},
-   {2, 8138577, 1},
-   {1, 8152650, 1},
-   {2, 8304094, 0},
-   {1, 8322892, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
+    // TestCase 22 --> Race3 (GT Team 4) with false start changed to -8ms:
+   {1, -9316, 1},
+   {2, 5176, 1},
+   {2, 12544, 0},
+   {2, 14200, 1},
+   {1, 121952, 0},
+   {2, 137596, 0},
+   {2, 4364748, 1},
+   {2, 4366600, 0},
+   {2, 4368436, 1},
+   {1, 4380404, 1},
+   {1, 4382296, 0},
+   {1, 4384164, 1},
+   {2, 4489344, 0},
+   {1, 4505604, 0},
+   {1, 4730036, 1},
+   {2, 4744732, 1},
+   {1, 4857296, 0},
+   {2, 4872020, 0},
+   {2, 9344132, 1},
+   {1, 9361276, 1},
+   {1, 9552148, 0},
+   {2, 9575988, 0},
+   {2, 15477068, 1},
+   {1, 15494804, 1},
+   {1, 15549608, 0},
+   {1, 15563036, 1},
+   {2, 15580812, 0},
+   {1, 15594584, 0},
+   {1, 15610220, 1},
+   {1, 15613904, 0},
+   {1, 15909920, 1},
+   {2, 15925776, 1},
+   {1, 16042356, 0},
+   {2, 16060036, 0},
+   {2, 20674000, 1},
+   {1, 20690804, 1},
+   {2, 20795000, 0},
+   {1, 20803392, 0},
+   {1, 21335620, 1},
+   {2, 21355152, 1},
+   {2, 21469528, 0},
+   {2, 21473956, 1},
+   {1, 21497288, 0},
+   {2, 21521176, 0},
+   {2, 26444356, 1},
+   {1, 26461276, 1},
+   {2, 26582668, 0},
+   {1, 26600304, 0},
+   {1, 34022032, 1},
+   {2, 34130784, 1},
+   {2, 35350988, 0},
+   {2, 35720860, 1},
+   {2, 35731936, 0},
+   {2, 35768820, 1},
+   {2, 47982712, 0},
+   {1, 48095780, 0},
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
@@ -1456,23 +1456,19 @@ void SimulatorClass::Main()
       //Pending record doesn't contain valid data, this means we've reched the end of our queue
       return;
    }
-   long long llRaceElapsedTime = GET_MICROS - RaceHandler.llRaceStartTime;
 
    //Simulate sensors  
-   if (RaceHandler.RaceState != RaceHandler.RESET && PendingRecord.llTriggerTime <= (long long)llRaceElapsedTime && PendingRecord.llTriggerTime != 0)
+   if ((PendingRecord.llTriggerTime < 0 && RaceHandler.RaceState == RaceHandler.STARTING) || (PendingRecord.llTriggerTime > 0 && RaceHandler.RaceState == RaceHandler.RUNNING)
+      || (RaceHandler.RaceState == RaceHandler.STOPPED && GET_MICROS <= RaceHandler._llRaceEndTime + 2000000))
    {
-         if ((PendingRecord.llTriggerTime < 0 && RaceHandler.RaceState == RaceHandler.STARTING) || (PendingRecord.llTriggerTime > 0 && RaceHandler.RaceState == RaceHandler.RUNNING)
-            || (RaceHandler.RaceState == RaceHandler.STOPPED && GET_MICROS <= RaceHandler._llRaceEndTime + 2000000))
-         {
-            while (PendingRecord.llTriggerTime <= (long long)llRaceElapsedTime && PendingRecord.llTriggerTime != 0)
-            {
-               //ESP_LOGD(__FILE__, "%lld Pending record S%d TriggerTime %lld | %lld", GET_MICROS, PendingRecord.iSensorNumber, RaceHandler.llRaceStartTime + PendingRecord.llTriggerTime, PendingRecord.llTriggerTime);
-               RaceHandler._QueuePush({PendingRecord.iSensorNumber, (RaceHandler.llRaceStartTime + PendingRecord.llTriggerTime), PendingRecord.iState});
-               //And increase pending record
-               _iDataPos++;
-               PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
-            }
-         }
+      while (PendingRecord.llTriggerTime != 0 && PendingRecord.llTriggerTime <= (long long)(GET_MICROS - (RaceHandler.llRaceStartTime - 10000))) //10ms advance added
+      {
+         //ESP_LOGD(__FILE__, "%lld Pending record S%d TriggerTime %lld | %lld", GET_MICROS, PendingRecord.iSensorNumber, RaceHandler.llRaceStartTime + PendingRecord.llTriggerTime, PendingRecord.llTriggerTime);
+         RaceHandler._QueuePush({PendingRecord.iSensorNumber, (RaceHandler.llRaceStartTime + PendingRecord.llTriggerTime), PendingRecord.iState});
+         //And increase pending record
+         _iDataPos++;
+         PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
+      }
    }
 }
 
