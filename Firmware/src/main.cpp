@@ -114,7 +114,8 @@ char cDogCrossingTime[8];
 char cElapsedRaceTime[8];
 char cTeamNetTime[8];
 long long llHeapPreviousMillis = 0;
-long long llHeapInterval = 30000;
+long long llHeapInterval = 5000;
+bool error = false;
 
 //Initialise Lights stuff
 #ifdef WS281x
@@ -332,6 +333,8 @@ void setup()
    //Initialize GPS Serial port and class
    GPSSerial.begin(9600, SERIAL_8N1, 39, 36);
    GPSHandler.init(&GPSSerial);
+
+   ESP_LOGI(__FILE__, "Setup running on core %d", xPortGetCoreID());
 }
 
 void loop()
@@ -557,13 +560,14 @@ void loop()
    }
 
    //heap memory monitor
-   /*long long llCurrentMillis = GET_MICROS / 1000;
+   long long llCurrentMillis = GET_MICROS / 1000;
    if (llCurrentMillis - llHeapPreviousMillis > llHeapInterval)
    {
-      ESP_LOGI(__FILE__, "Elapsed system time: %llu. Heap caps free size: %i\n", GET_MICROS / 1000, heap_caps_get_free_size(MALLOC_CAP_8BIT));
+      ESP_LOGI(__FILE__, "Elapsed system time: %llu. Heap caps free size: %i", GET_MICROS / 1000, heap_caps_get_free_size(MALLOC_CAP_8BIT));
+      ESP_LOGI(__FILE__, "Heap integrity OK? %i", heap_caps_check_integrity_all(error));
       llHeapPreviousMillis = llCurrentMillis;
    }
-   */
+   
    if (RaceHandler.iCurrentDog != iCurrentDog && RaceHandler.RaceState == RaceHandler.RUNNING)
    {
       ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", RaceHandler.iPreviousDog + 1, RaceHandler.GetDogTime(RaceHandler.iPreviousDog, -2), RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
@@ -575,14 +579,9 @@ void loop()
    if ((GET_MICROS / 1000 - lLastSerialOutput) > 60000)
    {
       //ESP_LOGI(__FILE__, "%llu: Elapsed time: %s", GET_MICROS / 1000, cElapsedRaceTime);
-      //ESP_LOGI(__FILE__, "Free heap: %i", system_get_free_heap_size());
-      if (RaceHandler.RaceState == RaceHandler.RUNNING)
-      {
-         ESP_LOGI(__FILE__, "Dog %i: %ss", RaceHandler.iCurrentDog, RaceHandler.GetDogTime(RaceHandler.iCurrentDog));
-      }
+      ESP_LOGI(__FILE__, "Free heap: %i", esp_get_free_heap_size());
       lLastSerialOutput = GET_MICROS / 1000;
-   }
-   */
+   }*/
 
    //Cleanup variables used for checking if something changed
    iCurrentDog = RaceHandler.iCurrentDog;

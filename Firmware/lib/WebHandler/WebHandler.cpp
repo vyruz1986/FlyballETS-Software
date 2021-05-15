@@ -223,9 +223,9 @@ void WebHandlerClass::init(int webPort)
 void WebHandlerClass::loop()
 {
    //When race is starting, running or stopped (race time > 0)
-   if ((RaceHandler.RaceState != RaceHandler.RESET))
+   if (RaceHandler.RaceState == RaceHandler.STARTING || RaceHandler.RaceState == RaceHandler.RUNNING)
    {
-      //Send race data each 200ms
+      //Send race data each 750ms
       if (millis() - _lLastRaceDataBroadcast > _lRaceDataBroadcastInterval)
       {
          _SendRaceData();
@@ -245,7 +245,7 @@ void WebHandlerClass::loop()
       //       auto client = _ws->client(i);
       //       client->ping(ping, sizeof ping);
       //    }
-      _ws->pingAll();
+      //_ws->pingAll();
    }
 }
 
