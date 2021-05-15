@@ -68,7 +68,10 @@ void LightsControllerClass::init(uint8_t iLatchPin, uint8_t iClockPin, uint8_t i
 /// </summary>
 void LightsControllerClass::Main()
 {
-   HandleStartSequence();
+   if (byOverallState == STARTING)
+   {
+      HandleStartSequence();
+   }
 
    //Check if we have to toggle any lights
    for (int i = 0; i < 6; i++)
@@ -115,52 +118,48 @@ void LightsControllerClass::Main()
 void LightsControllerClass::HandleStartSequence()
 {
    //This function takes care of the starting lights sequence
-   //First check if the overall state of this class is 'STARTING'
-   if (byOverallState == STARTING)
+   //Check if the lights have been programmed yet
+   if (!_bStartSequenceStarted)
    {
-      //The class is in the 'STARTING' state, check if the lights have been programmed yet
-      if (!_bStartSequenceStarted)
+      //Start sequence is not yet started, we need to schedule the lights on/off times
+
+      //Set schedule for RED light
+      _lLightsOnSchedule[1] = GET_MICROS / 1000;         //Turn on NOW
+      _lLightsOutSchedule[1] = GET_MICROS / 1000 + 1000; //keep on for 1 second
+
+      //Set schedule for YELLOW1 light
+      _lLightsOnSchedule[2] = GET_MICROS / 1000 + 1000;  //Turn on after 1 second
+      _lLightsOutSchedule[2] = GET_MICROS / 1000 + 2000; //Turn off after 2 seconds
+
+      //Set schedule for YELLOW2 light
+      _lLightsOnSchedule[4] = GET_MICROS / 1000 + 2000;  //Turn on after 2 seconds
+      _lLightsOutSchedule[4] = GET_MICROS / 1000 + 3000; //Turn off after 3 seconds
+
+      //Set schedule for GREEN light
+      _lLightsOnSchedule[5] = GET_MICROS / 1000 + 3000;  //Turn on after 3 seconds
+      _lLightsOutSchedule[5] = GET_MICROS / 1000 + 4000; //Turn off after 4 seconds
+
+      _bStartSequenceStarted = true;
+   }
+   //Check if the start sequence is busy
+   bool bStartSequenceBusy = false;
+   for (int i = 0; i < 6; i++)
+   {
+      if (_lLightsOnSchedule[i] > 0 || _lLightsOutSchedule[i] > 0)
       {
-         //Start sequence is not yet started, we need to schedule the lights on/off times
-
-         //Set schedule for RED light
-         _lLightsOnSchedule[1] = GET_MICROS / 1000;         //Turn on NOW
-         _lLightsOutSchedule[1] = GET_MICROS / 1000 + 1000; //keep on for 1 second
-
-         //Set schedule for YELLOW1 light
-         _lLightsOnSchedule[2] = GET_MICROS / 1000 + 1000;  //Turn on after 1 second
-         _lLightsOutSchedule[2] = GET_MICROS / 1000 + 2000; //Turn off after 2 seconds
-
-         //Set schedule for YELLOW2 light
-         _lLightsOnSchedule[4] = GET_MICROS / 1000 + 2000;  //Turn on after 2 seconds
-         _lLightsOutSchedule[4] = GET_MICROS / 1000 + 3000; //Turn off after 3 seconds
-
-         //Set schedule for GREEN light
-         _lLightsOnSchedule[5] = GET_MICROS / 1000 + 3000;  //Turn on after 3 seconds
-         _lLightsOutSchedule[5] = GET_MICROS / 1000 + 4000; //Turn off after 4 seconds
-
-         _bStartSequenceStarted = true;
+         bStartSequenceBusy = true;
       }
-      //Check if the start sequence is busy
-      bool bStartSequenceBusy = false;
-      for (int i = 0; i < 6; i++)
-      {
-         if (_lLightsOnSchedule[i] > 0 || _lLightsOutSchedule[i] > 0)
-         {
-            bStartSequenceBusy = true;
-         }
-      }
-      //Check if we should start the timer (GREEN light on)
-      if (CheckLightState(GREEN) == ON && RaceHandler.RaceState == RaceHandler.STARTING)
-      {
-         RaceHandler.StartTimers();
-         ESP_LOGD(__FILE__, "%llu: GREEN light is ON!", GET_MICROS / 1000);
-      }
-      if (!bStartSequenceBusy)
-      {
-         _bStartSequenceStarted = false;
-         byOverallState = STARTED;
-      }
+   }
+   //Check if we should start the timer (GREEN light on)
+   if (CheckLightState(GREEN) == ON && RaceHandler.RaceState == RaceHandler.STARTING)
+   {
+      RaceHandler.StartTimers();
+      ESP_LOGD(__FILE__, "%llu: GREEN light is ON!", GET_MICROS / 1000);
+   }
+   if (!bStartSequenceBusy)
+   {
+      _bStartSequenceStarted = false;
+      byOverallState = STARTED;
    }
 }
 
