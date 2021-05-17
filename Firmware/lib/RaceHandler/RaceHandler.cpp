@@ -209,9 +209,13 @@ void RaceHandlerClass::Main()
                ESP_LOGI(__FILE__, "Dog 1 FALSE START!");
             }
          }
-         //Normal race handling (positive cross)
-         else if (_byDogState == GOINGIN && (iCurrentDog != 0 || (iCurrentDog == 0 && _bRerunBusy)) && _bS1StillSafe)
+         else if ((_byDogState == GOINGIN && (iCurrentDog != 0 || (iCurrentDog == 0 && _bRerunBusy)) && _bS1StillSafe)  // Normal race handling (positive cross)
+                  || (_byDogState == COMINGBACK && iCurrentDog == iNextDog && !_bS1StillSafe))                          // or after false detection of OK/ok crossing while re-run
          {
+            if (!_bS1StillSafe)
+            {
+               ESP_LOGI(__FILE__, "There was false detection of ok / OK crossing while re-run.");
+            }
             _llDogEnterTimes[iCurrentDog] = STriggerRecord.llTriggerTime;
             _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = _llDogEnterTimes[iCurrentDog] - _llLastDogExitTime;
             _bS1StillSafe = false;
@@ -224,7 +228,8 @@ void RaceHandlerClass::Main()
             ESP_LOGI(__FILE__, "Dog %i going in crossed S1 safely. Clear fault if rerun.", iCurrentDog + 1);
          }
          //Check if this is a next dog which is too early (we were expecting a dog to come back)
-         else if (_byDogState == COMINGBACK && !_bS1StillSafe && (STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) > 2000000) //Filter out S1 HIGH signals that are < 2 seconds after dog enter time
+         else if (_byDogState == COMINGBACK && !_bS1StillSafe && (STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) > 2000000 //Filter out S1 HIGH signals that are < 2 seconds after dog enter time
+                  && (iCurrentDog != iNextDog)) // Exclude scenario if next dog is equal current dog as this can't be comming back dog.
          {
             //Set fault light for next dog.
             SetDogFault(iNextDog, ON);
