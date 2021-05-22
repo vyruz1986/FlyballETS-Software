@@ -36,7 +36,7 @@ void RaceHandlerClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
    _iS2Pin = iS2Pin;
    ResetRace();
    _iCurrentRaceId = 0;
-   Serial.printf("Run Direction from settings: %s", SettingsManager.getSetting("RunDirectionInverted").c_str());
+   ESP_LOGD(__FILE__, "Run Direction from settings: %s", SettingsManager.getSetting("RunDirectionInverted").c_str());
    if (SettingsManager.getSetting("RunDirectionInverted").equals("1"))
    {
       ToggleRunDirection();
@@ -133,7 +133,7 @@ void RaceHandlerClass::Main()
       }
       
       ESP_LOGI(__FILE__, "S%i | TT:%lld | T:%lld | St:%i", STriggerRecord.iSensorNumber, STriggerRecord.llTriggerTime, STriggerRecord.llTriggerTime - llRaceStartTime, STriggerRecord.iSensorState);
-
+      
       //Calculate what our next dog will be
       uint8_t iNextDogChanged = iNextDog;
       if (_bFault && iCurrentDog == 3)
@@ -509,6 +509,13 @@ void RaceHandlerClass::Main()
       }
    }
 
+   /*//Check if race state should be changed to RUNNING
+   if (RaceState == STARTING && GET_MICROS >= llRaceStartTime)
+   {
+      _ChangeRaceState(RUNNING);
+      ESP_LOGD(__FILE__, "%llu: GREEN light is ON!", GET_MICROS / 1000);
+   }*/
+      
    //Update racetime
    if (RaceState == RUNNING)
    {
