@@ -110,10 +110,10 @@ void RaceHandlerClass::Main()
    {
       //Get next record from queue
       STriggerRecord STriggerRecord = _QueuePop();
-      //If the transition string is not empty and is was not updated for 200ms then we have to clear it.
+      //If the transition string is not empty and it wasn't updated for 200ms then we have to clear it.
       if (_strTransition.length() != 0 && (GET_MICROS - _llLastTransitionStringUpdate) > 200000)
       {
-         //If dog state is GOINGIN we could have false detection is entering dog so we need to set S1StillSafe flag
+         //If dog state is GOINGIN we could have false detection of entering dog so we need to set S1StillSafe flag
          if (_byDogState == GOINGIN)
          {
             _bS1StillSafe = true;
@@ -209,13 +209,9 @@ void RaceHandlerClass::Main()
                ESP_LOGI(__FILE__, "Dog 1 FALSE START!");
             }
          }
-         else if ((_byDogState == GOINGIN && (iCurrentDog != 0 || (iCurrentDog == 0 && _bRerunBusy)) && _bS1StillSafe)  // Normal race handling (positive cross)
-                  || (_byDogState == COMINGBACK && iCurrentDog == iNextDog && !_bS1StillSafe))                          // or after false detection of OK/ok crossing while re-run
+         // Normal race handling (positive cross)
+         else if (_byDogState == GOINGIN && (iCurrentDog != 0 || (iCurrentDog == 0 && _bRerunBusy)) && _bS1StillSafe)
          {
-            if (!_bS1StillSafe)
-            {
-               ESP_LOGI(__FILE__, "There was false detection of ok / OK crossing while re-run.");
-            }
             _llDogEnterTimes[iCurrentDog] = STriggerRecord.llTriggerTime;
             _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = _llDogEnterTimes[iCurrentDog] - _llLastDogExitTime;
             _bS1StillSafe = false;
@@ -254,6 +250,16 @@ void RaceHandlerClass::Main()
                ESP_LOGI(__FILE__, "Re-run for dog %i", iNextDog + 1);
             }
             _ChangeDogNumber(iNextDog);
+         }
+         //Special case after false detection of "ok crossing" --> S1 activated 100ms after "ok crossing" detection or re-rung with next dog = current dog
+         else if (_byDogState == COMINGBACK && _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] && !_bS1StillSafe &&
+                  (((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) > 100000 && (STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) < 1000000)
+                  || (_bRerunBusy && iCurrentDog == iNextDog)))
+         {
+            _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] = false;
+            _llDogEnterTimes[iCurrentDog] = STriggerRecord.llTriggerTime;
+            _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = _llDogEnterTimes[iCurrentDog] - _llLastDogExitTime;
+            ESP_LOGI(__FILE__, "False 'ok crossing' detected. Recalculate dog %i times.", iCurrentDog + 1);
          }
       }
 
@@ -478,12 +484,13 @@ void RaceHandlerClass::Main()
                   }
                   else
                   {
+                  _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
                   ESP_LOGI(__FILE__, "Unmeasurable ok crossing for dog %i.", iCurrentDog + 1);
                   }
                }
                else if (_byDogState == COMINGBACK && strFirstTransitionChar == "A")
                {
-                  //ESP_LOGD(__FILE__, "Dog %i fault. Tstring starting with A.", iCurrentDog + 1);
+                  ESP_LOGD(__FILE__, "Dog %i fault. Tstring starting with A.", iCurrentDog + 1);
                }
                else
                //It has to be dog going in + sensors noise
@@ -636,6 +643,13 @@ void RaceHandlerClass::ResetRace()
          for (auto &bDogBigOK : Dog)
          {
             bDogBigOK = false;
+         }
+      }
+      for (auto &Dog : _bDogSmallok)
+      {
+         for (auto &bDogSmallok : Dog)
+         {
+            bDogSmallok = false;
          }
       }
       for (auto &Dog : _bDogMissedGateGoingin)

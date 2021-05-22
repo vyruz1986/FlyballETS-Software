@@ -100,6 +100,7 @@ private:
    bool _bDogManualFaults[4];
    bool _bDogPerfectCross[4][4];
    bool _bDogBigOK[4][4];
+   bool _bDogSmallok[4][4];
    bool _bDogMissedGateGoingin[4][4];
    bool _bDogMissedGateComingback[4][4];
    bool _bRerunBusy;

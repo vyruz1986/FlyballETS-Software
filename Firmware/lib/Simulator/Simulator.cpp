@@ -1353,7 +1353,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
-    // TestCase 22 --> Race3 (GT Team 4) with false start changed to -9ms:
+    // TestCase 22 --> Race3 (GT Team 4) with false start changed to -9ms
    {1, -9316, 1},
    {2, 5176, 1},
    {2, 12544, 0},
@@ -1414,7 +1414,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
-   // TestCase 23 --> Dog 3 late re-run with sensor noise (BAbBab):
+   // TestCase 23 --> Dog 3 false ok crossing while re-run (BAbBab)
    {1, 152328, 1},
    {2, 173930, 1},
    {1, 299271, 0},
