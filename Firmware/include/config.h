@@ -25,7 +25,7 @@
 #define Simulate false          // Set to true to enable race simulation (see Simulator.h/.cpp)
 #define JTAG false              // when set to true you need converter board with pins remappig and jtag + programing port. It deactite featuers: LSR BTN+LED, battery sensor, switch button
 #define Accuracy2digits true    // Change accuracy of displayed results from 0.001s to 0.01s except first dog if entry time in range from -0.095s to +0.095s
-#define NumSimulatedRaces 24    // number of prepeared simulated races. Sererial interface command to change interface: e.g. "race 1"
+#define NumSimulatedRaces 25    // number of prepeared simulated races. Sererial interface command to change interface: e.g. "race 1"
 //#define WiFiOFF                 // If defined all WiFi features are off: OTA, Web server. Please be carefull. Keep remote board/antenna away from ESP32 to avoid interferences.
 #define BatteryCalibration false// after setting to true LCD will display analog read value from battery pin (range 0-4095). This is handfull for battery volate curve definition (dPinVoltage)
 
