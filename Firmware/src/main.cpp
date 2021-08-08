@@ -485,9 +485,17 @@ void loop()
       iBatteryVoltage = BatterySensor.GetBatteryVoltage();
       uint16_t iBatteryPercentage = BatterySensor.GetBatteryPercentage();
       String sBatteryPercentage;
+      if (iBatteryPercentage == 1000)
+      {
+         sBatteryPercentage = "!!!";
+         LightsController.ResetLights();
+         esp_deep_sleep_start();
+      }
       if (iBatteryPercentage == 0)
       {
-         sBatteryPercentage = "LOW";
+         sBatteryPercentage = "OFF";
+         LightsController.ResetLights();
+         esp_deep_sleep_start();
       }
       else
       {

@@ -331,7 +331,7 @@ void RaceHandlerClass::Main()
             else if ((iCurrentDog == 3 && _bFault && !_bRerunBusy) //If current dog is dog 4 and a fault exists, we have to initiate rerun sequence
                      || _bRerunBusy)                               //Or if rerun is busy (and faults still exist)
             {
-               //Dog 4 came in but there is a fault, we have to initiate the rerun sequence
+               //Dog 4 came back but there is a fault, we have to initiate the rerun sequence
                _bRerunBusy = true;
                //Reset timers for this dog
                _llDogEnterTimes[iNextDog] = STriggerRecord.llTriggerTime;
