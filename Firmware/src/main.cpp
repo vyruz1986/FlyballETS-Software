@@ -485,7 +485,19 @@ void loop()
       iBatteryVoltage = BatterySensor.GetBatteryVoltage();
       uint16_t iBatteryPercentage = BatterySensor.GetBatteryPercentage();
       String sBatteryPercentage;
-      if (iBatteryPercentage == 0)
+      if (iBatteryPercentage == 9999)
+      {
+         sBatteryPercentage = "!!!";
+         LCDController.UpdateField(LCDController.BattLevel, sBatteryPercentage);
+         LightsController.ResetLights();
+         delay(3000);
+         esp_deep_sleep_start();
+      }
+      else if (iBatteryPercentage == 9911)
+      {
+         sBatteryPercentage = "USB";
+      }
+      else if (iBatteryPercentage == 0)
       {
          sBatteryPercentage = "LOW";
       }
@@ -493,6 +505,7 @@ void loop()
       {
          sBatteryPercentage = String(iBatteryPercentage);
       }
+
       while (sBatteryPercentage.length() < 3)
       {
          sBatteryPercentage = " " + sBatteryPercentage;

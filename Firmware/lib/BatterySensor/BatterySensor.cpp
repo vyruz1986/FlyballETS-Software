@@ -53,23 +53,27 @@ void BatterySensorClass::CheckBatteryVoltage()
       //ESP32 has 12-bit ADC (0-4095), theoretically 3.3V = 4095 in analogRead value
       //Theoreticallly this voltage divider allows reading 0-14.19V (3.3V multplied by divider 4.3),
       //In order to measure true range I recommend to activate in conifg.h "BatteryCalibration" and build table
-      //of true ready by ESP32 analogRead value for different power supply (lab power supply) points. In my case it was
+      //of true ready by ESP32 analogRead value for different power supply (lab power supply) points. Example of mapping:
       // power supply (V)   -->  analogRead from LCD
-      //  9,5                       2497
-      // 10,5                       2768
-      // 11,5                       3071
-      // 12,0                       3251
-      // 12,5                       3456
-      // 13,0                       3683
-      // 13,5                       3952
-      // 13,75                      4094
+      // 4.979                   1231
+      // 8.978                   2370  
+      // 9.477                   2512
+      // 10.478                  2806   
+      // 10.676                  2865
+      // 10.878                  2928
+      // 11.080                  2990
+      // 11.578                  3156
+      // 11.782                  3230
+      // 11.976                  3300
+      // 12.278                  3422
+      // 12.577                  3550
       //Theoretical voltage divider is 4.3, but true one based on comparision of
-      //supply voltage and pin35/R10K voltage was in my case 4.3223
+      //supply voltage and pin35/R10K voltage was (with load) 4.3172
       //
       //For easy simplification of analogRead mapping to R10k/pin35 voltage linear function map() can be used,
       //but in practice characteristic is not linear so for more accurate values calculated function should be used.
       //I use Excel for that with first selecting best maching trend line and later calucate it using this fucntion
-      //where y is range of cells (in one row, not column!) with values of R10k/pin35 voltage (supply voltage divided by 4.3223)
+      //where y is range of cells (in one row, not column!) with values of R10k/pin35 voltage (supply voltage divided by 4.3172)
       //and x is range of cells (in one row, not column!) with analogRead values
       // equation: y = c2 * x^2 + c1 * x + b
       // c2: =INDEKS(REGLINP(y; x^{1;2});1)
@@ -78,9 +82,9 @@ void BatterySensorClass::CheckBatteryVoltage()
 
       //First calculate voltage at ADC pin
       //int iPinVoltage = map(_iAverageBatteryReading, 958, 4095, 916, 3150);
-      double dPinVoltage = (-0.00017784) * pow(_iAverageBatteryReading, 2) + 1.783677 * _iAverageBatteryReading - 1145.2;
+      double dPinVoltage = (-0.00012493) * pow(_iAverageBatteryReading, 2) + 1.4559 * _iAverageBatteryReading - 671.7;
       int iPinVoltage = dPinVoltage;
-      _iBatteryVoltage = iPinVoltage * 4.3223;
+      _iBatteryVoltage = iPinVoltage * 4.3172;
       _iNumberOfBatteryReadings = 0;
    }
 }
@@ -98,28 +102,42 @@ uint16_t BatterySensorClass::GetBatteryVoltage()
 }
 
 /// <summary>
-///   Gets battery percentage.
+///   Gets battery percentage or analog pin read if calibrqtion mode.
+///   Assumed working range is 10.5V - 12.3V what is save for 3S2P and 3S4P li-ion batteries
+
 /// </summary>
 ///
 /// <returns>
-///   The battery percentage.
+///   The battery percentage or analog pin read or special tags.
+///   Tag 0    - when voltage is below 10.5V and above 10V "LOW" will be displayed
+///   Tag 9911 - when voltage is below 5V it would be assumed that USB is connected to ESP32
+///   Tag 9999 - when voltage is below 10V (and above 5V) we are close to danger li-ion 9V so
+///               "!!!" will be displayed and ESP32 turn into deep sleep mode 
 /// </returns>
 uint16_t BatterySensorClass::GetBatteryPercentage()
 {
 #if BatteryCalibration
    return _iAverageBatteryReading;
 #else
-   if (_iBatteryVoltage < 10900)
+   if (_iBatteryVoltage < 5000)
+   {
+      return 9911;
+   }
+   if (_iBatteryVoltage >= 5000 && _iBatteryVoltage < 10000)
+   {
+      return 9999;
+   }
+   else if (_iBatteryVoltage >= 10000 && _iBatteryVoltage < 10500)
    {
       return 0;
    }
-   else if (_iBatteryVoltage > 12460)
+   else if (_iBatteryVoltage > 12300)
    {
       return 100;
    }
    else
    {
-      uint16_t iBatteryPercentage = map(_iBatteryVoltage, 10900, 12460, 1, 100);
+      uint16_t iBatteryPercentage = map(_iBatteryVoltage, 10500, 12300, 1, 100);
       return iBatteryPercentage;
    }
 #endif

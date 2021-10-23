@@ -110,8 +110,8 @@ void RaceHandlerClass::Main()
    {
       //Get next record from queue
       STriggerRecord STriggerRecord = _QueuePop();
-      //If the transition string is not empty and it wasn't updated for 200ms then we have to clear it.
-      if (_strTransition.length() != 0 && (GET_MICROS - _llLastTransitionStringUpdate) > 200000)
+      //If the transition string is not empty and it wasn't updated for 350ms then it was noise and we have to clear it.
+      if (_strTransition.length() != 0 && (GET_MICROS - _llLastTransitionStringUpdate) > 350000)
       {
          //If dog state is GOINGIN we could have false detection of entering dog so we need to set S1StillSafe flag
          if (_byDogState == GOINGIN)
@@ -121,7 +121,7 @@ void RaceHandlerClass::Main()
          }
          _strTransition = "";
          _bGatesClear = true;
-         ESP_LOGD(__FILE__, "Reset transition strings as not updated since 200ms.");
+         ESP_LOGD(__FILE__, "Reset transition strings as not updated since 350ms.");
          ESP_LOGI(__FILE__, "Gate: CLEAR.");
       }
       
@@ -331,7 +331,7 @@ void RaceHandlerClass::Main()
             else if ((iCurrentDog == 3 && _bFault && !_bRerunBusy) //If current dog is dog 4 and a fault exists, we have to initiate rerun sequence
                      || _bRerunBusy)                               //Or if rerun is busy (and faults still exist)
             {
-               //Dog 4 came in but there is a fault, we have to initiate the rerun sequence
+               //Dog 4 came back but there is a fault, we have to initiate the rerun sequence
                _bRerunBusy = true;
                //Reset timers for this dog
                _llDogEnterTimes[iNextDog] = STriggerRecord.llTriggerTime;

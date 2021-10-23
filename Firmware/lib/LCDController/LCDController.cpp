@@ -59,7 +59,7 @@ void LCDControllerClass::init(LiquidCrystal *Clcd1, LiquidCrystal *Clcd2)
 #if BatteryCalibration
    _SlcdfieldFields[BattLevel] = {4, 27, 4, String("0000")};
 #else
-   _SlcdfieldFields[BattLevel] = {4, 27, 3, String("LOW")};
+   _SlcdfieldFields[BattLevel] = {4, 27, 3, String("UNK")};
 #endif
    _SlcdfieldFields[RaceState] = {1, 30, 7, String(" READY ")};
    _SlcdfieldFields[TeamTime] = {2, 33, 7, String("  0.000")};
