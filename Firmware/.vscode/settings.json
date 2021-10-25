@@ -12,7 +12,8 @@
       "sstream": "cpp",
       "cstddef": "cpp",
       "type_traits": "cpp",
-      "regex": "cpp"
+      "regex": "cpp",
+      "random": "cpp"
    },
    "C_Cpp.dimInactiveRegions": true
 }

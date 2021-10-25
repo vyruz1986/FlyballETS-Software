@@ -36,10 +36,15 @@ void RaceHandlerClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
    _iS2Pin = iS2Pin;
    ResetRace();
    _iCurrentRaceId = 0;
-   ESP_LOGD(__FILE__, "Run Direction from settings: %s", SettingsManager.getSetting("RunDirectionInverted").c_str());
    if (SettingsManager.getSetting("RunDirectionInverted").equals("1"))
    {
-      ToggleRunDirection();
+      _bRunDirectionInverted = true;
+      LCDController.UpdateField(LCDController.BoxDirection, "<--");
+      ESP_LOGD(__FILE__, "Run direction from settings: inverted");
+   }
+   else
+   {
+      ESP_LOGD(__FILE__, "Run direction from settings: normal");
    }
 }
 
@@ -1314,10 +1319,12 @@ void RaceHandlerClass::ToggleRunDirection()
    if (_bRunDirectionInverted)
    {
       LCDController.UpdateField(LCDController.BoxDirection, "<--");
+      ESP_LOGD(__FILE__, "Run direction changed to: inverted");
    }
    else
    {
       LCDController.UpdateField(LCDController.BoxDirection, "-->");
+      ESP_LOGD(__FILE__, "Run direction changed to: normal");
    }
 }
 

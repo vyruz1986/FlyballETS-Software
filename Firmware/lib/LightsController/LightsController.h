@@ -21,19 +21,13 @@
 #include <NeoPixelBus.h>
 #include "config.h"
 #include "Structs.h"
-#ifdef WS281x
-
-#endif // WS281x
 
 class LightsControllerClass
 {
 protected:
 public:
-#ifdef WS281x
    void init(NeoPixelBus<NeoRgbFeature, WS_METHOD> *LightsStrip);
-#else
-   void init(uint8_t iLatchPin, uint8_t iClockPin, uint8_t iDataPin);
-#endif
+
    //Overal state of this class
    enum OverallStates
    {
@@ -72,18 +66,9 @@ public:
    stLightsState GetLightsState();
 
 private:
-#ifdef WS281x
    //Neopixel object
    //Adafruit_NeoPixel _LightsStrip;
    NeoPixelBus<NeoRgbFeature, WS_METHOD> *_LightsStrip;
-#else
-   //Pin connected to ST_CP of 74HC595
-   uint8_t _iLatchPin = 12;
-   //Pin connected to SH_CP of 74HC595
-   uint8_t _iClockPin = 13;
-   //Pin connected to DS of 74HC595
-   uint8_t _iDataPin = 11;
-#endif // WS281x
 
    //This byte contains the combined states of all ligths at any given time
    byte _byCurrentLightsState = 255;
@@ -108,7 +93,6 @@ private:
       YELLOW2,
       GREEN};
 
-#ifdef WS281x
    struct SNeoPixelConfig
    {
       //uint32_t iColor;
@@ -116,7 +100,6 @@ private:
       uint8_t iPixelNumber;
    };
    SNeoPixelConfig _GetNeoPixelConfig(Lights byLight);
-#endif // WS281x
 };
 
 extern LightsControllerClass LightsController;

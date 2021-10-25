@@ -37,6 +37,8 @@
    #include <WiFiUdp.h>
 #endif
 #include <EEPROM.h>
+#include <NeoPixelBus.h>
+#include <ESPmDNS.h>
 //#include <time.h>
 
 //Private libs
@@ -50,42 +52,52 @@
 #include <LightsController.h>
 #include <BatterySensor.h>
 
+
 /*List of pins and the ones used (Lolin32 board):
    - 34: S1 (handler side) photoelectric sensor. ESP32 has no pull-down resistor on 34 pin, but pull-down anyway by 1kohm resistor on sensor board
-   - 33: S2 (box side) photoelectric sensor | with jtag port used for LCD Data4
+   - 33: S2 (box side) photoelectric sensor
 
    - 27: LCD Data7
-   - 14: LCD Data6                       with jtag board switched to 32; jtag uses 14 for MTMS
+   - 12: LCD Data6
    - 26: LCD Data5
-   - 13: LCD Data4                       with jtag board switched to 33; jtag uses 13 for MTCK
-   -  2: LCD1 (line 1&2) enable pin
-   - 15: LCD2 (line 3&4) enable pin      with jtag board switched to  5; jtag uses 15 for MTDO
+   - 13: LCD Data4
+   - 16: LCD1 (line 1&2) enable pin
+   - 17: LCD2 (line 3&4) enable pin
    - 25: LCD RS Pin
 
-   -  0: WS2811B lights data pin / Lights 74HC595 clock pin
-   - xx: <free> / Lights 74HC595 data pin
-   - xx: <free> / Lights 74HC595 latch pin
+   - 22: WS2811B lights data pin
 
-   - 19: remote D0
-   - 23: remote D1
-   - 18: remote D2
-   - 17: remote D3
-   - 16: remote D4
-   -  4: remote D5
+   - 35: battery sensor pin
 
-   - 35: battery sensor pin               swithed to S2 (box side)
-
-   -  5: Side switch button               disabled with jtag board to act as 15 pin LCD2 (line 3&4)
-
-   - 32: Laser trigger button             disabled with jtag board to act as 14 pin LCD Data6
-   - 12: Laser output                     disabled with jtag board; jtag uses 12 for MTDI
+   - 32: Laser trigger button
+   -  0: Laser output
    
-   -  1: free/TX, but used with jtag board
-   -  3: free/RX, but used with jtag
-   -  0: free to avoid flash programming difficulties via usb/serial
-   - 21: GPS PPS signal
+   -  5: free to avoid build in led collision
+   -  1: free/TX
+   -  3: free/RX
+   
+   - 21:    GPS PPS signal
    - 36/VP: GPS rx (ESP tx)
    - 39/VN: GPS tx (ESP rx)
+
+   -  2: SD card Data0
+   -  4: SD card Data1
+   - 14: SD card Clock
+   - 15: SD card Command
+
+   - 19: dataOutPin (Q7) for 74HC166
+   - 23: latchPin (CE)   for 74HC166
+   - 18: clockPin (CP)   for 74HC166
+
+74HC166 pinouts
+   - D0: Side switch button
+   - D1: remote D0 start/stop
+   - D2: remote D1 reset
+   - D3: remote D2 dog 1 fault
+   - D4: remote D5 dog 4 fault
+   - D5: remote D4 dog 3 fault
+   - D6: remote D3 dog 2 fault
+   - D7: not connected (pull down via 10kOhm resistor)
 */
 
 //Set simulate to true to enable simulator class (see Simulator.cpp/h)
@@ -93,20 +105,8 @@
 #include "Simulator.h"
 #endif
 
-#ifdef WS281x
-//#include <Adafruit_NeoPixel.h>
-#include <NeoPixelBus.h>
-#endif // WS281x
-
-#ifdef ESP32
-#include <ESPmDNS.h>
-#endif
 uint8_t iS1Pin = 34;
-#if !JTAG
 uint8_t iS2Pin = 33;
-#else
-uint8_t iS2Pin = 35;
-#endif
 uint8_t iCurrentDog;
 uint8_t iCurrentRaceState;
 
@@ -118,28 +118,19 @@ long long llHeapInterval = 5000;
 bool error = false;
 
 //Initialise Lights stuff
-#ifdef WS281x
-uint8_t iLightsDataPin = 22; // escaped from 0 to avoid issues with flash programming
+uint8_t iLightsDataPin = 22;
 NeoPixelBus<NeoRgbFeature, WS_METHOD> LightsStrip(5 * LIGHTSCHAINS, iLightsDataPin);
 
-#else
-uint8_t iLightsClockPin = 8;
-uint8_t iLightsDataPin = 9;
-uint8_t iLightsLatchPin = 21;
-#endif // WS281x
-
-#if !JTAG
 //Battery variables
 int iBatterySensorPin = 35;
 uint16_t iBatteryVoltage = 0;
 
 //Other IO's
 uint8_t iLaserTriggerPin = 32;
-uint8_t iLaserOutputPin = 12;
+uint8_t iLaserOutputPin = 0;
 boolean bLaserState = false;
-uint8_t iSideSwitchPin = 5;
-stInputSignal SideSwitch = {iSideSwitchPin, 0, 500};
-#endif
+//uint8_t iSideSwitchPin = 5;
+stInputSignal SideSwitch = {0, 500};
 
 //Set last serial output variable
 unsigned long lLastSerialOutput = 0;
@@ -147,29 +138,28 @@ unsigned long lLastSerialOutput = 0;
 //Battery % update on LCD timer variable
 unsigned long lLastBatteryLCDupdate = 0;
 
-//remote control pins
-int iRC0Pin = 19;
-int iRC1Pin = 23;
-int iRC2Pin = 18;
-int iRC3Pin = 17;
-int iRC4Pin = 16;
-int iRC5Pin = 4;
+//control pins for 74HC166 (remote + side switch)
+uint8_t iLatchPin = 23;
+uint8_t iClockPin = 18;
+uint8_t iDataInPin = 19;
+byte bDataIn = 0;
+
+//control pins for SD card
+uint8_t iSDdata0Pin = 2;
+uint8_t iSDdata1Pin = 4;
+uint8_t iSDclockPin = 14;
+uint8_t iSDcmdPin = 15;
 
 //Array to hold last time button presses
 unsigned long lLastRCPress[6] = {0, 0, 0, 0, 0, 0};
 
-#if !JTAG
+//control pins for LCD
+uint8_t iLCDE1Pin = 16;
+uint8_t iLCDE2Pin = 17;
 uint8_t iLCDData4Pin = 13;
-uint8_t iLCDData6Pin = 14;
-uint8_t iLCDE2Pin = 15;
-#else
-uint8_t iLCDData4Pin = 33;
-uint8_t iLCDData6Pin = 32;
-uint8_t iLCDE2Pin = 5;
-#endif
 uint8_t iLCDData5Pin = 26;
+uint8_t iLCDData6Pin = 12;
 uint8_t iLCDData7Pin = 27;
-uint8_t iLCDE1Pin = 2;
 uint8_t iLCDRSPin = 25;
 
 LiquidCrystal lcd(iLCDRSPin, iLCDE1Pin, iLCDData4Pin, iLCDData5Pin, iLCDData6Pin, iLCDData7Pin);  //declare two LCD's, this will be line 1&2
@@ -206,6 +196,8 @@ void StartStopRace();
 void StopRaceMain();
 void StartRaceMain();
 void serialEvent();
+void ButtonsRead();
+String GetButtonString();
 
 void setup()
 {
@@ -213,19 +205,23 @@ void setup()
    Serial.begin(115200);
    SettingsManager.init();
 
+   pinMode(5, OUTPUT);
+
    pinMode(iS1Pin, INPUT_PULLDOWN);
    pinMode(iS2Pin, INPUT_PULLDOWN);
 
    //Set light data pin as output
    pinMode(iLightsDataPin, OUTPUT);
 
-   //initialize pins for remote control
-   pinMode(iRC0Pin, INPUT_PULLDOWN);
-   pinMode(iRC1Pin, INPUT_PULLDOWN);
-   pinMode(iRC2Pin, INPUT_PULLDOWN);
-   pinMode(iRC3Pin, INPUT_PULLDOWN);
-   pinMode(iRC4Pin, INPUT_PULLDOWN);
-   pinMode(iRC5Pin, INPUT_PULLDOWN);
+   //initialize pins for 74HC166
+   pinMode(iLatchPin, OUTPUT);
+   pinMode(iClockPin, OUTPUT);
+   pinMode(iDataInPin, INPUT_PULLDOWN);
+
+   //initialize pins for SD Card
+   pinMode(iSDdata0Pin, INPUT_PULLUP);
+   pinMode(iSDdata1Pin, INPUT_PULLUP);
+   pinMode(iSDcmdPin, INPUT_PULLUP);
 
    //LCD pins as output
    pinMode(iLCDData4Pin, OUTPUT);
@@ -242,22 +238,15 @@ void setup()
    attachInterrupt(digitalPinToInterrupt(iS1Pin), Sensor1Wrapper, CHANGE);
 #endif
 
-#if !JTAG
    //Initialize other I/O's
    pinMode(iLaserTriggerPin, INPUT_PULLUP);
    pinMode(iLaserOutputPin, OUTPUT);
-   pinMode(SideSwitch.Pin, INPUT_PULLUP);
 
    //Initialize BatterySensor class with correct pin
    BatterySensor.init(iBatterySensorPin);
-#endif
 
    //Initialize LightsController class with shift register pins
-#ifdef WS281x
    LightsController.init(&LightsStrip);
-#else
-   LightsController.init(iLightsLatchPin, iLightsClockPin, iLightsDataPin);
-#endif
 
    //Initialize LCDController class with lcd1 and lcd2 objects
    LCDController.init(&lcd, &lcd2);
@@ -339,6 +328,9 @@ void setup()
 
 void loop()
 {
+   //Turn off build-in ESP32 Loli32 LED
+   digitalWrite(5, HIGH);
+
    //Exclude handling of those services in loop while race is running
    if (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)
    {
@@ -353,14 +345,15 @@ void loop()
       //Handle GPS
       GPSHandler.loop();
 
-   #if !JTAG
       //Handle battery sensor main processing
       BatterySensor.CheckBatteryVoltage();
-   #endif
    }
 
    //Check for serial events
    serialEvent();
+
+   //Check Remote and Side switch buttons state
+   ButtonsRead();
 
    //Handle lights main processing
    LightsController.Main();
@@ -390,7 +383,7 @@ void loop()
    }
 
    //Race start/stop button (remote D0 output)
-   if (digitalRead(iRC0Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[0]) > 2000)
+   if (bitRead(bDataIn, 1) == HIGH && (GET_MICROS / 1000 - lLastRCPress[0]) > 2000)
    {
       StartStopRace();
    }
@@ -408,7 +401,7 @@ void loop()
    }
 
    //Race reset button (remote D1 output)
-   if ((digitalRead(iRC1Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[1] > 2000)) || (bSerialStringComplete && strSerialData == "reset"))
+   if ((bitRead(bDataIn, 2) == HIGH && (GET_MICROS / 1000 - lLastRCPress[1] > 2000)) || (bSerialStringComplete && strSerialData == "reset"))
    {
       ResetRace();
    }
@@ -434,7 +427,7 @@ void loop()
 #endif
 
    //Dog 1 fault RC button
-   if ((digitalRead(iRC2Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[2] > 2000)) || (bSerialStringComplete && strSerialData == "d1f"))
+   if ((bitRead(bDataIn, 3) == HIGH && (GET_MICROS / 1000 - lLastRCPress[2] > 2000)) || (bSerialStringComplete && strSerialData == "d1f"))
    {
       lLastRCPress[2] = GET_MICROS / 1000;
       //Toggle fault for dog
@@ -442,14 +435,14 @@ void loop()
    }
 
    //Dog 2 fault RC button
-   if ((digitalRead(iRC3Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[3] > 2000)) || (bSerialStringComplete && strSerialData == "d2f"))
+   if ((bitRead(bDataIn, 6) == HIGH && (GET_MICROS / 1000 - lLastRCPress[3] > 2000)) || (bSerialStringComplete && strSerialData == "d2f"))
    {
       lLastRCPress[3] = GET_MICROS / 1000;
       //Toggle fault for dog
       RaceHandler.SetDogFault(1);
    }
    //Dog 3 fault RC button
-   if ((digitalRead(iRC4Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[4] > 2000)) || (bSerialStringComplete && strSerialData == "d3f"))
+   if ((bitRead(bDataIn, 5) == HIGH && (GET_MICROS / 1000 - lLastRCPress[4] > 2000)) || (bSerialStringComplete && strSerialData == "d3f"))
    {
       lLastRCPress[4] = GET_MICROS / 1000;
       //Toggle fault for dog
@@ -457,7 +450,7 @@ void loop()
    }
 
    //Dog 4 fault RC button
-   if ((digitalRead(iRC5Pin) == HIGH && (GET_MICROS / 1000 - lLastRCPress[5] > 2000)) || (bSerialStringComplete && strSerialData == "d4f"))
+   if ((bitRead(bDataIn, 4) == HIGH && (GET_MICROS / 1000 - lLastRCPress[5] > 2000)) || (bSerialStringComplete && strSerialData == "d4f"))
    {
       lLastRCPress[5] = GET_MICROS / 1000;
       //Toggle fault for dog
@@ -477,7 +470,6 @@ void loop()
    #endif
    LCDController.UpdateField(LCDController.TeamTime, cElapsedRaceTime);
    
-#if !JTAG
    //Update battery percentage to display
    if ((GET_MICROS / 1000 < 2000 || ((GET_MICROS / 1000 - lLastBatteryLCDupdate) > 30000))
       && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
@@ -514,7 +506,6 @@ void loop()
       //ESP_LOGD(__FILE__, "Battery: analog: %i ,voltage: %i, level: %i%%", BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
       lLastBatteryLCDupdate = GET_MICROS / 1000;
    }
-#endif
 
    //Update team netto time
    #if Accuracy2digits
@@ -607,24 +598,22 @@ void loop()
       bSerialStringComplete = false;
    }
 
-#if !JTAG
    //Handle laser output
    digitalWrite(iLaserOutputPin, !digitalRead(iLaserTriggerPin));
 
-   //Handle side switch button
-   if (digitalRead(SideSwitch.Pin) == LOW && GET_MICROS / 1000 - SideSwitch.LastTriggerTime > SideSwitch.CoolDownTime)
+   //Handle side switch button (when race is not running)
+   if (bitRead(bDataIn, 0) == HIGH && (GET_MICROS / 1000 - SideSwitch.LastTriggerTime > SideSwitch.CoolDownTime)
+      && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
    {
       SideSwitch.LastTriggerTime = GET_MICROS / 1000;
-      ESP_LOGI(__FILE__, "Switching sides!");
+      //ESP_LOGI(__FILE__, "Switching sides!");
       RaceHandler.ToggleRunDirection();
    }
-#endif
 }
 
 void serialEvent()
 {
    //Listen on serial port
-
    while (Serial.available() > 0)
    {
       char cInChar = Serial.read(); // Read a character
@@ -639,6 +628,73 @@ void serialEvent()
       }
       strSerialData += cInChar; // Store it
    }
+}
+
+/// <summary>
+///   Read 74HC166 pins status to detect remote buttons or switch side button press.
+/// </summary>
+void ButtonsRead()
+{
+   byte bOldDataIn = bDataIn;
+   bDataIn = 0;
+   digitalWrite(iLatchPin, LOW);
+   digitalWrite(iClockPin, LOW);
+   digitalWrite(iClockPin, HIGH);
+   digitalWrite(iLatchPin, HIGH);
+   for(uint8_t i = 0; i < 8; ++i)
+   {
+      bDataIn |= digitalRead(iDataInPin) << (7 - i);
+      digitalWrite(iClockPin, LOW);
+      digitalWrite(iClockPin, HIGH);
+   }
+   // It's assumed that only one button can be pressed at the same time, therefore any multiple high states are treated as false read and ingored
+   if (bDataIn != 0 && bDataIn != 1 && bDataIn != 2 && bDataIn != 4 && bDataIn != 8 && bDataIn != 16 && bDataIn != 32 && bDataIn != 64 && bDataIn != 128)
+   {
+      ESP_LOGD(__FILE__, "%s", GetButtonString().c_str());
+      bDataIn = 0;
+   }
+   // Print to console if button press detected
+   if (bDataIn != bOldDataIn && bDataIn != 0)
+   {
+      ESP_LOGD(__FILE__, "%s", GetButtonString().c_str());
+   }
+}
+
+/// <summary>
+///   Gets pressed button string for consol printing.
+/// </summary>
+String GetButtonString()
+{
+   String strButton;
+   switch (bDataIn)
+   {
+   case 1:
+      strButton = "Side switch";
+      break;
+   case 2:
+      strButton = "Remote 1: start/stop";
+      break;
+   case 4:
+      strButton = "Remote 2: reset";
+      break;
+   case 8:
+      strButton = "Remote 3: dog 1 fault";
+      break;
+   case 16:
+      strButton = "Remote 6: dog 4 fault";
+      break;
+   case 32:
+      strButton = "Remote 5: dog 3 fault";
+      break;
+   case 64:
+      strButton = "Remote 4: dog 2 fault";
+      break;
+   default:
+      strButton = "Unknown --> Ingored";
+      break;
+   }
+
+   return strButton;
 }
 
 /// <summary>
@@ -733,12 +789,10 @@ void WiFiEvent(WiFiEvent_t event)
    }
 }
 
-#ifdef ESP32
 void mdnsServerSetup()
 {
    MDNS.addService("http", "tcp", 80);
    MDNS.addServiceTxt("arduino", "tcp", "app_version", APP_VER);
    MDNS.begin("FlyballETS");
 }
-#endif
 #endif

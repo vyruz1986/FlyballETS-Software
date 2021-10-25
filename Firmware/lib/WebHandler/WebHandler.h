@@ -13,9 +13,7 @@
 #include "RaceHandler.h"
 #include "Structs.h"
 #include "LightsController.h"
-//#if !JTAG
 #include "BatterySensor.h"
-//#endif
 #include <AsyncTCP.h>
 #include "GPSHandler.h"
 #include <rom/rtc.h>

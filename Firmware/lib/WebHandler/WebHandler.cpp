@@ -491,9 +491,7 @@ void WebHandlerClass::_GetSystemData()
    _SystemData.Uptime = millis();
    _SystemData.NumClients = _ws->count();
    _SystemData.UTCSystemTime = GPSHandler.GetUTCTimestamp();
-#if !JTAG
    _SystemData.BatteryPercentage = BatterySensor.GetBatteryPercentage();
-#endif
 }
 
 void WebHandlerClass::_SendSystemData()
