@@ -23,15 +23,16 @@
 #define GLOBALVAR_H
 
 #define Simulate false          // Set to true to enable race simulation (see Simulator.h/.cpp)
-#define JTAG false              // when set to true you need converter board with pins remappig and jtag + programing port. It deactite featuers: LSR BTN+LED, battery sensor, switch button
 #define Accuracy2digits true    // Change accuracy of displayed results from 0.001s to 0.01s except first dog if entry time in range from -0.095s to +0.095s
 #define NumSimulatedRaces 25    // number of prepeared simulated races. Sererial interface command to change interface: e.g. "race 1"
 //#define WiFiOFF                 // If defined all WiFi features are off: OTA, Web server. Please be carefull. Keep remote board/antenna away from ESP32 to avoid interferences.
+#define WebUIonSDcard           // When defined webserver data will be loaded from SC card (MMC 1 bit mode) and not taken compiled into fimrware package
 #define BatteryCalibration false// after setting to true LCD will display analog read value from battery pin (range 0-4095). This is handfull for battery volate curve definition (dPinVoltage)
+
+#define LaserOutputTimer 60     // Laser output timer in seconds
 
 #define LIGHTSCHAINS 1          // Numer of WS281x lights chains. 1 - one chain of 5 pixels/lights, 2 - two chains --> 10 pixels/lights, etc.
 
-#define WS281x                  // Comment out this line if you want to use the v1 setup which used a 74HC595 shift register to control lights
 #define WS_METHOD NeoWs2813Method
 #define EEPROM_SIZE 4096        // EEPROM size in bytes
 #define SPI_FLASH_SEC_SIZE 4096 // Flash Sector Size declaration for ESP32 as it seems to become removed from embedded libraries

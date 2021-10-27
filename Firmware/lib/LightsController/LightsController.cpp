@@ -31,13 +31,8 @@
 /// <param name="iLatchPin">  Zero-based index of the latch pin. </param>
 /// <param name="iClockPin">  Zero-based index of the clock pin. </param>
 /// <param name="iDataPin">   Zero-based index of the data pin. </param>
-#ifdef WS281x
 void LightsControllerClass::init(NeoPixelBus<NeoRgbFeature, WS_METHOD> *LightsStrip)
-#else
-void LightsControllerClass::init(uint8_t iLatchPin, uint8_t iClockPin, uint8_t iDataPin)
-#endif // WS281x
 {
-#ifdef WS281x
    //pinMode(iLightsPin, OUTPUT);
    _LightsStrip = LightsStrip;
    //_LightsStrip = NeoPixelBus<NeoRgbFeature, NeoWs2813Method>(5, iLightsPin);
@@ -45,21 +40,6 @@ void LightsControllerClass::init(uint8_t iLatchPin, uint8_t iClockPin, uint8_t i
    _LightsStrip->Begin();
    //_LightsStrip->SetBrightness(255);
    _LightsStrip->Show(); // Initialize all pixels to 'off'
-#else
-   //Initialize pins for shift register
-   _iLatchPin = iLatchPin;
-   _iClockPin = iClockPin;
-   _iDataPin = iDataPin;
-
-   pinMode(_iLatchPin, OUTPUT);
-   pinMode(_iClockPin, OUTPUT);
-   pinMode(_iDataPin, OUTPUT);
-
-   //Write 0 to shift register to turn off all lights
-   digitalWrite(_iLatchPin, LOW);
-   shiftOut(_iDataPin, _iClockPin, MSBFIRST, 0);
-   digitalWrite(_iLatchPin, HIGH);
-#endif // WS281x
 }
 
 /// <summary>
@@ -87,23 +67,17 @@ void LightsControllerClass::Main()
          _lLightsOutSchedule[i] = 0; //Delete schedule
       }
    }
-#ifdef WS281x
+
    //Update lights
    if (_LightsStrip->CanShow())
    {
       _LightsStrip->Show();
    }
-#endif // WS281x
 
    if (_byCurrentLightsState != _byNewLightsState)
    {
       //ESP_LOGD(__FILE__, " %llu: New light states: %i", GET_MICROS / 1000, _byNewLightsState);
       _byCurrentLightsState = _byNewLightsState;
-#ifndef WS281x
-      digitalWrite(_iLatchPin, LOW);
-      shiftOut(_iDataPin, _iClockPin, MSBFIRST, _byCurrentLightsState);
-      digitalWrite(_iLatchPin, HIGH);
-#endif // WS281x
 #ifndef WiFiOFF
       //Send data to websocket clients
       WebHandler.SendLightsData(GetLightsState());
@@ -179,12 +153,10 @@ void LightsControllerClass::ResetLights()
    byOverallState = RESET;
 
    //Set all lights off
-#ifdef WS281x
    for (uint16_t i = 0; i < _LightsStrip->PixelCount(); i++)
    {
       _LightsStrip->SetPixelColor(i, 0);
    }
-#endif // WS281x
    _byNewLightsState = 0;
    DeleteSchedules();
 }
@@ -223,7 +195,7 @@ void LightsControllerClass::ToggleLightState(Lights byLight, LightStates byLight
          byLightState = ON;
       }
    }
-#ifdef WS281x
+
    SNeoPixelConfig LightConfig = _GetNeoPixelConfig(byLight);
 
    if (byLightState == OFF)
@@ -241,7 +213,6 @@ void LightsControllerClass::ToggleLightState(Lights byLight, LightStates byLight
       _LightsStrip->SetPixelColor(LightConfig.iPixelNumber + 5 * lightschain, LightConfig.iColor);
    }
 
-#endif // WS281x
    if (byCurrentLightState != byLightState)
    {
 
@@ -323,14 +294,10 @@ stLightsState LightsControllerClass::GetLightsState()
 /// </returns>
 LightsControllerClass::LightStates LightsControllerClass::CheckLightState(Lights byLight)
 {
-#ifdef WS281x
    RgbColor iCurrentColor;
    SNeoPixelConfig TargetConfig = _GetNeoPixelConfig(byLight);
    iCurrentColor = _LightsStrip->GetPixelColor(TargetConfig.iPixelNumber);
    if (iCurrentColor == TargetConfig.iColor)
-#else
-   if ((byLight & _byNewLightsState) == byLight)
-#endif // WS281x
    {
       return ON;
    }
@@ -340,7 +307,6 @@ LightsControllerClass::LightStates LightsControllerClass::CheckLightState(Lights
    }
 }
 
-#ifdef WS281x
 LightsControllerClass::SNeoPixelConfig LightsControllerClass::_GetNeoPixelConfig(LightsControllerClass::Lights byLight)
 {
    SNeoPixelConfig Config;
@@ -374,7 +340,6 @@ LightsControllerClass::SNeoPixelConfig LightsControllerClass::_GetNeoPixelConfig
 
    return Config;
 }
-#endif // WS281x
 
 /// <summary>
 ///   The lights controller.

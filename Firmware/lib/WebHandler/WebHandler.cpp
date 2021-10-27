@@ -201,6 +201,9 @@ void WebHandlerClass::init(int webPort)
 
    // Rewrites
    _server->rewrite("/", "/index.html");
+   #ifdef WebUIonSDcard
+   _server->serveStatic("/", SD_MMC, "/");
+   #endif
 
    // Serve home (basic authentication protection)
    _server->on("/index.html", HTTP_GET, std::bind(&WebHandlerClass::_onHome, this, std::placeholders::_1));
@@ -331,6 +334,7 @@ boolean WebHandlerClass::_DoAction(JsonObject &ActionObj, String *ReturnError)
       uint8_t iDogNum = ActionObj["actionData"]["dogNumber"];
       //boolean bFaultState = ActionObj["actionData"]["faultState"];
       RaceHandler.SetDogFault(iDogNum);
+      //RaceHandler.SetDogFault(iDogNum, (bFaultState ? RaceHandler.ON : RaceHandler.OFF));
       return true;
    }
    else
@@ -491,9 +495,7 @@ void WebHandlerClass::_GetSystemData()
    _SystemData.Uptime = millis();
    _SystemData.NumClients = _ws->count();
    _SystemData.UTCSystemTime = GPSHandler.GetUTCTimestamp();
-#if !JTAG
    _SystemData.BatteryPercentage = BatterySensor.GetBatteryPercentage();
-#endif
 }
 
 void WebHandlerClass::_SendSystemData()
@@ -601,8 +603,12 @@ void WebHandlerClass::_onHome(AsyncWebServerRequest *request)
    }
    else
    {
+      #ifndef WebUIonSDcard
       AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", index_html_gz, index_html_gz_len);
       response->addHeader("Content-Encoding", "gzip");
+      #else
+      AsyncWebServerResponse *response = request->beginResponse(SD_MMC, "/index.htm", "text/html");
+      #endif
       response->addHeader("Last-Modified", _last_modified);
       request->send(response);
    }
