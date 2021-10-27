@@ -42,9 +42,3 @@ struct stLightsState
 {
    uint8_t State[5];
 };
-
-struct stInputSignal
-{
-   unsigned long LastTriggerTime;
-   word CoolDownTime;
-};

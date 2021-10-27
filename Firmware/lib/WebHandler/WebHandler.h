@@ -7,8 +7,8 @@
 #include "SettingsManager.h"
 //#include <Hash.h>
 #include <ESPAsyncWebServer.h>
-//#include <FS.h>
-//#include <SPIFFS.h>
+#include <FS.h>
+#include <SD_MMC.h>
 #include <ArduinoJson.h>
 #include "RaceHandler.h"
 #include "Structs.h"
@@ -17,7 +17,9 @@
 #include <AsyncTCP.h>
 #include "GPSHandler.h"
 #include <rom/rtc.h>
+#ifndef WebUIonSDcard
 #include "index.html.gz.h" 
+#endif
 
 
 class WebHandlerClass

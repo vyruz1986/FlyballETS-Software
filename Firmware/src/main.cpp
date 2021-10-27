@@ -37,6 +37,8 @@
    #include <WiFiUdp.h>
 #endif
 #include <EEPROM.h>
+#include <FS.h>
+#include <SD_MMC.h>
 #include <NeoPixelBus.h>
 #include <ESPmDNS.h>
 //#include <time.h>
@@ -58,7 +60,7 @@
    - 33: S2 (box side) photoelectric sensor
 
    - 27: LCD Data7
-   - 12: LCD Data6
+   - 32: LCD Data6
    - 26: LCD Data5
    - 13: LCD Data4
    - 16: LCD1 (line 1&2) enable pin
@@ -69,10 +71,9 @@
 
    - 35: battery sensor pin
 
-   - 32: Laser trigger button
-   -  0: Laser output
+   - 12: Laser output
    
-   -  5: free to avoid build in led collision
+   -  5: set high to turn off build in led
    -  1: free/TX
    -  3: free/RX
    
@@ -97,7 +98,7 @@
    - D4: remote D5 dog 4 fault
    - D5: remote D4 dog 3 fault
    - D6: remote D3 dog 2 fault
-   - D7: not connected (pull down via 10kOhm resistor)
+   - D7: Laser trigger button
 */
 
 //Set simulate to true to enable simulator class (see Simulator.cpp/h)
@@ -126,17 +127,15 @@ int iBatterySensorPin = 35;
 uint16_t iBatteryVoltage = 0;
 
 //Other IO's
-uint8_t iLaserTriggerPin = 32;
-uint8_t iLaserOutputPin = 0;
-boolean bLaserState = false;
-//uint8_t iSideSwitchPin = 5;
-stInputSignal SideSwitch = {0, 500};
+uint8_t iLaserOutputPin = 12;
+boolean bLaserActive = false;
+uint16_t SideSwitchCoolDownTime = 500;
 
 //Set last serial output variable
 unsigned long lLastSerialOutput = 0;
 
 //Battery % update on LCD timer variable
-unsigned long lLastBatteryLCDupdate = 0;
+long long llLastBatteryLCDupdate = -28000;
 
 //control pins for 74HC166 (remote + side switch)
 uint8_t iLatchPin = 23;
@@ -151,14 +150,14 @@ uint8_t iSDclockPin = 14;
 uint8_t iSDcmdPin = 15;
 
 //Array to hold last time button presses
-unsigned long lLastRCPress[6] = {0, 0, 0, 0, 0, 0};
+unsigned long long llLastRCPress[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
 //control pins for LCD
 uint8_t iLCDE1Pin = 16;
 uint8_t iLCDE2Pin = 17;
 uint8_t iLCDData4Pin = 13;
 uint8_t iLCDData5Pin = 26;
-uint8_t iLCDData6Pin = 12;
+uint8_t iLCDData6Pin = 32;
 uint8_t iLCDData7Pin = 27;
 uint8_t iLCDRSPin = 25;
 
@@ -239,10 +238,12 @@ void setup()
 #endif
 
    //Initialize other I/O's
-   pinMode(iLaserTriggerPin, INPUT_PULLUP);
    pinMode(iLaserOutputPin, OUTPUT);
-
-   //Initialize BatterySensor class with correct pin
+   
+   //Turn off build-in ESP32 Loli32 LED
+   digitalWrite(5, HIGH);
+   
+    //Initialize BatterySensor class with correct pin
    BatterySensor.init(iBatterySensorPin);
 
    //Initialize LightsController class with shift register pins
@@ -252,7 +253,31 @@ void setup()
    LCDController.init(&lcd, &lcd2);
 
    strSerialData[0] = 0;
+   
+  //SD card init
+   if(!SD_MMC.begin("/sdcard", true)){
+      Serial.println("Card Mount Failed");
+      return;
+   }
+   uint8_t cardType = SD_MMC.cardType();
 
+   if(cardType == CARD_NONE){
+         Serial.println("No SD_MMC card attached");
+         return;
+   }
+   Serial.print("SD_MMC Card Type: ");
+   if(cardType == CARD_MMC){
+         Serial.println("MMC");
+   } else if(cardType == CARD_SD){
+         Serial.println("SDSC");
+   } else if(cardType == CARD_SDHC){
+         Serial.println("SDHC");
+   } else {
+         Serial.println("UNKNOWN");
+   }
+   uint64_t cardSize = SD_MMC.cardSize() / (1024 * 1024);
+   Serial.printf("SD_MMC Card Size: %lluMB\n", cardSize);
+   
    #ifndef WiFiOFF
    //Setup AP
    WiFi.onEvent(WiFiEvent);
@@ -328,9 +353,6 @@ void setup()
 
 void loop()
 {
-   //Turn off build-in ESP32 Loli32 LED
-   digitalWrite(5, HIGH);
-
    //Exclude handling of those services in loop while race is running
    if (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)
    {
@@ -383,7 +405,7 @@ void loop()
    }
 
    //Race start/stop button (remote D0 output)
-   if (bitRead(bDataIn, 1) == HIGH && (GET_MICROS / 1000 - lLastRCPress[0]) > 2000)
+   if (bitRead(bDataIn, 1) == HIGH && (GET_MICROS / 1000 - llLastRCPress[1]) > 2000)
    {
       StartStopRace();
    }
@@ -401,7 +423,7 @@ void loop()
    }
 
    //Race reset button (remote D1 output)
-   if ((bitRead(bDataIn, 2) == HIGH && (GET_MICROS / 1000 - lLastRCPress[1] > 2000)) || (bSerialStringComplete && strSerialData == "reset"))
+   if ((bitRead(bDataIn, 2) == HIGH && (GET_MICROS / 1000 - llLastRCPress[2] > 2000)) || (bSerialStringComplete && strSerialData == "reset"))
    {
       ResetRace();
    }
@@ -427,32 +449,32 @@ void loop()
 #endif
 
    //Dog 1 fault RC button
-   if ((bitRead(bDataIn, 3) == HIGH && (GET_MICROS / 1000 - lLastRCPress[2] > 2000)) || (bSerialStringComplete && strSerialData == "d1f"))
+   if ((bitRead(bDataIn, 3) == HIGH && (GET_MICROS / 1000 - llLastRCPress[3] > 2000)) || (bSerialStringComplete && strSerialData == "d1f"))
    {
-      lLastRCPress[2] = GET_MICROS / 1000;
+      llLastRCPress[3] = GET_MICROS / 1000;
       //Toggle fault for dog
       RaceHandler.SetDogFault(0);
    }
 
    //Dog 2 fault RC button
-   if ((bitRead(bDataIn, 6) == HIGH && (GET_MICROS / 1000 - lLastRCPress[3] > 2000)) || (bSerialStringComplete && strSerialData == "d2f"))
+   if ((bitRead(bDataIn, 6) == HIGH && (GET_MICROS / 1000 - llLastRCPress[6] > 2000)) || (bSerialStringComplete && strSerialData == "d2f"))
    {
-      lLastRCPress[3] = GET_MICROS / 1000;
+      llLastRCPress[6] = GET_MICROS / 1000;
       //Toggle fault for dog
       RaceHandler.SetDogFault(1);
    }
    //Dog 3 fault RC button
-   if ((bitRead(bDataIn, 5) == HIGH && (GET_MICROS / 1000 - lLastRCPress[4] > 2000)) || (bSerialStringComplete && strSerialData == "d3f"))
+   if ((bitRead(bDataIn, 5) == HIGH && (GET_MICROS / 1000 - llLastRCPress[5] > 2000)) || (bSerialStringComplete && strSerialData == "d3f"))
    {
-      lLastRCPress[4] = GET_MICROS / 1000;
+      llLastRCPress[5] = GET_MICROS / 1000;
       //Toggle fault for dog
       RaceHandler.SetDogFault(2);
    }
 
    //Dog 4 fault RC button
-   if ((bitRead(bDataIn, 4) == HIGH && (GET_MICROS / 1000 - lLastRCPress[5] > 2000)) || (bSerialStringComplete && strSerialData == "d4f"))
+   if ((bitRead(bDataIn, 4) == HIGH && (GET_MICROS / 1000 - llLastRCPress[4] > 2000)) || (bSerialStringComplete && strSerialData == "d4f"))
    {
-      lLastRCPress[5] = GET_MICROS / 1000;
+      llLastRCPress[4] = GET_MICROS / 1000;
       //Toggle fault for dog
       RaceHandler.SetDogFault(3);
    }
@@ -471,7 +493,7 @@ void loop()
    LCDController.UpdateField(LCDController.TeamTime, cElapsedRaceTime);
    
    //Update battery percentage to display
-   if ((GET_MICROS / 1000 < 2000 || ((GET_MICROS / 1000 - lLastBatteryLCDupdate) > 30000))
+   if ((GET_MICROS / 1000 < 2000 || ((GET_MICROS / 1000 - llLastBatteryLCDupdate) > 30000))
       && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
    {
       iBatteryVoltage = BatterySensor.GetBatteryVoltage();
@@ -504,7 +526,7 @@ void loop()
       }
       LCDController.UpdateField(LCDController.BattLevel, sBatteryPercentage);
       //ESP_LOGD(__FILE__, "Battery: analog: %i ,voltage: %i, level: %i%%", BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
-      lLastBatteryLCDupdate = GET_MICROS / 1000;
+      llLastBatteryLCDupdate = GET_MICROS / 1000;
    }
 
    //Update team netto time
@@ -598,14 +620,28 @@ void loop()
       bSerialStringComplete = false;
    }
 
-   //Handle laser output
-   digitalWrite(iLaserOutputPin, !digitalRead(iLaserTriggerPin));
-
-   //Handle side switch button (when race is not running)
-   if (bitRead(bDataIn, 0) == HIGH && (GET_MICROS / 1000 - SideSwitch.LastTriggerTime > SideSwitch.CoolDownTime)
+   //Laser activation
+   if (bitRead(bDataIn, 7) == HIGH && ((GET_MICROS / 1000 - llLastRCPress[7] > LaserOutputTimer * 1000) || llLastRCPress[7] == 0)
       && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
    {
-      SideSwitch.LastTriggerTime = GET_MICROS / 1000;
+      llLastRCPress[7] = GET_MICROS / 1000;
+      digitalWrite(iLaserOutputPin, HIGH);
+      bLaserActive = true;
+      ESP_LOGI(__FILE__, "Turn Laser ON.");
+   }
+   //Laser deativation
+   if ((bLaserActive) && ((GET_MICROS / 1000 - llLastRCPress[7] > LaserOutputTimer * 1000) || RaceHandler.RaceState == RaceHandler.STARTING || RaceHandler.RaceState == RaceHandler.RUNNING))
+   {
+      digitalWrite(iLaserOutputPin, LOW);
+      bLaserActive = false;
+      ESP_LOGI(__FILE__, "Turn Laser OFF.");
+   }
+
+   //Handle side switch button (when race is not running)
+   if (bitRead(bDataIn, 0) == HIGH && (GET_MICROS / 1000 - llLastRCPress[0] > SideSwitchCoolDownTime)
+      && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
+   {
+      llLastRCPress[0] = GET_MICROS / 1000;
       //ESP_LOGI(__FILE__, "Switching sides!");
       RaceHandler.ToggleRunDirection();
    }
@@ -689,6 +725,9 @@ String GetButtonString()
    case 64:
       strButton = "Remote 4: dog 2 fault";
       break;
+   case 128:
+      strButton = "Laser trigger";
+      break;
    default:
       strButton = "Unknown --> Ingored";
       break;
@@ -736,7 +775,7 @@ void StopRaceMain()
 /// </summary>
 void StartStopRace()
 {
-   lLastRCPress[0] = GET_MICROS / 1000;
+   llLastRCPress[1] = GET_MICROS / 1000;
    if (RaceHandler.RaceState == RaceHandler.RESET) //If race is reset
    {
       //Then start the race
@@ -757,7 +796,7 @@ void ResetRace()
    {
       return;
    }
-   lLastRCPress[1] = GET_MICROS / 1000;
+   llLastRCPress[2] = GET_MICROS / 1000;
    LightsController.ResetLights();
    RaceHandler.ResetRace();
 }
