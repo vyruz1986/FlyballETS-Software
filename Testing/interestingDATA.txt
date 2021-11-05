@@ -1,0 +1,47 @@
+####################### RACE 0
+Dog 0:   0.000|CR:  
+RT:  0.000
+RS:  START 
+RS: RUNNING
+Dog 0:   4.467|CR: -  0.102
+RT:  4.624
+Dog 1:   4.614|CR: +  0.365
+RT:  9.695
+Dog 2:   6.132|CR:       OK
+RT: 15.713
+Dog 3:   5.063|CR: +  0.133
+RT: 20.922
+D0:   5.109|CR: +  0.661
+RT: 26.547
+RS:  STOP  
+####################### RACE 1
+RS:  START 
+RS: RUNNING
+Dog 0:   4.467|CR: +  0.002
+RT:  4.659
+Dog 1:   4.980|CR:      NOK
+RT:  9.696
+Dog 2:   6.133|CR:       OK
+RT: 15.715
+Dog 3:   4.765|CR: +  0.432
+RT: 20.925
+D1:   5.109|CR: +  0.661
+RT: 26.549
+RS:  STOP  
+####################### RACE 2
+Dog 0:   0.000|CR:  
+RT:  0.000
+RS:  START 
+RS: RUNNING
+Dog 0:   4.467|CR: +  0.002
+RT:  4.659
+Dog 1:   4.980|CR:      NOK
+RT:  9.696
+Dog 2:   6.133|CR:       OK
+RT: 15.715
+Dog 3:   4.765|CR: +  0.432
+RT: 21.038
+D1:   5.770|CR:       OK
+RT: 26.549
+RS:  STOP  
+####################### RACE 3
