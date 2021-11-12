@@ -78,7 +78,7 @@ void LightsControllerClass::Main()
    {
       //ESP_LOGD(__FILE__, " %llu: New light states: %i", GET_MICROS / 1000, _byNewLightsState);
       _byCurrentLightsState = _byNewLightsState;
-#ifndef WiFiOFF
+#ifdef WiFiON
       //Send data to websocket clients
       WebHandler.SendLightsData(GetLightsState());
 #endif

@@ -29,12 +29,12 @@
 
 //Public libs
 #include <LiquidCrystal.h>
-#ifndef WiFiOFF
-   #include <WiFi.h>
-   #include <WiFiMulti.h>
-   #include <ESPmDNS.h>
-   #include <ArduinoOTA.h>
-   #include <WiFiUdp.h>
+#ifdef WiFiON
+#include <WiFi.h>
+#include <WiFiMulti.h>
+#include <ESPmDNS.h>
+#include <ArduinoOTA.h>
+#include <WiFiUdp.h>
 #endif
 #include <EEPROM.h>
 #include <FS.h>
@@ -46,14 +46,13 @@
 //Private libs
 #include <GPSHandler.h>
 #include <SettingsManager.h>
-#ifndef WiFiOFF
-   #include <WebHandler.h>
+#ifdef WiFiON
+#include <WebHandler.h>
 #endif
 #include <LCDController.h>
 #include <RaceHandler.h>
 #include <LightsController.h>
 #include <BatterySensor.h>
-
 
 /*List of pins and the ones used (Lolin32 board):
    - 34: S1 (handler side) photoelectric sensor. ESP32 has no pull-down resistor on 34 pin, but pull-down anyway by 1kohm resistor on sensor board
@@ -135,7 +134,7 @@ uint16_t SideSwitchCoolDownTime = 500;
 unsigned long lLastSerialOutput = 0;
 
 //Battery % update on LCD timer variable
-long long llLastBatteryLCDupdate = -28000;
+long long llLastBatteryLCDupdate = -25000;
 
 //control pins for 74HC166 (remote + side switch)
 uint8_t iLatchPin = 23;
@@ -186,8 +185,8 @@ unsigned int uiLastProgress = 0;
 //Function prototypes
 void Sensor1Wrapper();
 void Sensor2Wrapper();
-#ifndef WiFiOFF
-   void WiFiEvent(WiFiEvent_t event);
+#ifdef WiFiON
+void WiFiEvent(WiFiEvent_t event);
 #endif
 void ResetRace();
 void mdnsServerSetup();
@@ -239,11 +238,11 @@ void setup()
 
    //Initialize other I/O's
    pinMode(iLaserOutputPin, OUTPUT);
-   
+
    //Turn off build-in ESP32 Loli32 LED
    digitalWrite(5, HIGH);
-   
-    //Initialize BatterySensor class with correct pin
+
+   //Initialize BatterySensor class with correct pin
    BatterySensor.init(iBatterySensorPin);
 
    //Initialize LightsController class with shift register pins
@@ -253,32 +252,46 @@ void setup()
    LCDController.init(&lcd, &lcd2);
 
    strSerialData[0] = 0;
-   
-  //SD card init
-   if(!SD_MMC.begin("/sdcard", true)){
+
+   //SD card init
+ #ifdef SDcard
+   if (!SD_MMC.begin("/sdcard", true))
+   {
       Serial.println("Card Mount Failed");
       return;
    }
-   uint8_t cardType = SD_MMC.cardType();
+   else
+   {
+      uint8_t cardType = SD_MMC.cardType();
 
-   if(cardType == CARD_NONE){
+      if (cardType == CARD_NONE)
+      {
          Serial.println("No SD_MMC card attached");
          return;
-   }
-   Serial.print("SD_MMC Card Type: ");
-   if(cardType == CARD_MMC){
+      }
+      Serial.print("SD_MMC Card Type: ");
+      if (cardType == CARD_MMC)
+      {
          Serial.println("MMC");
-   } else if(cardType == CARD_SD){
+      }
+      else if (cardType == CARD_SD)
+      {
          Serial.println("SDSC");
-   } else if(cardType == CARD_SDHC){
+      }
+      else if (cardType == CARD_SDHC)
+      {
          Serial.println("SDHC");
-   } else {
+      }
+      else
+      {
          Serial.println("UNKNOWN");
+      }
+      uint64_t cardSize = SD_MMC.cardSize() / (1024 * 1024);
+      Serial.printf("SD_MMC Card Size: %lluMB\n", cardSize);
    }
-   uint64_t cardSize = SD_MMC.cardSize() / (1024 * 1024);
-   Serial.printf("SD_MMC Card Size: %lluMB\n", cardSize);
-   
-   #ifndef WiFiOFF
+#endif
+
+#ifdef WiFiON
    //Setup AP
    WiFi.onEvent(WiFiEvent);
    WiFi.mode(WIFI_MODE_AP);
@@ -297,7 +310,7 @@ void setup()
 
    //configure webserver
    WebHandler.init(80);
-   #endif
+#endif
 
    //Initialize RaceHandler class with S1 and S2 pins
    RaceHandler.init(iS1Pin, iS2Pin);
@@ -307,11 +320,12 @@ void setup()
    Simulator.init(iS1Pin, iS2Pin);
 #endif
 
-#ifndef WiFiOFF
+#ifdef WiFiON
    //Ota setup
    ArduinoOTA.setPassword("FlyballETS.1234");
    ArduinoOTA.setPort(3232);
-   ArduinoOTA.onStart([]() {
+   ArduinoOTA.onStart([]()
+   {
       String type;
       if (ArduinoOTA.getCommand() == 0) //VSCode constantly can't read properly value of U_FLASH, therefore replacing with "0"
          type = "sketch";
@@ -322,10 +336,12 @@ void setup()
       ESP_LOGI(__FILE__, "Start updating %s", type);
    });
 
-   ArduinoOTA.onEnd([]() {
+   ArduinoOTA.onEnd([]()
+   {
       ESP_LOGI(__FILE__, "[OTA]: End");
    });
-   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total)
+   {
       unsigned int progressPercentage = (progress / (total / 100));
       if (uiLastProgress != progressPercentage)
       {
@@ -333,7 +349,8 @@ void setup()
          uiLastProgress = progressPercentage;
       }
    });
-   ArduinoOTA.onError([](ota_error_t error) {
+   ArduinoOTA.onError([](ota_error_t error)
+   {
       ESP_LOGE(__FILE__, "");
       ESP_LOGE(__FILE__, "[OTA]: Error[%u]: ", error);
    });
@@ -358,11 +375,11 @@ void loop()
    {
       //Handle settings manager loop
       SettingsManager.loop();
-   
-      #ifndef WiFiOFF
+
+#ifdef WiFiON
       //Handle OTA update if incoming
       ArduinoOTA.handle();
-      #endif
+#endif
 
       //Handle GPS
       GPSHandler.loop();
@@ -391,10 +408,10 @@ void loop()
    //Handle LCD processing
    LCDController.Main();
 
-   #ifndef WiFiOFF
+#ifdef WiFiON
    //Handle WebSocket server
    WebHandler.loop();
-   #endif
+#endif
 
    //Reset variables when state RESET
    if (RaceHandler.RaceState == RaceHandler.RESET)
@@ -479,21 +496,21 @@ void loop()
       RaceHandler.SetDogFault(3);
    }
 
-   //Update LCD Display fields
-   //Update team time to display
-   #if Accuracy2digits
+//Update LCD Display fields
+//Update team time to display
+#if Accuracy2digits
    {
       dtostrf(RaceHandler.GetRaceTime(), 6, 2, cElapsedRaceTime);
    }
-   #else
+#else
    {
       dtostrf(RaceHandler.GetRaceTime(), 7, 3, cElapsedRaceTime);
    }
-   #endif
+#endif
    LCDController.UpdateField(LCDController.TeamTime, cElapsedRaceTime);
-   
+
    //Update battery percentage to display
-   if ((GET_MICROS / 1000 < 2000 || ((GET_MICROS / 1000 - llLastBatteryLCDupdate) > 30000))
+   if ((GET_MICROS / 1000 < 2000 || ((GET_MICROS / 1000 - llLastBatteryLCDupdate) > 30000)) //
       && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
    {
       iBatteryVoltage = BatterySensor.GetBatteryVoltage();
@@ -529,16 +546,16 @@ void loop()
       llLastBatteryLCDupdate = GET_MICROS / 1000;
    }
 
-   //Update team netto time
-   #if Accuracy2digits
+//Update team netto time
+#if Accuracy2digits
    {
       dtostrf(RaceHandler.GetNetTime(), 6, 2, cTeamNetTime);
    }
-   #else
+#else
    {
       dtostrf(RaceHandler.GetNetTime(), 7, 3, cTeamNetTime);
    }
-   #endif
+#endif
    LCDController.UpdateField(LCDController.NetTime, cTeamNetTime);
 
    //Update race status to display
@@ -579,9 +596,9 @@ void loop()
       }
       ESP_LOGI(__FILE__, " Team: %s", cElapsedRaceTime);
       ESP_LOGI(__FILE__, "  Net: %s\n", cTeamNetTime);
-      #if !Simulate
-         RaceHandler.PrintRaceTriggerRecords();
-      #endif
+#if !Simulate
+      RaceHandler.PrintRaceTriggerRecords();
+#endif
       bRaceSummaryPrinted = true;
    }
 
@@ -621,7 +638,7 @@ void loop()
    }
 
    //Laser activation
-   if (bitRead(bDataIn, 7) == HIGH && ((GET_MICROS / 1000 - llLastRCPress[7] > LaserOutputTimer * 1000) || llLastRCPress[7] == 0)
+   if (bitRead(bDataIn, 7) == HIGH && ((GET_MICROS / 1000 - llLastRCPress[7] > LaserOutputTimer * 1000) || llLastRCPress[7] == 0) //
       && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
    {
       llLastRCPress[7] = GET_MICROS / 1000;
@@ -638,7 +655,7 @@ void loop()
    }
 
    //Handle side switch button (when race is not running)
-   if (bitRead(bDataIn, 0) == HIGH && (GET_MICROS / 1000 - llLastRCPress[0] > SideSwitchCoolDownTime)
+   if (bitRead(bDataIn, 0) == HIGH && (GET_MICROS / 1000 - llLastRCPress[0] > SideSwitchCoolDownTime) //
       && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
    {
       llLastRCPress[0] = GET_MICROS / 1000;
@@ -677,7 +694,7 @@ void ButtonsRead()
    digitalWrite(iClockPin, LOW);
    digitalWrite(iClockPin, HIGH);
    digitalWrite(iLatchPin, HIGH);
-   for(uint8_t i = 0; i < 8; ++i)
+   for (uint8_t i = 0; i < 8; ++i)
    {
       bDataIn |= digitalRead(iDataInPin) << (7 - i);
       digitalWrite(iClockPin, LOW);
@@ -801,7 +818,7 @@ void ResetRace()
    RaceHandler.ResetRace();
 }
 
-#ifndef WiFiOFF
+#ifdef WiFiON
 void WiFiEvent(WiFiEvent_t event)
 {
    Serial.printf("Wifi event %i\r\n", event);
