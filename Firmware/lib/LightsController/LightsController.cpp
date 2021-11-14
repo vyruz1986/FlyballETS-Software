@@ -63,21 +63,6 @@ void LightsControllerClass::Main()
       }
    }
 
-   // If start sequence is initiated and we're going to turn on RED light we need to start race timer
-   if (byOverallState == INITIATED && CheckLightState(RED) == ON)
-   {
-      RaceHandler.StartRaceTimer();
-      byOverallState = STARTING;
-   }
-
-   // If start sequence is in progress and we're going to trun on GREEN light we need to change race state to RUNNING
-   if (byOverallState == STARTING && CheckLightState(GREEN) == ON)
-   {
-      RaceHandler.ChangeRaceStateToRunning();
-      byOverallState = STARTED;
-      ESP_LOGD(__FILE__, "%llu: GREEN light is ON!", GET_MICROS / 1000);
-   }
-
    //Update lights
    if (_LightsStrip->CanShow())
    {
@@ -100,23 +85,23 @@ void LightsControllerClass::Main()
 /// </summary>
 void LightsControllerClass::InitiateStartSequence()
 {
-   //Set start sequence, we need to schedule the lights on/off times
+   //Set start sequence, we need to schedule the lights on/off times. Offset of 10ms instoruced to avoid RED light ON delay
 
    //Set schedule for RED light
-   _lLightsOnSchedule[1] = GET_MICROS / 1000;         //Turn on NOW
-   _lLightsOutSchedule[1] = GET_MICROS / 1000 + 1000; //keep on for 1 second
+   _lLightsOnSchedule[1] = (GET_MICROS + 10000) / 1000;         //Turn on NOW
+   _lLightsOutSchedule[1] = (GET_MICROS + 10000)  / 1000 + 1000; //keep on for 1 second
 
    //Set schedule for YELLOW1 light
-   _lLightsOnSchedule[2] = GET_MICROS / 1000 + 1000;  //Turn on after 1 second
-   _lLightsOutSchedule[2] = GET_MICROS / 1000 + 2000; //Turn off after 2 seconds
+   _lLightsOnSchedule[2] = (GET_MICROS + 10000)  / 1000 + 1000;  //Turn on after 1 second
+   _lLightsOutSchedule[2] = (GET_MICROS + 10000)  / 1000 + 2000; //Turn off after 2 seconds
 
    //Set schedule for YELLOW2 light
-   _lLightsOnSchedule[4] = GET_MICROS / 1000 + 2000;  //Turn on after 2 seconds
-   _lLightsOutSchedule[4] = GET_MICROS / 1000 + 3000; //Turn off after 3 seconds
+   _lLightsOnSchedule[4] = (GET_MICROS + 10000) / 1000 + 2000;  //Turn on after 2 seconds
+   _lLightsOutSchedule[4] = (GET_MICROS + 10000)  / 1000 + 3000; //Turn off after 3 seconds
 
    //Set schedule for GREEN light
-   _lLightsOnSchedule[5] = GET_MICROS / 1000 + 3000;  //Turn on after 3 seconds
-   _lLightsOutSchedule[5] = GET_MICROS / 1000 + 4000; //Turn off after 4 seconds
+   _lLightsOnSchedule[5] = (GET_MICROS + 10000)  / 1000 + 3000;  //Turn on after 3 seconds
+   _lLightsOutSchedule[5] = (GET_MICROS + 10000)  / 1000 + 4000; //Turn off after 4 seconds
 
    byOverallState = INITIATED;
 }
@@ -177,16 +162,30 @@ void LightsControllerClass::ToggleLightState(Lights byLight, LightStates byLight
    if (byLightState == OFF)
    {
       LightConfig.iColor = RgbColor(0);
-      ESP_LOGD(__FILE__, "%llu: Light %d is OFF", GET_MICROS / 1000, LightConfig.iPixelNumber);
+      //ESP_LOGD(__FILE__, "%llu: Light %d is OFF", GET_MICROS / 1000, LightConfig.iPixelNumber);
    }
    else
    {
-      ESP_LOGD(__FILE__, "%llu: Light %d is ON", GET_MICROS / 1000, LightConfig.iPixelNumber);
+      //ESP_LOGD(__FILE__, "%llu: Light %d is ON", GET_MICROS / 1000, LightConfig.iPixelNumber);
+      // If start sequence is initiated and we're going to turn on RED light we need to start race timer
+      if (byOverallState == INITIATED && LightConfig.iPixelNumber == 1)
+      {
+         RaceHandler.StartRaceTimer();
+         byOverallState = STARTING;
+      }
+
+      // If start sequence is in progress and we're going to trun on GREEN light we need to change race state to RUNNING
+      if (byOverallState == STARTING && LightConfig.iPixelNumber == 4)
+      {
+         RaceHandler.ChangeRaceStateToRunning();
+         byOverallState = STARTED;
+      }
    }
 
    for (int lightschain = 0; lightschain < LIGHTSCHAINS; lightschain++)
    {
       _LightsStrip->SetPixelColor(LightConfig.iPixelNumber + 5 * lightschain, LightConfig.iColor);
+      ESP_LOGD(__FILE__, "%llu: Light %d is now %d", GET_MICROS / 1000, LightConfig.iPixelNumber, byLightState);
    }
 
    if (byCurrentLightState != byLightState)
