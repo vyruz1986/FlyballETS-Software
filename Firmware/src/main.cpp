@@ -775,7 +775,6 @@ void Sensor1Wrapper()
 void StartRaceMain()
 {
    LightsController.InitiateStartSequence();
-   RaceHandler.StartRace();
 }
 
 /// <summary>

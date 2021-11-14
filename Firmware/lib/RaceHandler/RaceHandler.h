@@ -33,8 +33,8 @@ public:
    long long llRaceStartTime;
 
    void Main();
-   void StartTimers();
-   void StartRace();
+   void ChangeRaceStateToRunning();
+   void StartRaceTimer();
    void StopRace();
    void StopRace(long long llStopTime);
    void ResetRace();

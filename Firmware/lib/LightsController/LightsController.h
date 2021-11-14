@@ -31,6 +31,7 @@ public:
    //Overal state of this class
    enum OverallStates
    {
+      INITIATED,
       RESET,
       STARTING,
       STARTED

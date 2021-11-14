@@ -22,13 +22,13 @@
 #ifndef GLOBALVAR_H
 #define GLOBALVAR_H
 
-#define Simulate true          // Set to true to enable race simulation (see Simulator.h/.cpp)
+#define Simulate false          // Set to true to enable race simulation (see Simulator.h/.cpp)
 #define NumSimulatedRaces 25    // number of prepeared simulated races. Sererial interface command to change interface: e.g. "race 1"
 #define Accuracy2digits true    // Change accuracy of displayed results from 0.001s to 0.01s except first dog if entry time in range from -0.095s to +0.095s
 
 #define WiFiON                  // If defined all WiFi features are on: OTA, Web server. Please be carefull. Keep remote receiver board (antenna) away from ESP32 to avoid interferences.
-//#define SDcard                  // When defined support of SD card in MMC mode is active (require HW 5.0.0 rev.S or higher)
-//#define WebUIonSDcard           // When defined webserver data will be loaded from SC card (MMC 1 bit mode) and not taken compiled into fimrware package. Precondition: SDcard defined too.
+#define SDcard                  // When defined support of SD card in MMC mode is active (require HW 5.0.0 rev.S or higher)
+#define WebUIonSDcard           // When defined webserver data will be loaded from SC card (MMC 1 bit mode) and not taken compiled into fimrware package. Precondition: SDcard defined too.
 #define BatteryCalibration false// after setting to true LCD will display analog read value from battery pin (range 0-4095). This is handfull for battery volate curve definition (dPinVoltage)
 
 #define LaserOutputTimer 60     // Laser output timer in seconds
@@ -40,7 +40,7 @@
 #define SPI_FLASH_SEC_SIZE 4096 // Flash Sector Size declaration for ESP32 as it seems to become removed from embedded libraries
 
 #define WS_TICKET_BUFFER_SIZE 5 // Number of websocket tickets kept in memory
-#define WS_TIMEOUT 1800000      // Timeout for secured websocket
+#define WS_TIMEOUT 180000       // Timeout for secured websocket in miliseconds
 
 #define APP_VER "5.0.0"
 

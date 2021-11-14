@@ -553,18 +553,18 @@ void RaceHandlerClass::Main()
 }
 
 /// <summary>
-///   Starts the timers. Should be called once GREEN light comes ON.
+///   Change race to RUNNING when GREEN light comes ON during start sequence.
 /// </summary>
-void RaceHandlerClass::StartTimers()
+void RaceHandlerClass::ChangeRaceStateToRunning()
 {
    _ChangeRaceState(RUNNING);
 }
 
 /// <summary>
-///   Sets the status of the race to STARTING, should be called at same time when start light
-///   sequence is called.
+///   Initiates race start timer and sets the status of the race to STARTING.
+///   Should be called when RED light comes ON during start sequence.
 /// </summary>
-void RaceHandlerClass::StartRace()
+void RaceHandlerClass::StartRaceTimer()
 {
    llRaceStartTime = GET_MICROS + 3000000;
    _ChangeRaceState(STARTING);

@@ -48,11 +48,6 @@ void LightsControllerClass::init(NeoPixelBus<NeoRgbFeature, WS_METHOD> *LightsSt
 /// </summary>
 void LightsControllerClass::Main()
 {
-   if (byOverallState == STARTING)
-   {
-      HandleStartSequence();
-   }
-
    //Check if we have to toggle any lights
    for (int i = 0; i < 6; i++)
    {
@@ -66,6 +61,21 @@ void LightsControllerClass::Main()
          ToggleLightState(_byLightsArray[i], OFF);
          _lLightsOutSchedule[i] = 0; //Delete schedule
       }
+   }
+
+   // If start sequence is initiated and we're going to turn on RED light we need to start race timer
+   if (byOverallState == INITIATED && CheckLightState(RED) == ON)
+   {
+      RaceHandler.StartRaceTimer();
+      byOverallState = STARTING;
+   }
+
+   // If start sequence is in progress and we're going to trun on GREEN light we need to change race state to RUNNING
+   if (byOverallState == STARTING && CheckLightState(GREEN) == ON)
+   {
+      RaceHandler.ChangeRaceStateToRunning();
+      byOverallState = STARTED;
+      ESP_LOGD(__FILE__, "%llu: GREEN light is ON!", GET_MICROS / 1000);
    }
 
    //Update lights
@@ -86,63 +96,29 @@ void LightsControllerClass::Main()
 }
 
 /// <summary>
-///   Handles the start sequence, will be called by main function when oceral race state is
-///   STARTING.
-/// </summary>
-void LightsControllerClass::HandleStartSequence()
-{
-   //This function takes care of the starting lights sequence
-   //Check if the lights have been programmed yet
-   if (!_bStartSequenceStarted)
-   {
-      //Start sequence is not yet started, we need to schedule the lights on/off times
-
-      //Set schedule for RED light
-      _lLightsOnSchedule[1] = GET_MICROS / 1000;         //Turn on NOW
-      _lLightsOutSchedule[1] = GET_MICROS / 1000 + 1000; //keep on for 1 second
-
-      //Set schedule for YELLOW1 light
-      _lLightsOnSchedule[2] = GET_MICROS / 1000 + 1000;  //Turn on after 1 second
-      _lLightsOutSchedule[2] = GET_MICROS / 1000 + 2000; //Turn off after 2 seconds
-
-      //Set schedule for YELLOW2 light
-      _lLightsOnSchedule[4] = GET_MICROS / 1000 + 2000;  //Turn on after 2 seconds
-      _lLightsOutSchedule[4] = GET_MICROS / 1000 + 3000; //Turn off after 3 seconds
-
-      //Set schedule for GREEN light
-      _lLightsOnSchedule[5] = GET_MICROS / 1000 + 3000;  //Turn on after 3 seconds
-      _lLightsOutSchedule[5] = GET_MICROS / 1000 + 4000; //Turn off after 4 seconds
-
-      _bStartSequenceStarted = true;
-   }
-   //Check if the start sequence is busy
-   bool bStartSequenceBusy = false;
-   for (int i = 0; i < 6; i++)
-   {
-      if (_lLightsOnSchedule[i] > 0 || _lLightsOutSchedule[i] > 0)
-      {
-         bStartSequenceBusy = true;
-      }
-   }
-   //Check if we should start the timer (GREEN light on)
-   if (CheckLightState(GREEN) == ON && RaceHandler.RaceState == RaceHandler.STARTING)
-   {
-      RaceHandler.StartTimers();
-      ESP_LOGD(__FILE__, "%llu: GREEN light is ON!", GET_MICROS / 1000);
-   }
-   if (!bStartSequenceBusy)
-   {
-      _bStartSequenceStarted = false;
-      byOverallState = STARTED;
-   }
-}
-
-/// <summary>
 ///   Initiate start sequence, should be called if starting lights sequence should be initiated.
 /// </summary>
 void LightsControllerClass::InitiateStartSequence()
 {
-   byOverallState = STARTING;
+   //Set start sequence, we need to schedule the lights on/off times
+
+   //Set schedule for RED light
+   _lLightsOnSchedule[1] = GET_MICROS / 1000;         //Turn on NOW
+   _lLightsOutSchedule[1] = GET_MICROS / 1000 + 1000; //keep on for 1 second
+
+   //Set schedule for YELLOW1 light
+   _lLightsOnSchedule[2] = GET_MICROS / 1000 + 1000;  //Turn on after 1 second
+   _lLightsOutSchedule[2] = GET_MICROS / 1000 + 2000; //Turn off after 2 seconds
+
+   //Set schedule for YELLOW2 light
+   _lLightsOnSchedule[4] = GET_MICROS / 1000 + 2000;  //Turn on after 2 seconds
+   _lLightsOutSchedule[4] = GET_MICROS / 1000 + 3000; //Turn off after 3 seconds
+
+   //Set schedule for GREEN light
+   _lLightsOnSchedule[5] = GET_MICROS / 1000 + 3000;  //Turn on after 3 seconds
+   _lLightsOutSchedule[5] = GET_MICROS / 1000 + 4000; //Turn off after 4 seconds
+
+   byOverallState = INITIATED;
 }
 
 /// <summary>
