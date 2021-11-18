@@ -148,6 +148,11 @@ uint8_t iSDdata1Pin = 4;
 uint8_t iSDclockPin = 14;
 uint8_t iSDcmdPin = 15;
 
+//GPS module pins
+uint8_t iGPStxPin = 36;
+uint8_t iGPSrxPin = 39;
+uint8_t iGPSppsPin = 21;
+
 //Array to hold last time button presses
 unsigned long long llLastRCPress[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
@@ -362,7 +367,7 @@ void setup()
 #endif
 
    //Initialize GPS Serial port and class
-   GPSSerial.begin(9600, SERIAL_8N1, 39, 36);
+   GPSSerial.begin(9600, SERIAL_8N1, iGPSrxPin, iGPStxPin);
    GPSHandler.init(&GPSSerial);
 
    ESP_LOGI(__FILE__, "Setup running on core %d", xPortGetCoreID());

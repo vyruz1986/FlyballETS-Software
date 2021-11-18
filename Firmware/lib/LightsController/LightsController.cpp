@@ -133,6 +133,9 @@ void LightsControllerClass::DeleteSchedules()
       _lLightsOnSchedule[i] = 0;  //Delete schedule
       _lLightsOutSchedule[i] = 0; //Delete schedule
    }
+   //Blink WHITE light to indicate manual STOP or RESET execution
+   _lLightsOnSchedule[0] = GET_MICROS / 1000;         //Turn on NOW
+   _lLightsOutSchedule[0] = GET_MICROS / 1000 + 100;  //keep on for 100ms
 }
 
 /// <summary>
