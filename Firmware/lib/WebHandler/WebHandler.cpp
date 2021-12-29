@@ -38,7 +38,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
    }
    else if (type == WS_EVT_PONG)
    {
-      //ESP_LOGD(__FILE__, "ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len) ? (char *)data : "");
+      ESP_LOGD(__FILE__, "ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len) ? (char *)data : "");
    }
    else if (type == WS_EVT_DATA)
    {
@@ -217,7 +217,10 @@ void WebHandlerClass::init(int webPort)
    _lRaceDataBroadcastInterval = 750;
 
    _lLastSystemDataBroadcast = 0;
-   _lSystemDataBroadcastInterval = 2000;
+   _lSystemDataBroadcastInterval = 1000;
+
+   _lLastPingBroadcast = 0;
+   _lPingBroadcastInterval = 10000;
 
    _SystemData.CPU0ResetReason = rtc_get_reset_reason(0);
    _SystemData.CPU1ResetReason = rtc_get_reset_reason(1);
@@ -235,23 +238,29 @@ void WebHandlerClass::loop()
          _lLastRaceDataBroadcast = millis();
       }
    }
-   if (millis() - _lLastSystemDataBroadcast > _lSystemDataBroadcastInterval)
+   else
    {
-      _GetSystemData();
-      _SendSystemData();
-      _lLastSystemDataBroadcast = millis();
-      // ESP_LOGD(__FILE__, "Current websocket clients connected: %i", _ws->count());
-      //    for (size_t i = 0; i < _ws->count(); i++)
-      //    {
-      //       ESP_LOGD(__FILE__, "Pinging client %i", i);
-      //       char *ping = "ping";
-      //       auto client = _ws->client(i);
-      //       client->ping(ping, sizeof ping);
-      //    }
-      //_ws->pingAll();
+      if (millis() - _lLastSystemDataBroadcast > _lSystemDataBroadcastInterval)
+      {
+         _GetSystemData();
+         _SendSystemData();
+         _lLastSystemDataBroadcast = millis();
+      }
+      if (millis() - _lLastPingBroadcast > _lPingBroadcastInterval)
+      {
+         ESP_LOGD(__FILE__, "Current websocket clients connected: %i", _ws->count());
+         //    for (size_t i = 0; i < _ws->count(); i++)
+         //    {
+         //       ESP_LOGD(__FILE__, "Pinging client %i", i);
+         //       char *ping = "ping";
+         //       auto client = _ws->client(i);
+         //       client->ping(ping, sizeof ping);
+         //    }
+         _ws->pingAll();
+         _lLastPingBroadcast = millis();
+      }
    }
 }
-
 void WebHandlerClass::SendLightsData(stLightsState LightStates)
 {
    const size_t bufferSize = JSON_ARRAY_SIZE(5) + JSON_OBJECT_SIZE(1);
@@ -292,7 +301,6 @@ boolean WebHandlerClass::_DoAction(JsonObject &ActionObj, String *ReturnError)
       else
       {
          LightsController.InitiateStartSequence();
-         RaceHandler.StartRace();
          return true;
       }
    }
@@ -333,8 +341,8 @@ boolean WebHandlerClass::_DoAction(JsonObject &ActionObj, String *ReturnError)
       }
       uint8_t iDogNum = ActionObj["actionData"]["dogNumber"];
       //boolean bFaultState = ActionObj["actionData"]["faultState"];
-      RaceHandler.SetDogFault(iDogNum);
       //RaceHandler.SetDogFault(iDogNum, (bFaultState ? RaceHandler.ON : RaceHandler.OFF));
+      RaceHandler.SetDogFault(iDogNum);
       return true;
    }
    else

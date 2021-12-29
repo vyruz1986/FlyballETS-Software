@@ -39,9 +39,10 @@ void LCDControllerClass::init(LiquidCrystal *Clcd1, LiquidCrystal *Clcd2)
    //Put initial text on screen
    //                                 1         2         3
    //LCD layout:            0123456789012345678901234567890123456789
-   _UpdateLCD(2, 0, String("  Flyball Electronic Training System    "), 40);
-   _UpdateLCD(3, 0, String("             ver. 1.0.0                 "), 40);
-   delay(3000);
+   _UpdateLCD(2, 0, String("   Flyball Electronic Training System   "), 40);
+   _UpdateLCD(3, 0, String("            ver.        rev.S           "), 40);
+   _UpdateLCD(3, 17, String(FW_VER), 6);
+   delay(1500);
    _UpdateLCD(1, 0, String("1:   0.000  +  0.000    |     WELCOME   "), 40);
    _UpdateLCD(2, 0, String("2:   0.000  +  0.000    | Team:    0.000"), 40);
    _UpdateLCD(3, 0, String("3:   0.000  +  0.000    |  Net:    0.000"), 40);

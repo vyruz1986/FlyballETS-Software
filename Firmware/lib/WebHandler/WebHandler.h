@@ -51,6 +51,8 @@ protected:
    unsigned long _lRaceDataBroadcastInterval;
    unsigned long _lLastSystemDataBroadcast;
    unsigned long _lSystemDataBroadcastInterval;
+   unsigned long _lLastPingBroadcast;
+   unsigned long _lPingBroadcastInterval;
    stSystemData _SystemData;
    char _last_modified[50];
 
