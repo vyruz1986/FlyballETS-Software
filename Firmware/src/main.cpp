@@ -72,32 +72,35 @@
 
    - 12: Laser output
    
-   -  5: set high to turn off build in led
    -  1: free/TX
    -  3: free/RX
    
+GPS module
    - 21:    GPS PPS signal
    - 36/VP: GPS rx (ESP tx)
    - 39/VN: GPS tx (ESP rx)
 
+SD card in MMC mode (require HW 5.0.0 rev.S or higher)
    -  2: SD card Data0
    -  4: SD card Data1
    - 14: SD card Clock
    - 15: SD card Command
+   -  5: SD card Detect (state low when card inserted)
 
+74HC166 lines
    - 19: dataOutPin (Q7) for 74HC166
    - 23: latchPin (CE)   for 74HC166
    - 18: clockPin (CP)   for 74HC166
 
-74HC166 pinouts
-   - D0: Side switch button
-   - D1: remote D0 start/stop
-   - D2: remote D1 reset
-   - D3: remote D2 dog 1 fault
-   - D4: remote D5 dog 4 fault
-   - D5: remote D4 dog 3 fault
-   - D6: remote D3 dog 2 fault
-   - D7: Laser trigger button
+   74HC166 pinouts
+      - D0: Side switch button
+      - D1: remote D0 start/stop
+      - D2: remote D1 reset
+      - D3: remote D2 dog 1 fault
+      - D4: remote D5 dog 4 fault
+      - D5: remote D4 dog 3 fault
+      - D6: remote D3 dog 2 fault
+      - D7: Laser trigger button
 */
 
 //Set simulate to true to enable simulator class (see Simulator.cpp/h)
@@ -147,6 +150,8 @@ uint8_t iSDdata0Pin = 2;
 uint8_t iSDdata1Pin = 4;
 uint8_t iSDclockPin = 14;
 uint8_t iSDcmdPin = 15;
+uint8_t iSDdetectPin = 5;
+boolean bSDCardDetected = false;
 
 //GPS module pins
 uint8_t iGPStxPin = 36;
@@ -208,8 +213,6 @@ void setup()
    Serial.begin(115200);
    SettingsManager.init();
 
-   pinMode(5, OUTPUT);
-
    pinMode(iS1Pin, INPUT_PULLDOWN);
    pinMode(iS2Pin, INPUT_PULLDOWN);
 
@@ -225,6 +228,7 @@ void setup()
    pinMode(iSDdata0Pin, INPUT_PULLUP);
    pinMode(iSDdata1Pin, INPUT_PULLUP);
    pinMode(iSDcmdPin, INPUT_PULLUP);
+   pinMode(iSDdetectPin, INPUT_PULLUP);
 
    //LCD pins as output
    pinMode(iLCDData4Pin, OUTPUT);
@@ -244,9 +248,6 @@ void setup()
    //Initialize other I/O's
    pinMode(iLaserOutputPin, OUTPUT);
 
-   //Turn off build-in ESP32 Loli32 LED
-   digitalWrite(5, HIGH);
-
    //Initialize BatterySensor class with correct pin
    BatterySensor.init(iBatterySensorPin);
 
@@ -258,8 +259,12 @@ void setup()
 
    strSerialData[0] = 0;
 
+   //Print SW version
+   ESP_LOGI(__FILE__, "Firmware version %s", FW_VER);
+
    //SD card init
- #ifdef SDcard
+if (digitalRead(iSDdetectPin) == LOW || SDcardForcedDetect)
+{
    if (!SD_MMC.begin("/sdcard", true))
    {
       Serial.println("Card Mount Failed");
@@ -274,27 +279,34 @@ void setup()
          Serial.println("No SD_MMC card attached");
          return;
       }
-      Serial.print("SD_MMC Card Type: ");
+      Serial.print("\nSD_MMC Card Type: ");
       if (cardType == CARD_MMC)
       {
          Serial.println("MMC");
+         bSDCardDetected = true;
       }
       else if (cardType == CARD_SD)
       {
          Serial.println("SDSC");
+         bSDCardDetected = true;
       }
       else if (cardType == CARD_SDHC)
       {
          Serial.println("SDHC");
+         bSDCardDetected = true;
       }
       else
       {
          Serial.println("UNKNOWN");
       }
       uint64_t cardSize = SD_MMC.cardSize() / (1024 * 1024);
-      Serial.printf("SD_MMC Card Size: %lluMB\n", cardSize);
+      Serial.printf("SD_MMC Card Size: %lluMB\n\n", cardSize);
    }
-#endif
+}
+else
+{
+   Serial.println("\nSD Card not inserted!\n");
+}
 
 #ifdef WiFiON
    //Setup AP
@@ -391,6 +403,20 @@ void loop()
 
       //Handle battery sensor main processing
       BatterySensor.CheckBatteryVoltage();
+
+      //Check SD card
+      if (bSDCardDetected && digitalRead(iSDdetectPin) == HIGH)
+      {
+         Serial.println("\nSD Card plugged out - rebooting!\n");
+         delay(500);
+         ESP.restart();
+      }
+      if (!bSDCardDetected && digitalRead(iSDdetectPin) == LOW)
+      {
+         Serial.println("\nSD Card plugged in - rebooting!\n");
+         delay(500);
+         ESP.restart();
+      }
    }
 
    //Check for serial events
