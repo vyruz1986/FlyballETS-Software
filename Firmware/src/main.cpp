@@ -37,22 +37,21 @@
 #include <WiFiUdp.h>
 #endif
 #include <EEPROM.h>
-#include <FS.h>
-#include <SD_MMC.h>
 #include <NeoPixelBus.h>
 #include <ESPmDNS.h>
 //#include <time.h>
 
 //Private libs
-#include <GPSHandler.h>
-#include <SettingsManager.h>
+#include "GPSHandler.h"
+#include "SettingsManager.h"
 #ifdef WiFiON
-#include <WebHandler.h>
+#include "WebHandler.h"
 #endif
-#include <LCDController.h>
-#include <RaceHandler.h>
-#include <LightsController.h>
-#include <BatterySensor.h>
+#include "LCDController.h"
+#include "RaceHandler.h"
+#include "LightsController.h"
+#include "BatterySensor.h"
+#include "SDcardController.h"
 
 /*List of pins and the ones used (Lolin32 board):
    - 34: S1 (handler side) photoelectric sensor. ESP32 has no pull-down resistor on 34 pin, but pull-down anyway by 1kohm resistor on sensor board
@@ -125,7 +124,7 @@ uint8_t iLightsDataPin = 22;
 NeoPixelBus<NeoRgbFeature, WS_METHOD> LightsStrip(5 * LIGHTSCHAINS, iLightsDataPin);
 
 //Battery variables
-int iBatterySensorPin = 35;
+uint8_t iBatterySensorPin = 35;
 uint16_t iBatteryVoltage = 0;
 
 //Other IO's
@@ -151,7 +150,6 @@ uint8_t iSDdata1Pin = 4;
 uint8_t iSDclockPin = 14;
 uint8_t iSDcmdPin = 15;
 uint8_t iSDdetectPin = 5;
-boolean bSDCardDetected = false;
 
 //GPS module pins
 uint8_t iGPStxPin = 36;
@@ -263,50 +261,14 @@ void setup()
    ESP_LOGI(__FILE__, "Firmware version %s", FW_VER);
 
    //SD card init
-if (digitalRead(iSDdetectPin) == LOW || SDcardForcedDetect)
-{
-   if (!SD_MMC.begin("/sdcard", true))
+   if (digitalRead(iSDdetectPin) == LOW || SDcardForcedDetect)
    {
-      Serial.println("Card Mount Failed");
-      return;
+      SDcardController.init();
    }
    else
    {
-      uint8_t cardType = SD_MMC.cardType();
-
-      if (cardType == CARD_NONE)
-      {
-         Serial.println("No SD_MMC card attached");
-         return;
-      }
-      Serial.print("\nSD_MMC Card Type: ");
-      if (cardType == CARD_MMC)
-      {
-         Serial.println("MMC");
-         bSDCardDetected = true;
-      }
-      else if (cardType == CARD_SD)
-      {
-         Serial.println("SDSC");
-         bSDCardDetected = true;
-      }
-      else if (cardType == CARD_SDHC)
-      {
-         Serial.println("SDHC");
-         bSDCardDetected = true;
-      }
-      else
-      {
-         Serial.println("UNKNOWN");
-      }
-      uint64_t cardSize = SD_MMC.cardSize() / (1024 * 1024);
-      Serial.printf("SD_MMC Card Size: %lluMB\n\n", cardSize);
+      Serial.println("\nSD Card not inserted!\n");
    }
-}
-else
-{
-   Serial.println("\nSD Card not inserted!\n");
-}
 
 #ifdef WiFiON
    //Setup AP
@@ -404,19 +366,8 @@ void loop()
       //Handle battery sensor main processing
       BatterySensor.CheckBatteryVoltage();
 
-      //Check SD card
-      if (bSDCardDetected && digitalRead(iSDdetectPin) == HIGH)
-      {
-         Serial.println("\nSD Card plugged out - rebooting!\n");
-         delay(500);
-         ESP.restart();
-      }
-      if (!bSDCardDetected && digitalRead(iSDdetectPin) == LOW)
-      {
-         Serial.println("\nSD Card plugged in - rebooting!\n");
-         delay(500);
-         ESP.restart();
-      }
+      //Check SD card slot (card inserted / removed)
+      SDcardController.CheckSDcardSlot(iSDdetectPin);
    }
 
    //Check for serial events
@@ -474,6 +425,13 @@ void loop()
    if ((bitRead(bDataIn, 2) == HIGH && (GET_MICROS / 1000 - llLastRCPress[2] > 2000)) || (bSerialStringComplete && strSerialData == "reset"))
    {
       ResetRace();
+   }
+
+   //Print time
+   if (bSerialStringComplete && strSerialData == "time")
+   {
+      ESP_LOGI(__FILE__, "GPS UTC: %s", GPSHandler.GetUTCTimestamp());
+      ESP_LOGI(__FILE__, "System:  %s", GPSHandler.GetLocalTimestamp());;
    }
 
    //Reboot ESP32

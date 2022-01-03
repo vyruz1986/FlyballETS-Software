@@ -22,6 +22,7 @@
 #include "SettingsManager.h"
 #include "config.h"
 #include "WebHandler.h"
+#include "SDcardController.h"
 
 /// <summary>
 ///   Initialises this object andsets all counters to 0.
@@ -569,7 +570,7 @@ void RaceHandlerClass::StartRaceTimer()
    llRaceStartTime = GET_MICROS + 3000000;
    _ChangeRaceState(STARTING);
    ESP_LOGD(__FILE__, "%llu: STARTING!", (llRaceStartTime - 3000000) / 1000);
-   ESP_LOGI(__FILE__, "%s", GPSHandler.GetUTCTimestamp());
+   ESP_LOGI(__FILE__, "%s", GPSHandler.GetLocalTimestamp());
 }
 
 /// <summary>
