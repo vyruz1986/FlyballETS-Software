@@ -65,7 +65,7 @@
    - 17: LCD2 (line 3&4) enable pin
    - 25: LCD RS Pin
 
-   - 22: WS2811B lights data pin
+   - 21: WS2811B lights data pin
 
    - 35: battery sensor pin
 
@@ -75,7 +75,7 @@
    -  3: free/RX
    
 GPS module
-   - 21:    GPS PPS signal
+   - 22:    GPS PPS signal
    - 36/VP: GPS rx (ESP tx)
    - 39/VN: GPS tx (ESP rx)
 
@@ -120,7 +120,7 @@ long long llHeapInterval = 5000;
 bool error = false;
 
 //Initialise Lights stuff
-uint8_t iLightsDataPin = 22;
+uint8_t iLightsDataPin = 21;
 NeoPixelBus<NeoRgbFeature, WS_METHOD> LightsStrip(5 * LIGHTSCHAINS, iLightsDataPin);
 
 //Battery variables
@@ -154,7 +154,7 @@ uint8_t iSDdetectPin = 5;
 //GPS module pins
 uint8_t iGPStxPin = 36;
 uint8_t iGPSrxPin = 39;
-uint8_t iGPSppsPin = 21;
+uint8_t iGPSppsPin = 22;
 
 //Array to hold last time button presses
 unsigned long long llLastRCPress[8] = {0, 0, 0, 0, 0, 0, 0, 0};
