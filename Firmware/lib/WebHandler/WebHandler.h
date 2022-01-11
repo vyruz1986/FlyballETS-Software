@@ -7,8 +7,7 @@
 #include "SettingsManager.h"
 //#include <Hash.h>
 #include <ESPAsyncWebServer.h>
-#include <FS.h>
-#include <SD_MMC.h>
+#include "SDcardController.h"
 #include <ArduinoJson.h>
 #include "RaceHandler.h"
 #include "Structs.h"
@@ -33,7 +32,7 @@ protected:
    void _WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
    boolean _DoAction(JsonObject &ActionObj, String *ReturnError);
    boolean _GetRaceDataJsonString(uint iRaceId, String &strJsonString);
-   void _SendRaceData(uint iRaceId = RaceHandler._iCurrentRaceId);
+   void _SendRaceData(int iRaceId = RaceHandler.iCurrentRaceId);
 
    boolean _ProcessConfig(JsonArray &newConfig, String *ReturnError);
 

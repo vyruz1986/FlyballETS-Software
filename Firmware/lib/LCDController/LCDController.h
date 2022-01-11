@@ -44,8 +44,11 @@ public:
       D4CrossTime,
       RaceState,
       BattLevel,
+      RaceID,
       TeamTime,
       NetTime,
+      GpsState,
+      SDcardState,
       BoxDirection
    };
 
@@ -65,7 +68,7 @@ private:
       int iFieldLength;
       String strText;
    };
-   struct SLCDField _SlcdfieldFields[17];
+   struct SLCDField _SlcdfieldFields[20];
 };
 
 extern LCDControllerClass LCDController;

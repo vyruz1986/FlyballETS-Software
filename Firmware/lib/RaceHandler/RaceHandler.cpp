@@ -22,6 +22,7 @@
 #include "SettingsManager.h"
 #include "config.h"
 #include "WebHandler.h"
+#include "SDcardController.h"
 
 /// <summary>
 ///   Initialises this object andsets all counters to 0.
@@ -35,11 +36,10 @@ void RaceHandlerClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
    _iS1Pin = iS1Pin;
    _iS2Pin = iS2Pin;
    ResetRace();
-   _iCurrentRaceId = 0;
    if (SettingsManager.getSetting("RunDirectionInverted").equals("1"))
    {
       _bRunDirectionInverted = true;
-      LCDController.UpdateField(LCDController.BoxDirection, "<--");
+      LCDController.UpdateField(LCDController.BoxDirection, "<");
       ESP_LOGD(__FILE__, "Run direction from settings: inverted");
    }
    else
@@ -568,8 +568,9 @@ void RaceHandlerClass::StartRaceTimer()
 {
    llRaceStartTime = GET_MICROS + 3000000;
    _ChangeRaceState(STARTING);
-   ESP_LOGD(__FILE__, "%llu: STARTING!", (llRaceStartTime - 3000000) / 1000);
-   ESP_LOGI(__FILE__, "%s", GPSHandler.GetUTCTimestamp());
+   ESP_LOGD(__FILE__, "%llu: STARTING! Race ID: %i", (llRaceStartTime - 3000000) / 1000, iCurrentRaceId + 1);
+   cRaceStartTimestamp = GPSHandler.GetLocalTimestamp();
+   ESP_LOGI(__FILE__, "Timestamp: %s", cRaceStartTimestamp);
 }
 
 /// <summary>
@@ -593,7 +594,7 @@ void RaceHandlerClass::StopRace(long long llStopTime)
       _llRaceTime = _llRaceEndTime - llRaceStartTime;
    }
    _ChangeRaceState(STOPPED);
-   _HistoricRaceData[_iCurrentRaceId] = GetRaceData(_iCurrentRaceId);
+   _HistoricRaceData[iCurrentRaceId] = GetRaceData(iCurrentRaceId);
 }
 
 /// <summary>
@@ -707,14 +708,20 @@ void RaceHandlerClass::ResetRace()
       _ChangeRaceState(RESET);
    }
 
-   if (_iCurrentRaceId == NUM_HISTORIC_RACE_RECORDS)
+   if (iCurrentRaceId == NUM_HISTORIC_RACE_RECORDS)
    {
-      _iCurrentRaceId = 0;
+      iCurrentRaceId = 0;
    }
    else
    {
-      _iCurrentRaceId++;
+      iCurrentRaceId++;
    }
+   String _sCurrentRaceId = String(iCurrentRaceId + 1);
+   while (_sCurrentRaceId.length() < 2)
+   {
+      _sCurrentRaceId = " " + _sCurrentRaceId;
+   }
+   LCDController.UpdateField(LCDController.RaceID, _sCurrentRaceId);
    ESP_LOGI(__FILE__, "Reset Race: DONE");
 #ifdef WiFiON
    //Send updated racedata to any web clients
@@ -733,6 +740,40 @@ void RaceHandlerClass::PrintRaceTriggerRecords()
       STriggerRecord RecordToPrint = _InputTriggerQueue[iRecordToPrintIndex];
       printf("{%i, %lld, %i},\n", RecordToPrint.iSensorNumber, RecordToPrint.llTriggerTime - llRaceStartTime, RecordToPrint.iSensorState);
       iRecordToPrintIndex++;
+   }
+}
+
+/// <summary>
+///   If SD card is present, after race is ended/stopped print trigger records to file
+/// </summary>
+void RaceHandlerClass::PrintRaceTriggerRecordsToFile()
+{
+   File rawSensorsReadingFile;
+   String rawSensorsReadingFileName= "/SENSORS_DATA/" + SDcardController.sTagValue + "_SensorsData" + ".txt";
+   if (iCurrentRaceId == 0)
+   {
+      SDcardController.writeFile(SD_MMC, rawSensorsReadingFileName.c_str(),
+      "Sensor ID; Time [us]; Sensor state\n");
+   }
+   rawSensorsReadingFile = SD_MMC.open(rawSensorsReadingFileName.c_str(), FILE_APPEND);
+   if(rawSensorsReadingFile)
+   {
+      rawSensorsReadingFile.print("Race ID: ");
+      rawSensorsReadingFile.println(RaceHandler.iCurrentRaceId + 1);
+      uint8_t iRecordToPrintIndex = 0;
+      while (iRecordToPrintIndex < _iInputQueueWriteIndex)
+      {
+         STriggerRecord RecordToPrint = _InputTriggerQueue[iRecordToPrintIndex];
+         rawSensorsReadingFile.print("{");
+         rawSensorsReadingFile.print(RecordToPrint.iSensorNumber);
+         rawSensorsReadingFile.print(", ");
+         rawSensorsReadingFile.print(RecordToPrint.llTriggerTime - llRaceStartTime);
+         rawSensorsReadingFile.print(", ");
+         rawSensorsReadingFile.print(RecordToPrint.iSensorState);
+         rawSensorsReadingFile.println("},");                        
+         iRecordToPrintIndex++;
+      }
+      rawSensorsReadingFile.close();
    }
 }
 
@@ -989,18 +1030,24 @@ String RaceHandlerClass::GetStoredDogTimes(uint8_t iDogNumber, int8_t iRunNumber
    char cDogTime[8];
    String strDogTime;
    double dDogTime = 0;
-#if Accuracy2digits
+   if (Accuracy2digits)
    {
       dDogTime = ((long long)(_llDogTimes[iDogNumber][iRunNumber] + 5000) / 10000) / 100.0;
       dtostrf(dDogTime, 7, 2, cDogTime);
    }
-#else
+   else
    {
       dDogTime = ((long long)(_llDogTimes[iDogNumber][iRunNumber] + 500) / 1000) / 1000.0;
       dtostrf(dDogTime, 7, 3, cDogTime);
    }
-#endif
-   strDogTime = cDogTime;
+   if (dDogTime == 0)
+   {
+      strDogTime = "";
+   }
+   else
+   {
+      strDogTime = cDogTime;
+   }
    if (_bDogMissedGateGoingin[iDogNumber][iRunNumber])
    {
       strDogTime = " run in";
@@ -1039,6 +1086,7 @@ String RaceHandlerClass::GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber)
 ///
 /// <param name="iDogNumber"> Zero-based index of the dog number. </param>
 /// <param name="iRunNumber"> Zero-based index of the run number. </param>
+/// <param name="bToFile"> used for results printing to file. </param>
 ///
 /// <returns>
 ///   String with following options:
@@ -1050,15 +1098,15 @@ String RaceHandlerClass::GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber)
 ///   * fault - un-measurable fault
 ///   * "empty" - if no crossing time available / possible
 /// </returns>
-String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNumber)
+String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNumber, boolean bToFile)
 {
    double dCrossingTime;
    char cCrossingTime[8];
    String strCrossingTime;
    if (_llCrossingTimes[iDogNumber][iRunNumber] < 0 && _llDogEnterTimes[iDogNumber] != 0 && (GET_MICROS - _llDogEnterTimes[iDogNumber]) > 300000)
    {
-      if ((iDogNumber == 0 && iRunNumber == 0 && _llCrossingTimes[0][0] > -9500) && Accuracy2digits) //If this is first dog false start below 9.5ms
-                                                                                                     //use "ms" accuracy even if 2digits accuracy has been set
+      if ((iDogNumber == 0 && iRunNumber == 0 && _llCrossingTimes[0][0] > -9500) && Accuracy2digits && !bToFile)  //If this is first dog false start below 9.5ms
+                                                                                                                  //use "ms" accuracy even if 2digits accuracy has been set
       {
          dCrossingTime = ((long long)(_llCrossingTimes[iDogNumber][iRunNumber] - 500) / 1000);
          dCrossingTime = fabs(dCrossingTime);
@@ -1067,15 +1115,7 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
          strCrossingTime += cCrossingTime;
          strCrossingTime += " ms";
       }
-      else if (Accuracy2digits)
-      {
-         dCrossingTime = ((long long)(_llCrossingTimes[iDogNumber][iRunNumber] - 5000) / 10000) / 100.0;
-         dCrossingTime = fabs(dCrossingTime);
-         dtostrf(dCrossingTime, 6, 2, cCrossingTime);
-         strCrossingTime = "-";
-         strCrossingTime += cCrossingTime;
-      }
-      else
+      else if (!Accuracy2digits || ((iDogNumber == 0 && iRunNumber == 0 && _llCrossingTimes[0][0] > -9500) && Accuracy2digits && bToFile))
       {
          dCrossingTime = ((long long)(_llCrossingTimes[iDogNumber][iRunNumber] - 500) / 1000) / 1000.0;
          dCrossingTime = fabs(dCrossingTime);
@@ -1083,11 +1123,19 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
          strCrossingTime = "-";
          strCrossingTime += cCrossingTime;
       }
+      else
+      {
+         dCrossingTime = ((long long)(_llCrossingTimes[iDogNumber][iRunNumber] - 5000) / 10000) / 100.0;
+         dCrossingTime = fabs(dCrossingTime);
+         dtostrf(dCrossingTime, 6, 2, cCrossingTime);
+         strCrossingTime = "-";
+         strCrossingTime += cCrossingTime;
+      }
    }
    else if (_llCrossingTimes[iDogNumber][iRunNumber] > 0 && _llDogEnterTimes[iDogNumber] != 0 && (GET_MICROS - _llDogEnterTimes[iDogNumber]) > 300000)
    {
-      if ((iDogNumber == 0 && iRunNumber == 0 && _llCrossingTimes[0][0] < 9500) && Accuracy2digits) //If this is first dog entry time (start) below 9.5ms
-                                                                                                    //use "ms" accuracy even if 2digits accuracy has been set
+      if ((iDogNumber == 0 && iRunNumber == 0 && _llCrossingTimes[0][0] < 9500) && Accuracy2digits && !bToFile)//If this is first dog entry time (start) below 9.5ms
+                                                                                                               //use "ms" accuracy even if 2digits accuracy has been set
       {
          dCrossingTime = ((long long)(_llCrossingTimes[iDogNumber][iRunNumber] + 500) / 1000);
          dtostrf(dCrossingTime, 3, 0, cCrossingTime);
@@ -1095,17 +1143,17 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
          strCrossingTime += cCrossingTime;
          strCrossingTime += " ms";
       }
-      else if (Accuracy2digits)
+      else if (!Accuracy2digits || ((iDogNumber == 0 && iRunNumber == 0 && _llCrossingTimes[0][0] < 9500) && Accuracy2digits && bToFile))
       {
-         dCrossingTime = ((long long)(_llCrossingTimes[iDogNumber][iRunNumber] + 5000) / 10000) / 100.0;
-         dtostrf(dCrossingTime, 6, 2, cCrossingTime);
+         dCrossingTime = ((long long)(_llCrossingTimes[iDogNumber][iRunNumber] + 500) / 1000) / 1000.0;
+         dtostrf(dCrossingTime, 7, 3, cCrossingTime);
          strCrossingTime = "+";
          strCrossingTime += cCrossingTime;
       }
       else
       {
-         dCrossingTime = ((long long)(_llCrossingTimes[iDogNumber][iRunNumber] + 500) / 1000) / 1000.0;
-         dtostrf(dCrossingTime, 7, 3, cCrossingTime);
+         dCrossingTime = ((long long)(_llCrossingTimes[iDogNumber][iRunNumber] + 5000) / 10000) / 100.0;
+         dtostrf(dCrossingTime, 6, 2, cCrossingTime);
          strCrossingTime = "+";
          strCrossingTime += cCrossingTime;
       }
@@ -1253,7 +1301,7 @@ String RaceHandlerClass::GetRaceStateString()
 /// </returns>
 stRaceData RaceHandlerClass::GetRaceData()
 {
-   return GetRaceData(_iCurrentRaceId);
+   return GetRaceData(iCurrentRaceId);
 }
 
 /// <summary>
@@ -1269,10 +1317,10 @@ stRaceData RaceHandlerClass::GetRaceData(uint iRaceId)
 {
    stRaceData RequestedRaceData;
 
-   if (iRaceId == _iCurrentRaceId)
+   if (iRaceId == iCurrentRaceId)
    {
       //We need to return data for the current dace
-      RequestedRaceData.Id = _iCurrentRaceId;
+      RequestedRaceData.Id = iCurrentRaceId;
       RequestedRaceData.StartTime = llRaceStartTime / 1000;
       RequestedRaceData.EndTime = _llRaceEndTime / 1000;
 #if Accuracy2digits
@@ -1317,12 +1365,12 @@ void RaceHandlerClass::ToggleRunDirection()
    SettingsManager.setSetting("RunDirectionInverted", String(_bRunDirectionInverted));
    if (_bRunDirectionInverted)
    {
-      LCDController.UpdateField(LCDController.BoxDirection, "<--");
+      LCDController.UpdateField(LCDController.BoxDirection, "<");
       ESP_LOGD(__FILE__, "Run direction changed to: inverted");
    }
    else
    {
-      LCDController.UpdateField(LCDController.BoxDirection, "-->");
+      LCDController.UpdateField(LCDController.BoxDirection, ">");
       ESP_LOGD(__FILE__, "Run direction changed to: normal");
    }
 }

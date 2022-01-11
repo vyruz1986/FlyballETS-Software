@@ -37,22 +37,21 @@
 #include <WiFiUdp.h>
 #endif
 #include <EEPROM.h>
-#include <FS.h>
-#include <SD_MMC.h>
 #include <NeoPixelBus.h>
 #include <ESPmDNS.h>
 //#include <time.h>
 
 //Private libs
-#include <GPSHandler.h>
-#include <SettingsManager.h>
+#include "GPSHandler.h"
+#include "SettingsManager.h"
 #ifdef WiFiON
-#include <WebHandler.h>
+#include "WebHandler.h"
 #endif
-#include <LCDController.h>
-#include <RaceHandler.h>
-#include <LightsController.h>
-#include <BatterySensor.h>
+#include "LCDController.h"
+#include "RaceHandler.h"
+#include "LightsController.h"
+#include "BatterySensor.h"
+#include "SDcardController.h"
 
 /*List of pins and the ones used (Lolin32 board):
    - 34: S1 (handler side) photoelectric sensor. ESP32 has no pull-down resistor on 34 pin, but pull-down anyway by 1kohm resistor on sensor board
@@ -66,7 +65,7 @@
    - 17: LCD2 (line 3&4) enable pin
    - 25: LCD RS Pin
 
-   - 22: WS2811B lights data pin
+   - 21: WS2811B lights data pin
 
    - 35: battery sensor pin
 
@@ -76,7 +75,7 @@
    -  3: free/RX
    
 GPS module
-   - 21:    GPS PPS signal
+   - 22:    GPS PPS signal
    - 36/VP: GPS rx (ESP tx)
    - 39/VN: GPS tx (ESP rx)
 
@@ -119,13 +118,16 @@ char cTeamNetTime[8];
 long long llHeapPreviousMillis = 0;
 long long llHeapInterval = 5000;
 bool error = false;
+File raceDataFile;
+String raceDataFileName;
+String sDate;
 
 //Initialise Lights stuff
-uint8_t iLightsDataPin = 22;
+uint8_t iLightsDataPin = 21;
 NeoPixelBus<NeoRgbFeature, WS_METHOD> LightsStrip(5 * LIGHTSCHAINS, iLightsDataPin);
 
 //Battery variables
-int iBatterySensorPin = 35;
+uint8_t iBatterySensorPin = 35;
 uint16_t iBatteryVoltage = 0;
 
 //Other IO's
@@ -151,12 +153,11 @@ uint8_t iSDdata1Pin = 4;
 uint8_t iSDclockPin = 14;
 uint8_t iSDcmdPin = 15;
 uint8_t iSDdetectPin = 5;
-boolean bSDCardDetected = false;
 
 //GPS module pins
 uint8_t iGPStxPin = 36;
 uint8_t iGPSrxPin = 39;
-uint8_t iGPSppsPin = 21;
+uint8_t iGPSppsPin = 22;
 
 //Array to hold last time button presses
 unsigned long long llLastRCPress[8] = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -262,51 +263,20 @@ void setup()
    //Print SW version
    ESP_LOGI(__FILE__, "Firmware version %s", FW_VER);
 
+   
+   //Initialize GPS Serial port and class
+   GPSSerial.begin(9600, SERIAL_8N1, iGPSrxPin, iGPStxPin);
+   GPSHandler.init(&GPSSerial);
+
    //SD card init
-if (digitalRead(iSDdetectPin) == LOW || SDcardForcedDetect)
-{
-   if (!SD_MMC.begin("/sdcard", true))
+   if (digitalRead(iSDdetectPin) == LOW || SDcardForcedDetect)
    {
-      Serial.println("Card Mount Failed");
-      return;
+      SDcardController.init();
    }
    else
    {
-      uint8_t cardType = SD_MMC.cardType();
-
-      if (cardType == CARD_NONE)
-      {
-         Serial.println("No SD_MMC card attached");
-         return;
-      }
-      Serial.print("\nSD_MMC Card Type: ");
-      if (cardType == CARD_MMC)
-      {
-         Serial.println("MMC");
-         bSDCardDetected = true;
-      }
-      else if (cardType == CARD_SD)
-      {
-         Serial.println("SDSC");
-         bSDCardDetected = true;
-      }
-      else if (cardType == CARD_SDHC)
-      {
-         Serial.println("SDHC");
-         bSDCardDetected = true;
-      }
-      else
-      {
-         Serial.println("UNKNOWN");
-      }
-      uint64_t cardSize = SD_MMC.cardSize() / (1024 * 1024);
-      Serial.printf("SD_MMC Card Size: %lluMB\n\n", cardSize);
+      Serial.println("\nSD Card not inserted!\n");
    }
-}
-else
-{
-   Serial.println("\nSD Card not inserted!\n");
-}
 
 #ifdef WiFiON
    //Setup AP
@@ -378,10 +348,6 @@ else
 #endif //  ESP32
 #endif
 
-   //Initialize GPS Serial port and class
-   GPSSerial.begin(9600, SERIAL_8N1, iGPSrxPin, iGPStxPin);
-   GPSHandler.init(&GPSSerial);
-
    ESP_LOGI(__FILE__, "Setup running on core %d", xPortGetCoreID());
 }
 
@@ -404,19 +370,8 @@ void loop()
       //Handle battery sensor main processing
       BatterySensor.CheckBatteryVoltage();
 
-      //Check SD card
-      if (bSDCardDetected && digitalRead(iSDdetectPin) == HIGH)
-      {
-         Serial.println("\nSD Card plugged out - rebooting!\n");
-         delay(500);
-         ESP.restart();
-      }
-      if (!bSDCardDetected && digitalRead(iSDdetectPin) == LOW)
-      {
-         Serial.println("\nSD Card plugged in - rebooting!\n");
-         delay(500);
-         ESP.restart();
-      }
+      //Check SD card slot (card inserted / removed)
+      SDcardController.CheckSDcardSlot(iSDdetectPin);
    }
 
    //Check for serial events
@@ -474,6 +429,25 @@ void loop()
    if ((bitRead(bDataIn, 2) == HIGH && (GET_MICROS / 1000 - llLastRCPress[2] > 2000)) || (bSerialStringComplete && strSerialData == "reset"))
    {
       ResetRace();
+   }
+
+   //Print time
+   if (bSerialStringComplete && strSerialData == "time")
+   {
+      ESP_LOGI(__FILE__, "System time:  %s", GPSHandler.GetLocalTimestamp());
+   }
+
+   //Delete tag file
+   if (bSerialStringComplete && strSerialData == "deltagfile")
+   {
+      SDcardController.deleteFile(SD_MMC, "/tag.txt");
+   }
+
+   //List files on SD card
+   if (bSerialStringComplete && strSerialData == "list")
+   {
+      SDcardController.listDir(SD_MMC, "/", 0);
+      SDcardController.listDir(SD_MMC, "/SENSORS_DATA", 0);
    }
 
    //Reboot ESP32
@@ -622,14 +596,55 @@ void loop()
          //ESP_LOGD(__FILE__, "Dog %i -> %i run(s).", i + 1, RaceHandler.iDogRunCounters[i] + 1);
          for (uint8_t i2 = 0; i2 < (RaceHandler.iDogRunCounters[i] + 1); i2++)
          {
-            ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", i + 1, RaceHandler.GetStoredDogTimes(i, i2), RaceHandler.TransformCrossingTime(i, i2).c_str());
+            ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", i + 1, RaceHandler.GetStoredDogTimes(i, i2), RaceHandler.TransformCrossingTime(i, i2));
          }
       }
       ESP_LOGI(__FILE__, " Team: %s", cElapsedRaceTime);
       ESP_LOGI(__FILE__, "  Net: %s\n", cTeamNetTime);
 #if !Simulate
       RaceHandler.PrintRaceTriggerRecords();
+      if (SDcardController.bSDCardDetected)
+      {
+         RaceHandler.PrintRaceTriggerRecordsToFile();
+      }
 #endif
+      if (SDcardController.bSDCardDetected)
+      {
+         sDate = GPSHandler.GetDate();
+         if (RaceHandler.iCurrentRaceId == 0)
+         {
+            raceDataFileName = "/" + SDcardController.sTagValue + "_ETS_" + sDate + ".csv";
+            SDcardController.writeFile(SD_MMC, raceDataFileName.c_str(),
+            "Tag;Race ID;Date;Race timestamp;Dog 1 time;Dog 1 starting;Dog 1 re-run time;Dog 1 re-run crossing;Dog 1 2nd re-run time;Dog 1 2nd re-run crossing;Dog 2 time;Dog 2 crossing;Dog 2 re-run time;Dog 2 re-run crossing;Dog 2 2nd re-run time;Dog 2 2nd re-run crossing;Dog 3 time;Dog 3 crossing;Dog 3 re-run time;Dog 3 re-run crossing;Dog 3 2nd re-run time;Dog 3 2nd re-run crossing;Dog 4 time;Dog 4 crossing;Dog 4 re-run time;Dog 4 re-run crossing;Dog 4 2nd re-run time;Dog 4 2nd re-run crossing;Team time; Net time;Comments\n");
+         }
+         raceDataFile = SD_MMC.open(raceDataFileName.c_str(), FILE_APPEND);
+         if(raceDataFile)
+         {
+            raceDataFile.print(SDcardController.iTagValue);
+            raceDataFile.print(";");
+            raceDataFile.print(RaceHandler.iCurrentRaceId + 1);
+            raceDataFile.print(";");
+            raceDataFile.print(sDate);
+            raceDataFile.print(";");
+            raceDataFile.print(RaceHandler.cRaceStartTimestamp);
+            raceDataFile.print(";");
+            for (uint8_t i = 0; i < 4; i++)
+            {
+               for (uint8_t i2 = 0; i2 < 3; i2++)
+               {
+                  raceDataFile.print(RaceHandler.GetStoredDogTimes(i, i2));
+                  raceDataFile.print(";");
+                  raceDataFile.print(RaceHandler.TransformCrossingTime(i, i2, true));
+                  raceDataFile.print(";");
+               }
+            }
+            raceDataFile.print(RaceHandler.GetRaceTime());
+            raceDataFile.print(";");
+            raceDataFile.print(RaceHandler.GetNetTime());
+            raceDataFile.println(";");
+            raceDataFile.close();    
+         }    
+      }
       bRaceSummaryPrinted = true;
    }
 
@@ -661,13 +676,6 @@ void loop()
    iCurrentDog = RaceHandler.iCurrentDog;
    iCurrentRaceState = RaceHandler.RaceState;
 
-   //Check if we have serial data which we should handle
-   if (strSerialData.length() > 0 && bSerialStringComplete)
-   {
-      strSerialData = "";
-      bSerialStringComplete = false;
-   }
-
    //Laser activation
    if (bitRead(bDataIn, 7) == HIGH && ((GET_MICROS / 1000 - llLastRCPress[7] > LaserOutputTimer * 1000) || llLastRCPress[7] == 0) //
       && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
@@ -686,12 +694,20 @@ void loop()
    }
 
    //Handle side switch button (when race is not running)
-   if (bitRead(bDataIn, 0) == HIGH && (GET_MICROS / 1000 - llLastRCPress[0] > SideSwitchCoolDownTime) //
+   if ((((bitRead(bDataIn, 0) == HIGH) && (GET_MICROS / 1000 - llLastRCPress[0] > SideSwitchCoolDownTime)) //
+      || (bSerialStringComplete && strSerialData == "toggle"))
       && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
    {
       llLastRCPress[0] = GET_MICROS / 1000;
       //ESP_LOGI(__FILE__, "Switching sides!");
       RaceHandler.ToggleRunDirection();
+   }
+
+   //Check if we have serial data which we should handle
+   if (strSerialData.length() > 0 && bSerialStringComplete)
+   {
+      strSerialData = "";
+      bSerialStringComplete = false;
    }
 }
 

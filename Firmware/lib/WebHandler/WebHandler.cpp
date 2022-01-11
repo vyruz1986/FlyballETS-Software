@@ -249,13 +249,6 @@ void WebHandlerClass::loop()
       if (millis() - _lLastPingBroadcast > _lPingBroadcastInterval)
       {
          ESP_LOGD(__FILE__, "Current websocket clients connected: %i", _ws->count());
-         //    for (size_t i = 0; i < _ws->count(); i++)
-         //    {
-         //       ESP_LOGD(__FILE__, "Pinging client %i", i);
-         //       char *ping = "ping";
-         //       auto client = _ws->client(i);
-         //       client->ping(ping, sizeof ping);
-         //    }
          _ws->pingAll();
          _lLastPingBroadcast = millis();
       }
@@ -396,7 +389,7 @@ boolean WebHandlerClass::_GetRaceDataJsonString(uint iRaceId, String &strJsonStr
    return true;
 }
 
-void WebHandlerClass::_SendRaceData(uint iRaceId)
+void WebHandlerClass::_SendRaceData(int iRaceId)
 {
    const size_t bufferSize = 5 * JSON_ARRAY_SIZE(4) + JSON_OBJECT_SIZE(1) + 16 * JSON_OBJECT_SIZE(2) + 4 * JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(7);
    DynamicJsonBuffer JsonBuffer(bufferSize);
@@ -502,7 +495,7 @@ void WebHandlerClass::_GetSystemData()
    _SystemData.FreeHeap = esp_get_free_heap_size();
    _SystemData.Uptime = millis();
    _SystemData.NumClients = _ws->count();
-   _SystemData.UTCSystemTime = GPSHandler.GetUTCTimestamp();
+   _SystemData.LocalSystemTime = GPSHandler.GetLocalDateAndTime();
    _SystemData.BatteryPercentage = BatterySensor.GetBatteryPercentage();
 }
 
@@ -518,7 +511,7 @@ void WebHandlerClass::_SendSystemData()
    JsonSystemData["CPU0ResetReason"] = (int)_SystemData.CPU0ResetReason;
    JsonSystemData["CPU1ResetReason"] = (int)_SystemData.CPU1ResetReason;
    JsonSystemData["numClients"] = _SystemData.NumClients;
-   JsonSystemData["systemTimestamp"] = _SystemData.UTCSystemTime;
+   JsonSystemData["systemTimestamp"] = _SystemData.LocalSystemTime;
    JsonSystemData["batteryPercentage"] = _SystemData.BatteryPercentage;
 
    size_t len = JsonRoot.measureLength();
