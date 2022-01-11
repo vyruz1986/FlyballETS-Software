@@ -1,5 +1,6 @@
 //
 #include "GPSHandler.h"
+#include "LCDController.h"
 
 TimeChangeRule CEST = {"CEST", Last, Sun, Mar, 2, 120}; //UTC + 2 hours
 TimeChangeRule CET = {"CET", Last, Sun, Oct, 3, 60};    //UTC + 1 hour
@@ -33,6 +34,7 @@ void GPSHandlerClass::loop()
       {
          _FormatTime();
          llLastGPSRead = GET_MICROS / 1000;
+         LCDController.UpdateField(LCDController.GpsState, "GPS");
          //ESP_LOGD(__FILE__, "GPS updated UTC time: %s. Updated local time: %s", _cUTCTime, _cLocalDateAndTime);
       }
    }

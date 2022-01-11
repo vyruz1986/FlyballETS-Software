@@ -18,6 +18,7 @@
 
 #include "SDcardController.h"
 #include "config.h"
+#include "LCDController.h"
 
 /// <summary>
 ///   Initialises SD card.
@@ -58,36 +59,40 @@ void SDcardControllerClass::init()
       {
          Serial.println("UNKNOWN");
       }
-      Serial.printf("SD_MMC Card Size: %lluMB\n\n", SD_MMC.cardSize() / (1024 * 1024));
-      Serial.printf("Free space: %lluMB\n\n", (SD_MMC.totalBytes() - SD_MMC.usedBytes()) / (1024 * 1024));
-      if (!SD_MMC.exists("/SENSORS_DATA"))
+      if (bSDCardDetected)
       {
-         createDir(SD_MMC, "/SENSORS_DATA");
-      }
-      //listDir(SD_MMC, "/", 1);
-      
-      // Check last tag value and increase it by one or create new tag.txt file with initial value 1
-      File tagfile = SD_MMC.open("/tag.txt");
-      if(!tagfile) {
-         delay(50);
-         writeFile(SD_MMC, "/tag.txt", "1\r\n");
-         tagfile.close();
-      }
-      else
-      {
-         uint16_t oldTagValue = tagfile.parseInt();
-         tagfile.close();
-         iTagValue = oldTagValue + 1;
-         sTagValue = String(iTagValue);
-         ESP_LOGI(__FILE__, "Previous Tag value: %i. Updating tag.txt file...", oldTagValue);
-         deleteFile(SD_MMC, "/tag.txt");
-         String writeTagValue = sTagValue + "\r\n";
-         writeFile(SD_MMC, "/tag.txt", writeTagValue.c_str());
-         while (sTagValue.length() < 4)
+         LCDController.UpdateField(LCDController.SDcardState, "SD");
+         Serial.printf("SD_MMC Card Size: %lluMB\n\n", SD_MMC.cardSize() / (1024 * 1024));
+         Serial.printf("Free space: %lluMB\n\n", (SD_MMC.totalBytes() - SD_MMC.usedBytes()) / (1024 * 1024));
+         if (!SD_MMC.exists("/SENSORS_DATA"))
          {
-            sTagValue = "0" + sTagValue;
+            createDir(SD_MMC, "/SENSORS_DATA");
          }
-         ESP_LOGI(__FILE__, "New tag.txt file value: %i. Tag string: %s", iTagValue, sTagValue);
+         //listDir(SD_MMC, "/", 1);
+         
+         // Check last tag value and increase it by one or create new tag.txt file with initial value 1
+         File tagfile = SD_MMC.open("/tag.txt");
+         if(!tagfile) {
+            delay(50);
+            writeFile(SD_MMC, "/tag.txt", "1\r\n");
+            tagfile.close();
+         }
+         else
+         {
+            uint16_t oldTagValue = tagfile.parseInt();
+            tagfile.close();
+            iTagValue = oldTagValue + 1;
+            sTagValue = String(iTagValue);
+            ESP_LOGI(__FILE__, "Previous Tag value: %i. Updating tag.txt file...", oldTagValue);
+            deleteFile(SD_MMC, "/tag.txt");
+            String writeTagValue = sTagValue + "\r\n";
+            writeFile(SD_MMC, "/tag.txt", writeTagValue.c_str());
+            while (sTagValue.length() < 4)
+            {
+               sTagValue = "0" + sTagValue;
+            }
+            ESP_LOGI(__FILE__, "New tag.txt file value: %i. Tag string: %s", iTagValue, sTagValue);
+         }
       }
    }
 }

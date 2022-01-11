@@ -31,7 +31,7 @@ public:
    uint8_t iNextDog;
    uint8_t iDogRunCounters[4];  //Number of (re-)runs for each dog
    long long llRaceStartTime;
-   uint iCurrentRaceId;
+   int iCurrentRaceId = -1;
    char* cRaceStartTimestamp;
    
    void Main();

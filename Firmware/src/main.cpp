@@ -443,7 +443,7 @@ void loop()
       SDcardController.deleteFile(SD_MMC, "/tag.txt");
    }
 
-   //List files
+   //List files on SD card
    if (bSerialStringComplete && strSerialData == "list")
    {
       SDcardController.listDir(SD_MMC, "/", 0);
@@ -622,7 +622,7 @@ void loop()
          {
             raceDataFile.print(SDcardController.iTagValue);
             raceDataFile.print(";");
-            raceDataFile.print(RaceHandler.iCurrentRaceId);
+            raceDataFile.print(RaceHandler.iCurrentRaceId + 1);
             raceDataFile.print(";");
             raceDataFile.print(sDate);
             raceDataFile.print(";");
@@ -676,13 +676,6 @@ void loop()
    iCurrentDog = RaceHandler.iCurrentDog;
    iCurrentRaceState = RaceHandler.RaceState;
 
-   //Check if we have serial data which we should handle
-   if (strSerialData.length() > 0 && bSerialStringComplete)
-   {
-      strSerialData = "";
-      bSerialStringComplete = false;
-   }
-
    //Laser activation
    if (bitRead(bDataIn, 7) == HIGH && ((GET_MICROS / 1000 - llLastRCPress[7] > LaserOutputTimer * 1000) || llLastRCPress[7] == 0) //
       && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
@@ -701,12 +694,20 @@ void loop()
    }
 
    //Handle side switch button (when race is not running)
-   if (bitRead(bDataIn, 0) == HIGH && (GET_MICROS / 1000 - llLastRCPress[0] > SideSwitchCoolDownTime) //
+   if ((((bitRead(bDataIn, 0) == HIGH) && (GET_MICROS / 1000 - llLastRCPress[0] > SideSwitchCoolDownTime)) //
+      || (bSerialStringComplete && strSerialData == "toggle"))
       && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
    {
       llLastRCPress[0] = GET_MICROS / 1000;
       //ESP_LOGI(__FILE__, "Switching sides!");
       RaceHandler.ToggleRunDirection();
+   }
+
+   //Check if we have serial data which we should handle
+   if (strSerialData.length() > 0 && bSerialStringComplete)
+   {
+      strSerialData = "";
+      bSerialStringComplete = false;
    }
 }
 

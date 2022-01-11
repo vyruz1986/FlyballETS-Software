@@ -389,7 +389,7 @@ boolean WebHandlerClass::_GetRaceDataJsonString(uint iRaceId, String &strJsonStr
    return true;
 }
 
-void WebHandlerClass::_SendRaceData(uint iRaceId)
+void WebHandlerClass::_SendRaceData(int iRaceId)
 {
    const size_t bufferSize = 5 * JSON_ARRAY_SIZE(4) + JSON_OBJECT_SIZE(1) + 16 * JSON_OBJECT_SIZE(2) + 4 * JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(7);
    DynamicJsonBuffer JsonBuffer(bufferSize);

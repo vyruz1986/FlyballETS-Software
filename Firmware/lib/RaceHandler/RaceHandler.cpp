@@ -36,11 +36,10 @@ void RaceHandlerClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
    _iS1Pin = iS1Pin;
    _iS2Pin = iS2Pin;
    ResetRace();
-   iCurrentRaceId = 0;
    if (SettingsManager.getSetting("RunDirectionInverted").equals("1"))
    {
       _bRunDirectionInverted = true;
-      LCDController.UpdateField(LCDController.BoxDirection, "<--");
+      LCDController.UpdateField(LCDController.BoxDirection, "<");
       ESP_LOGD(__FILE__, "Run direction from settings: inverted");
    }
    else
@@ -569,7 +568,7 @@ void RaceHandlerClass::StartRaceTimer()
 {
    llRaceStartTime = GET_MICROS + 3000000;
    _ChangeRaceState(STARTING);
-   ESP_LOGD(__FILE__, "%llu: STARTING!", (llRaceStartTime - 3000000) / 1000);
+   ESP_LOGD(__FILE__, "%llu: STARTING! Race ID: %i", (llRaceStartTime - 3000000) / 1000, iCurrentRaceId + 1);
    cRaceStartTimestamp = GPSHandler.GetLocalTimestamp();
    ESP_LOGI(__FILE__, "Timestamp: %s", cRaceStartTimestamp);
 }
@@ -717,6 +716,12 @@ void RaceHandlerClass::ResetRace()
    {
       iCurrentRaceId++;
    }
+   String _sCurrentRaceId = String(iCurrentRaceId + 1);
+   while (_sCurrentRaceId.length() < 2)
+   {
+      _sCurrentRaceId = " " + _sCurrentRaceId;
+   }
+   LCDController.UpdateField(LCDController.RaceID, _sCurrentRaceId);
    ESP_LOGI(__FILE__, "Reset Race: DONE");
 #ifdef WiFiON
    //Send updated racedata to any web clients
@@ -754,18 +759,18 @@ void RaceHandlerClass::PrintRaceTriggerRecordsToFile()
    if(rawSensorsReadingFile)
    {
       rawSensorsReadingFile.print("Race ID: ");
-      rawSensorsReadingFile.println(RaceHandler.iCurrentRaceId);
+      rawSensorsReadingFile.println(RaceHandler.iCurrentRaceId + 1);
       uint8_t iRecordToPrintIndex = 0;
       while (iRecordToPrintIndex < _iInputQueueWriteIndex)
       {
          STriggerRecord RecordToPrint = _InputTriggerQueue[iRecordToPrintIndex];
          rawSensorsReadingFile.print("{");
          rawSensorsReadingFile.print(RecordToPrint.iSensorNumber);
-         rawSensorsReadingFile.print(",");
+         rawSensorsReadingFile.print(", ");
          rawSensorsReadingFile.print(RecordToPrint.llTriggerTime - llRaceStartTime);
-         rawSensorsReadingFile.print(",");
+         rawSensorsReadingFile.print(", ");
          rawSensorsReadingFile.print(RecordToPrint.iSensorState);
-         rawSensorsReadingFile.println("}");                        
+         rawSensorsReadingFile.println("},");                        
          iRecordToPrintIndex++;
       }
       rawSensorsReadingFile.close();
@@ -1360,12 +1365,12 @@ void RaceHandlerClass::ToggleRunDirection()
    SettingsManager.setSetting("RunDirectionInverted", String(_bRunDirectionInverted));
    if (_bRunDirectionInverted)
    {
-      LCDController.UpdateField(LCDController.BoxDirection, "<--");
+      LCDController.UpdateField(LCDController.BoxDirection, "<");
       ESP_LOGD(__FILE__, "Run direction changed to: inverted");
    }
    else
    {
-      LCDController.UpdateField(LCDController.BoxDirection, "-->");
+      LCDController.UpdateField(LCDController.BoxDirection, ">");
       ESP_LOGD(__FILE__, "Run direction changed to: normal");
    }
 }
