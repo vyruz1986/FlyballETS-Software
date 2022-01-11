@@ -32,7 +32,7 @@ protected:
    void _WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
    boolean _DoAction(JsonObject &ActionObj, String *ReturnError);
    boolean _GetRaceDataJsonString(uint iRaceId, String &strJsonString);
-   void _SendRaceData(uint iRaceId = RaceHandler._iCurrentRaceId);
+   void _SendRaceData(uint iRaceId = RaceHandler.iCurrentRaceId);
 
    boolean _ProcessConfig(JsonArray &newConfig, String *ReturnError);
 

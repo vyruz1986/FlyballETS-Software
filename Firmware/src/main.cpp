@@ -118,6 +118,9 @@ char cTeamNetTime[8];
 long long llHeapPreviousMillis = 0;
 long long llHeapInterval = 5000;
 bool error = false;
+File raceDataFile;
+String raceDataFileName;
+String sDate;
 
 //Initialise Lights stuff
 uint8_t iLightsDataPin = 21;
@@ -260,6 +263,11 @@ void setup()
    //Print SW version
    ESP_LOGI(__FILE__, "Firmware version %s", FW_VER);
 
+   
+   //Initialize GPS Serial port and class
+   GPSSerial.begin(9600, SERIAL_8N1, iGPSrxPin, iGPStxPin);
+   GPSHandler.init(&GPSSerial);
+
    //SD card init
    if (digitalRead(iSDdetectPin) == LOW || SDcardForcedDetect)
    {
@@ -339,10 +347,6 @@ void setup()
    mdnsServerSetup();
 #endif //  ESP32
 #endif
-
-   //Initialize GPS Serial port and class
-   GPSSerial.begin(9600, SERIAL_8N1, iGPSrxPin, iGPStxPin);
-   GPSHandler.init(&GPSSerial);
 
    ESP_LOGI(__FILE__, "Setup running on core %d", xPortGetCoreID());
 }
@@ -430,8 +434,20 @@ void loop()
    //Print time
    if (bSerialStringComplete && strSerialData == "time")
    {
-      ESP_LOGI(__FILE__, "GPS UTC: %s", GPSHandler.GetUTCTimestamp());
-      ESP_LOGI(__FILE__, "System:  %s", GPSHandler.GetLocalTimestamp());;
+      ESP_LOGI(__FILE__, "System time:  %s", GPSHandler.GetLocalTimestamp());
+   }
+
+   //Delete tag file
+   if (bSerialStringComplete && strSerialData == "deltagfile")
+   {
+      SDcardController.deleteFile(SD_MMC, "/tag.txt");
+   }
+
+   //List files
+   if (bSerialStringComplete && strSerialData == "list")
+   {
+      SDcardController.listDir(SD_MMC, "/", 0);
+      SDcardController.listDir(SD_MMC, "/SENSORS_DATA", 0);
    }
 
    //Reboot ESP32
@@ -580,14 +596,55 @@ void loop()
          //ESP_LOGD(__FILE__, "Dog %i -> %i run(s).", i + 1, RaceHandler.iDogRunCounters[i] + 1);
          for (uint8_t i2 = 0; i2 < (RaceHandler.iDogRunCounters[i] + 1); i2++)
          {
-            ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", i + 1, RaceHandler.GetStoredDogTimes(i, i2), RaceHandler.TransformCrossingTime(i, i2).c_str());
+            ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", i + 1, RaceHandler.GetStoredDogTimes(i, i2), RaceHandler.TransformCrossingTime(i, i2));
          }
       }
       ESP_LOGI(__FILE__, " Team: %s", cElapsedRaceTime);
       ESP_LOGI(__FILE__, "  Net: %s\n", cTeamNetTime);
 #if !Simulate
       RaceHandler.PrintRaceTriggerRecords();
+      if (SDcardController.bSDCardDetected)
+      {
+         RaceHandler.PrintRaceTriggerRecordsToFile();
+      }
 #endif
+      if (SDcardController.bSDCardDetected)
+      {
+         sDate = GPSHandler.GetDate();
+         if (RaceHandler.iCurrentRaceId == 0)
+         {
+            raceDataFileName = "/" + SDcardController.sTagValue + "_ETS_" + sDate + ".csv";
+            SDcardController.writeFile(SD_MMC, raceDataFileName.c_str(),
+            "Tag;Race ID;Date;Race timestamp;Dog 1 time;Dog 1 starting;Dog 1 re-run time;Dog 1 re-run crossing;Dog 1 2nd re-run time;Dog 1 2nd re-run crossing;Dog 2 time;Dog 2 crossing;Dog 2 re-run time;Dog 2 re-run crossing;Dog 2 2nd re-run time;Dog 2 2nd re-run crossing;Dog 3 time;Dog 3 crossing;Dog 3 re-run time;Dog 3 re-run crossing;Dog 3 2nd re-run time;Dog 3 2nd re-run crossing;Dog 4 time;Dog 4 crossing;Dog 4 re-run time;Dog 4 re-run crossing;Dog 4 2nd re-run time;Dog 4 2nd re-run crossing;Team time; Net time;Comments\n");
+         }
+         raceDataFile = SD_MMC.open(raceDataFileName.c_str(), FILE_APPEND);
+         if(raceDataFile)
+         {
+            raceDataFile.print(SDcardController.iTagValue);
+            raceDataFile.print(";");
+            raceDataFile.print(RaceHandler.iCurrentRaceId);
+            raceDataFile.print(";");
+            raceDataFile.print(sDate);
+            raceDataFile.print(";");
+            raceDataFile.print(RaceHandler.cRaceStartTimestamp);
+            raceDataFile.print(";");
+            for (uint8_t i = 0; i < 4; i++)
+            {
+               for (uint8_t i2 = 0; i2 < 3; i2++)
+               {
+                  raceDataFile.print(RaceHandler.GetStoredDogTimes(i, i2));
+                  raceDataFile.print(";");
+                  raceDataFile.print(RaceHandler.TransformCrossingTime(i, i2, true));
+                  raceDataFile.print(";");
+               }
+            }
+            raceDataFile.print(RaceHandler.GetRaceTime());
+            raceDataFile.print(";");
+            raceDataFile.print(RaceHandler.GetNetTime());
+            raceDataFile.println(";");
+            raceDataFile.close();    
+         }    
+      }
       bRaceSummaryPrinted = true;
    }
 

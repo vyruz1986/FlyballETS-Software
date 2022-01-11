@@ -21,38 +21,39 @@ void GPSHandlerClass::init(HardwareSerial *SerialPort)
    _HandleSerialPort();
    _FormatTime();
    ESP_LOGI(__FILE__, "Initial UTC time:  %s", _cUTCTime);
-   ESP_LOGI(__FILE__, "Local system time: %s", _cLocalTime);
+   ESP_LOGI(__FILE__, "Local system time: %s", _cLocalDateAndTime);
 }
 
 void GPSHandlerClass::loop()
 {
-   if ((GET_MICROS / 1000 - llLastGPSRead) > 1000)
+   if ((GET_MICROS / 1000 - llLastGPSRead) > 5000)
    {
       _HandleSerialPort();
       if (_Tgps.time.isUpdated() && (_Tgps.date.year() != 2000))
       {
          _FormatTime();
-         //ESP_LOGD(__FILE__, "GPS updated UTC time: %s. Updated local time: %s", _cUTCTime, _cLocalTime);
+         llLastGPSRead = GET_MICROS / 1000;
+         //ESP_LOGD(__FILE__, "GPS updated UTC time: %s. Updated local time: %s", _cUTCTime, _cLocalDateAndTime);
       }
-      else
-      {
-         tmElements_t tm;
-         breakTime(now(), tm);
-         sprintf(_cLocalTime, "%i-%02i-%02iT%02i:%02i:%02iZ", tm.Year + 1970, tm.Month, tm.Day, tm.Hour, tm.Minute, tm.Second);
-         //ESP_LOGD(__FILE__, "System local time: %s", _cLocalTime);
-      }
-      llLastGPSRead = GET_MICROS / 1000;
    }
 }
 
-char *GPSHandlerClass::GetUTCTimestamp()
+char *GPSHandlerClass::GetLocalDateAndTime()
 {
-   return _cUTCTime;
+   sprintf(_cLocalDateAndTime, "%i-%02i-%02iT%02i:%02i:%02iZ", year(), month(), day(), hour(), minute(), second());
+   return _cLocalDateAndTime;
 }
 
 char *GPSHandlerClass::GetLocalTimestamp()
 {
-   return _cLocalTime;
+   sprintf(_cLocalTimestamp, "%02i:%02i:%02i", hour(), minute(), second());
+   return _cLocalTimestamp;
+}
+
+char *GPSHandlerClass::GetDate()
+{
+   sprintf(_cDate, "%i-%02i-%02i", year(), month(), day());
+   return _cDate;
 }
 
 void GPSHandlerClass::_FormatTime()
@@ -60,10 +61,10 @@ void GPSHandlerClass::_FormatTime()
    tmElements_t tm;
    if(_Tgps.date.year() == 2000)
    {
-      tm.Year = (2022 - 1970);
+      tm.Year = (2021 - 1970);
       tm.Month = 1;
       tm.Day = 1;
-      tm.Hour = 15;
+      tm.Hour = 12;
       tm.Minute = 00;
       tm.Second = 00;
    }
@@ -81,7 +82,7 @@ void GPSHandlerClass::_FormatTime()
    timeLocal = euCentral.toLocal(utc);
    setTime(timeLocal);
    breakTime(timeLocal, tm);
-   sprintf(_cLocalTime, "%i-%02i-%02iT%02i:%02i:%02iZ", tm.Year + 1970, tm.Month, tm.Day, tm.Hour, tm.Minute, tm.Second);
+   sprintf(_cLocalDateAndTime, "%i-%02i-%02iT%02i:%02i:%02iZ", tm.Year + 1970, tm.Month, tm.Day, tm.Hour, tm.Minute, tm.Second);
 }
 
 GPSHandlerClass GPSHandler;

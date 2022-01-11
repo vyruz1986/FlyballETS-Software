@@ -18,14 +18,17 @@ protected:
    void _HandleSerialPort();
    void _FormatTime(); 
    char _cUTCTime[25];
-   char _cLocalTime[25];
+   char _cLocalDateAndTime[25];
+   char _cLocalTimestamp[9];
+   char _cDate[11];
    unsigned long long llLastGPSRead = 0;
 
 public:
    void init(HardwareSerial* SerialPort);
    void loop();
-   char* GetUTCTimestamp();
+   char* GetLocalDateAndTime();
    char* GetLocalTimestamp();
+   char* GetDate();
    time_t timeLocal;
 };
 extern GPSHandlerClass GPSHandler;

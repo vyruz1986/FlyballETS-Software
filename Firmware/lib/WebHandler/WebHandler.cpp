@@ -495,7 +495,7 @@ void WebHandlerClass::_GetSystemData()
    _SystemData.FreeHeap = esp_get_free_heap_size();
    _SystemData.Uptime = millis();
    _SystemData.NumClients = _ws->count();
-   _SystemData.LocalSystemTime = GPSHandler.GetLocalTimestamp();
+   _SystemData.LocalSystemTime = GPSHandler.GetLocalDateAndTime();
    _SystemData.BatteryPercentage = BatterySensor.GetBatteryPercentage();
 }
 

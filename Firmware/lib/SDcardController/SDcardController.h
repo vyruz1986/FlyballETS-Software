@@ -18,6 +18,7 @@
 #define _SDCARDCONTROLLER_h
 
 #include "Arduino.h"
+#include "GPSHandler.h"
 #include <FS.h>
 #include <SD_MMC.h>
 
@@ -25,11 +26,23 @@ class SDcardControllerClass
 {
 protected:
 public:
+    void listDir(fs::FS &fs, const char * dirname, uint8_t levels);
+    void createDir(fs::FS &fs, const char * path);
+    void removeDir(fs::FS &fs, const char * path);
+    void readFile(fs::FS &fs, const char * path);
+    void writeFile(fs::FS &fs, const char * path, const char * message);
+    void appendFile(fs::FS &fs, const char * path, const char * message);
+    void renameFile(fs::FS &fs, const char * path1, const char * path2);
+    void deleteFile(fs::FS &fs, const char * path);
     void init();
     void CheckSDcardSlot(uint8_t iSDdetectPin);
+    boolean bSDCardDetected = false;
+    String sTagValue;
+    uint16_t iTagValue;
 
 private:
-    boolean _bSDCardDetected = false;
+    void testFileIO(fs::FS &fs, const char * path);
+
     uint8_t _iSDdetectPinStatus;
 };
 
