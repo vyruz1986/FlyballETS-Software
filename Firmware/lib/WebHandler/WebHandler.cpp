@@ -23,9 +23,6 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
             return;
          }
       }
-
-      //TODO: Would be nicer if we only send this to the specific client who just connected instead of all clients
-      //_SendRaceData(); //Make sure we always broadcast racedata when new client connects
       client->ping();
    }
    else if (type == WS_EVT_DISCONNECT)
@@ -114,34 +111,34 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
       }
 
       // Parse JSON input
-      DynamicJsonBuffer jsonBufferRequest;
-      JsonObject &request = jsonBufferRequest.parseObject(msg);
-      if (!request.success())
+      StaticJsonDocument<bsActionScheduleStartRace> jsonRequestDoc;
+      DeserializationError error = deserializeJson(jsonRequestDoc, msg);
+      JsonObject request = jsonRequestDoc.as<JsonObject>();
+      if (error)
       {
-         ESP_LOGE(__FILE__, "Error parsing JSON!");
+         ESP_LOGE(__FILE__, "Error parsing JSON: %s", error.c_str());
          //wsSend_P(client->id(), PSTR("{\"message\": 3}"));
          client->text("{\"error\":\"Invalid JSON received\"}");
          return;
       }
 
-      //const size_t bufferSize = JSON_ARRAY_SIZE(50) + 50 * JSON_OBJECT_SIZE(3);
-      //DynamicJsonBuffer jsonBufferResponse(bufferSize);
-      DynamicJsonBuffer jsonBufferResponse;
-      JsonObject &JsonResponseRoot = jsonBufferResponse.createObject();
+      const size_t bufferSize = JSON_ARRAY_SIZE(50) + 50 * JSON_OBJECT_SIZE(3);
+      StaticJsonDocument<bufferSize> jsonResponseDoc;
+      JsonObject JsonResponseRoot = jsonResponseDoc.to<JsonObject>();
 
       if (request.containsKey("action"))
       {
-         JsonObject &ActionResult = JsonResponseRoot.createNestedObject("ActionResult");
+         JsonObject ActionResult = JsonResponseRoot.createNestedObject("ActionResult");
          String errorText;
-         bool result = _DoAction(request["action"], &errorText, client);
+         bool result = _DoAction(request["action"].as<JsonObject>(), &errorText, client);
          ActionResult["success"] = result;
          ActionResult["error"] = errorText;
       }
       else if (request.containsKey("config"))
       {
-         JsonObject &ConfigResult = JsonResponseRoot.createNestedObject("configResult");
+         JsonObject ConfigResult = JsonResponseRoot.createNestedObject("configResult");
          String errorText;
-         JsonArray &config = request["config"];
+         JsonArray config = request["config"].as<JsonArray>();
          //We allow setting config only over admin websocket
          bool result;
          if (isAdmin)
@@ -159,8 +156,8 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
       else if (request.containsKey("getData"))
       {
          String dataName = request["getData"];
-         JsonObject &DataResult = JsonResponseRoot.createNestedObject("dataResult");
-         JsonObject &DataObject = DataResult.createNestedObject(dataName + "Data");
+         JsonObject DataResult = JsonResponseRoot.createNestedObject("dataResult");
+         JsonObject DataObject = DataResult.createNestedObject(dataName + "Data");
          bool result;
          if (dataName == "config" && !isAdmin)
          {
@@ -179,11 +176,11 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
          JsonResponseRoot["error"] = "Got valid JSON but unknown message!";
       }
 
-      size_t len = JsonResponseRoot.measureLength();
+      size_t len = measureJson(jsonResponseDoc);
       AsyncWebSocketMessageBuffer *wsBuffer = _ws->makeBuffer(len);
       if (wsBuffer)
       {
-         JsonResponseRoot.printTo((char *)wsBuffer->get(), len + 1);
+         serializeJson(jsonResponseDoc, (char *)wsBuffer->get(), len + 1);
          client->text(wsBuffer);
       }
    }
@@ -258,9 +255,9 @@ void WebHandlerClass::loop()
    {
       if (millis() - _lLastSystemDataBroadcast > _lSystemDataBroadcastInterval)
       {
+         _lLastSystemDataBroadcast = millis();
          _GetSystemData();
          _SendSystemData();
-         _lLastSystemDataBroadcast = millis();
       }
       if (millis() - _lLastPingBroadcast > _lPingBroadcastInterval)
       {
@@ -270,40 +267,31 @@ void WebHandlerClass::loop()
       }
    }
 }
+
 void WebHandlerClass::SendLightsData(stLightsState LightStates)
 {
-   const size_t bufferSize = JSON_ARRAY_SIZE(5) + JSON_OBJECT_SIZE(1);
-   DynamicJsonBuffer JsonBuffer(bufferSize);
-   JsonObject &JsonRoot = JsonBuffer.createObject();
+   StaticJsonDocument<bsLightsData> JsonDoc;
+   JsonObject JsonRoot = JsonDoc.to<JsonObject>();
 
-   if (!JsonRoot.success())
-   {
-      ESP_LOGE(__FILE__, "Error creating JSON object!");
-      _ws->textAll("{\"error\": \"Error creating JSON object!\"}");
-      return;
-   }
-   else
-   {
-      JsonArray &JsonLightsData = JsonRoot.createNestedArray("LightsData");
-      JsonLightsData.copyFrom(LightStates.State);
+   JsonArray JsonLightsData = JsonRoot.createNestedArray("LightsData");
+   copyArray(LightStates.State, JsonLightsData);
 
-      size_t len = JsonRoot.measureLength();
-      AsyncWebSocketMessageBuffer *wsBuffer = _ws->makeBuffer(len);
-      if (wsBuffer)
+   size_t len = measureJson(JsonDoc);
+   AsyncWebSocketMessageBuffer *wsBuffer = _ws->makeBuffer(len);
+   if (wsBuffer)
+   {
+      serializeJson(JsonDoc, (char *)wsBuffer->get(), len + 1);
+      for (uint8_t i = 0; i < _ws->count(); i++)
       {
-         JsonRoot.printTo((char *)wsBuffer->get(), len + 1);
-         for (uint8_t i = 0; i < _ws->count(); i++)
+         if (_bIsConsumerArray[i])
          {
-            if (_bIsConsumerArray[i])
-            {
-               _ws->text(i, (char *)wsBuffer);
-            }
+            _ws->text(i, (char *)wsBuffer);
          }
       }
    }
 }
 
-boolean WebHandlerClass::_DoAction(JsonObject &ActionObj, String *ReturnError, AsyncWebSocketClient *Client)
+boolean WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, AsyncWebSocketClient *Client)
 {
    String ActionType = ActionObj["actionType"];
    if (ActionType == "StartRace")
@@ -381,121 +369,111 @@ boolean WebHandlerClass::_DoAction(JsonObject &ActionObj, String *ReturnError, A
 
 boolean WebHandlerClass::_GetRaceDataJsonString(int iRaceId, String &strJsonString)
 {
-   const size_t bufferSize = 5 * JSON_ARRAY_SIZE(4) + JSON_OBJECT_SIZE(1) + 16 * JSON_OBJECT_SIZE(2) + 4 * JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(7);
-   DynamicJsonBuffer JsonBuffer(bufferSize);
-   JsonObject &JsonRoot = JsonBuffer.createObject();
-   if (!JsonRoot.success())
-   {
-      ESP_LOGE(__FILE__, "Error parsing JSON!");
-      //strJsonString = "{\"error\": \"Error parsing JSON from RaceData!\"}";
-      return false;
-   }
-   else
-   {
-      JsonObject &JsonRaceData = JsonRoot.createNestedObject("RaceData");
-      stRaceData RequestedRaceData = RaceHandler.GetRaceData();
-      JsonRaceData["id"] = RequestedRaceData.Id;
-      JsonRaceData["startTime"] = RequestedRaceData.StartTime;
-      JsonRaceData["endTime"] = RequestedRaceData.EndTime;
-      JsonRaceData["elapsedTime"] = RequestedRaceData.ElapsedTime;
-      JsonRaceData["totalCrossingTime"] = RequestedRaceData.TotalCrossingTime;
-      JsonRaceData["raceState"] = RequestedRaceData.RaceState;
+   StaticJsonDocument<bsRaceData> JsonDoc;
+   JsonObject JsonRoot = JsonDoc.to<JsonObject>();
+   JsonObject JsonRaceData = JsonRoot.createNestedObject("RaceData");
+   stRaceData RequestedRaceData = RaceHandler.GetRaceData();
+   JsonRaceData["id"] = RequestedRaceData.Id;
+   JsonRaceData["startTime"] = RequestedRaceData.StartTime;
+   JsonRaceData["endTime"] = RequestedRaceData.EndTime;
+   JsonRaceData["elapsedTime"] = RequestedRaceData.ElapsedTime;
+   JsonRaceData["totalCrossingTime"] = RequestedRaceData.TotalCrossingTime;
+   JsonRaceData["raceState"] = RequestedRaceData.RaceState;
 
-      JsonArray &JsonDogDataArray = JsonRaceData.createNestedArray("dogData");
-      for (uint8_t i = 0; i < 4; i++)
+   JsonArray JsonDogDataArray = JsonRaceData.createNestedArray("dogData");
+   for (uint8_t i = 0; i < 4; i++)
+   {
+      JsonObject JsonDogData = JsonDogDataArray.createNestedObject();
+      JsonDogData["dogNumber"] = RequestedRaceData.DogData[i].DogNumber;
+      JsonArray JsonDogDataTimingArray = JsonDogData.createNestedArray("timing");
+      for (uint8_t i2 = 0; i2 < 4; i2++)
       {
-         JsonObject &JsonDogData = JsonDogDataArray.createNestedObject();
-         JsonDogData["dogNumber"] = RequestedRaceData.DogData[i].DogNumber;
-         JsonArray &JsonDogDataTimingArray = JsonDogData.createNestedArray("timing");
-         for (uint8_t i2 = 0; i2 < 4; i2++)
-         {
-            JsonObject &DogTiming = JsonDogDataTimingArray.createNestedObject();
-            DogTiming["time"] = RequestedRaceData.DogData[i].Timing[i2].Time;
-            DogTiming["crossingTime"] = RequestedRaceData.DogData[i].Timing[i2].CrossingTime;
-         }
-         JsonDogData["fault"] = RequestedRaceData.DogData[i].Fault;
-         JsonDogData["running"] = RequestedRaceData.DogData[i].Running;
+         JsonObject DogTiming = JsonDogDataTimingArray.createNestedObject();
+         DogTiming["time"] = RequestedRaceData.DogData[i].Timing[i2].Time;
+         DogTiming["crossingTime"] = RequestedRaceData.DogData[i].Timing[i2].CrossingTime;
       }
-
-      JsonRoot.printTo(strJsonString);
+      JsonDogData["fault"] = RequestedRaceData.DogData[i].Fault;
+      JsonDogData["running"] = RequestedRaceData.DogData[i].Running;
    }
+
+   serializeJson(JsonRaceData, strJsonString);
 
    return true;
 }
 
 void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
 {
-   const size_t bufferSize = 5 * JSON_ARRAY_SIZE(4) + JSON_OBJECT_SIZE(1) + 16 * JSON_OBJECT_SIZE(2) + 4 * JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(7);
-   DynamicJsonBuffer JsonBuffer(bufferSize);
-   JsonObject &JsonRoot = JsonBuffer.createObject();
-   if (!JsonRoot.success())
+   if (_iNumOfConsumers == 0)
    {
-      ESP_LOGE(__FILE__, "Error parsing JSON!");
+      return;
+   }
+   StaticJsonDocument<bsRaceDataArray> JsonDoc;
+   JsonObject JsonRoot = JsonDoc.to<JsonObject>();
+   JsonArray jsonRaceData = JsonRoot.createNestedArray("RaceData");
+
+   StaticJsonDocument<bsRaceData> jsonMasterRaceDataDoc;
+   JsonObject jsonMasterRaceData = jsonMasterRaceDataDoc.to<JsonObject>();
+
+   stRaceData RequestedRaceData = RaceHandler.GetRaceData();
+   jsonMasterRaceData["id"] = RequestedRaceData.Id;
+   jsonMasterRaceData["startTime"] = RequestedRaceData.StartTime;
+   jsonMasterRaceData["endTime"] = RequestedRaceData.EndTime;
+   jsonMasterRaceData["elapsedTime"] = RequestedRaceData.ElapsedTime;
+   jsonMasterRaceData["totalCrossingTime"] = RequestedRaceData.TotalCrossingTime;
+   jsonMasterRaceData["raceState"] = RequestedRaceData.RaceState;
+
+   JsonArray JsonDogDataArray = jsonMasterRaceData.createNestedArray("dogData");
+   for (uint8_t i = 0; i < 4; i++)
+   {
+      JsonObject JsonDogData = JsonDogDataArray.createNestedObject();
+      JsonDogData["dogNumber"] = RequestedRaceData.DogData[i].DogNumber;
+      JsonArray JsonDogDataTimingArray = JsonDogData.createNestedArray("timing");
+      for (uint8_t i2 = 0; i2 < 4; i2++)
+      {
+         JsonObject DogTiming = JsonDogDataTimingArray.createNestedObject();
+         DogTiming["time"] = RequestedRaceData.DogData[i].Timing[i2].Time;
+         DogTiming["crossingTime"] = RequestedRaceData.DogData[i].Timing[i2].CrossingTime;
+      }
+      JsonDogData["fault"] = RequestedRaceData.DogData[i].Fault;
+      JsonDogData["running"] = RequestedRaceData.DogData[i].Running;
+   }
+
+   jsonRaceData.add(jsonMasterRaceData);
+   ESP_LOGD(__FILE__, "[WEBHANDLER]: Collected own racedata, length: %i\r\n", measureJson(jsonRaceData));
+
+   String strJsonRaceData;
+   serializeJson(JsonDoc, strJsonRaceData);
+   ESP_LOGD(__FILE__, "Sending back RD array: %s\r\n", strJsonRaceData.c_str());
+   if (iClientId == -1)
+   {
+
+      uint8_t iId = 0;
+      for (auto &isConsumer : _bIsConsumerArray)
+      {
+         if (isConsumer)
+         {
+            ESP_LOGD(__FILE__, "Getting client obj for id %i\r\n", iId);
+            AsyncWebSocketClient *client = _ws->client(iId);
+            if (client && client->status() == WS_CONNECTED)
+            {
+               ESP_LOGD(__FILE__, "Sending to client %i\r\n", iId);
+               client->text(strJsonRaceData);
+            }
+         }
+         iId++;
+      }
    }
    else
    {
-      JsonObject &JsonRaceData = JsonRoot.createNestedObject("RaceData");
-      stRaceData RequestedRaceData = RaceHandler.GetRaceData();
-      JsonRaceData["id"] = RequestedRaceData.Id;
-      JsonRaceData["startTime"] = RequestedRaceData.StartTime;
-      JsonRaceData["endTime"] = RequestedRaceData.EndTime;
-      JsonRaceData["elapsedTime"] = RequestedRaceData.ElapsedTime;
-      JsonRaceData["totalCrossingTime"] = RequestedRaceData.TotalCrossingTime;
-      JsonRaceData["raceState"] = RequestedRaceData.RaceState;
-
-      JsonArray &JsonDogDataArray = JsonRaceData.createNestedArray("dogData");
-      for (uint8_t i = 0; i < 4; i++)
-      {
-         JsonObject &JsonDogData = JsonDogDataArray.createNestedObject();
-         JsonDogData["dogNumber"] = RequestedRaceData.DogData[i].DogNumber;
-         JsonArray &JsonDogDataTimingArray = JsonDogData.createNestedArray("timing");
-         for (uint8_t i2 = 0; i2 < 4; i2++)
-         {
-            JsonObject &DogTiming = JsonDogDataTimingArray.createNestedObject();
-            DogTiming["time"] = RequestedRaceData.DogData[i].Timing[i2].Time;
-            DogTiming["crossingTime"] = RequestedRaceData.DogData[i].Timing[i2].CrossingTime;
-         }
-         JsonDogData["fault"] = RequestedRaceData.DogData[i].Fault;
-         JsonDogData["running"] = RequestedRaceData.DogData[i].Running;
-      }
-      size_t len = JsonRoot.measureLength();
-      AsyncWebSocketMessageBuffer *wsBuffer = _ws->makeBuffer(len);
-      if (wsBuffer)
-      {
-         JsonRoot.printTo((char *)wsBuffer->get(), len + 1);
-         if (iClientId == -1)
-         {
-
-            uint8_t iId = 0;
-            for (auto &isConsumer : _bIsConsumerArray)
-            {
-               if (isConsumer)
-               {
-                  //ESP_LOGD(__FILE__, "Getting client obj for id %i\r\n", iId);
-                  AsyncWebSocketClient *client = _ws->client(iId);
-                  if (client && client->status() == WS_CONNECTED)
-                  {
-                     //ESP_LOGD(__FILE__, "Sending to client %i\r\n", iId);
-                     client->text(wsBuffer);
-                  }
-               }
-               iId++;
-            }
-         }
-         else
-         {
-            //ESP_LOGD(__FILE__, "Sending to client %i\r\n", iClientId);
-            AsyncWebSocketClient *client = _ws->client(iClientId);
-            client->text(wsBuffer);
-         }
-      }
+      ESP_LOGD(__FILE__, "Sending to client %i\r\n", iClientId);
+      _ws->text(iClientId, strJsonRaceData);
    }
 }
 
-boolean WebHandlerClass::_ProcessConfig(JsonArray &newConfig, String *ReturnError)
+boolean WebHandlerClass::_ProcessConfig(JsonArray newConfig, String *ReturnError)
 {
    bool save = false;
-   Serial.printf("config is %i big\r\n", newConfig.size());
+   ESP_LOGD(__FILE__, "config is %i big\r\n", newConfig.size());
    for (unsigned int i = 0; i < newConfig.size(); i++)
    {
       String key = newConfig[i]["name"];
@@ -512,12 +490,14 @@ boolean WebHandlerClass::_ProcessConfig(JsonArray &newConfig, String *ReturnErro
    if (save)
    {
       SettingsManager.saveSettings();
+      //Schedule system reboot to activate new settings in 5s
+      //SystemManager.scheduleReboot(millis() + 5000);
    }
 
    return true;
 }
 
-boolean WebHandlerClass::_GetData(String dataType, JsonObject &Data)
+boolean WebHandlerClass::_GetData(String dataType, JsonObject Data)
 {
    if (dataType == "config")
    {
@@ -528,11 +508,11 @@ boolean WebHandlerClass::_GetData(String dataType, JsonObject &Data)
    }
    else if (dataType == "triggerQueue")
    {
-      JsonArray &triggerQueue = Data.createNestedArray("triggerQueue");
+      JsonArray triggerQueue = Data.createNestedArray("triggerQueue");
 
       for (auto &trigger : RaceHandler._OutputTriggerQueue)
       {
-         JsonObject &triggerObj = triggerQueue.createNestedObject();
+         JsonObject triggerObj = triggerQueue.createNestedObject();
          triggerObj["sensorNum"] = trigger.iSensorNumber;
          triggerObj["triggerTime"] = trigger.llTriggerTime - RaceHandler.llRaceStartTime;
          triggerObj["state"] = trigger.iSensorState;
@@ -558,11 +538,15 @@ void WebHandlerClass::_GetSystemData()
 
 void WebHandlerClass::_SendSystemData(int8_t iClientId)
 {
-   const size_t bufferSize = JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(7);
-   DynamicJsonBuffer JsonBuffer(bufferSize);
-   JsonObject &JsonRoot = JsonBuffer.createObject();
+   if (_iNumOfConsumers == 0)
+   {
+      return;
+   }
+   const size_t bufferSize = JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(7) + 170;
+   StaticJsonDocument<bufferSize> JsonDoc;
+   JsonObject JsonRoot = JsonDoc.to<JsonObject>();
 
-   JsonObject &JsonSystemData = JsonRoot.createNestedObject("SystemData");
+   JsonObject JsonSystemData = JsonRoot.createNestedObject("SystemData");
    JsonSystemData["uptime"] = _SystemData.Uptime;
    JsonSystemData["freeHeap"] = _SystemData.FreeHeap;
    JsonSystemData["CPU0ResetReason"] = (int)_SystemData.CPU0ResetReason;
@@ -571,38 +555,34 @@ void WebHandlerClass::_SendSystemData(int8_t iClientId)
    JsonSystemData["systemTimestamp"] = _SystemData.LocalSystemTime;
    JsonSystemData["batteryPercentage"] = _SystemData.BatteryPercentage;
 
-   size_t len = JsonRoot.measureLength();
-   AsyncWebSocketMessageBuffer *wsBuffer = _ws->makeBuffer(len);
-   if (wsBuffer)
-   {
-      JsonRoot.printTo((char *)wsBuffer->get(), len + 1);
-      if (iClientId == -1)
-      {
+   String strJsonSystemData;
+   serializeJson(JsonDoc, strJsonSystemData);
 
-         uint8_t iId = 0;
-         for (auto &isConsumer : _bIsConsumerArray)
-         {
-            if (isConsumer)
-            {
-               //ESP_LOGD(__FILE__, "Getting client obj for id %i\r\n", iId);
-               AsyncWebSocketClient *client = _ws->client(iId);
-               if (client && client->status() == WS_CONNECTED)
-               {
-                  //ESP_LOGD(__FILE__, "Sending to client %i\r\n", iId);
-                  client->text(wsBuffer);
-               }
-            }
-            iId++;
-         }
-      }
-      else
+   if (iClientId == -1)
+   {
+
+      uint8_t iId = 0;
+      for (auto &isConsumer : _bIsConsumerArray)
       {
-         //ESP_LOGD(__FILE__, "Sending to client %i\r\n", iClientId);
-         AsyncWebSocketClient *client = _ws->client(iClientId);
-         client->text(wsBuffer);
+         if (isConsumer)
+         {
+            ESP_LOGD(__FILE__, "Getting client obj for id %i\r\n", iId);
+            AsyncWebSocketClient *client = _ws->client(iId);
+            if (client && client->status() == WS_CONNECTED)
+            {
+               ESP_LOGD(__FILE__, "Sending to client %i\r\n", iId);
+               client->text(strJsonSystemData);
+            }
+         }
+         iId++;
       }
-      //ESP_LOGD(__FILE__, "Sent sysdata at %lu\r\n", millis());
    }
+   else
+   {
+      ESP_LOGD(__FILE__, "Sending to client %i\r\n", iClientId);
+      _ws->text(iClientId, strJsonSystemData);
+   }
+   ESP_LOGD(__FILE__, "Sent sysdata at %lu\r\n", millis());
 }
 
 void WebHandlerClass::_onAuth(AsyncWebServerRequest *request)
