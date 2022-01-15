@@ -61,7 +61,7 @@ void RaceHandlerClass::_ChangeRaceState(RaceStates byNewRaceState)
       PreviousRaceState = RaceState;
       RaceState = byNewRaceState;
 #ifdef WiFiON
-      WebHandler._SendRaceData();
+      WebHandler._SendRaceData(iCurrentRaceId, -1);
 #endif
    }
 }
@@ -725,7 +725,7 @@ void RaceHandlerClass::ResetRace()
    ESP_LOGI(__FILE__, "Reset Race: DONE");
 #ifdef WiFiON
    //Send updated racedata to any web clients
-   WebHandler._SendRaceData();
+   WebHandler._SendRaceData(iCurrentRaceId, -1);
 #endif
 }
 
