@@ -13,7 +13,12 @@
       "cstddef": "cpp",
       "type_traits": "cpp",
       "regex": "cpp",
-      "random": "cpp"
+      "random": "cpp",
+      "ratio": "cpp",
+      "system_error": "cpp",
+      "array": "cpp",
+      "tuple": "cpp",
+      "utility": "cpp"
    },
    "C_Cpp.dimInactiveRegions": true
 }
