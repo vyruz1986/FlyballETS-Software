@@ -258,7 +258,6 @@ void WebHandlerClass::loop()
    {
       if (millis() - _lLastSystemDataBroadcast > _lSystemDataBroadcastInterval)
       {
-         _GetSystemData();
          _SendSystemData();
          _lLastSystemDataBroadcast = millis();
       }
@@ -547,17 +546,13 @@ boolean WebHandlerClass::_GetData(String dataType, JsonObject &Data)
    return true;
 }
 
-void WebHandlerClass::_GetSystemData()
+void WebHandlerClass::_SendSystemData(int8_t iClientId)
 {
    _SystemData.FreeHeap = esp_get_free_heap_size();
    _SystemData.Uptime = millis();
    _SystemData.NumClients = _ws->count();
    _SystemData.LocalSystemTime = GPSHandler.GetLocalDateAndTime();
    _SystemData.BatteryPercentage = BatterySensor.GetBatteryPercentage();
-}
-
-void WebHandlerClass::_SendSystemData(int8_t iClientId)
-{
    const size_t bufferSize = JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(7);
    DynamicJsonBuffer JsonBuffer(bufferSize);
    JsonObject &JsonRoot = JsonBuffer.createObject();
