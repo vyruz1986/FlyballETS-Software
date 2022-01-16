@@ -23,7 +23,6 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
             return;
          }
       }
-      //_SendRaceData(RaceHandler.iCurrentRaceId, client->id()); //Make sure we always broadcast racedata when new client connects
       client->ping();
    }
    else if (type == WS_EVT_DISCONNECT)
@@ -113,7 +112,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
 
       // Parse JSON input
       //StaticJsonDocument<bsActionScheduleStartRace> jsonRequestDoc;
-      DynamicJsonDocument jsonRequestDoc(4096);
+      DynamicJsonDocument jsonRequestDoc(128);
       //DynamicJsonDocument jsonRequestDoc(bsActionScheduleStartRace);
       DeserializationError error = deserializeJson(jsonRequestDoc, msg);
       JsonObject request = jsonRequestDoc.as<JsonObject>();
@@ -125,7 +124,8 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
          return;
       }
 
-      const size_t bufferSize = JSON_ARRAY_SIZE(50) + 50 * JSON_OBJECT_SIZE(3);
+      //const size_t bufferSize = JSON_ARRAY_SIZE(50) + 50 * JSON_OBJECT_SIZE(3);
+      const size_t bufferSize = 2048;
       DynamicJsonDocument jsonResponseDoc(bufferSize);
       JsonObject JsonResponseRoot = jsonResponseDoc.to<JsonObject>();
 
@@ -184,6 +184,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
       if (wsBuffer)
       {
          serializeJson(jsonResponseDoc, (char *)wsBuffer->get(), len + 1);
+         ESP_LOGD(__FILE__, "wsBuffer to send: %s", (char *)wsBuffer->get());
          client->text(wsBuffer);
       }
    }
@@ -258,9 +259,8 @@ void WebHandlerClass::loop()
    {
       if (millis() - _lLastSystemDataBroadcast > _lSystemDataBroadcastInterval)
       {
-         _lLastSystemDataBroadcast = millis();
-         _GetSystemData();
          _SendSystemData();
+         _lLastSystemDataBroadcast = millis();
       }
       if (millis() - _lLastPingBroadcast > _lPingBroadcastInterval)
       {
@@ -284,6 +284,7 @@ void WebHandlerClass::SendLightsData(stLightsState LightStates)
    if (wsBuffer)
    {
       serializeJson(JsonDoc, (char *)wsBuffer->get(), len + 1);
+      ESP_LOGD(__FILE__, "LightsData wsBuffer to send: %s", (char *)wsBuffer->get());
       for (uint8_t i = 0; i < _ws->count(); i++)
       {
          if (_bIsConsumerArray[i])
@@ -359,7 +360,8 @@ boolean WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, As
          _iNumOfConsumers++;
       }
       _bIsConsumerArray[Client->id()] = true;
-      _SendRaceData(RaceHandler.iCurrentRaceId, Client->id());
+      _SendSystemData(Client->id());
+      //_SendRaceData(RaceHandler.iCurrentRaceId, Client->id());
       return true;
    }
    else
@@ -400,6 +402,7 @@ boolean WebHandlerClass::_GetRaceDataJsonString(int iRaceId, String &strJsonStri
    }
 
    serializeJson(JsonRaceData, strJsonString);
+   ESP_LOGD(__FILE__, "JSON Race Data to send: %s", strJsonString.c_str());
 
    return true;
 }
@@ -530,62 +533,65 @@ boolean WebHandlerClass::_GetData(String dataType, JsonObject Data)
    return true;
 }
 
-void WebHandlerClass::_GetSystemData()
-{
-   _SystemData.FreeHeap = esp_get_free_heap_size();
-   _SystemData.Uptime = millis();
-   _SystemData.NumClients = _ws->count();
-   _SystemData.LocalSystemTime = GPSHandler.GetLocalDateAndTime();
-   _SystemData.BatteryPercentage = BatterySensor.GetBatteryPercentage();
-}
-
 void WebHandlerClass::_SendSystemData(int8_t iClientId)
 {
    if (_iNumOfConsumers == 0)
    {
       return;
    }
-   const size_t bufferSize = JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(7) + 170;
-   DynamicJsonDocument JsonDoc(bufferSize);
-   JsonObject JsonRoot = JsonDoc.to<JsonObject>();
-
-   JsonObject JsonSystemData = JsonRoot.createNestedObject("SystemData");
-   JsonSystemData["uptime"] = _SystemData.Uptime;
-   JsonSystemData["freeHeap"] = _SystemData.FreeHeap;
-   JsonSystemData["CPU0ResetReason"] = (int)_SystemData.CPU0ResetReason;
-   JsonSystemData["CPU1ResetReason"] = (int)_SystemData.CPU1ResetReason;
-   JsonSystemData["numClients"] = _SystemData.NumClients;
-   JsonSystemData["systemTimestamp"] = _SystemData.LocalSystemTime;
-   JsonSystemData["batteryPercentage"] = _SystemData.BatteryPercentage;
-
-   String strJsonSystemData;
-   serializeJson(JsonDoc, strJsonSystemData);
-
-   if (iClientId == -1)
-   {
-
-      uint8_t iId = 0;
-      for (auto &isConsumer : _bIsConsumerArray)
-      {
-         if (isConsumer)
-         {
-            ESP_LOGD(__FILE__, "Getting client obj for id %i\r\n", iId);
-            AsyncWebSocketClient *client = _ws->client(iId);
-            if (client && client->status() == WS_CONNECTED)
-            {
-               ESP_LOGD(__FILE__, "Sending to client %i\r\n", iId);
-               client->text(strJsonSystemData);
-            }
-         }
-         iId++;
-      }
-   }
    else
    {
-      ESP_LOGD(__FILE__, "Sending to client %i\r\n", iClientId);
-      _ws->text(iClientId, strJsonSystemData);
+      _SystemData.FreeHeap = esp_get_free_heap_size();
+      _SystemData.Uptime = millis();
+      _SystemData.NumClients = _ws->count();
+      _SystemData.LocalSystemTime = GPSHandler.GetLocalDateAndTime();
+      _SystemData.BatteryPercentage = BatterySensor.GetBatteryPercentage();
+
+
+      const size_t bufferSize = JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(7) + 170;
+      DynamicJsonDocument JsonDoc(bufferSize);
+      JsonObject JsonRoot = JsonDoc.to<JsonObject>();
+
+      JsonObject JsonSystemData = JsonRoot.createNestedObject("SystemData");
+      JsonSystemData["uptime"] = _SystemData.Uptime;
+      JsonSystemData["freeHeap"] = _SystemData.FreeHeap;
+      JsonSystemData["CPU0ResetReason"] = (int)_SystemData.CPU0ResetReason;
+      JsonSystemData["CPU1ResetReason"] = (int)_SystemData.CPU1ResetReason;
+      JsonSystemData["numClients"] = _SystemData.NumClients;
+      JsonSystemData["systemTimestamp"] = _SystemData.LocalSystemTime;
+      JsonSystemData["batteryPercentage"] = _SystemData.BatteryPercentage;
+
+      String strJsonSystemData;
+      serializeJson(JsonDoc, strJsonSystemData);
+      //ESP_LOGD(__FILE__, "Serialized SystemData %s\r\n", strJsonSystemData.c_str());
+
+      if (iClientId == -1)
+      {
+
+         uint8_t iId = 0;
+         for (auto &isConsumer : _bIsConsumerArray)
+         {
+            if (isConsumer)
+            {
+               ESP_LOGD(__FILE__, "Getting client obj for id %i\r\n", iId);
+               AsyncWebSocketClient *client = _ws->client(iId);
+               if (client && client->status() == WS_CONNECTED)
+               {
+                  ESP_LOGD(__FILE__, "Generic update. Sending to client %i\r\n", iId);
+                  client->text(strJsonSystemData);
+               }
+            }
+            iId++;
+         }
+      }
+      else
+      {
+         ESP_LOGD(__FILE__, "Unique update. Sending to client %i\r\n", iClientId);
+         _ws->text(iClientId, strJsonSystemData);
+      }
+      //ESP_LOGD(__FILE__, "Sent sysdata at %lu\r\n", millis());
    }
-   ESP_LOGD(__FILE__, "Sent sysdata at %lu\r\n", millis());
+
 }
 
 void WebHandlerClass::_onAuth(AsyncWebServerRequest *request)

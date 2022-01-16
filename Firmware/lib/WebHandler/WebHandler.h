@@ -41,7 +41,6 @@ protected:
 
    boolean _GetData(String dataType, JsonObject ReturnError);
 
-   void _GetSystemData();
    void _SendSystemData(int8_t iClientId = -1);
    void _onAuth(AsyncWebServerRequest *request);
    bool _authenticate(AsyncWebServerRequest *request);
