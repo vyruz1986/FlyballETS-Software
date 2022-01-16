@@ -111,7 +111,9 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
       }
 
       // Parse JSON input
-      StaticJsonDocument<bsActionScheduleStartRace> jsonRequestDoc;
+      //StaticJsonDocument<bsActionScheduleStartRace> jsonRequestDoc;
+      DynamicJsonDocument jsonRequestDoc(4096);
+      //DynamicJsonDocument jsonRequestDoc(bsActionScheduleStartRace);
       DeserializationError error = deserializeJson(jsonRequestDoc, msg);
       JsonObject request = jsonRequestDoc.as<JsonObject>();
       if (error)
@@ -123,7 +125,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
       }
 
       const size_t bufferSize = JSON_ARRAY_SIZE(50) + 50 * JSON_OBJECT_SIZE(3);
-      StaticJsonDocument<bufferSize> jsonResponseDoc;
+      DynamicJsonDocument jsonResponseDoc(bufferSize);
       JsonObject JsonResponseRoot = jsonResponseDoc.to<JsonObject>();
 
       if (request.containsKey("action"))
@@ -270,7 +272,7 @@ void WebHandlerClass::loop()
 
 void WebHandlerClass::SendLightsData(stLightsState LightStates)
 {
-   StaticJsonDocument<bsLightsData> JsonDoc;
+   DynamicJsonDocument JsonDoc(bsLightsData);
    JsonObject JsonRoot = JsonDoc.to<JsonObject>();
 
    JsonArray JsonLightsData = JsonRoot.createNestedArray("LightsData");
@@ -369,7 +371,7 @@ boolean WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, As
 
 boolean WebHandlerClass::_GetRaceDataJsonString(int iRaceId, String &strJsonString)
 {
-   StaticJsonDocument<bsRaceData> JsonDoc;
+   DynamicJsonDocument JsonDoc(bsRaceData);
    JsonObject JsonRoot = JsonDoc.to<JsonObject>();
    JsonObject JsonRaceData = JsonRoot.createNestedObject("RaceData");
    stRaceData RequestedRaceData = RaceHandler.GetRaceData();
@@ -407,11 +409,11 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
    {
       return;
    }
-   StaticJsonDocument<bsRaceDataArray> JsonDoc;
+   DynamicJsonDocument JsonDoc(bsRaceDataArray);
    JsonObject JsonRoot = JsonDoc.to<JsonObject>();
    JsonArray jsonRaceData = JsonRoot.createNestedArray("RaceData");
 
-   StaticJsonDocument<bsRaceData> jsonMasterRaceDataDoc;
+   DynamicJsonDocument jsonMasterRaceDataDoc(bsRaceData);
    JsonObject jsonMasterRaceData = jsonMasterRaceDataDoc.to<JsonObject>();
 
    stRaceData RequestedRaceData = RaceHandler.GetRaceData();
@@ -543,7 +545,7 @@ void WebHandlerClass::_SendSystemData(int8_t iClientId)
       return;
    }
    const size_t bufferSize = JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(7) + 170;
-   StaticJsonDocument<bufferSize> JsonDoc;
+   DynamicJsonDocument JsonDoc(bufferSize);
    JsonObject JsonRoot = JsonDoc.to<JsonObject>();
 
    JsonObject JsonSystemData = JsonRoot.createNestedObject("SystemData");
