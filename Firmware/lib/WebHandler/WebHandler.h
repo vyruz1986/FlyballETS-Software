@@ -30,16 +30,16 @@ protected:
    AsyncWebSocket *_ws;
    AsyncWebSocket *_wsa;
    void _WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
-   boolean _DoAction(JsonObject &ActionObj, String *ReturnError);
-   boolean _GetRaceDataJsonString(uint iRaceId, String &strJsonString);
-   void _SendRaceData(int iRaceId = RaceHandler.iCurrentRaceId);
+   boolean _DoAction(JsonObject &ActionObj, String *ReturnError, AsyncWebSocketClient *Client);
+   boolean _GetRaceDataJsonString(int iRaceId, String &strJsonString);
+   void _SendRaceData(int iRaceId, int8_t iClientId);
 
    boolean _ProcessConfig(JsonArray &newConfig, String *ReturnError);
 
    boolean _GetData(String dataType, JsonObject &ReturnError);
 
    void _GetSystemData();
-   void _SendSystemData();
+   void _SendSystemData(int8_t iClientId = -1);
    void _onAuth(AsyncWebServerRequest *request);
    bool _authenticate(AsyncWebServerRequest *request);
    bool _wsAuth(AsyncWebSocketClient *client);
@@ -61,6 +61,9 @@ protected:
       unsigned long timestamp = 0;
    } ws_ticket_t;
    ws_ticket_t _ticket[WS_TICKET_BUFFER_SIZE];
+
+   boolean _bIsConsumerArray[255];
+   uint8_t _iNumOfConsumers;
 
 public:
    void init(int webPort);

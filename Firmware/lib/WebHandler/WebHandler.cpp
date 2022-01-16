@@ -11,7 +11,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
 
    if (type == WS_EVT_CONNECT)
    {
-      ESP_LOGI(__FILE__, "ws[%s][%u] connect: %zu\n", server->url(), client->id());
+      ESP_LOGI(__FILE__, "Client %i connected to %s!", client->id(), server->url());
       //client->printf("Hello Client %u :)", client->id());
 
       //Should we check authentication?
@@ -25,12 +25,18 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
       }
 
       //TODO: Would be nicer if we only send this to the specific client who just connected instead of all clients
-      _SendRaceData(); //Make sure we always broadcast racedata when new client connects
+      //_SendRaceData(); //Make sure we always broadcast racedata when new client connects
       client->ping();
    }
    else if (type == WS_EVT_DISCONNECT)
    {
-      ESP_LOGI(__FILE__, "ws[%s][%u] disconnect: %zu\n", server->url(), client->id());
+      if (_bIsConsumerArray[client->id()])
+      {
+         _iNumOfConsumers--;
+         _bIsConsumerArray[client->id()] = false;
+      }
+
+      ESP_LOGI(__FILE__, "Client %u disconnected!\n", client->id());
    }
    else if (type == WS_EVT_ERROR)
    {
@@ -127,12 +133,11 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
       {
          JsonObject &ActionResult = JsonResponseRoot.createNestedObject("ActionResult");
          String errorText;
-         bool result = _DoAction(request["action"], &errorText);
+         bool result = _DoAction(request["action"], &errorText, client);
          ActionResult["success"] = result;
          ActionResult["error"] = errorText;
       }
-
-      if (request.containsKey("config"))
+      else if (request.containsKey("config"))
       {
          JsonObject &ConfigResult = JsonResponseRoot.createNestedObject("configResult");
          String errorText;
@@ -151,8 +156,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
          ConfigResult["success"] = result;
          ConfigResult["error"] = errorText;
       }
-
-      if (request.containsKey("getData"))
+      else if (request.containsKey("getData"))
       {
          String dataName = request["getData"];
          JsonObject &DataResult = JsonResponseRoot.createNestedObject("dataResult");
@@ -168,6 +172,11 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
             result = _GetData(dataName, DataObject);
          }
          DataResult["success"] = result;
+      }
+      else
+      {
+         ESP_LOGI(__FILE__, "Got valid JSON but unknown message!");
+         JsonResponseRoot["error"] = "Got valid JSON but unknown message!";
       }
 
       size_t len = JsonResponseRoot.measureLength();
@@ -224,6 +233,13 @@ void WebHandlerClass::init(int webPort)
 
    _SystemData.CPU0ResetReason = rtc_get_reset_reason(0);
    _SystemData.CPU1ResetReason = rtc_get_reset_reason(1);
+
+   for (boolean &bIsConsumer : _bIsConsumerArray)
+   {
+      bIsConsumer = false;
+   }
+
+   _iNumOfConsumers = 0;
 }
 
 void WebHandlerClass::loop()
@@ -234,7 +250,7 @@ void WebHandlerClass::loop()
       //Send race data each 750ms
       if (millis() - _lLastRaceDataBroadcast > _lRaceDataBroadcastInterval)
       {
-         _SendRaceData();
+         _SendRaceData(RaceHandler.iCurrentRaceId, -1);
          _lLastRaceDataBroadcast = millis();
       }
    }
@@ -248,8 +264,8 @@ void WebHandlerClass::loop()
       }
       if (millis() - _lLastPingBroadcast > _lPingBroadcastInterval)
       {
-         ESP_LOGD(__FILE__, "Current websocket clients connected: %i", _ws->count());
-         _ws->pingAll();
+         ESP_LOGD(__FILE__, "Have %i clients, %i consumers\r\n", _ws->count(), _iNumOfConsumers);
+         //_ws->pingAll();
          _lLastPingBroadcast = millis();
       }
    }
@@ -276,12 +292,18 @@ void WebHandlerClass::SendLightsData(stLightsState LightStates)
       if (wsBuffer)
       {
          JsonRoot.printTo((char *)wsBuffer->get(), len + 1);
-         _ws->textAll(wsBuffer);
+         for (uint8_t i = 0; i < _ws->count(); i++)
+         {
+            if (_bIsConsumerArray[i])
+            {
+               _ws->text(i, (char *)wsBuffer);
+            }
+         }
       }
    }
 }
 
-boolean WebHandlerClass::_DoAction(JsonObject &ActionObj, String *ReturnError)
+boolean WebHandlerClass::_DoAction(JsonObject &ActionObj, String *ReturnError, AsyncWebSocketClient *Client)
 {
    String ActionType = ActionObj["actionType"];
    if (ActionType == "StartRace")
@@ -338,14 +360,26 @@ boolean WebHandlerClass::_DoAction(JsonObject &ActionObj, String *ReturnError)
       RaceHandler.SetDogFault(iDogNum);
       return true;
    }
+   else if (ActionType == "AnnounceConsumer")
+   {
+      ESP_LOGI(__FILE__, "We have a consumer with ID %i and IP %s", Client->id(), Client->remoteIP().toString().c_str());
+      if (!_bIsConsumerArray[Client->id()])
+      {
+         _iNumOfConsumers++;
+      }
+      _bIsConsumerArray[Client->id()] = true;
+      _SendRaceData(RaceHandler.iCurrentRaceId, Client->id());
+      return true;
+   }
    else
    {
       //ReturnError = "Unknown action received!";
+      ESP_LOGD(__FILE__, "Unknown action received: %s", ActionType.c_str());
       return false;
    }
 }
 
-boolean WebHandlerClass::_GetRaceDataJsonString(uint iRaceId, String &strJsonString)
+boolean WebHandlerClass::_GetRaceDataJsonString(int iRaceId, String &strJsonString)
 {
    const size_t bufferSize = 5 * JSON_ARRAY_SIZE(4) + JSON_OBJECT_SIZE(1) + 16 * JSON_OBJECT_SIZE(2) + 4 * JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(7);
    DynamicJsonBuffer JsonBuffer(bufferSize);
@@ -389,7 +423,7 @@ boolean WebHandlerClass::_GetRaceDataJsonString(uint iRaceId, String &strJsonStr
    return true;
 }
 
-void WebHandlerClass::_SendRaceData(int iRaceId)
+void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
 {
    const size_t bufferSize = 5 * JSON_ARRAY_SIZE(4) + JSON_OBJECT_SIZE(1) + 16 * JSON_OBJECT_SIZE(2) + 4 * JSON_OBJECT_SIZE(4) + JSON_OBJECT_SIZE(7);
    DynamicJsonBuffer JsonBuffer(bufferSize);
@@ -429,7 +463,31 @@ void WebHandlerClass::_SendRaceData(int iRaceId)
       if (wsBuffer)
       {
          JsonRoot.printTo((char *)wsBuffer->get(), len + 1);
-         _ws->textAll(wsBuffer);
+         if (iClientId == -1)
+         {
+
+            uint8_t iId = 0;
+            for (auto &isConsumer : _bIsConsumerArray)
+            {
+               if (isConsumer)
+               {
+                  //ESP_LOGD(__FILE__, "Getting client obj for id %i\r\n", iId);
+                  AsyncWebSocketClient *client = _ws->client(iId);
+                  if (client && client->status() == WS_CONNECTED)
+                  {
+                     //ESP_LOGD(__FILE__, "Sending to client %i\r\n", iId);
+                     client->text(wsBuffer);
+                  }
+               }
+               iId++;
+            }
+         }
+         else
+         {
+            //ESP_LOGD(__FILE__, "Sending to client %i\r\n", iClientId);
+            AsyncWebSocketClient *client = _ws->client(iClientId);
+            client->text(wsBuffer);
+         }
       }
    }
 }
@@ -437,7 +495,6 @@ void WebHandlerClass::_SendRaceData(int iRaceId)
 boolean WebHandlerClass::_ProcessConfig(JsonArray &newConfig, String *ReturnError)
 {
    bool save = false;
-   bool changed = false;
    Serial.printf("config is %i big\r\n", newConfig.size());
    for (unsigned int i = 0; i < newConfig.size(); i++)
    {
@@ -448,7 +505,7 @@ boolean WebHandlerClass::_ProcessConfig(JsonArray &newConfig, String *ReturnErro
       {
          ESP_LOGD(__FILE__, "[WEBHANDLER] Storing %s = %s", key.c_str(), value.c_str());
          SettingsManager.setSetting(key, value);
-         save = changed = true;
+         save = true;
       }
    }
 
@@ -499,7 +556,7 @@ void WebHandlerClass::_GetSystemData()
    _SystemData.BatteryPercentage = BatterySensor.GetBatteryPercentage();
 }
 
-void WebHandlerClass::_SendSystemData()
+void WebHandlerClass::_SendSystemData(int8_t iClientId)
 {
    const size_t bufferSize = JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(7);
    DynamicJsonBuffer JsonBuffer(bufferSize);
@@ -519,7 +576,32 @@ void WebHandlerClass::_SendSystemData()
    if (wsBuffer)
    {
       JsonRoot.printTo((char *)wsBuffer->get(), len + 1);
-      _ws->textAll(wsBuffer);
+      if (iClientId == -1)
+      {
+
+         uint8_t iId = 0;
+         for (auto &isConsumer : _bIsConsumerArray)
+         {
+            if (isConsumer)
+            {
+               //ESP_LOGD(__FILE__, "Getting client obj for id %i\r\n", iId);
+               AsyncWebSocketClient *client = _ws->client(iId);
+               if (client && client->status() == WS_CONNECTED)
+               {
+                  //ESP_LOGD(__FILE__, "Sending to client %i\r\n", iId);
+                  client->text(wsBuffer);
+               }
+            }
+            iId++;
+         }
+      }
+      else
+      {
+         //ESP_LOGD(__FILE__, "Sending to client %i\r\n", iClientId);
+         AsyncWebSocketClient *client = _ws->client(iClientId);
+         client->text(wsBuffer);
+      }
+      //ESP_LOGD(__FILE__, "Sent sysdata at %lu\r\n", millis());
    }
 }
 
