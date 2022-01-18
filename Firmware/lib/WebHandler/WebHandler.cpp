@@ -516,11 +516,12 @@ boolean WebHandlerClass::_GetData(String dataType, JsonObject Data)
 
 void WebHandlerClass::_SendSystemData(int8_t iClientId)
 {
-      if (_iNumOfConsumers == 0)
+   if (_iNumOfConsumers == 0)
    {
       return;
    }
    else
+
    {
       char _cLocalDateAndTime[29];
       sprintf(_cLocalDateAndTime, "%i-%02i-%02iT%02i:%02i:%02iZ", year(), month(), day(), hour(), minute(), second());
