@@ -64,7 +64,7 @@ public:
    String GetRaceStateString();
 
    stRaceData GetRaceData();
-   stRaceData GetRaceData(uint iRaceId);
+   stRaceData GetRaceData(int iRaceId);
    void ToggleRunDirection();
    boolean GetRunDirection();
 

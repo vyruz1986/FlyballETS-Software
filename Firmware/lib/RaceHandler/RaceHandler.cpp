@@ -61,7 +61,10 @@ void RaceHandlerClass::_ChangeRaceState(RaceStates byNewRaceState)
       PreviousRaceState = RaceState;
       RaceState = byNewRaceState;
 #ifdef WiFiON
-      WebHandler._SendRaceData(iCurrentRaceId, -1);
+      if (RaceState == RESET)
+      {
+         WebHandler._SendRaceData(iCurrentRaceId, -1);
+      }    
 #endif
    }
 }
@@ -1313,14 +1316,14 @@ stRaceData RaceHandlerClass::GetRaceData()
 /// <returns>
 ///  Race data struct
 /// </returns>
-stRaceData RaceHandlerClass::GetRaceData(uint iRaceId)
+stRaceData RaceHandlerClass::GetRaceData(int iRaceId)
 {
    stRaceData RequestedRaceData;
 
    if (iRaceId == iCurrentRaceId)
    {
       //We need to return data for the current dace
-      RequestedRaceData.Id = iCurrentRaceId;
+      RequestedRaceData.Id = iCurrentRaceId + 1;
       RequestedRaceData.StartTime = llRaceStartTime / 1000;
       RequestedRaceData.EndTime = _llRaceEndTime / 1000;
 #if Accuracy2digits
