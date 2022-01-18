@@ -34,7 +34,6 @@ protected:
    AsyncWebSocket *_wsa;
    void _WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
    boolean _DoAction(JsonObject ActionObj, String *ReturnError, AsyncWebSocketClient *Client);
-   boolean _GetRaceDataJsonString(int iRaceId, String &strJsonString);
    void _SendRaceData(int iRaceId, int8_t iClientId);
 
    boolean _ProcessConfig(JsonArray newConfig, String *ReturnError);

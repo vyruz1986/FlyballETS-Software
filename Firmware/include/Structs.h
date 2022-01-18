@@ -18,7 +18,7 @@ struct stDogData
 
 struct stRaceData
 {
-   uint Id;
+   int Id;
    unsigned long StartTime;
    unsigned long EndTime;
    double ElapsedTime;
