@@ -35,6 +35,7 @@
 #include <ESPmDNS.h>
 #include <ArduinoOTA.h>
 #include <WiFiUdp.h>
+#include <WiFiClientSecure.h>
 #endif
 #include <EEPROM.h>
 #include <NeoPixelBus.h>
