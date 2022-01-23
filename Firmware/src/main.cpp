@@ -564,8 +564,13 @@ void loop()
 #endif
    LCDController.UpdateField(LCDController.NetTime, cTeamNetTime);
 
-   //Update race status to display
-   LCDController.UpdateField(LCDController.RaceState, RaceHandler.GetRaceStateString());
+   if (iCurrentRaceState != RaceHandler.RaceState)
+   {
+      String sRaceStateMain = RaceHandler.GetRaceStateString();
+      ESP_LOGI(__FILE__, "RS: %s", sRaceStateMain);
+      //Update race status to display
+      LCDController.UpdateField(LCDController.RaceState, sRaceStateMain);
+   }
 
    //Handle individual dog info
    LCDController.UpdateField(LCDController.D1Time, RaceHandler.GetDogTime(0));
@@ -583,11 +588,6 @@ void loop()
    LCDController.UpdateField(LCDController.D4Time, RaceHandler.GetDogTime(3));
    LCDController.UpdateField(LCDController.D4CrossTime, RaceHandler.GetCrossingTime(3));
    LCDController.UpdateField(LCDController.D4RerunInfo, RaceHandler.GetRerunInfo(3));
-
-   if (iCurrentRaceState != RaceHandler.RaceState)
-   {
-      ESP_LOGI(__FILE__, "RS: %s", RaceHandler.GetRaceStateString());
-   }
 
    if (RaceHandler.RaceState == RaceHandler.STOPPED && ((GET_MICROS / 1000 - (RaceHandler.llRaceStartTime / 1000 + RaceHandler.GetRaceTime() * 1000)) > 1500) && !bRaceSummaryPrinted)
    {

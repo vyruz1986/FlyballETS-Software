@@ -7,7 +7,7 @@ import { Component, OnInit, Input } from '@angular/core';
 })
 export class TimeDisplayComponent implements OnInit {
    @Input() elapsedTime: number;
-   @Input() totalCrossingTime: number;
+   @Input() NetTime: number;
    constructor() { }
 
    ngOnInit() {

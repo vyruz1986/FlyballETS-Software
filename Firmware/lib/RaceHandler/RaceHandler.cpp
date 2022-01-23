@@ -60,12 +60,6 @@ void RaceHandlerClass::_ChangeRaceState(RaceStates byNewRaceState)
    {
       PreviousRaceState = RaceState;
       RaceState = byNewRaceState;
-#ifdef WiFiON
-      if (RaceState == RESET)
-      {
-         WebHandler._SendRaceData(iCurrentRaceId, -1);
-      }    
-#endif
    }
 }
 
@@ -571,7 +565,7 @@ void RaceHandlerClass::StartRaceTimer()
 {
    llRaceStartTime = GET_MICROS + 3000000;
    _ChangeRaceState(STARTING);
-   ESP_LOGD(__FILE__, "%llu: STARTING! Race ID: %i", (llRaceStartTime - 3000000) / 1000, iCurrentRaceId + 1);
+   ESP_LOGD(__FILE__, "%llu: STARTING! Tag: %i, Race ID: %i.", (llRaceStartTime - 3000000) / 1000, SDcardController.iTagValue, iCurrentRaceId + 1);
    cRaceStartTimestamp = GPSHandler.GetLocalTimestamp();
    ESP_LOGI(__FILE__, "Timestamp: %s", cRaceStartTimestamp);
 }
@@ -728,7 +722,7 @@ void RaceHandlerClass::ResetRace()
    ESP_LOGI(__FILE__, "Reset Race: DONE");
 #ifdef WiFiON
    //Send updated racedata to any web clients
-   WebHandler._SendRaceData(iCurrentRaceId, -1);
+   WebHandler._bSendRaceData = true;
 #endif
 }
 
@@ -1335,7 +1329,7 @@ stRaceData RaceHandlerClass::GetRaceData(int iRaceId)
          RequestedRaceData.ElapsedTime = ((long long)(_llRaceTime + 500) / 1000) / 1000.0;
       }
 #endif
-      RequestedRaceData.TotalCrossingTime = this->GetNetTime();
+      RequestedRaceData.NetTime = this->GetNetTime();
       RequestedRaceData.RaceState = RaceState;
 
       //Get Dog info

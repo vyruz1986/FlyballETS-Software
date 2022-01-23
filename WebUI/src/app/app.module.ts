@@ -17,7 +17,6 @@ import { EtsdataService } from "./services/etsdata.service";
 import { SecureEtsDataService } from "./services/secure-ets-data.service";
 import { LoginComponent } from "./components/login/login.component";
 import { HttpClientModule } from "@angular/common/http";
-import { CrossingTime } from "./pipes/crossing-time.pipe";
 import { DatePipe } from "@angular/common";
 import { FriendlyRaceStatePipe } from "./pipes/friendly-race-state.pipe";
 import { RaceControlComponent } from "./components/racedisplay/race-control/race-control.component";
@@ -40,7 +39,6 @@ const appRoutes: Routes = [
     SystemDataComponent,
     LightsComponent,
     LoginComponent,
-    CrossingTime,
     FriendlyRaceStatePipe,
     RaceControlComponent,
     TimeDisplayComponent,

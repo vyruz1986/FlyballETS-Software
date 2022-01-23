@@ -3,10 +3,10 @@
     <span class="badge badge-info text-center">
       Batt: {{systemData.batteryPercentage}}%
       | T: {{systemData.systemTimestamp | date:'short'}}
-      | U: {{hmsTime}}
+      | Up: {{hmsTime}}
       | C: {{systemData.numClients}}
-      | H: {{systemData.freeHeap}}
-      | B: {{systemData.CPU0ResetReason}}/{{systemData.CPU1ResetReason}}
+      | Id: {{systemData.PwrOnTag}}/{{systemData.RaceID}}
+      | Mem: {{systemData.freeHeap}}
     </span>
   </div>
 </footer>

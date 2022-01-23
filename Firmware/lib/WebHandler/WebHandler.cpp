@@ -54,10 +54,8 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
 
          if (info->opcode == WS_TEXT)
          {
-            for (size_t i = 0; i < info->len; i++)
-            {
-               msg += (char)data[i];
-            }
+            data[len] = 0;
+            msg = (char*)data;
          }
          else
          {
@@ -84,10 +82,8 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
 
          if (info->opcode == WS_TEXT)
          {
-            for (size_t i = 0; i < info->len; i++)
-            {
-               msg += (char)data[i];
-            }
+            data[len] = 0;
+            msg = (char*)data;
          }
          else
          {
@@ -104,9 +100,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
          {
             ESP_LOGI(__FILE__, "ws[%s][%u] frame[%u] end[%llu]\n", server->url(), client->id(), info->num, info->len);
             if (info->final)
-            {
                ESP_LOGI(__FILE__, "ws[%s][%u] %s-message end\n", server->url(), client->id(), (info->message_opcode == WS_TEXT) ? "text" : "binary");
-            }
          }
       }
 
@@ -124,6 +118,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
          return;
       }
 
+      _lWebSocketReceivedTime = millis();
       const size_t bufferSize = JSON_ARRAY_SIZE(50) + 50 * JSON_OBJECT_SIZE(3);
       StaticJsonDocument<bufferSize> jsonResponseDoc;
       //DynamicJsonDocument jsonResponseDoc(48);
@@ -197,6 +192,8 @@ void WebHandlerClass::init(int webPort)
    _ws = new AsyncWebSocket("/ws");
    _wsa = new AsyncWebSocket("/wsa");
 
+   _lWebSocketReceivedTime = 0;
+
    _ws->onEvent(std::bind(&WebHandlerClass::_WsEvent, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5, std::placeholders::_6));
 
    _wsa->onEvent(std::bind(&WebHandlerClass::_WsEvent, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5, std::placeholders::_6));
@@ -232,8 +229,9 @@ void WebHandlerClass::init(int webPort)
    _lLastPingBroadcast = 0;
    _lPingBroadcastInterval = 10000;
 
-   _SystemData.CPU0ResetReason = rtc_get_reset_reason(0);
-   _SystemData.CPU1ResetReason = rtc_get_reset_reason(1);
+   _lLastBroadcast = 0;
+
+   _SystemData.PwrOnTag = SDcardController.iTagValue;
 
    for (boolean &bIsConsumer : _bIsConsumerArray)
    {
@@ -245,34 +243,44 @@ void WebHandlerClass::init(int webPort)
 
 void WebHandlerClass::loop()
 {
-   //When race is starting, running or stopped (race time > 0)
-   if (RaceHandler.RaceState == RaceHandler.STARTING || RaceHandler.RaceState == RaceHandler.RUNNING || (RaceHandler.RaceState == RaceHandler.STOPPED && ((GET_MICROS - RaceHandler._llRaceEndTime) / 1000) < 1500))
+   //ESP_LOGD(__FILE__, "Update lights: %i, update race data: %i\r\n", _bUpdateLights, _bSendRaceData);
+   if (_bUpdateLights && (millis() - _lLastBroadcast > 100) && (millis() - _lWebSocketReceivedTime > 100))
+   {
+      SendLightsData();
+   }
+   else if (_bSendRaceData && ((millis() - _lLastRaceDataBroadcast) > 100) && ((millis() - _lWebSocketReceivedTime) > 100))
+   {
+      _SendRaceData(RaceHandler.iCurrentRaceId, -1);
+   }
+   //When race is starting, running or stopped
+   else if (RaceHandler.RaceState == RaceHandler.STARTING || RaceHandler.RaceState == RaceHandler.RUNNING || (RaceHandler.RaceState == RaceHandler.STOPPED && ((GET_MICROS - RaceHandler._llRaceEndTime) / 1000) < 1500))
    {
       //Send race data each 750ms
-      if (millis() - _lLastRaceDataBroadcast > _lRaceDataBroadcastInterval)
+      if (((millis() - _lLastRaceDataBroadcast) > _lRaceDataBroadcastInterval) && ((millis() - _lWebSocketReceivedTime) > 100) && ((millis() - _lLastBroadcast) > 100))
       {
          _SendRaceData(RaceHandler.iCurrentRaceId, -1);
-         _lLastRaceDataBroadcast = millis();
       }
    }
    else
    {
-      if (millis() - _lLastSystemDataBroadcast > _lSystemDataBroadcastInterval)
+      if (((millis() - _lLastSystemDataBroadcast) > _lSystemDataBroadcastInterval) && ((millis() - _lWebSocketReceivedTime) > 2000) && ((millis() - _lLastBroadcast) > 2000))
       {
          _SendSystemData();
-         _lLastSystemDataBroadcast = millis();
       }
-      if (millis() - _lLastPingBroadcast > _lPingBroadcastInterval)
+      if ((millis() - _lLastPingBroadcast > _lPingBroadcastInterval) && ((millis() - _lLastBroadcast) > 100))
       {
+         _ws->cleanupClients();
          ESP_LOGD(__FILE__, "Have %i clients, %i consumers\r\n", _ws->count(), _iNumOfConsumers);
          //_ws->pingAll();
          _lLastPingBroadcast = millis();
+         _lLastBroadcast = millis();
       }
    }
 }
 
-void WebHandlerClass::SendLightsData(stLightsState LightStates)
+void WebHandlerClass::SendLightsData()
 {
+   stLightsState LightStates = LightsController.GetLightsState();
    StaticJsonDocument<96> jsonLightsDoc;
    //DynamicJsonDocument jsonLightsDoc(96);
    JsonObject JsonRoot = jsonLightsDoc.to<JsonObject>();
@@ -286,7 +294,8 @@ void WebHandlerClass::SendLightsData(stLightsState LightStates)
    {
       serializeJson(jsonLightsDoc, (char *)wsBuffer->get(), len + 1);
       //ESP_LOGD(__FILE__, "LightsData wsBuffer to send: %s. No of ws clients is: %i", (char *)wsBuffer->get(), _ws->count());
-      uint8_t iId = 0;
+      _ws->textAll(wsBuffer);
+      /*uint8_t iId = 0;
       for (auto &isConsumer : _bIsConsumerArray)
       {
          if (isConsumer)
@@ -299,8 +308,10 @@ void WebHandlerClass::SendLightsData(stLightsState LightStates)
             }
          }
          iId++;
-      }
+      }*/
    }
+   _lLastBroadcast = millis();
+   _bUpdateLights = false;
 }
 
 boolean WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, AsyncWebSocketClient *Client)
@@ -311,8 +322,6 @@ boolean WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, As
       if (RaceHandler.RaceState != RaceHandler.RESET)
       {
          //ReturnError = String("Race was not reset, stop and reset it first!");
-         SendLightsData(LightsController.GetLightsState());
-         _SendRaceData(RaceHandler.iCurrentRaceId, Client->id());
          return false;
       }
       else
@@ -326,14 +335,14 @@ boolean WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, As
       if (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)
       {
          //ReturnError = "Race was already stopped!";
-         SendLightsData(LightsController.GetLightsState());
          _SendRaceData(RaceHandler.iCurrentRaceId, Client->id());
+         _bUpdateLights = true;
          return false;
       }
       else
       {
-         RaceHandler.StopRace();
          LightsController.DeleteSchedules();
+         RaceHandler.StopRace();
          return true;
       }
    }
@@ -342,7 +351,7 @@ boolean WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, As
       if (RaceHandler.RaceState != RaceHandler.STOPPED)
       {
          //ReturnError = "Race was not stopped, or already in RESET state.";
-         SendLightsData(LightsController.GetLightsState());
+         _bUpdateLights = true;
          _SendRaceData(RaceHandler.iCurrentRaceId, Client->id());
          return false;
       }
@@ -375,6 +384,7 @@ boolean WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, As
       }
       _bIsConsumerArray[Client->id()] = true;
       _SendRaceData(RaceHandler.iCurrentRaceId, Client->id());
+      _bUpdateLights = true;
       return true;
    }
    else
@@ -403,7 +413,7 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
       JsonRaceData["startTime"] = RequestedRaceData.StartTime;
       JsonRaceData["endTime"] = RequestedRaceData.EndTime;
       JsonRaceData["elapsedTime"] = RequestedRaceData.ElapsedTime;
-      JsonRaceData["totalCrossingTime"] = RequestedRaceData.TotalCrossingTime;
+      JsonRaceData["NetTime"] = RequestedRaceData.NetTime;
       JsonRaceData["raceState"] = RequestedRaceData.RaceState;
 
       JsonArray JsonDogDataArray = JsonRaceData.createNestedArray("dogData");
@@ -412,11 +422,14 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
          JsonObject JsonDogData = JsonDogDataArray.createNestedObject();
          JsonDogData["dogNumber"] = RequestedRaceData.DogData[i].DogNumber;
          JsonArray JsonDogDataTimingArray = JsonDogData.createNestedArray("timing");
+         char cForJson[8];
          for (uint8_t i2 = 0; i2 < 4; i2++)
          {
             JsonObject DogTiming = JsonDogDataTimingArray.createNestedObject();
-            DogTiming["time"] = RequestedRaceData.DogData[i].Timing[i2].Time;
-            DogTiming["crossingTime"] = RequestedRaceData.DogData[i].Timing[i2].CrossingTime;
+            RequestedRaceData.DogData[i].Timing[i2].Time.toCharArray(cForJson, 8);
+            DogTiming["time"] = cForJson;
+            RequestedRaceData.DogData[i].Timing[i2].CrossingTime.toCharArray(cForJson, 8);
+            DogTiming["crossingTime"] = cForJson;
          }
          JsonDogData["fault"] = RequestedRaceData.DogData[i].Fault;
          JsonDogData["running"] = RequestedRaceData.DogData[i].Running;
@@ -430,8 +443,8 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
          //ESP_LOGD(__FILE__, "RaceData wsBuffer to send: %s", (char *)wsBuffer->get());
          if (iClientId == -1)
          {
-
-            uint8_t iId = 0;
+            _ws->textAll(wsBuffer);
+            /*uint8_t iId = 0;
             for (auto &isConsumer : _bIsConsumerArray)
             {
                if (isConsumer)
@@ -445,7 +458,7 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
                   }
                }
                iId++;
-            }
+            }*/
          }
          else
          {
@@ -454,7 +467,10 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
             client->text(wsBuffer);
          }
       }
+      _lLastRaceDataBroadcast = millis();
+      _lLastBroadcast = millis();
    }
+   _bSendRaceData = false;
 }
 
 boolean WebHandlerClass::_ProcessConfig(JsonArray newConfig, String *ReturnError)
@@ -521,11 +537,11 @@ void WebHandlerClass::_SendSystemData(int8_t iClientId)
       return;
    }
    else
-
    {
       char _cLocalDateAndTime[29];
       sprintf(_cLocalDateAndTime, "%i-%02i-%02iT%02i:%02i:%02iZ", year(), month(), day(), hour(), minute(), second());
       _SystemData.FreeHeap = esp_get_free_heap_size();
+      _SystemData.RaceID = RaceHandler.iCurrentRaceId + 1;
       _SystemData.Uptime = millis();
       _SystemData.NumClients = _ws->count();
       _SystemData.LocalSystemTime =  (char*) _cLocalDateAndTime;;
@@ -539,8 +555,8 @@ void WebHandlerClass::_SendSystemData(int8_t iClientId)
       JsonObject JsonSystemData = JsonRoot.createNestedObject("SystemData");
       JsonSystemData["uptime"] = _SystemData.Uptime;
       JsonSystemData["freeHeap"] = _SystemData.FreeHeap;
-      JsonSystemData["CPU0ResetReason"] = (int)_SystemData.CPU0ResetReason;
-      JsonSystemData["CPU1ResetReason"] = (int)_SystemData.CPU1ResetReason;
+      JsonSystemData["PwrOnTag"] = _SystemData.PwrOnTag;
+      JsonSystemData["RaceID"] = _SystemData.RaceID;
       JsonSystemData["numClients"] = _SystemData.NumClients;
       JsonSystemData["systemTimestamp"] = _SystemData.LocalSystemTime;
       JsonSystemData["batteryPercentage"] = _SystemData.BatteryPercentage;
@@ -552,8 +568,8 @@ void WebHandlerClass::_SendSystemData(int8_t iClientId)
          serializeJson(JsonSystemDataDoc, (char *)wsBuffer->get(), len + 1);
          if (iClientId == -1)
          {
-
-            uint8_t iId = 0;
+            _ws->textAll(wsBuffer);
+            /*uint8_t iId = 0;
             for (auto &isConsumer : _bIsConsumerArray)
             {
                if (isConsumer)
@@ -567,7 +583,7 @@ void WebHandlerClass::_SendSystemData(int8_t iClientId)
                   }
                }
                iId++;
-            }
+            }*/
          }
          else
          {
@@ -577,6 +593,8 @@ void WebHandlerClass::_SendSystemData(int8_t iClientId)
          }
          //ESP_LOGD(__FILE__, "Sent sysdata at %lu\r\n", millis());
       }
+      _lLastSystemDataBroadcast = millis();
+      _lLastBroadcast = millis();
    }
 }
 
@@ -606,6 +624,7 @@ void WebHandlerClass::_onAuth(AsyncWebServerRequest *request)
       _ticket[index].timestamp = now;
       request->send(204);
    }
+   _lLastBroadcast = millis();
 }
 
 bool WebHandlerClass::_authenticate(AsyncWebServerRequest *request)
@@ -644,6 +663,7 @@ bool WebHandlerClass::_wsAuth(AsyncWebSocketClient *client)
    {
       ESP_LOGI(__FILE__, "[WEBSOCKET] Validation check failed\n");
       client->text("{\"success\": false, \"error\": \"You shall not pass!!!! Please authenticate first :-)\", \"authenticated\": false}");
+      _lLastBroadcast = millis();
       return false;
    }
 

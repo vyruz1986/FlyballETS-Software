@@ -24,15 +24,15 @@ struct stRaceData
    double ElapsedTime;
    uint8_t RaceState;
    stDogData DogData[4];
-   double TotalCrossingTime;
+   double NetTime;
 };
 
 struct stSystemData
 {
    unsigned long Uptime;
    uint32_t FreeHeap;
-   RESET_REASON CPU0ResetReason;
-   RESET_REASON CPU1ResetReason;
+   uint16_t PwrOnTag;
+   int RaceID;
    uint NumClients;
    char* LocalSystemTime;
    uint BatteryPercentage = 0;

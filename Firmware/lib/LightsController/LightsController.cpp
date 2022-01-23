@@ -75,7 +75,7 @@ void LightsControllerClass::Main()
       _byCurrentLightsState = _byNewLightsState;
 #ifdef WiFiON
       //Send data to websocket clients
-      WebHandler.SendLightsData(GetLightsState());
+      WebHandler._bUpdateLights = true;
 #endif
    }
 }
