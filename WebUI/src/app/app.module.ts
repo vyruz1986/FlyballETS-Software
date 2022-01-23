@@ -10,7 +10,6 @@ import { NavbarComponent } from "./components/navbar/navbar.component";
 import { HomeComponent } from "./components/home/home.component";
 import { RacedisplayComponent } from "./components/racedisplay/racedisplay.component";
 import { ConfigComponent } from "./components/config/config.component";
-
 import { SystemDataComponent } from "./components/system-data/system-data.component";
 import { LightsComponent } from "./components/racedisplay/lights/lights.component";
 import { EtsdataService } from "./services/etsdata.service";
@@ -24,7 +23,7 @@ import { TimeDisplayComponent } from "./components/racedisplay/time-display/time
 import { DogDetailsComponent } from "./components/racedisplay/dog-details/dog-details.component";
 
 const appRoutes: Routes = [
-  { path: "", component: HomeComponent },
+  { path: "", component: RacedisplayComponent },
   { path: "racedisplay", component: RacedisplayComponent },
   { path: "config", component: ConfigComponent },
 ];

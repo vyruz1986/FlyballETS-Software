@@ -8,13 +8,16 @@
    <div class="navbar-collapse" [ngbCollapse]="navbarCollapsed"  id="navbarSupportedContent">
       <ul class="navbar-nav mr-auto">
          <li class="nav-item" [routerLinkActive]="['active']" [routerLinkActiveOptions]= "{exact: true}">  
-            <a class="nav-link" [routerLink]="['']" (click)="navbarCollapsed = true">Home</a>  
+            <a class="nav-link" [routerLink]="['']" (click)="navbarCollapsed = true">Race</a>  
          </li>  
-         <li class="nav-item" [routerLinkActive]="['active']" [routerLinkActiveOptions]= "{exact: true}">  
+         <!-- <li class="nav-item" [routerLinkActive]="['active']" [routerLinkActiveOptions]= "{exact: true}">  
             <a class="nav-link" [routerLink]="['racedisplay']" (click)="navbarCollapsed = true">Race Display</a>  
-         </li> 
+         </li> -->
          <li class="nav-item" [routerLinkActive]="['active']" [routerLinkActiveOptions]= "{exact: true}">  
             <a class="nav-link" [routerLink]="['config']" (click)="navbarCollapsed = true">Configuration</a>  
+         </li>
+         <li class="nav-item" [routerLinkActive]="['active']" [routerLinkActiveOptions]= "{exact: true}">  
+            <a class="nav-link" href="/update">Firmware update</a>  
          </li> 
       </ul>
    </div>
