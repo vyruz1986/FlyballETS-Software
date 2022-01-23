@@ -1,8 +1,8 @@
 export interface SystemData {
   uptime: number;
   freeHeap: number;
-  CPU0ResetReason: number;
-  CPU1ResetReason: number;
+  PwrOnTag: number;
+  RaceID: number;
   numClients: number;
   systemTimestamp: Date;
   batteryPercentage: Number;
