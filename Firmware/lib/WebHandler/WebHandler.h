@@ -53,6 +53,8 @@ protected:
    unsigned long _lSystemDataBroadcastInterval;
    unsigned long _lLastPingBroadcast;
    unsigned long _lPingBroadcastInterval;
+   unsigned long _lWebSocketReceivedTime;
+   unsigned long _lLastBroadcast;
    stSystemData _SystemData;
    char _last_modified[50];
 
@@ -69,7 +71,9 @@ protected:
 public:
    void init(int webPort);
    void loop();
-   void SendLightsData(stLightsState LightStates);
+   void SendLightsData();
+   boolean _bUpdateLights = false;
+   boolean _bSendRaceData = false;
 };
 
 extern WebHandlerClass WebHandler;
