@@ -35,8 +35,8 @@ export class RaceControlComponent implements OnChanges, OnInit {
       this.overallMaxState = Math.max(...this.raceStates.RaceStates);
 
       this.startDisabled = !(this.overallMaxState == 0);
-      this.stopDisabled = (this.overallMaxState == 0 || this.overallMaxState == 3);
-      this.resetDisabled = !(this.overallMaxState == 3);
+      this.stopDisabled = !(this.overallMaxState == 1 || this.overallMaxState == 2);
+      this.resetDisabled = (this.overallMaxState == 1 || this.overallMaxState == 2);
    }
 
    EmitCommand(command: RaceCommandEnum) {
