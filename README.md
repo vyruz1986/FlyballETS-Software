@@ -1,8 +1,8 @@
 ## FlyballETS-Software by simonttp78
 
-This project is a fork of Flyball ETS project by vyruz1986 with several changes. Highlights can be found below.
+This project is a fork of Flyball ETS project by vyruz1986. Highlights described below.
 
-## Major changes vs FlyballETS original project by Alex Gore
+## Major changes vs oryginal FlyballETS project by vyruz1908
 
 * Configurable results accuracy: 2 or 3 digits
 * Total crossing time replaced with Net time
