@@ -1,8 +1,6 @@
 ## FlyballETS-Software by simonttp78
 
-This project rely on original Flyball ETS project by Alex Gore. Information about initial version, that evolves as well, can be found here:
-[Flyball ETS project](https://sparkydevices.wordpress.com/tag/flyball-ets/).
-FlyballETS-Software is a for of Alex'es FlyballETS-Software repositorium and contains the sources for the microcontroller software.
+This project is a fork of Flyball ETS project by vyruz1986 with several changes. Highlights can be found below.
 
 ## Major changes vs FlyballETS original project by Alex Gore
 
@@ -24,8 +22,9 @@ FlyballETS-Software is a for of Alex'es FlyballETS-Software repositorium and con
 * Battery calibration improvements
 * Local system time
 * WebUI and LCD layout changes
+* Firmware update via WebUI -> thanks to AsyncElegantOTA by ayushsharma82
 * Reset and Manual stop indicated by white fault light blink
-* Configurable laser diodes on time in order to simplify set-up process
+* Configurable ON time for laser diodes
 
 ## Source files
 
@@ -64,3 +63,4 @@ This project was made possible by the following awesome libraries/projects and t
 - [NeoPixelBus](https://github.com/Makuna/NeoPixelBus) for reliably controlling WS2812 LEDs using ESP32
 - [Espurna Project](https://bitbucket.org/xoseperez/espurna) was used as a great example to solve several problems, such as the web UI and the settings interface.
 - [Timezone](https://github.com/JChristensen/Timezone) used for local time adjustments: time zones and daylight saving time change
+- [AsyncElegantOTA](https://github.com/ayushsharma82/AsyncElegantOTA) used for firmware update via WebUI
