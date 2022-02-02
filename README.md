@@ -2,7 +2,7 @@
 
 This project is a fork of Flyball ETS project by vyruz1986. Highlights described below.
 
-## Major changes vs oryginal FlyballETS project by vyruz1908
+## Major changes vs oryginal FlyballETS project by vyruz1986
 
 * Configurable results accuracy: 2 or 3 digits
 * Total crossing time replaced with Net time
