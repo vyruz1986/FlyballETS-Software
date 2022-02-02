@@ -2,6 +2,7 @@
 //
 //
 #include "WebHandler.h"
+#include <AsyncElegantOTA.h>
 
 void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
 {
@@ -195,7 +196,6 @@ void WebHandlerClass::init(int webPort)
    _lWebSocketReceivedTime = 0;
 
    _ws->onEvent(std::bind(&WebHandlerClass::_WsEvent, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5, std::placeholders::_6));
-
    _wsa->onEvent(std::bind(&WebHandlerClass::_WsEvent, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5, std::placeholders::_6));
 
    _server->addHandler(_ws);
@@ -217,6 +217,8 @@ void WebHandlerClass::init(int webPort)
 
    //Authentication handler
    _server->on("/auth", HTTP_GET, std::bind(&WebHandlerClass::_onAuth, this, std::placeholders::_1));
+
+   AsyncElegantOTA.begin(_server);    // Start ElegantOTA
 
    _server->begin();
 
