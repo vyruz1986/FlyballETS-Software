@@ -590,6 +590,11 @@ void RaceHandlerClass::StopRace(long long llStopTime)
       _llRaceEndTime = llStopTime;
       _llRaceTime = _llRaceEndTime - llRaceStartTime;
    }
+   else //RaceState is RUNNING
+   {
+      _llRaceEndTime = llStopTime;
+      _llRaceTime = 0;
+   }
    _ChangeRaceState(STOPPED);
    _HistoricRaceData[iCurrentRaceId] = GetRaceData(iCurrentRaceId);
 }

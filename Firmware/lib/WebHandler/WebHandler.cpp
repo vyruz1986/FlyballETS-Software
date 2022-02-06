@@ -218,7 +218,7 @@ void WebHandlerClass::init(int webPort)
    //Authentication handler
    _server->on("/auth", HTTP_GET, std::bind(&WebHandlerClass::_onAuth, this, std::placeholders::_1));
 
-   AsyncElegantOTA.begin(_server);    // Start ElegantOTA
+   AsyncElegantOTA.begin(_server, "FlyballETS", "FlyballETS.1234");    // Start ElegantOTA
 
    _server->begin();
 
@@ -226,7 +226,7 @@ void WebHandlerClass::init(int webPort)
    _lRaceDataBroadcastInterval = 750;
 
    _lLastSystemDataBroadcast = 0;
-   _lSystemDataBroadcastInterval = 2500;
+   _lSystemDataBroadcastInterval = 3500;
 
    _lLastPingBroadcast = 0;
    _lPingBroadcastInterval = 10000;
@@ -255,7 +255,7 @@ void WebHandlerClass::loop()
       _SendRaceData(RaceHandler.iCurrentRaceId, -1);
    }
    //When race is starting, running or stopped
-   else if (RaceHandler.RaceState == RaceHandler.STARTING || RaceHandler.RaceState == RaceHandler.RUNNING || (RaceHandler.RaceState == RaceHandler.STOPPED && ((GET_MICROS - RaceHandler._llRaceEndTime) / 1000) < 1500))
+   else if (RaceHandler.RaceState == RaceHandler.STARTING || RaceHandler.RaceState == RaceHandler.RUNNING || (RaceHandler.RaceState == RaceHandler.STOPPED && (GET_MICROS - RaceHandler._llRaceEndTime) / 1000 < 1500))
    {
       //Send race data each 750ms
       if (((millis() - _lLastRaceDataBroadcast) > _lRaceDataBroadcastInterval) && ((millis() - _lWebSocketReceivedTime) > 100) && ((millis() - _lLastBroadcast) > 100))
@@ -265,7 +265,7 @@ void WebHandlerClass::loop()
    }
    else
    {
-      if (((millis() - _lLastSystemDataBroadcast) > _lSystemDataBroadcastInterval) && ((millis() - _lWebSocketReceivedTime) > 2000) && ((millis() - _lLastBroadcast) > 2000))
+      if (((millis() - _lLastSystemDataBroadcast) > _lSystemDataBroadcastInterval) && ((millis() - _lWebSocketReceivedTime) > 1500) && ((millis() - _lLastBroadcast) > 1500))
       {
          _SendSystemData();
       }

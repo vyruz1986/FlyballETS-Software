@@ -25,9 +25,9 @@ export class SystemDataComponent implements OnInit {
     
     var h = Math.floor(d / 3600);
     var m = Math.floor(d % 3600 / 60);
-    var s = Math.floor(d % 3600 % 60);
+    var s = Math.floor(d % 3600 % 60 / 10);
     
-    this.hmsTime = ('0' + h).slice(-2) + ":" + ('0' + m).slice(-2) + ":" + ('0' + s).slice(-2);
+    this.hmsTime = ('0' + h).slice(-1) + ":" + ('0' + m).slice(-2) + ":" + ('0' + s).slice(-1);
   }
 
   ngOnInit() {}

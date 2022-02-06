@@ -34,7 +34,7 @@ void GPSHandlerClass::loop()
       {
          _FormatTime();
          llLastGPSRead = GET_MICROS / 1000;
-         LCDController.UpdateField(LCDController.GpsState, "GPS");
+         LCDController.UpdateField(LCDController.GpsState, "gps");
          //ESP_LOGD(__FILE__, "GPS updated UTC time: %s. Updated local time: %s", _cUTCTime, _cLocalDateAndTime);
       }
    }

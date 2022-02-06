@@ -566,6 +566,7 @@ void loop()
 
    if (iCurrentRaceState != RaceHandler.RaceState)
    {
+      iCurrentRaceState = RaceHandler.RaceState;
       String sRaceStateMain = RaceHandler.GetRaceStateString();
       ESP_LOGI(__FILE__, "RS: %s", sRaceStateMain);
       //Update race status to display
@@ -675,7 +676,6 @@ void loop()
 
    //Cleanup variables used for checking if something changed
    iCurrentDog = RaceHandler.iCurrentDog;
-   iCurrentRaceState = RaceHandler.RaceState;
 
    //Laser activation
    if (bitRead(bDataIn, 7) == HIGH && ((GET_MICROS / 1000 - llLastRCPress[7] > LaserOutputTimer * 1000) || llLastRCPress[7] == 0) //
@@ -896,6 +896,6 @@ void mdnsServerSetup()
 {
    MDNS.addService("http", "tcp", 80);
    MDNS.addServiceTxt("arduino", "tcp", "app_version", APP_VER);
-   MDNS.begin("FlyballETS");
+   MDNS.begin("flyballets");
 }
 #endif

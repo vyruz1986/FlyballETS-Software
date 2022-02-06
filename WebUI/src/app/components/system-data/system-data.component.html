@@ -1,12 +1,12 @@
-<footer class="footer">
   <div class="container">
-    <span class="badge badge-info text-center">
-      Batt: {{systemData.batteryPercentage}}%
-      | Id: {{systemData.PwrOnTag}}/{{systemData.RaceID}}
-      | Up: {{hmsTime}}
-      | T: {{systemData.systemTimestamp | date:'short'}}
-      | C: {{systemData.numClients}}
-      | Mem: {{systemData.freeHeap}}
-    </span>
+    <p style="text-align:center">
+      <span class="badge badge-info text-center">
+        Battery: {{systemData.batteryPercentage}}%
+        &nbsp;&nbsp;&nbsp; Race Id: {{systemData.PwrOnTag}} - {{systemData.RaceID}}
+        &nbsp;&nbsp;&nbsp; Clients: {{systemData.numClients}}<br />
+        <br />
+        {{systemData.systemTimestamp | date:'short'}} &nbsp;&nbsp;&nbsp;&nbsp; {{hmsTime}} 
+        <!--| Mem: {{systemData.freeHeap}}-->
+      </span>
+    </p>
   </div>
-</footer>

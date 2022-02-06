@@ -29,24 +29,31 @@
          class="row"
          *ngFor="let currentRace of currentRaces; let raceIndex = index"
       >
-      <div class="col-12 col-md-6 text-center">
-         <app-time-display
-            [elapsedTime]="currentRace.elapsedTime"
-            [NetTime]="currentRace.NetTime"
-         ></app-time-display>
-      </div>
-      <div class="col-12 col-md-6">
-         <app-lights
-            *ngIf="lightStates?.length > raceIndex"
-            [lightsState]="lightStates[raceIndex]"
-         ></app-lights>
+         <div class="col-12 col-md-12 text-center">
+            <app-time-display
+               [elapsedTime]="currentRace.elapsedTime"
+               [NetTime]="currentRace.NetTime"
+            ></app-time-display>
          </div>
-         <div class="col-12 col-md-6">
+         <div class="col-12 col-md-12">
+            <app-lights
+               *ngIf="lightStates?.length > raceIndex"
+               [lightsState]="lightStates[raceIndex]"
+            ></app-lights>
+         </div>
+         <div class="col-12 col-md-12">
             <app-dog-details
                [dogData]="currentRace.dogData"
                [raceIndex]="raceIndex"
                (setDogFault)="onSetDogFault($event)"
             ></app-dog-details>
+         </div>
+      </div>
+      <div class="space">
+      </div>
+      <div class="row">
+         <div class="col-12 col-md-12">
+            <app-system-data></app-system-data>
          </div>
       </div>
    </div>

@@ -1,32 +1,19 @@
 <!-- <h4>Dog details</h4> -->
 <ul class="list-group">
    <li *ngFor="let dog of dogData" [ngClass]="{'list-group-item': true, 'active': dog.running}">
-      Dog {{dog.dogNumber + 1}}
-      &nbsp;
-      &nbsp;
-      &nbsp;
-      &nbsp;
-      &nbsp;
-      &nbsp;
-      &nbsp;
-      &nbsp;
-      &nbsp;
-      &nbsp;
-      &nbsp;
-      <div class="form-check checkbox-slider--c-weight checkbox-slider-danger checkbox-slider-md d-inline">
-         
+      <b>Dog {{dog.dogNumber + 1}}</b> &nbsp;&nbsp;
+      <div class="form-check checkbox-slider--c-weight checkbox-slider-danger checkbox-slider-md d-inline offset-4">
          <label>
-            <input type="checkbox" [(ngModel)]="dog.fault" (click)="EmitDogFault(dog.dogNumber, !dog.fault)"><span>Fault state</span>
+            <input type="checkbox" [(ngModel)]="dog.fault" (click)="EmitDogFault(dog.dogNumber, !dog.fault)"><span>Fault</span>
          </label>           
       </div>
       <div *ngFor="let dogTime of dog.timing; let i = index">
          <ng-container *ngIf="dogTime.crossingTime != 0 || dogTime.time != 0 || i == 0">
-         {{dogTime.time}}
-         &nbsp;
-         &nbsp;
-         {{dogTime.crossingTime}}<br>
+            <div class="dogsTimes">
+               {{dogTime.time}}&nbsp;&nbsp;
+               {{dogTime.crossingTime}}<br>
+            </div>
          </ng-container>
       </div>
    </li>
 </ul>
-<app-system-data></app-system-data>
