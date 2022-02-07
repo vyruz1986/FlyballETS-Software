@@ -590,9 +590,9 @@ void loop()
    LCDController.UpdateField(LCDController.D4CrossTime, RaceHandler.GetCrossingTime(3));
    LCDController.UpdateField(LCDController.D4RerunInfo, RaceHandler.GetRerunInfo(3));
 
-   if (RaceHandler.RaceState == RaceHandler.STOPPED && ((GET_MICROS / 1000 - (RaceHandler.llRaceStartTime / 1000 + RaceHandler.GetRaceTime() * 1000)) > 1500) && !bRaceSummaryPrinted)
+   if (RaceHandler.RaceState == RaceHandler.STOPPED && ((GET_MICROS / 1000 - (RaceHandler.llRaceStartTime / 1000 + RaceHandler.GetRaceTime() * 1000)) > 500) && !bRaceSummaryPrinted)
    {
-      //Race has been stopped 1 second ago: print race summary to console
+      //Race has been stopped 0.5 second ago: print race summary to console
       for (uint8_t i = 0; i < 4; i++)
       {
          //ESP_LOGD(__FILE__, "Dog %i -> %i run(s).", i + 1, RaceHandler.iDogRunCounters[i] + 1);
@@ -861,8 +861,8 @@ void ResetRace()
       return;
    }
    llLastRCPress[2] = GET_MICROS / 1000;
-   LightsController.ResetLights();
    RaceHandler.ResetRace();
+   LightsController.ResetLights();
 }
 
 #ifdef WiFiON

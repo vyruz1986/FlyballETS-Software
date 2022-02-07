@@ -210,7 +210,7 @@ void RaceHandlerClass::Main()
                SetDogFault(iCurrentDog, ON);
                ESP_LOGI(__FILE__, "Dog 1 FALSE START!");
             }
-         }
+         }        
          // Normal race handling (positive cross)
          else if (_byDogState == GOINGIN && (iCurrentDog != 0 || (iCurrentDog == 0 && _bRerunBusy)) && _bS1StillSafe)
          {
@@ -224,7 +224,7 @@ void RaceHandlerClass::Main()
                SetDogFault(iCurrentDog, OFF);
             }
             ESP_LOGI(__FILE__, "Dog %i going in crossed S1 safely. Clear fault if rerun.", iCurrentDog + 1);
-         }
+         }        
          //Check if this is a next dog which is too early (we were expecting a dog to come back)
          else if (_byDogState == COMINGBACK && !_bS1StillSafe && (STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) > 2000000 //Filter out S1 HIGH signals that are < 2 seconds after dog enter time
                   && (iCurrentDog != iNextDog))                                                                                           // Exclude scenario if next dog is equal current dog as this can't be comming back dog.
@@ -252,7 +252,7 @@ void RaceHandlerClass::Main()
                ESP_LOGI(__FILE__, "Re-run for dog %i", iNextDog + 1);
             }
             _ChangeDogNumber(iNextDog);
-         }
+         }        
          //Special case after false detection of "ok crossing" --> S1 activated 100ms after "ok crossing" detection or re-rung with next dog = current dog
          else if (_byDogState == COMINGBACK && _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] && !_bS1StillSafe &&
                   (((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) > 100000
@@ -276,7 +276,7 @@ void RaceHandlerClass::Main()
             if (_bDogMissedGateComingback[iPreviousDog][iDogRunCounters[iPreviousDog]]) // Clear flag if set as previous dog is comming back so he didn't missed the gate
             {
                _bDogMissedGateComingback[iPreviousDog][iDogRunCounters[iPreviousDog]] = false;
-            }
+            }           
             //If current dog has no fault it has to be invisible dog coming back and it's next dog who did negative cross
             if (!_bDogFaults[iCurrentDog])
             {
@@ -309,7 +309,7 @@ void RaceHandlerClass::Main()
             //
             ESP_LOGI(__FILE__, "Calculate negative cross time for dog %i and update times for previous dog %i.", iCurrentDog + 1, iPreviousDog + 1);
             ESP_LOGI(__FILE__, "Dog %i updated time [ms]: %lld", iPreviousDog + 1, ((_llDogTimes[iPreviousDog][iDogRunCounters[iPreviousDog]] + 500) / 1000));
-         }
+         }        
          if (_bS1isSafe) //If S2 crossed before S1 (ok or positive cross scenarios)
          {
             //Normal handling for dog coming back or dog going in after S2 crossed safely
@@ -372,7 +372,7 @@ void RaceHandlerClass::Main()
             _llS2CrossedSafeTime = STriggerRecord.llTriggerTime;
             _ChangeDogState(COMINGBACK);
             ESP_LOGI(__FILE__, "Invisible dog %i came back!. Update enter time. OK or Perfect crossing.", iCurrentDog + 1);
-         }
+         }        
          else if (_byDogState == COMINGBACK)
          {
             //TODO: The current dog could also have a fault which is not caused by being too early (manually triggered fault).
@@ -568,6 +568,10 @@ void RaceHandlerClass::StartRaceTimer()
    ESP_LOGD(__FILE__, "%llu: STARTING! Tag: %i, Race ID: %i.", (llRaceStartTime - 3000000) / 1000, SDcardController.iTagValue, iCurrentRaceId + 1);
    cRaceStartTimestamp = GPSHandler.GetLocalTimestamp();
    ESP_LOGI(__FILE__, "Timestamp: %s", cRaceStartTimestamp);
+   #ifdef WiFiON
+      //Send updated racedata to all web clients
+      WebHandler._bSendRaceData = true;
+   #endif
 }
 
 /// <summary>
@@ -1425,12 +1429,12 @@ void RaceHandlerClass::_QueueFilter()
       STriggerRecord _NextRecord = _InputTriggerQueue[_iInputQueueReadIndex + 1];
 
       // If 2 records are from the same sensors line and delta time is below 4ms ignore both
-      if (_CurrentRecord.iSensorNumber == _NextRecord.iSensorNumber && _NextRecord.llTriggerTime - _CurrentRecord.llTriggerTime <= 4000)
+      if (_CurrentRecord.iSensorNumber == _NextRecord.iSensorNumber && _NextRecord.llTriggerTime - _CurrentRecord.llTriggerTime <= 5000)
       {
          //ESP_LOGD(__FILE__, "Next record %lld - Current record %lld = %lld < 4ms.", _NextRecord.llTriggerTime, _CurrentRecord.llTriggerTime, _NextRecord.llTriggerTime - _CurrentRecord.llTriggerTime);
          ESP_LOGI(__FILE__, "S%i | TT:%lld | T:%lld | St:%i | IGNORED", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime,
                   _CurrentRecord.llTriggerTime - llRaceStartTime, _CurrentRecord.iSensorState);
-         ESP_LOGI(__FILE__, "S%i | TT:%lld | T:%lld | St:%i | IGNORED < 4ms", _NextRecord.iSensorNumber, _NextRecord.llTriggerTime,
+         ESP_LOGI(__FILE__, "S%i | TT:%lld | T:%lld | St:%i | IGNORED < 5ms", _NextRecord.iSensorNumber, _NextRecord.llTriggerTime,
                   _NextRecord.llTriggerTime - llRaceStartTime, _NextRecord.iSensorState);
 
          //Input Read index has to be increased, check it we should wrap-around
@@ -1599,10 +1603,27 @@ void RaceHandlerClass::_AddToTransitionString(STriggerRecord _InterruptTrigger)
 
    //Filtering for unwanted sensor jitter
    //Filter consecutive alternating changes out
-   _strTransition.replace("AaA", "A");
-   _strTransition.replace("aAa", "a");
-   _strTransition.replace("BbB", "B");
-   _strTransition.replace("bBb", "b");
+   if (_strTransition.endsWith("AaA"))
+   {
+      _strTransition.replace("AaA", "A");
+      ESP_LOGD(__FILE__, "Tstring AaA replaced with A");
+   }
+   if (_strTransition.endsWith("aAa"))
+   {
+      _strTransition.replace("aAa", "a");
+      ESP_LOGD(__FILE__, "Tstring aAa replaced with a");
+   }
+   if (_strTransition.endsWith("BbB"))
+   {
+      _strTransition.replace("BbB", "B");
+      ESP_LOGD(__FILE__, "Tstring BbB replaced with B");
+   }
+   if (_strTransition.endsWith("bBb"))
+   {
+      _strTransition.replace("bBb", "b");
+      ESP_LOGD(__FILE__, "Tstring bBb replaced with b");
+      
+   }
 }
 
 /// <summary>

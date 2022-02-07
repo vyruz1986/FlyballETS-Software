@@ -51,7 +51,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
       if (info->final && info->index == 0 && info->len == len)
       {
          //the whole message is in a single frame and we got all of it's data
-         ESP_LOGI(__FILE__, "ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT) ? "text" : "binary", info->len);
+         //ESP_LOGI(__FILE__, "ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT) ? "text" : "binary", info->len);
 
          if (info->opcode == WS_TEXT)
          {
@@ -119,7 +119,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
          return;
       }
 
-      _lWebSocketReceivedTime = millis();
+      _lWebSocketReceivedTime = GET_MICROS / 1000;
       const size_t bufferSize = JSON_ARRAY_SIZE(50) + 50 * JSON_OBJECT_SIZE(3);
       StaticJsonDocument<bufferSize> jsonResponseDoc;
       //DynamicJsonDocument jsonResponseDoc(48);
@@ -177,10 +177,11 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
 
       size_t len = measureJson(jsonResponseDoc);
       AsyncWebSocketMessageBuffer *wsBuffer = _ws->makeBuffer(len);
+      _lLastBroadcast = GET_MICROS / 1000;
       if (wsBuffer)
       {
          serializeJson(jsonResponseDoc, (char *)wsBuffer->get(), len + 1);
-         ESP_LOGD(__FILE__, "wsBuffer to send: %s", (char *)wsBuffer->get());
+         //ESP_LOGD(__FILE__, "wsBuffer to send: %s", (char *)wsBuffer->get());
          client->text(wsBuffer);
       }
    }
@@ -229,7 +230,7 @@ void WebHandlerClass::init(int webPort)
    _lSystemDataBroadcastInterval = 3500;
 
    _lLastPingBroadcast = 0;
-   _lPingBroadcastInterval = 10000;
+   _lPingBroadcastInterval = 30000;
 
    _lLastBroadcast = 0;
 
@@ -245,42 +246,33 @@ void WebHandlerClass::init(int webPort)
 
 void WebHandlerClass::loop()
 {
-   //ESP_LOGD(__FILE__, "Update lights: %i, update race data: %i\r\n", _bUpdateLights, _bSendRaceData);
-   if (_bUpdateLights && (millis() - _lLastBroadcast > 100) && (millis() - _lWebSocketReceivedTime > 100))
+   unsigned long lCurrentUpTime = GET_MICROS / 1000;
+   //ESP_LOGD(__FILE__, "_bSendRaceData: %i, _bUpdateLights: %i, since LastBroadcast: %ul, since WS received: %ul, \r\n", _bSendRaceData, _bUpdateLights, (lCurrentUpTime - _lLastBroadcast), (lCurrentUpTime - _lWebSocketReceivedTime));
+   if ((lCurrentUpTime - _lLastBroadcast > 100) && (lCurrentUpTime - _lWebSocketReceivedTime > 50))
    {
-      SendLightsData();
-   }
-   else if (_bSendRaceData && ((millis() - _lLastRaceDataBroadcast) > 100) && ((millis() - _lWebSocketReceivedTime) > 100))
-   {
-      _SendRaceData(RaceHandler.iCurrentRaceId, -1);
-   }
-   //When race is starting, running or stopped
-   else if (RaceHandler.RaceState == RaceHandler.STARTING || RaceHandler.RaceState == RaceHandler.RUNNING || (RaceHandler.RaceState == RaceHandler.STOPPED && (GET_MICROS - RaceHandler._llRaceEndTime) / 1000 < 1500))
-   {
-      //Send race data each 750ms
-      if (((millis() - _lLastRaceDataBroadcast) > _lRaceDataBroadcastInterval) && ((millis() - _lWebSocketReceivedTime) > 100) && ((millis() - _lLastBroadcast) > 100))
-      {
+      if (_bUpdateLights)
+         _SendLightsData();
+      else if (_bSendRaceData
+               || ((RaceHandler.RaceState == RaceHandler.RUNNING || (RaceHandler.RaceState == RaceHandler.STOPPED && (GET_MICROS - RaceHandler._llRaceEndTime) / 1000 < 1500))
+                     && (lCurrentUpTime - _lLastRaceDataBroadcast > _lRaceDataBroadcastInterval)))
          _SendRaceData(RaceHandler.iCurrentRaceId, -1);
-      }
-   }
-   else
-   {
-      if (((millis() - _lLastSystemDataBroadcast) > _lSystemDataBroadcastInterval) && ((millis() - _lWebSocketReceivedTime) > 1500) && ((millis() - _lLastBroadcast) > 1500))
+      else if (RaceHandler.RaceState == RaceHandler.RESET || (RaceHandler.RaceState == RaceHandler.STOPPED && (GET_MICROS - RaceHandler._llRaceEndTime) / 1000 > 1500))
       {
-         _SendSystemData();
-      }
-      if ((millis() - _lLastPingBroadcast > _lPingBroadcastInterval) && ((millis() - _lLastBroadcast) > 100))
-      {
-         _ws->cleanupClients();
-         ESP_LOGD(__FILE__, "Have %i clients, %i consumers\r\n", _ws->count(), _iNumOfConsumers);
-         //_ws->pingAll();
-         _lLastPingBroadcast = millis();
-         _lLastBroadcast = millis();
+         if (lCurrentUpTime - _lLastSystemDataBroadcast > _lSystemDataBroadcastInterval)
+            _SendSystemData();
+         if (lCurrentUpTime - _lLastPingBroadcast > _lPingBroadcastInterval)
+         {
+            _ws->cleanupClients();
+            ESP_LOGD(__FILE__, "Have %i clients, %i consumers\r\n", _ws->count(), _iNumOfConsumers);
+            //_ws->pingAll();
+            //_lLastBroadcast = GET_MICROS / 1000;
+            _lLastPingBroadcast = GET_MICROS / 1000;
+         }
       }
    }
 }
 
-void WebHandlerClass::SendLightsData()
+void WebHandlerClass::_SendLightsData()
 {
    stLightsState LightStates = LightsController.GetLightsState();
    StaticJsonDocument<96> jsonLightsDoc;
@@ -295,8 +287,10 @@ void WebHandlerClass::SendLightsData()
    if (wsBuffer)
    {
       serializeJson(jsonLightsDoc, (char *)wsBuffer->get(), len + 1);
-      //ESP_LOGD(__FILE__, "LightsData wsBuffer to send: %s. No of ws clients is: %i", (char *)wsBuffer->get(), _ws->count());
+      //ESP_LOGD(__FILE__, "%llu LightsData wsBuffer to send: %s. No of ws clients is: %i", GET_MICROS / 1000, (char *)wsBuffer->get(), _ws->count());
       _ws->textAll(wsBuffer);
+      _lLastBroadcast = GET_MICROS / 1000;
+      _bUpdateLights = false;
       /*uint8_t iId = 0;
       for (auto &isConsumer : _bIsConsumerArray)
       {
@@ -312,8 +306,6 @@ void WebHandlerClass::SendLightsData()
          iId++;
       }*/
    }
-   _lLastBroadcast = millis();
-   _bUpdateLights = false;
 }
 
 boolean WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, AsyncWebSocketClient *Client)
@@ -337,7 +329,7 @@ boolean WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, As
       if (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)
       {
          //ReturnError = "Race was already stopped!";
-         _SendRaceData(RaceHandler.iCurrentRaceId, Client->id());
+         _bSendRaceData = true;
          _bUpdateLights = true;
          return false;
       }
@@ -353,14 +345,14 @@ boolean WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, As
       if (RaceHandler.RaceState != RaceHandler.STOPPED)
       {
          //ReturnError = "Race was not stopped, or already in RESET state.";
+         _bSendRaceData = true;
          _bUpdateLights = true;
-         _SendRaceData(RaceHandler.iCurrentRaceId, Client->id());
          return false;
       }
       else
       {
-         LightsController.ResetLights();
          RaceHandler.ResetRace();
+         LightsController.ResetLights();
          return true;
       }
    }
@@ -385,7 +377,7 @@ boolean WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, As
          _iNumOfConsumers++;
       }
       _bIsConsumerArray[Client->id()] = true;
-      _SendRaceData(RaceHandler.iCurrentRaceId, Client->id());
+      _bSendRaceData = true;
       _bUpdateLights = true;
       return true;
    }
@@ -468,11 +460,11 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
             AsyncWebSocketClient *client = _ws->client(iClientId);
             client->text(wsBuffer);
          }
+         _lLastRaceDataBroadcast = _lLastBroadcast = GET_MICROS / 1000;
+         _bSendRaceData = false;
       }
-      _lLastRaceDataBroadcast = millis();
-      _lLastBroadcast = millis();
+      
    }
-   _bSendRaceData = false;
 }
 
 boolean WebHandlerClass::_ProcessConfig(JsonArray newConfig, String *ReturnError)
@@ -496,7 +488,7 @@ boolean WebHandlerClass::_ProcessConfig(JsonArray newConfig, String *ReturnError
    {
       SettingsManager.saveSettings();
       //Schedule system reboot to activate new settings in 5s
-      //SystemManager.scheduleReboot(millis() + 5000);
+      //SystemManager.scheduleReboot(GET_MICROS / 1000 + 5000);
    }
 
    return true;
@@ -544,7 +536,7 @@ void WebHandlerClass::_SendSystemData(int8_t iClientId)
       sprintf(_cLocalDateAndTime, "%i-%02i-%02iT%02i:%02i:%02iZ", year(), month(), day(), hour(), minute(), second());
       _SystemData.FreeHeap = esp_get_free_heap_size();
       _SystemData.RaceID = RaceHandler.iCurrentRaceId + 1;
-      _SystemData.Uptime = millis();
+      _SystemData.Uptime = GET_MICROS / 1000;
       _SystemData.NumClients = _ws->count();
       _SystemData.LocalSystemTime =  (char*) _cLocalDateAndTime;;
       _SystemData.BatteryPercentage = BatterySensor.GetBatteryPercentage();
@@ -593,10 +585,9 @@ void WebHandlerClass::_SendSystemData(int8_t iClientId)
             AsyncWebSocketClient *client = _ws->client(iClientId);
             client->text(wsBuffer);
          }
-         //ESP_LOGD(__FILE__, "Sent sysdata at %lu\r\n", millis());
+         _lLastSystemDataBroadcast = _lLastBroadcast = GET_MICROS / 1000;
+         //ESP_LOGD(__FILE__, "Sent sysdata at %lu\r\n", GET_MICROS / 1000);
       }
-      _lLastSystemDataBroadcast = millis();
-      _lLastBroadcast = millis();
    }
 }
 
@@ -605,7 +596,7 @@ void WebHandlerClass::_onAuth(AsyncWebServerRequest *request)
    if (!_authenticate(request))
       return request->requestAuthentication("", false);
    IPAddress ip = request->client()->remoteIP();
-   unsigned long now = millis();
+   unsigned long now = GET_MICROS / 1000;
    unsigned short index;
    for (index = 0; index < WS_TICKET_BUFFER_SIZE; index++)
    {
@@ -626,7 +617,6 @@ void WebHandlerClass::_onAuth(AsyncWebServerRequest *request)
       _ticket[index].timestamp = now;
       request->send(204);
    }
-   _lLastBroadcast = millis();
 }
 
 bool WebHandlerClass::_authenticate(AsyncWebServerRequest *request)
@@ -646,7 +636,6 @@ bool WebHandlerClass::_wsAuth(AsyncWebSocketClient *client)
 {
 
    IPAddress ip = client->remoteIP();
-   unsigned long now = millis();
    unsigned short index = 0;
 
    //TODO: Here be dragons, this way of 'authenticating' is all but secure
@@ -657,7 +646,7 @@ bool WebHandlerClass::_wsAuth(AsyncWebSocketClient *client)
    for (index = 0; index < WS_TICKET_BUFFER_SIZE; index++)
    {
       ESP_LOGI(__FILE__, "Checking ticket: %i, ip: %s, time: %ul", index, _ticket[index].ip.toString().c_str(), _ticket[index].timestamp);
-      if ((_ticket[index].ip == ip) && (now - _ticket[index].timestamp < WS_TIMEOUT))
+      if ((_ticket[index].ip == ip) && (GET_MICROS / 1000 - _ticket[index].timestamp < WS_TIMEOUT))
          break;
    }
 
@@ -665,7 +654,7 @@ bool WebHandlerClass::_wsAuth(AsyncWebSocketClient *client)
    {
       ESP_LOGI(__FILE__, "[WEBSOCKET] Validation check failed\n");
       client->text("{\"success\": false, \"error\": \"You shall not pass!!!! Please authenticate first :-)\", \"authenticated\": false}");
-      _lLastBroadcast = millis();
+      _lLastBroadcast = GET_MICROS / 1000;
       return false;
    }
 
