@@ -22,7 +22,7 @@
 #ifndef GLOBALVAR_H
 #define GLOBALVAR_H
 
-#define FW_VER "0.9.16"         // Flyball ETS firmware version
+#define FW_VER "0.9.17"         // Flyball ETS firmware version
 
 #define Simulate false          // Set to true to enable race simulation (see Simulator.h/.cpp)
 #define NumSimulatedRaces 26    // number of prepeared simulated races. Sererial interface command to change interface: e.g. "race 1"
@@ -41,7 +41,7 @@
 #define EEPROM_SIZE 4096        // EEPROM size in bytes
 #define SPI_FLASH_SEC_SIZE 4096 // Flash Sector Size declaration for ESP32 as it seems to become removed from embedded libraries
 
-#define WS_TICKET_BUFFER_SIZE 10// Number of websocket tickets kept in memory
+#define WS_TICKET_BUFFER_SIZE 8 // Number of websocket tickets kept in memory
 #define WS_TIMEOUT 300          // Timeout for secured websocket in miliseconds
 
 #define APP_VER "5.0.0"
