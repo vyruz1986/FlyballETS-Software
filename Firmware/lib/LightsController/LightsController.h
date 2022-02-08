@@ -31,6 +31,7 @@ public:
    //Overal state of this class
    enum OverallStates
    {
+      WARNING,
       INITIATED,
       RESET,
       STARTING,
@@ -38,15 +39,17 @@ public:
    };
    OverallStates byOverallState = RESET;
 
-   //Decimal values of lights connected to 74HC595
+   //Possible pixel colors (unique names needed)
    enum Lights
    {
-      WHITE = 130,  //74HC595 QH (128) + QB (2). I made a boo-boo on my prototype, WHITE should be wired to QB.
-      RED = 64,     //74HC595 QG
-      YELLOW1 = 32, //74HC595 QF
-      BLUE = 16,    //74HC595 QE
-      YELLOW2 = 8,  //74HC595 QD
-      GREEN = 4     //74HC595 QC
+      WHITE0, // pixel 0
+      RED0,   // pixel 0
+      YELLOW1,// pixel 1
+      RED1,   // pixel 1
+      YELLOW2,// pixel 2
+      BLUE2,  // pixel 2
+      YELLOW3,// pixel 3
+      GREEN4  // pixel 4
    };
    enum LightStates
    {
@@ -58,6 +61,7 @@ public:
    void Main();
    void HandleStartSequence();
    void InitiateStartSequence();
+   void WarningStartSequence();
    void ToggleLightState(Lights byLight, LightStates byLightState = TOGGLE);
    void ResetLights();
    void DeleteSchedules();
@@ -75,24 +79,24 @@ private:
    byte _byCurrentLightsState = 255;
    byte _byNewLightsState = 0;
 
-   bool _bStartSequenceStarted = 0;
+   unsigned long _lLightsOnSchedule[8];
+   unsigned long _lLightsOutSchedule[8];
 
-   unsigned long _lLightsOnSchedule[6];
-   unsigned long _lLightsOutSchedule[6];
-
-   Lights _byLightsArray[6] = {
-      WHITE,
-      RED,
-      YELLOW1,
-      BLUE,
-      YELLOW2,
-      GREEN};
+   Lights _byLightsArray[8] = {
+      WHITE0, // 0
+      RED0,   // 1
+      YELLOW1,// 2
+      RED1,   // 3
+      YELLOW2,// 4
+      BLUE2,  // 5
+      YELLOW3,// 6
+      GREEN4};// 7
 
    Lights _byDogErrorLigths[4] = {
-      RED,
-      BLUE,
-      YELLOW2,
-      GREEN};
+      RED1,
+      BLUE2,
+      YELLOW3,
+      GREEN4};
 
    struct SNeoPixelConfig
    {

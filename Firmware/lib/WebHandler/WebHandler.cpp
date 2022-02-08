@@ -313,14 +313,18 @@ boolean WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, As
    String ActionType = ActionObj["actionType"];
    if (ActionType == "StartRace")
    {
-      if (RaceHandler.RaceState != RaceHandler.RESET)
+      if (RaceHandler.RaceState != RaceHandler.RESET || LightsController.byOverallState == LightsController.WARNING)
       {
          //ReturnError = String("Race was not reset, stop and reset it first!");
          return false;
       }
       else
       {
-         LightsController.InitiateStartSequence();
+         #ifdef StartSequenceNAFA
+            LightsController.WarningStartSequence();
+         #else
+            LightsController.InitiateStartSequence();
+         #endif
          return true;
       }
    }

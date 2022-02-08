@@ -409,7 +409,7 @@ void loop()
    }
 
    //Race start/stop button (remote D0 output)
-   if (bitRead(bDataIn, 1) == HIGH && (GET_MICROS / 1000 - llLastRCPress[1]) > 2000)
+   if (bitRead(bDataIn, 1) == HIGH && (GET_MICROS / 1000 - llLastRCPress[1]) > 2500)
    {
       StartStopRace();
    }
@@ -822,7 +822,11 @@ void Sensor1Wrapper()
 /// </summary>
 void StartRaceMain()
 {
-   LightsController.InitiateStartSequence();
+   #ifdef StartSequenceNAFA
+      LightsController.WarningStartSequence();
+   #else
+      LightsController.InitiateStartSequence();
+   #endif
 }
 
 /// <summary>
