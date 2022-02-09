@@ -134,7 +134,8 @@ uint16_t iBatteryVoltage = 0;
 //Other IO's
 uint8_t iLaserOutputPin = 12;
 boolean bLaserActive = false;
-uint16_t SideSwitchCoolDownTime = 500;
+uint16_t SideSwitchCoolDownTime = 300;
+bool bSideSwitchPressedOnce = false;
 
 //Set last serial output variable
 unsigned long lLastSerialOutput = 0;
@@ -250,24 +251,23 @@ void setup()
    //Initialize other I/O's
    pinMode(iLaserOutputPin, OUTPUT);
 
+   //Print SW version
+   ESP_LOGI(__FILE__, "Firmware version %s", FW_VER);
+   
+   //Initialize GPS Serial port and class
+   GPSSerial.begin(9600, SERIAL_8N1, iGPSrxPin, iGPStxPin);
+   GPSHandler.init(&GPSSerial);
+   
    //Initialize BatterySensor class with correct pin
    BatterySensor.init(iBatterySensorPin);
 
-   //Initialize LightsController class with shift register pins
+   //Initialize LightsController class
    LightsController.init(&LightsStrip);
 
    //Initialize LCDController class with lcd1 and lcd2 objects
    LCDController.init(&lcd, &lcd2);
 
    strSerialData[0] = 0;
-
-   //Print SW version
-   ESP_LOGI(__FILE__, "Firmware version %s", FW_VER);
-
-   
-   //Initialize GPS Serial port and class
-   GPSSerial.begin(9600, SERIAL_8N1, iGPSrxPin, iGPStxPin);
-   GPSHandler.init(&GPSSerial);
 
    //SD card init
    if (digitalRead(iSDdetectPin) == LOW || SDcardForcedDetect)
@@ -504,15 +504,14 @@ void loop()
 
 //Update LCD Display fields
 //Update team time to display
-#if Accuracy2digits
+   if (!LightsController.bModeNAFA)
    {
       dtostrf(RaceHandler.GetRaceTime(), 6, 2, cElapsedRaceTime);
    }
-#else
+   else
    {
       dtostrf(RaceHandler.GetRaceTime(), 7, 3, cElapsedRaceTime);
    }
-#endif
    LCDController.UpdateField(LCDController.TeamTime, cElapsedRaceTime);
 
    //Update battery percentage to display
@@ -553,15 +552,14 @@ void loop()
    }
 
 //Update team netto time
-#if Accuracy2digits
+   if (!LightsController.bModeNAFA)
    {
       dtostrf(RaceHandler.GetNetTime(), 6, 2, cTeamNetTime);
    }
-#else
+   else
    {
       dtostrf(RaceHandler.GetNetTime(), 7, 3, cTeamNetTime);
    }
-#endif
    LCDController.UpdateField(LCDController.NetTime, cTeamNetTime);
 
    if (iCurrentRaceState != RaceHandler.RaceState)
@@ -696,12 +694,28 @@ void loop()
 
    //Handle side switch button (when race is not running)
    if ((((bitRead(bDataIn, 0) == HIGH) && (GET_MICROS / 1000 - llLastRCPress[0] > SideSwitchCoolDownTime)) //
-      || (bSerialStringComplete && strSerialData == "toggle"))
+      || (bSerialStringComplete && strSerialData == "NAFA"))
       && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
    {
+      if (((GET_MICROS / 1000 - llLastRCPress[0] < 1000) && bSideSwitchPressedOnce) || (bSerialStringComplete && strSerialData == "NAFA"))
+      {
+         ESP_LOGI(__FILE__, "Switch sides button double pressed!");
+         LightsController.ToggleStartingSequence();
+         LCDController.reInit();
+         bSideSwitchPressedOnce = false;
+      }
+      else
+      { bSideSwitchPressedOnce = true; }
       llLastRCPress[0] = GET_MICROS / 1000;
-      //ESP_LOGI(__FILE__, "Switching sides!");
+      
+      
+   }
+   if ((bSideSwitchPressedOnce || (bSerialStringComplete && strSerialData == "direction"))
+         && (GET_MICROS / 1000 - llLastRCPress[0] > 1000) && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
+   {
+      ESP_LOGI(__FILE__, "Switch sides button pressed!");
       RaceHandler.ToggleRunDirection();
+      bSideSwitchPressedOnce = false;
    }
 
    //Check if we have serial data which we should handle
@@ -757,7 +771,7 @@ void ButtonsRead()
    // Print to console if button press detected
    if (bDataIn != bOldDataIn && bDataIn != 0)
    {
-      ESP_LOGD(__FILE__, "%s", GetButtonString().c_str());
+      //ESP_LOGD(__FILE__, "%s", GetButtonString().c_str());
    }
 }
 
@@ -822,11 +836,10 @@ void Sensor1Wrapper()
 /// </summary>
 void StartRaceMain()
 {
-   #ifdef StartSequenceNAFA
+   if (LightsController.bModeNAFA)
       LightsController.WarningStartSequence();
-   #else
+   else
       LightsController.InitiateStartSequence();
-   #endif
 }
 
 /// <summary>

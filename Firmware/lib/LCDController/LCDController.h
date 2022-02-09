@@ -17,8 +17,9 @@
 #ifndef _LCDCONTROLLER_h
 #define _LCDCONTROLLER_h
 
-#include "Arduino.h"
+#include <Arduino.h>
 #include <LiquidCrystal.h>
+#include "LightsController.h"
 
 class LCDControllerClass
 {
@@ -27,6 +28,7 @@ protected:
 
 public:
    void init(LiquidCrystal *Clcd1, LiquidCrystal *Clcd2);
+   void reInit();
    void Main();
    enum LCDFields
    {

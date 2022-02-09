@@ -18,7 +18,6 @@
 
 #include "config.h"
 #include "LCDController.h"
-#include <LiquidCrystal.h>
 
 /// <summary>
 ///   Initialises this object.
@@ -67,7 +66,7 @@ void LCDControllerClass::init(LiquidCrystal *Clcd1, LiquidCrystal *Clcd2)
 #else
    _SlcdfieldFields[BattLevel] = {4, 27, 3, String("UNK")};
 #endif
-   if (Accuracy2digits)
+   if (!LightsController.bModeNAFA)
    {
       _SlcdfieldFields[TeamTime] = {2, 34, 6, String("  0.00")};
       _SlcdfieldFields[NetTime] = {3, 34, 6, String("  0.00")};
@@ -80,6 +79,32 @@ void LCDControllerClass::init(LiquidCrystal *Clcd1, LiquidCrystal *Clcd2)
    _SlcdfieldFields[GpsState] = {4, 32, 3, String("   ")};
    _SlcdfieldFields[SDcardState] = {4, 36, 2, String("  ")};
    _SlcdfieldFields[BoxDirection] = {4, 39, 1, String(">")};
+}
+
+void LCDControllerClass::reInit()
+{
+   _UpdateLCD(1, 0, String("                                        "), 40);
+   _UpdateLCD(2, 0, String("                 mode:                  "), 40);
+   _UpdateLCD(3, 0, String("                                        "), 40);
+   _UpdateLCD(4, 0, String("                                        "), 40);
+   if (!LightsController.bModeNAFA)
+   {
+   _UpdateLCD(3, 0, String("                  FCI                   "), 40);
+   delay(500);
+   _SlcdfieldFields[TeamTime] = {2, 34, 6, String("  0.00")};
+   _SlcdfieldFields[NetTime] = {3, 34, 6, String("  0.00")};
+   }
+   else
+   {
+   _UpdateLCD(3, 0, String("                 NAFA                   "), 40);
+   delay(500);
+   _SlcdfieldFields[TeamTime] = {2, 33, 7, String("  0.000")};
+   _SlcdfieldFields[NetTime] = {3, 33, 7, String("  0.000")};
+   }
+   _UpdateLCD(1, 0, String("1:                      |               "), 40);
+   _UpdateLCD(2, 0, String("2:                      | Team:         "), 40);
+   _UpdateLCD(3, 0, String("3:                      |  Net:         "), 40);
+   _UpdateLCD(4, 0, String("4:                      |     %         "), 40);
 }
 
 /// <summary>

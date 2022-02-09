@@ -24,9 +24,13 @@
 
 class LightsControllerClass
 {
+   friend class WebHandlerClass;
+
 protected:
 public:
    void init(NeoPixelBus<NeoRgbFeature, WS_METHOD> *LightsStrip);
+
+   bool bModeNAFA = false;
 
    //Overal state of this class
    enum OverallStates
@@ -37,6 +41,7 @@ public:
       STARTING,
       STARTED
    };
+   
    OverallStates byOverallState = RESET;
 
    //Possible pixel colors (unique names needed)
@@ -51,12 +56,14 @@ public:
       YELLOW3,// pixel 3
       GREEN4  // pixel 4
    };
+   
    enum LightStates
    {
       OFF,
       ON,
       TOGGLE
    };
+
    LightStates CheckLightState(Lights byLight);
    void Main();
    void HandleStartSequence();
@@ -67,6 +74,7 @@ public:
    void DeleteSchedules();
    void ToggleFaultLight(uint8_t iDogNumber, LightStates byLightState);
    void ReaceReadyFault(LightStates byLightState);
+   void ToggleStartingSequence();
 
    stLightsState GetLightsState();
 

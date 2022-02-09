@@ -320,11 +320,10 @@ boolean WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, As
       }
       else
       {
-         #ifdef StartSequenceNAFA
+         if (LightsController.bModeNAFA)
             LightsController.WarningStartSequence();
-         #else
+         else
             LightsController.InitiateStartSequence();
-         #endif
          return true;
       }
    }

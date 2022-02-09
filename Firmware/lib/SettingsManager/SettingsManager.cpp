@@ -86,6 +86,12 @@ void SettingsManagerClass::setDefaultSettings()
       setSetting("RunDirectionInverted", String("0"));
       saveSettings();
    }
+
+   if (!hasSetting("StartingSequenceNAFA"))
+   {
+      setSetting("StartingSequenceNAFA", String("0"));
+      saveSettings();
+   }   
 }
 
 SettingsManagerClass SettingsManager;

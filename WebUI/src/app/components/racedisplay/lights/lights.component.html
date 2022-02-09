@@ -1,6 +1,6 @@
   <div class="lightsContainer">
-    <span [ngClass]="{'white': lightsState.State[0] == 1}"></span>
-    <span [ngClass]="{'red': lightsState.State[1] == 1}"></span>
+    <span [ngClass]="{'white': lightsState.State[0] == 1, 'red': lightsState.State[0] == 2}"></span>&nbsp;&nbsp;&nbsp;
+    <span [ngClass]="{'orange': lightsState.State[1] == 1, 'red': lightsState.State[1] == 2}"></span>
     <span [ngClass]="{'orange': lightsState.State[2] == 1, 'blue': lightsState.State[2] == 2}"></span>
     <span [ngClass]="{'orange': lightsState.State[3] == 1}"></span>
     <span [ngClass]="{'green': lightsState.State[4] == 1}"></span>
