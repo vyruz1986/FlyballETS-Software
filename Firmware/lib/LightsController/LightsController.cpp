@@ -48,11 +48,6 @@ void LightsControllerClass::init(NeoPixelBus<NeoRgbFeature, WS_METHOD> *LightsSt
 /// </summary>
 void LightsControllerClass::Main()
 {
-   if (byOverallState == STARTING)
-   {
-      HandleStartSequence();
-   }
-
    //Check if we have to toggle any lights
    for (int i = 0; i < 6; i++)
    {
@@ -78,62 +73,10 @@ void LightsControllerClass::Main()
    {
       //ESP_LOGD(__FILE__, " %llu: New light states: %i", GET_MICROS / 1000, _byNewLightsState);
       _byCurrentLightsState = _byNewLightsState;
-#ifndef WiFiOFF
+#ifdef WiFiON
       //Send data to websocket clients
-      WebHandler.SendLightsData(GetLightsState());
+      WebHandler._bUpdateLights = true;
 #endif
-   }
-}
-
-/// <summary>
-///   Handles the start sequence, will be called by main function when oceral race state is
-///   STARTING.
-/// </summary>
-void LightsControllerClass::HandleStartSequence()
-{
-   //This function takes care of the starting lights sequence
-   //Check if the lights have been programmed yet
-   if (!_bStartSequenceStarted)
-   {
-      //Start sequence is not yet started, we need to schedule the lights on/off times
-
-      //Set schedule for RED light
-      _lLightsOnSchedule[1] = GET_MICROS / 1000;         //Turn on NOW
-      _lLightsOutSchedule[1] = GET_MICROS / 1000 + 1000; //keep on for 1 second
-
-      //Set schedule for YELLOW1 light
-      _lLightsOnSchedule[2] = GET_MICROS / 1000 + 1000;  //Turn on after 1 second
-      _lLightsOutSchedule[2] = GET_MICROS / 1000 + 2000; //Turn off after 2 seconds
-
-      //Set schedule for YELLOW2 light
-      _lLightsOnSchedule[4] = GET_MICROS / 1000 + 2000;  //Turn on after 2 seconds
-      _lLightsOutSchedule[4] = GET_MICROS / 1000 + 3000; //Turn off after 3 seconds
-
-      //Set schedule for GREEN light
-      _lLightsOnSchedule[5] = GET_MICROS / 1000 + 3000;  //Turn on after 3 seconds
-      _lLightsOutSchedule[5] = GET_MICROS / 1000 + 4000; //Turn off after 4 seconds
-
-      _bStartSequenceStarted = true;
-   }
-   //Check if the start sequence is busy
-   bool bStartSequenceBusy = false;
-   for (int i = 0; i < 6; i++)
-   {
-      if (_lLightsOnSchedule[i] > 0 || _lLightsOutSchedule[i] > 0)
-      {
-         bStartSequenceBusy = true;
-      }
-   }
-   //Check if we should start the timer (GREEN light on)
-   if (CheckLightState(GREEN) == ON && RaceHandler.RaceState == RaceHandler.STARTING)
-   {
-      RaceHandler.StartTimers();
-      ESP_LOGD(__FILE__, "%llu: GREEN light is ON!", GET_MICROS / 1000);
-   }
-   if (!bStartSequenceBusy)
-   {
-      _bStartSequenceStarted = false;
-      byOverallState = STARTED;
    }
 }
 
@@ -142,7 +85,25 @@ void LightsControllerClass::HandleStartSequence()
 /// </summary>
 void LightsControllerClass::InitiateStartSequence()
 {
-   byOverallState = STARTING;
+   //Set start sequence, we need to schedule the lights on/off times. Offset of 10ms instoruced to avoid RED light ON delay
+
+   //Set schedule for RED light
+   _lLightsOnSchedule[1] = (GET_MICROS + 10000) / 1000;         //Turn on NOW
+   _lLightsOutSchedule[1] = (GET_MICROS + 10000)  / 1000 + 1000; //keep on for 1 second
+
+   //Set schedule for YELLOW1 light
+   _lLightsOnSchedule[2] = (GET_MICROS + 10000)  / 1000 + 1000;  //Turn on after 1 second
+   _lLightsOutSchedule[2] = (GET_MICROS + 10000)  / 1000 + 2000; //Turn off after 2 seconds
+
+   //Set schedule for YELLOW2 light
+   _lLightsOnSchedule[4] = (GET_MICROS + 10000) / 1000 + 2000;  //Turn on after 2 seconds
+   _lLightsOutSchedule[4] = (GET_MICROS + 10000)  / 1000 + 3000; //Turn off after 3 seconds
+
+   //Set schedule for GREEN light
+   _lLightsOnSchedule[5] = (GET_MICROS + 10000)  / 1000 + 3000;  //Turn on after 3 seconds
+   _lLightsOutSchedule[5] = (GET_MICROS + 10000)  / 1000 + 4000; //Turn off after 4 seconds
+
+   byOverallState = INITIATED;
 }
 
 /// <summary>
@@ -172,6 +133,9 @@ void LightsControllerClass::DeleteSchedules()
       _lLightsOnSchedule[i] = 0;  //Delete schedule
       _lLightsOutSchedule[i] = 0; //Delete schedule
    }
+   //Blink WHITE light to indicate manual STOP or RESET execution
+   _lLightsOnSchedule[0] = GET_MICROS / 1000;         //Turn on NOW
+   _lLightsOutSchedule[0] = GET_MICROS / 1000 + 100;  //keep on for 100ms
 }
 
 /// <summary>
@@ -201,16 +165,30 @@ void LightsControllerClass::ToggleLightState(Lights byLight, LightStates byLight
    if (byLightState == OFF)
    {
       LightConfig.iColor = RgbColor(0);
-      ESP_LOGD(__FILE__, "%llu: Light %d is OFF", GET_MICROS / 1000, LightConfig.iPixelNumber);
+      //ESP_LOGD(__FILE__, "%llu: Light %d is OFF", GET_MICROS / 1000, LightConfig.iPixelNumber);
    }
    else
    {
-      ESP_LOGD(__FILE__, "%llu: Light %d is ON", GET_MICROS / 1000, LightConfig.iPixelNumber);
+      //ESP_LOGD(__FILE__, "%llu: Light %d is ON", GET_MICROS / 1000, LightConfig.iPixelNumber);
+      // If start sequence is initiated and we're going to turn on RED light we need to start race timer
+      if (byOverallState == INITIATED && LightConfig.iPixelNumber == 1)
+      {
+         RaceHandler.StartRaceTimer();
+         byOverallState = STARTING;
+      }
+
+      // If start sequence is in progress and we're going to trun on GREEN light we need to change race state to RUNNING
+      if (byOverallState == STARTING && LightConfig.iPixelNumber == 4)
+      {
+         RaceHandler.ChangeRaceStateToRunning();
+         byOverallState = STARTED;
+      }
    }
 
    for (int lightschain = 0; lightschain < LIGHTSCHAINS; lightschain++)
    {
       _LightsStrip->SetPixelColor(LightConfig.iPixelNumber + 5 * lightschain, LightConfig.iColor);
+      ESP_LOGD(__FILE__, "%llu: Light %d is now %d", GET_MICROS / 1000, LightConfig.iPixelNumber, byLightState);
    }
 
    if (byCurrentLightState != byLightState)

@@ -10,14 +10,12 @@ import { NavbarComponent } from "./components/navbar/navbar.component";
 import { HomeComponent } from "./components/home/home.component";
 import { RacedisplayComponent } from "./components/racedisplay/racedisplay.component";
 import { ConfigComponent } from "./components/config/config.component";
-
 import { SystemDataComponent } from "./components/system-data/system-data.component";
 import { LightsComponent } from "./components/racedisplay/lights/lights.component";
 import { EtsdataService } from "./services/etsdata.service";
 import { SecureEtsDataService } from "./services/secure-ets-data.service";
 import { LoginComponent } from "./components/login/login.component";
 import { HttpClientModule } from "@angular/common/http";
-import { CrossingTime } from "./pipes/crossing-time.pipe";
 import { DatePipe } from "@angular/common";
 import { FriendlyRaceStatePipe } from "./pipes/friendly-race-state.pipe";
 import { RaceControlComponent } from "./components/racedisplay/race-control/race-control.component";
@@ -25,7 +23,7 @@ import { TimeDisplayComponent } from "./components/racedisplay/time-display/time
 import { DogDetailsComponent } from "./components/racedisplay/dog-details/dog-details.component";
 
 const appRoutes: Routes = [
-  { path: "", component: HomeComponent },
+  { path: "", component: RacedisplayComponent },
   { path: "racedisplay", component: RacedisplayComponent },
   { path: "config", component: ConfigComponent },
 ];
@@ -40,7 +38,6 @@ const appRoutes: Routes = [
     SystemDataComponent,
     LightsComponent,
     LoginComponent,
-    CrossingTime,
     FriendlyRaceStatePipe,
     RaceControlComponent,
     TimeDisplayComponent,

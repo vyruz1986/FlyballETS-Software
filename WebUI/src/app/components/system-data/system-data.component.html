@@ -2,11 +2,11 @@
   <div class="container">
     <span class="badge badge-info text-center">
       Batt: {{systemData.batteryPercentage}}%
+      | Id: {{systemData.PwrOnTag}}/{{systemData.RaceID}}
+      | Up: {{hmsTime}}
       | T: {{systemData.systemTimestamp | date:'short'}}
-      | U: {{hmsTime}}
       | C: {{systemData.numClients}}
-      | H: {{systemData.freeHeap}}
-      | B: {{systemData.CPU0ResetReason}}/{{systemData.CPU1ResetReason}}
+      | Mem: {{systemData.freeHeap}}
     </span>
   </div>
 </footer>

@@ -39,13 +39,14 @@ void LCDControllerClass::init(LiquidCrystal *Clcd1, LiquidCrystal *Clcd2)
    //Put initial text on screen
    //                                 1         2         3
    //LCD layout:            0123456789012345678901234567890123456789
-   _UpdateLCD(2, 0, String("  Flyball Electronic Training System    "), 40);
-   _UpdateLCD(3, 0, String("             ver. 1.0.0                 "), 40);
-   delay(3000);
-   _UpdateLCD(1, 0, String("1:   0.000  +  0.000    |     WELCOME   "), 40);
+   _UpdateLCD(2, 0, String("   Flyball Electronic Training System   "), 40);
+   _UpdateLCD(3, 0, String("            ver.        rev.S           "), 40);
+   _UpdateLCD(3, 17, String(FW_VER), 6);
+   delay(1500);
+   _UpdateLCD(1, 0, String("1:   0.000  +  0.000    |   WELCOME   00"), 40);
    _UpdateLCD(2, 0, String("2:   0.000  +  0.000    | Team:    0.000"), 40);
    _UpdateLCD(3, 0, String("3:   0.000  +  0.000    |  Net:    0.000"), 40);
-   _UpdateLCD(4, 0, String("4:   0.000  +  0.000    |  100%      -->"), 40);
+   _UpdateLCD(4, 0, String("4:   0.000  +  0.000    |  100% GPS SD >"), 40);
 
    _SlcdfieldFields[D1Time] = {1, 3, 7, String("  0.000")};
    _SlcdfieldFields[D1RerunInfo] = {1, 22, 2, String("  ")};
@@ -59,15 +60,26 @@ void LCDControllerClass::init(LiquidCrystal *Clcd1, LiquidCrystal *Clcd2)
    _SlcdfieldFields[D2CrossTime] = {2, 12, 8, String("        ")};
    _SlcdfieldFields[D3CrossTime] = {3, 12, 8, String("        ")};
    _SlcdfieldFields[D4CrossTime] = {4, 12, 8, String("        ")};
+   _SlcdfieldFields[RaceState] = {1, 28, 7, String(" READY ")};
+   _SlcdfieldFields[RaceID] = {1, 38, 2, String(" 1")};
 #if BatteryCalibration
    _SlcdfieldFields[BattLevel] = {4, 27, 4, String("0000")};
 #else
    _SlcdfieldFields[BattLevel] = {4, 27, 3, String("UNK")};
 #endif
-   _SlcdfieldFields[RaceState] = {1, 30, 7, String(" READY ")};
-   _SlcdfieldFields[TeamTime] = {2, 33, 7, String("  0.000")};
-   _SlcdfieldFields[NetTime] = {3, 33, 7, String("  0.000")};
-   _SlcdfieldFields[BoxDirection] = {4, 37, 3, String("-->")};
+   if (Accuracy2digits)
+   {
+      _SlcdfieldFields[TeamTime] = {2, 34, 6, String("  0.00")};
+      _SlcdfieldFields[NetTime] = {3, 34, 6, String("  0.00")};
+   }
+   else
+   {
+      _SlcdfieldFields[TeamTime] = {2, 33, 7, String("  0.000")};
+      _SlcdfieldFields[NetTime] = {3, 33, 7, String("  0.000")};
+   }
+   _SlcdfieldFields[GpsState] = {4, 32, 3, String("   ")};
+   _SlcdfieldFields[SDcardState] = {4, 36, 2, String("  ")};
+   _SlcdfieldFields[BoxDirection] = {4, 39, 1, String(">")};
 }
 
 /// <summary>

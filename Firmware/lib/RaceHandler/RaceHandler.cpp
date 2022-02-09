@@ -22,6 +22,7 @@
 #include "SettingsManager.h"
 #include "config.h"
 #include "WebHandler.h"
+#include "SDcardController.h"
 
 /// <summary>
 ///   Initialises this object andsets all counters to 0.
@@ -35,11 +36,10 @@ void RaceHandlerClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
    _iS1Pin = iS1Pin;
    _iS2Pin = iS2Pin;
    ResetRace();
-   _iCurrentRaceId = 0;
    if (SettingsManager.getSetting("RunDirectionInverted").equals("1"))
    {
       _bRunDirectionInverted = true;
-      LCDController.UpdateField(LCDController.BoxDirection, "<--");
+      LCDController.UpdateField(LCDController.BoxDirection, "<");
       ESP_LOGD(__FILE__, "Run direction from settings: inverted");
    }
    else
@@ -60,9 +60,6 @@ void RaceHandlerClass::_ChangeRaceState(RaceStates byNewRaceState)
    {
       PreviousRaceState = RaceState;
       RaceState = byNewRaceState;
-#ifndef WiFiOFF
-      WebHandler._SendRaceData();
-#endif
    }
 }
 
@@ -129,16 +126,16 @@ void RaceHandlerClass::Main()
          ESP_LOGD(__FILE__, "Reset transition strings as not updated since 350ms.");
          ESP_LOGI(__FILE__, "Gate: CLEAR.");
       }
-      
+
       //If we have potential negative cross detected on S2, but S1 wasn't crossed for 100ms since then it had to be sensor noise and we need to reset flag
       if (_bPotentialNegativeCrossDetected && (GET_MICROS - _llS2CrossedUnsafeTime) > 100000)
       {
          _bPotentialNegativeCrossDetected = false;
          ESP_LOGD(__FILE__, "Potential negative cross flag reset as S1 not crossed for 100ms");
       }
-      
+
       ESP_LOGI(__FILE__, "S%i | TT:%lld | T:%lld | St:%i", STriggerRecord.iSensorNumber, STriggerRecord.llTriggerTime, STriggerRecord.llTriggerTime - llRaceStartTime, STriggerRecord.iSensorState);
-      
+
       //Calculate what our next dog will be
       uint8_t iNextDogChanged = iNextDog;
       if (_bFault && iCurrentDog == 3)
@@ -230,7 +227,7 @@ void RaceHandlerClass::Main()
          }
          //Check if this is a next dog which is too early (we were expecting a dog to come back)
          else if (_byDogState == COMINGBACK && !_bS1StillSafe && (STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) > 2000000 //Filter out S1 HIGH signals that are < 2 seconds after dog enter time
-                  && (iCurrentDog != iNextDog)) // Exclude scenario if next dog is equal current dog as this can't be comming back dog.
+                  && (iCurrentDog != iNextDog))                                                                                           // Exclude scenario if next dog is equal current dog as this can't be comming back dog.
          {
             //Set fault light for next dog.
             SetDogFault(iNextDog, ON);
@@ -258,8 +255,8 @@ void RaceHandlerClass::Main()
          }
          //Special case after false detection of "ok crossing" --> S1 activated 100ms after "ok crossing" detection or re-rung with next dog = current dog
          else if (_byDogState == COMINGBACK && _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] && !_bS1StillSafe &&
-                  (((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) > 100000 && (STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) < 1000000)
-                  || (_bRerunBusy && iCurrentDog == iNextDog)))
+                  (((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) > 100000
+                  && (STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) < 1000000) || (_bRerunBusy && iCurrentDog == iNextDog)))
          {
             _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] = false;
             _llDogEnterTimes[iCurrentDog] = STriggerRecord.llTriggerTime;
@@ -323,7 +320,7 @@ void RaceHandlerClass::Main()
             _bS1isSafe = false;
             ESP_LOGI(__FILE__, "S1 line crossed while being safe. Calculate dog %i time.", iCurrentDog + 1);
             if (_llDogExitTimes[iCurrentDog] - _llS2CrossedSafeTime < 5000) // If S1 (safe) crossing time is below 5ms after S2 crossing means S1 was crossed
-                                                                             // by going in dog and we have true PERFECT crossing
+                                                                            // by going in dog and we have true PERFECT crossing
             {
                _bDogPerfectCross[iNextDog][iDogRunCounters[iNextDog]] = true;
                ESP_LOGI(__FILE__, "PERFECT cross below 5ms detected for dog %i.", iNextDog + 1);
@@ -445,8 +442,8 @@ void RaceHandlerClass::Main()
                //Change dog state to coming back
                _ChangeDogState(COMINGBACK);
                ESP_LOGI(__FILE__, "New dog state: COMINGBACK. ABab.");
-               if (_bDogManualFaults[iPreviousDog])   // If previous dog has manual fault we assume it's because he missed gate while coming back
-                                                      // If however this will be negative cross scenario flag will be deactivated in S2 sensor section
+               if (_bDogManualFaults[iPreviousDog]) // If previous dog has manual fault we assume it's because he missed gate while coming back
+                                                    // If however this will be negative cross scenario flag will be deactivated in S2 sensor section
                {
                   _bDogMissedGateComingback[iPreviousDog][iDogRunCounters[iPreviousDog]] = true;
                }
@@ -489,8 +486,8 @@ void RaceHandlerClass::Main()
                   }
                   else
                   {
-                  _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
-                  ESP_LOGI(__FILE__, "Unmeasurable ok crossing for dog %i.", iCurrentDog + 1);
+                     _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+                     ESP_LOGI(__FILE__, "Unmeasurable ok crossing for dog %i.", iCurrentDog + 1);
                   }
                }
                else if (_byDogState == COMINGBACK && strFirstTransitionChar == "A")
@@ -501,7 +498,7 @@ void RaceHandlerClass::Main()
                //It has to be dog going in + sensors noise
                {
                   _ChangeDogState(COMINGBACK);
-                  ESP_LOGI(__FILE__, "New dog %i state: COMINGBACK. Uncertain.", iCurrentDog  + 1);
+                  ESP_LOGI(__FILE__, "New dog %i state: COMINGBACK. Uncertain.", iCurrentDog + 1);
                }
             }
          }
@@ -520,7 +517,7 @@ void RaceHandlerClass::Main()
       _ChangeRaceState(RUNNING);
       ESP_LOGD(__FILE__, "%llu: GREEN light is ON!", GET_MICROS / 1000);
    }*/
-      
+
    //Update racetime
    if (RaceState == RUNNING)
    {
@@ -553,24 +550,24 @@ void RaceHandlerClass::Main()
 }
 
 /// <summary>
-///   Starts the timers. Should be called once GREEN light comes ON.
+///   Change race to RUNNING when GREEN light comes ON during start sequence.
 /// </summary>
-void RaceHandlerClass::StartTimers()
+void RaceHandlerClass::ChangeRaceStateToRunning()
 {
    _ChangeRaceState(RUNNING);
 }
 
 /// <summary>
-///   Sets the status of the race to STARTING, should be called at same time when start light
-///   sequence is called.
+///   Initiates race start timer and sets the status of the race to STARTING.
+///   Should be called when RED light comes ON during start sequence.
 /// </summary>
-void RaceHandlerClass::StartRace()
+void RaceHandlerClass::StartRaceTimer()
 {
    llRaceStartTime = GET_MICROS + 3000000;
    _ChangeRaceState(STARTING);
-   ESP_LOGD(__FILE__, "%llu: STARTING!", (llRaceStartTime - 3000000) / 1000);
-   ESP_LOGI(__FILE__, "%s", GPSHandler.GetUTCTimestamp());
-   
+   ESP_LOGD(__FILE__, "%llu: STARTING! Tag: %i, Race ID: %i.", (llRaceStartTime - 3000000) / 1000, SDcardController.iTagValue, iCurrentRaceId + 1);
+   cRaceStartTimestamp = GPSHandler.GetLocalTimestamp();
+   ESP_LOGI(__FILE__, "Timestamp: %s", cRaceStartTimestamp);
 }
 
 /// <summary>
@@ -594,7 +591,7 @@ void RaceHandlerClass::StopRace(long long llStopTime)
       _llRaceTime = _llRaceEndTime - llRaceStartTime;
    }
    _ChangeRaceState(STOPPED);
-   _HistoricRaceData[_iCurrentRaceId] = GetRaceData(_iCurrentRaceId);
+   _HistoricRaceData[iCurrentRaceId] = GetRaceData(iCurrentRaceId);
 }
 
 /// <summary>
@@ -708,18 +705,24 @@ void RaceHandlerClass::ResetRace()
       _ChangeRaceState(RESET);
    }
 
-   if (_iCurrentRaceId == NUM_HISTORIC_RACE_RECORDS)
+   if (iCurrentRaceId == NUM_HISTORIC_RACE_RECORDS)
    {
-      _iCurrentRaceId = 0;
+      iCurrentRaceId = 0;
    }
    else
    {
-      _iCurrentRaceId++;
+      iCurrentRaceId++;
    }
+   String _sCurrentRaceId = String(iCurrentRaceId + 1);
+   while (_sCurrentRaceId.length() < 2)
+   {
+      _sCurrentRaceId = " " + _sCurrentRaceId;
+   }
+   LCDController.UpdateField(LCDController.RaceID, _sCurrentRaceId);
    ESP_LOGI(__FILE__, "Reset Race: DONE");
-#ifndef WiFiOFF
+#ifdef WiFiON
    //Send updated racedata to any web clients
-   WebHandler._SendRaceData();
+   WebHandler._bSendRaceData = true;
 #endif
 }
 
@@ -734,6 +737,40 @@ void RaceHandlerClass::PrintRaceTriggerRecords()
       STriggerRecord RecordToPrint = _InputTriggerQueue[iRecordToPrintIndex];
       printf("{%i, %lld, %i},\n", RecordToPrint.iSensorNumber, RecordToPrint.llTriggerTime - llRaceStartTime, RecordToPrint.iSensorState);
       iRecordToPrintIndex++;
+   }
+}
+
+/// <summary>
+///   If SD card is present, after race is ended/stopped print trigger records to file
+/// </summary>
+void RaceHandlerClass::PrintRaceTriggerRecordsToFile()
+{
+   File rawSensorsReadingFile;
+   String rawSensorsReadingFileName= "/SENSORS_DATA/" + SDcardController.sTagValue + "_SensorsData" + ".txt";
+   if (iCurrentRaceId == 0)
+   {
+      SDcardController.writeFile(SD_MMC, rawSensorsReadingFileName.c_str(),
+      "Sensor ID; Time [us]; Sensor state\n");
+   }
+   rawSensorsReadingFile = SD_MMC.open(rawSensorsReadingFileName.c_str(), FILE_APPEND);
+   if(rawSensorsReadingFile)
+   {
+      rawSensorsReadingFile.print("Race ID: ");
+      rawSensorsReadingFile.println(RaceHandler.iCurrentRaceId + 1);
+      uint8_t iRecordToPrintIndex = 0;
+      while (iRecordToPrintIndex < _iInputQueueWriteIndex)
+      {
+         STriggerRecord RecordToPrint = _InputTriggerQueue[iRecordToPrintIndex];
+         rawSensorsReadingFile.print("{");
+         rawSensorsReadingFile.print(RecordToPrint.iSensorNumber);
+         rawSensorsReadingFile.print(", ");
+         rawSensorsReadingFile.print(RecordToPrint.llTriggerTime - llRaceStartTime);
+         rawSensorsReadingFile.print(", ");
+         rawSensorsReadingFile.print(RecordToPrint.iSensorState);
+         rawSensorsReadingFile.println("},");                        
+         iRecordToPrintIndex++;
+      }
+      rawSensorsReadingFile.close();
    }
 }
 
@@ -842,15 +879,15 @@ double RaceHandlerClass::GetRaceTime()
    double dRaceTimeSeconds = 0;
    if (RaceState != STARTING)
    {
-      #if Accuracy2digits
+#if Accuracy2digits
       {
          dRaceTimeSeconds = ((long long)(_llRaceTime + 5000) / 10000) / 100.0;
       }
-      #else
+#else
       {
          dRaceTimeSeconds = ((long long)(_llRaceTime + 500) / 1000) / 1000.0;
       }
-      #endif
+#endif
    }
    return dRaceTimeSeconds;
 }
@@ -939,8 +976,8 @@ String RaceHandlerClass::GetDogTime(uint8_t iDogNumber, int8_t iRunNumber)
    }
    //Then check if the requested dog is perhaps running (and coming back) so we can return the time so far
    //and if requested run number is lower then number of times dog has run
-   else if ((RaceState == RUNNING && iCurrentDog == iDogNumber && _byDogState == COMINGBACK) && iRunNumber <= iDogRunCounters[iDogNumber]
-            && _llDogEnterTimes[iDogNumber] != 0) 
+   else if ((RaceState == RUNNING && iCurrentDog == iDogNumber && _byDogState == COMINGBACK) && iRunNumber <= iDogRunCounters[iDogNumber] //
+            && _llDogEnterTimes[iDogNumber] != 0)
    {
       ulDogTimeMillis = (GET_MICROS - _llDogEnterTimes[iDogNumber]) / 1000;
    }
@@ -949,17 +986,17 @@ String RaceHandlerClass::GetDogTime(uint8_t iDogNumber, int8_t iRunNumber)
    {
       ulDogTimeMillis = 0;
    }
-   #if Accuracy2digits
+#if Accuracy2digits
    {
       dDogTime = ((unsigned long)(ulDogTimeMillis + 5) / 10) / 100.0;
       dtostrf(dDogTime, 7, 2, cDogTime);
    }
-   #else
+#else
    {
       dDogTime = ulDogTimeMillis / 1000.0;
       dtostrf(dDogTime, 7, 3, cDogTime);
    }
-   #endif
+#endif
    if (_bDogMissedGateGoingin[iDogNumber][iRunNumber])
    {
       strDogTime = " run in";
@@ -990,18 +1027,24 @@ String RaceHandlerClass::GetStoredDogTimes(uint8_t iDogNumber, int8_t iRunNumber
    char cDogTime[8];
    String strDogTime;
    double dDogTime = 0;
-   #if Accuracy2digits
+   if (Accuracy2digits)
    {
       dDogTime = ((long long)(_llDogTimes[iDogNumber][iRunNumber] + 5000) / 10000) / 100.0;
       dtostrf(dDogTime, 7, 2, cDogTime);
    }
-   #else
+   else
    {
       dDogTime = ((long long)(_llDogTimes[iDogNumber][iRunNumber] + 500) / 1000) / 1000.0;
       dtostrf(dDogTime, 7, 3, cDogTime);
    }
-   #endif
-   strDogTime = cDogTime;
+   if (dDogTime == 0)
+   {
+      strDogTime = "";
+   }
+   else
+   {
+      strDogTime = cDogTime;
+   }
    if (_bDogMissedGateGoingin[iDogNumber][iRunNumber])
    {
       strDogTime = " run in";
@@ -1040,6 +1083,7 @@ String RaceHandlerClass::GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber)
 ///
 /// <param name="iDogNumber"> Zero-based index of the dog number. </param>
 /// <param name="iRunNumber"> Zero-based index of the run number. </param>
+/// <param name="bToFile"> used for results printing to file. </param>
 ///
 /// <returns>
 ///   String with following options:
@@ -1051,15 +1095,15 @@ String RaceHandlerClass::GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber)
 ///   * fault - un-measurable fault
 ///   * "empty" - if no crossing time available / possible
 /// </returns>
-String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNumber)
+String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNumber, boolean bToFile)
 {
    double dCrossingTime;
    char cCrossingTime[8];
    String strCrossingTime;
-   if (_llCrossingTimes[iDogNumber][iRunNumber] < 0 && _llDogEnterTimes[iDogNumber]!= 0 && (GET_MICROS - _llDogEnterTimes[iDogNumber]) > 300000)
+   if (_llCrossingTimes[iDogNumber][iRunNumber] < 0 && _llDogEnterTimes[iDogNumber] != 0 && (GET_MICROS - _llDogEnterTimes[iDogNumber]) > 300000)
    {
-      if ((iDogNumber == 0 && iRunNumber == 0 && _llCrossingTimes[0][0] > -9500) && Accuracy2digits)  //If this is first dog false start below 9.5ms
-                                                                                                      //use "ms" accuracy even if 2digits accuracy has been set
+      if ((iDogNumber == 0 && iRunNumber == 0 && _llCrossingTimes[0][0] > -9500) && Accuracy2digits && !bToFile)  //If this is first dog false start below 9.5ms
+                                                                                                                  //use "ms" accuracy even if 2digits accuracy has been set
       {
          dCrossingTime = ((long long)(_llCrossingTimes[iDogNumber][iRunNumber] - 500) / 1000);
          dCrossingTime = fabs(dCrossingTime);
@@ -1068,15 +1112,7 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
          strCrossingTime += cCrossingTime;
          strCrossingTime += " ms";
       }
-      else if (Accuracy2digits)
-      {
-         dCrossingTime = ((long long)(_llCrossingTimes[iDogNumber][iRunNumber] - 5000) / 10000) / 100.0;
-         dCrossingTime = fabs(dCrossingTime);
-         dtostrf(dCrossingTime, 6, 2, cCrossingTime);
-         strCrossingTime = "-";
-         strCrossingTime += cCrossingTime;
-      }
-      else
+      else if (!Accuracy2digits || ((iDogNumber == 0 && iRunNumber == 0 && _llCrossingTimes[0][0] > -9500) && Accuracy2digits && bToFile))
       {
          dCrossingTime = ((long long)(_llCrossingTimes[iDogNumber][iRunNumber] - 500) / 1000) / 1000.0;
          dCrossingTime = fabs(dCrossingTime);
@@ -1084,11 +1120,19 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
          strCrossingTime = "-";
          strCrossingTime += cCrossingTime;
       }
+      else
+      {
+         dCrossingTime = ((long long)(_llCrossingTimes[iDogNumber][iRunNumber] - 5000) / 10000) / 100.0;
+         dCrossingTime = fabs(dCrossingTime);
+         dtostrf(dCrossingTime, 6, 2, cCrossingTime);
+         strCrossingTime = "-";
+         strCrossingTime += cCrossingTime;
+      }
    }
-   else if (_llCrossingTimes[iDogNumber][iRunNumber] > 0 && _llDogEnterTimes[iDogNumber]!= 0 && (GET_MICROS - _llDogEnterTimes[iDogNumber]) > 300000)
+   else if (_llCrossingTimes[iDogNumber][iRunNumber] > 0 && _llDogEnterTimes[iDogNumber] != 0 && (GET_MICROS - _llDogEnterTimes[iDogNumber]) > 300000)
    {
-      if ((iDogNumber == 0 && iRunNumber == 0 && _llCrossingTimes[0][0] < 9500) && Accuracy2digits)   //If this is first dog entry time (start) below 9.5ms
-                                                                                                      //use "ms" accuracy even if 2digits accuracy has been set
+      if ((iDogNumber == 0 && iRunNumber == 0 && _llCrossingTimes[0][0] < 9500) && Accuracy2digits && !bToFile)//If this is first dog entry time (start) below 9.5ms
+                                                                                                               //use "ms" accuracy even if 2digits accuracy has been set
       {
          dCrossingTime = ((long long)(_llCrossingTimes[iDogNumber][iRunNumber] + 500) / 1000);
          dtostrf(dCrossingTime, 3, 0, cCrossingTime);
@@ -1096,17 +1140,17 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
          strCrossingTime += cCrossingTime;
          strCrossingTime += " ms";
       }
-      else if (Accuracy2digits)
+      else if (!Accuracy2digits || ((iDogNumber == 0 && iRunNumber == 0 && _llCrossingTimes[0][0] < 9500) && Accuracy2digits && bToFile))
       {
-         dCrossingTime = ((long long)(_llCrossingTimes[iDogNumber][iRunNumber] + 5000) / 10000) / 100.0;
-         dtostrf(dCrossingTime, 6, 2, cCrossingTime);
+         dCrossingTime = ((long long)(_llCrossingTimes[iDogNumber][iRunNumber] + 500) / 1000) / 1000.0;
+         dtostrf(dCrossingTime, 7, 3, cCrossingTime);
          strCrossingTime = "+";
          strCrossingTime += cCrossingTime;
       }
       else
       {
-         dCrossingTime = ((long long)(_llCrossingTimes[iDogNumber][iRunNumber] + 500) / 1000) / 1000.0;
-         dtostrf(dCrossingTime, 7, 3, cCrossingTime);
+         dCrossingTime = ((long long)(_llCrossingTimes[iDogNumber][iRunNumber] + 5000) / 10000) / 100.0;
+         dtostrf(dCrossingTime, 6, 2, cCrossingTime);
          strCrossingTime = "+";
          strCrossingTime += cCrossingTime;
       }
@@ -1125,19 +1169,19 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
    }
    //We have dog time (crossing time is zero)
    else if (_llDogTimes[iDogNumber][iRunNumber] > 0)
+   {
+      if ((iDogRunCounters[iDogNumber] > 0 && iDogRunCounters[iDogNumber] != iRunNumber) || (iDogRunCounters[iDogNumber] == 0 && (_bDogFaults[iDogNumber] || _bDogManualFaults[iDogNumber])))
       {
-         if ((iDogRunCounters[iDogNumber] > 0 && iDogRunCounters[iDogNumber] != iRunNumber) || (iDogRunCounters[iDogNumber] == 0 && (_bDogFaults[iDogNumber] || _bDogManualFaults[iDogNumber])))
-         {
-            strCrossingTime = "  fault";
-         }
-         else
-         {
-            strCrossingTime = "     ok";
-         }
+         strCrossingTime = "  fault";
       }
+      else
+      {
+         strCrossingTime = "     ok";
+      }
+   }
    //If dog is still running
-   else if ((RaceState == RUNNING && iCurrentDog == iDogNumber && _byDogState == COMINGBACK) && iRunNumber <= iDogRunCounters[iDogNumber]
-            && _llDogEnterTimes[iDogNumber]!= 0 && (GET_MICROS - _llDogEnterTimes[iDogNumber]) > 300000)
+   else if ((RaceState == RUNNING && iCurrentDog == iDogNumber && _byDogState == COMINGBACK) && iRunNumber <= iDogRunCounters[iDogNumber] //
+            && _llDogEnterTimes[iDogNumber] != 0 && (GET_MICROS - _llDogEnterTimes[iDogNumber]) > 300000)
    {
       if (_bDogFaults[iDogNumber] || _bDogManualFaults[iDogNumber])
       {
@@ -1200,15 +1244,15 @@ double RaceHandlerClass::GetNetTime()
       }
    }
    double dNetTime;
-   #if Accuracy2digits
+#if Accuracy2digits
    {
       dNetTime = ((long long)(llTotalNetTime + 5000) / 10000) / 100.0;
    }
-   #else
+#else
    {
       dNetTime = ((long long)(llTotalNetTime + 500) / 1000) / 1000.0;
    }
-   #endif
+#endif
    return dNetTime;
 }
 
@@ -1254,7 +1298,7 @@ String RaceHandlerClass::GetRaceStateString()
 /// </returns>
 stRaceData RaceHandlerClass::GetRaceData()
 {
-   return GetRaceData(_iCurrentRaceId);
+   return GetRaceData(iCurrentRaceId);
 }
 
 /// <summary>
@@ -1266,26 +1310,26 @@ stRaceData RaceHandlerClass::GetRaceData()
 /// <returns>
 ///  Race data struct
 /// </returns>
-stRaceData RaceHandlerClass::GetRaceData(uint iRaceId)
+stRaceData RaceHandlerClass::GetRaceData(int iRaceId)
 {
    stRaceData RequestedRaceData;
 
-   if (iRaceId == _iCurrentRaceId)
+   if (iRaceId == iCurrentRaceId)
    {
       //We need to return data for the current dace
-      RequestedRaceData.Id = _iCurrentRaceId;
+      RequestedRaceData.Id = iCurrentRaceId + 1;
       RequestedRaceData.StartTime = llRaceStartTime / 1000;
       RequestedRaceData.EndTime = _llRaceEndTime / 1000;
-      #if Accuracy2digits
+#if Accuracy2digits
       {
          RequestedRaceData.ElapsedTime = ((long long)(_llRaceTime + 5000) / 10000) / 100.0;
       }
-      #else
+#else
       {
          RequestedRaceData.ElapsedTime = ((long long)(_llRaceTime + 500) / 1000) / 1000.0;
       }
-      #endif
-      RequestedRaceData.TotalCrossingTime = this->GetNetTime();
+#endif
+      RequestedRaceData.NetTime = this->GetNetTime();
       RequestedRaceData.RaceState = RaceState;
 
       //Get Dog info
@@ -1318,12 +1362,12 @@ void RaceHandlerClass::ToggleRunDirection()
    SettingsManager.setSetting("RunDirectionInverted", String(_bRunDirectionInverted));
    if (_bRunDirectionInverted)
    {
-      LCDController.UpdateField(LCDController.BoxDirection, "<--");
+      LCDController.UpdateField(LCDController.BoxDirection, "<");
       ESP_LOGD(__FILE__, "Run direction changed to: inverted");
    }
    else
    {
-      LCDController.UpdateField(LCDController.BoxDirection, "-->");
+      LCDController.UpdateField(LCDController.BoxDirection, ">");
       ESP_LOGD(__FILE__, "Run direction changed to: normal");
    }
 }

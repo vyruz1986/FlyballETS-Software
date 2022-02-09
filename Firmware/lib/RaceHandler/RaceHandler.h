@@ -31,14 +31,17 @@ public:
    uint8_t iNextDog;
    uint8_t iDogRunCounters[4];  //Number of (re-)runs for each dog
    long long llRaceStartTime;
-
+   int iCurrentRaceId = -1;
+   char* cRaceStartTimestamp;
+   
    void Main();
-   void StartTimers();
-   void StartRace();
+   void ChangeRaceStateToRunning();
+   void StartRaceTimer();
    void StopRace();
    void StopRace(long long llStopTime);
    void ResetRace();
    void PrintRaceTriggerRecords();
+   void PrintRaceTriggerRecordsToFile();
    void TriggerSensor1();
    void TriggerSensor2();
 
@@ -54,14 +57,14 @@ public:
    String GetStoredDogTimes(uint8_t iDogNumber, int8_t iRunNumber = -1);
    int8_t SelectRunNumber(uint8_t iDogNumber, int8_t iRunNumber = -1);
    String GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber = -1);
-   String TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNumber);
+   String TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNumber, boolean bToFile = false);
    String GetRerunInfo(uint8_t iDogNumber);
    double GetNetTime();
 
    String GetRaceStateString();
 
    stRaceData GetRaceData();
-   stRaceData GetRaceData(uint iRaceId);
+   stRaceData GetRaceData(int iRaceId);
    void ToggleRunDirection();
    boolean GetRunDirection();
 
@@ -125,7 +128,6 @@ private:
    bool _bGatesClear = true;
 
    stRaceData _HistoricRaceData[NUM_HISTORIC_RACE_RECORDS];
-   uint _iCurrentRaceId;
 
    void _ChangeRaceState(RaceStates _byNewRaceState);
    void _ChangeDogState(_byDogStates _byNewDogState);
