@@ -12,8 +12,8 @@ export interface RaceData {
    id: number,
    startTime: number,
    endTime: number,
-   elapsedTime: number,
-   NetTime: number,
+   elapsedTime: String,
+   NetTime: String,
    raceState: RaceStateEnum,
    raceStateFriendly: String,
    dogData: Array<DogData>

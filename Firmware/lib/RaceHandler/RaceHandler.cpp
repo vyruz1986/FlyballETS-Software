@@ -888,15 +888,10 @@ double RaceHandlerClass::GetRaceTime()
    double dRaceTimeSeconds = 0;
    if (RaceState != STARTING)
    {
-#if Accuracy2digits
-      {
+      if (!LightsController.bModeNAFA)
          dRaceTimeSeconds = ((long long)(_llRaceTime + 5000) / 10000) / 100.0;
-      }
-#else
-      {
+      else
          dRaceTimeSeconds = ((long long)(_llRaceTime + 500) / 1000) / 1000.0;
-      }
-#endif
    }
    return dRaceTimeSeconds;
 }
@@ -995,17 +990,16 @@ String RaceHandlerClass::GetDogTime(uint8_t iDogNumber, int8_t iRunNumber)
    {
       ulDogTimeMillis = 0;
    }
-#if Accuracy2digits
+   if (!LightsController.bModeNAFA)
    {
       dDogTime = ((unsigned long)(ulDogTimeMillis + 5) / 10) / 100.0;
       dtostrf(dDogTime, 7, 2, cDogTime);
    }
-#else
+   else
    {
       dDogTime = ulDogTimeMillis / 1000.0;
       dtostrf(dDogTime, 7, 3, cDogTime);
    }
-#endif
    if (_bDogMissedGateGoingin[iDogNumber][iRunNumber])
    {
       strDogTime = " run in";
@@ -1036,7 +1030,7 @@ String RaceHandlerClass::GetStoredDogTimes(uint8_t iDogNumber, int8_t iRunNumber
    char cDogTime[8];
    String strDogTime;
    double dDogTime = 0;
-   if (Accuracy2digits)
+   if (!LightsController.bModeNAFA)
    {
       dDogTime = ((long long)(_llDogTimes[iDogNumber][iRunNumber] + 5000) / 10000) / 100.0;
       dtostrf(dDogTime, 7, 2, cDogTime);
@@ -1109,10 +1103,10 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
    double dCrossingTime;
    char cCrossingTime[8];
    String strCrossingTime;
-   if (_llCrossingTimes[iDogNumber][iRunNumber] < 0 && _llDogEnterTimes[iDogNumber] != 0 && (GET_MICROS - _llDogEnterTimes[iDogNumber]) > 300000)
+   if (((GET_MICROS - _llDogEnterTimes[iDogNumber] > 300000) || (iRunNumber < iDogRunCounters[iDogNumber])) && _llCrossingTimes[iDogNumber][iRunNumber] < 0 && _llDogEnterTimes[iDogNumber] != 0)
    {
-      if ((iDogNumber == 0 && iRunNumber == 0 && _llCrossingTimes[0][0] > -9500) && Accuracy2digits && !bToFile)  //If this is first dog false start below 9.5ms
-                                                                                                                  //use "ms" accuracy even if 2digits accuracy has been set
+      if ((iDogNumber == 0 && iRunNumber == 0 && _llCrossingTimes[0][0] > -9500) && !LightsController.bModeNAFA && !bToFile)  //If this is first dog false start below 9.5ms
+                                                                                                                              //use "ms" accuracy even if 2digits accuracy has been set
       {
          dCrossingTime = ((long long)(_llCrossingTimes[iDogNumber][iRunNumber] - 500) / 1000);
          dCrossingTime = fabs(dCrossingTime);
@@ -1121,7 +1115,7 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
          strCrossingTime += cCrossingTime;
          strCrossingTime += " ms";
       }
-      else if (!Accuracy2digits || ((iDogNumber == 0 && iRunNumber == 0 && _llCrossingTimes[0][0] > -9500) && Accuracy2digits && bToFile))
+      else if (LightsController.bModeNAFA || ((iDogNumber == 0 && iRunNumber == 0 && _llCrossingTimes[0][0] > -9500) && !LightsController.bModeNAFA && bToFile))
       {
          dCrossingTime = ((long long)(_llCrossingTimes[iDogNumber][iRunNumber] - 500) / 1000) / 1000.0;
          dCrossingTime = fabs(dCrossingTime);
@@ -1138,10 +1132,10 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
          strCrossingTime += cCrossingTime;
       }
    }
-   else if (_llCrossingTimes[iDogNumber][iRunNumber] > 0 && _llDogEnterTimes[iDogNumber] != 0 && (GET_MICROS - _llDogEnterTimes[iDogNumber]) > 300000)
+   else if (((GET_MICROS - _llDogEnterTimes[iDogNumber] > 300000) || (iRunNumber < iDogRunCounters[iDogNumber])) && _llCrossingTimes[iDogNumber][iRunNumber] > 0 && _llDogEnterTimes[iDogNumber] != 0)
    {
-      if ((iDogNumber == 0 && iRunNumber == 0 && _llCrossingTimes[0][0] < 9500) && Accuracy2digits && !bToFile)//If this is first dog entry time (start) below 9.5ms
-                                                                                                               //use "ms" accuracy even if 2digits accuracy has been set
+      if ((iDogNumber == 0 && iRunNumber == 0 && _llCrossingTimes[0][0] < 9500) && !LightsController.bModeNAFA && !bToFile)//If this is first dog entry time (start) below 9.5ms
+                                                                                                                           //use "ms" accuracy even if 2digits accuracy has been set
       {
          dCrossingTime = ((long long)(_llCrossingTimes[iDogNumber][iRunNumber] + 500) / 1000);
          dtostrf(dCrossingTime, 3, 0, cCrossingTime);
@@ -1149,7 +1143,7 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
          strCrossingTime += cCrossingTime;
          strCrossingTime += " ms";
       }
-      else if (!Accuracy2digits || ((iDogNumber == 0 && iRunNumber == 0 && _llCrossingTimes[0][0] < 9500) && Accuracy2digits && bToFile))
+      else if (LightsController.bModeNAFA || ((iDogNumber == 0 && iRunNumber == 0 && _llCrossingTimes[0][0] < 9500) && !LightsController.bModeNAFA && bToFile))
       {
          dCrossingTime = ((long long)(_llCrossingTimes[iDogNumber][iRunNumber] + 500) / 1000) / 1000.0;
          dtostrf(dCrossingTime, 7, 3, cCrossingTime);
@@ -1170,22 +1164,34 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
    }
    else if (_bDogPerfectCross[iDogNumber][iRunNumber])
    {
-      strCrossingTime = "Perfect";
+      if (LightsController.bModeNAFA)
+         strCrossingTime = " Perfect";
+      else
+         strCrossingTime = "Perfect";
    }
    else if (_bDogBigOK[iDogNumber][iRunNumber])
    {
-      strCrossingTime = "     OK";
+      if (LightsController.bModeNAFA)
+         strCrossingTime = "      OK";
+      else
+         strCrossingTime = "     OK";
    }
    //We have dog time (crossing time is zero)
    else if (_llDogTimes[iDogNumber][iRunNumber] > 0)
    {
       if ((iDogRunCounters[iDogNumber] > 0 && iDogRunCounters[iDogNumber] != iRunNumber) || (iDogRunCounters[iDogNumber] == 0 && (_bDogFaults[iDogNumber] || _bDogManualFaults[iDogNumber])))
       {
-         strCrossingTime = "  fault";
+         if (LightsController.bModeNAFA)
+            strCrossingTime = "   fault";
+         else
+            strCrossingTime = "  fault";
       }
       else
       {
-         strCrossingTime = "     ok";
+         if (LightsController.bModeNAFA)
+            strCrossingTime = "      ok";
+         else
+            strCrossingTime = "     ok";
       }
    }
    //If dog is still running
@@ -1194,11 +1200,17 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
    {
       if (_bDogFaults[iDogNumber] || _bDogManualFaults[iDogNumber])
       {
-         strCrossingTime = "  fault";
+         if (LightsController.bModeNAFA)
+            strCrossingTime = "   fault";
+         else
+            strCrossingTime = "  fault";
       }
       else
       {
-         strCrossingTime = "     ok";
+         if (LightsController.bModeNAFA)
+            strCrossingTime = "      ok";
+         else
+            strCrossingTime = "     ok";
       }
    }
    else
@@ -1253,15 +1265,14 @@ double RaceHandlerClass::GetNetTime()
       }
    }
    double dNetTime;
-#if Accuracy2digits
+   if (!LightsController.bModeNAFA)
    {
       dNetTime = ((long long)(llTotalNetTime + 5000) / 10000) / 100.0;
    }
-#else
+   else
    {
       dNetTime = ((long long)(llTotalNetTime + 500) / 1000) / 1000.0;
    }
-#endif
    return dNetTime;
 }
 
@@ -1329,16 +1340,21 @@ stRaceData RaceHandlerClass::GetRaceData(int iRaceId)
       RequestedRaceData.Id = iCurrentRaceId + 1;
       RequestedRaceData.StartTime = llRaceStartTime / 1000;
       RequestedRaceData.EndTime = _llRaceEndTime / 1000;
-#if Accuracy2digits
+
+      char cElapsedTime[8];
+      char cNetTime[8];
+      if (!LightsController.bModeNAFA)
       {
-         RequestedRaceData.ElapsedTime = ((long long)(_llRaceTime + 5000) / 10000) / 100.0;
+         dtostrf(GetRaceTime(), 7, 2, cElapsedTime);
+         dtostrf(GetNetTime(), 7, 2, cNetTime);
       }
-#else
+      else
       {
-         RequestedRaceData.ElapsedTime = ((long long)(_llRaceTime + 500) / 1000) / 1000.0;
+         dtostrf(GetRaceTime(), 7, 3, cElapsedTime);
+         dtostrf(GetNetTime(), 7, 3, cNetTime);
       }
-#endif
-      RequestedRaceData.NetTime = this->GetNetTime();
+      RequestedRaceData.ElapsedTime = cElapsedTime;
+      RequestedRaceData.NetTime = cNetTime;
       RequestedRaceData.RaceState = RaceState;
 
       //Get Dog info

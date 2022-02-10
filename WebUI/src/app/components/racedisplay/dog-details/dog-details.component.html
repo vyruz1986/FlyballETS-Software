@@ -10,8 +10,11 @@
       <div *ngFor="let dogTime of dog.timing; let i = index">
          <ng-container *ngIf="dogTime.crossingTime != 0 || dogTime.time != 0 || i == 0">
             <div class="dogsTimes">
-               {{dogTime.time}}&nbsp;&nbsp;
-               {{dogTime.crossingTime}}<br>
+               {{dogTime.time}}
+               <span class="crossingTimes">
+                  {{dogTime.crossingTime}}<br>
+               </span>
+               
             </div>
          </ng-container>
       </div>

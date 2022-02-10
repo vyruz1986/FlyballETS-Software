@@ -42,8 +42,13 @@ void GPSHandlerClass::loop()
 
 char *GPSHandlerClass::GetLocalDateAndTime()
 {
-   sprintf(_cLocalDateAndTime, "%i-%02i-%02iT%02i:%02i:%02iZ", year(), month(), day(), hour(), minute(), second());
+   //sprintf(_cLocalDateAndTime, "%i-%02i-%02iT%02i:%02i:%02iZ", year(), month(), day(), hour(), minute(), second());
    return _cLocalDateAndTime;
+}
+
+char *GPSHandlerClass::GetUtcDateAndTime()
+{
+   return _cUTCTime;
 }
 
 char *GPSHandlerClass::GetLocalTimestamp()
