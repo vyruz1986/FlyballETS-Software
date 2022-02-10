@@ -253,11 +253,7 @@ void setup()
 
    //Print SW version
    ESP_LOGI(__FILE__, "Firmware version %s", FW_VER);
-   
-   //Initialize GPS Serial port and class
-   GPSSerial.begin(9600, SERIAL_8N1, iGPSrxPin, iGPStxPin);
-   GPSHandler.init(&GPSSerial);
-   
+ 
    //Initialize BatterySensor class with correct pin
    BatterySensor.init(iBatterySensorPin);
 
@@ -268,6 +264,10 @@ void setup()
    LCDController.init(&lcd, &lcd2);
 
    strSerialData[0] = 0;
+   
+   //Initialize GPS Serial port and class
+   GPSSerial.begin(9600, SERIAL_8N1, iGPSrxPin, iGPStxPin);
+   GPSHandler.init(&GPSSerial);
 
    //SD card init
    if (digitalRead(iSDdetectPin) == LOW || SDcardForcedDetect)
@@ -344,9 +344,7 @@ void setup()
    });
    ArduinoOTA.begin();
 
-#ifdef ESP32
    mdnsServerSetup();
-#endif //  ESP32
 #endif
 
    ESP_LOGI(__FILE__, "Setup running on core %d", xPortGetCoreID());
@@ -404,7 +402,6 @@ void loop()
    if (RaceHandler.RaceState == RaceHandler.RESET)
    {
       iCurrentDog = RaceHandler.iCurrentDog;
-      iCurrentRaceState = RaceHandler.RaceState;
       bRaceSummaryPrinted = false;
    }
 

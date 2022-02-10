@@ -313,7 +313,7 @@ boolean WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, As
    String ActionType = ActionObj["actionType"];
    if (ActionType == "StartRace")
    {
-      if (RaceHandler.RaceState != RaceHandler.RESET || LightsController.byOverallState == LightsController.WARNING)
+      if (RaceHandler.RaceState != RaceHandler.RESET)
       {
          //ReturnError = String("Race was not reset, stop and reset it first!");
          return false;

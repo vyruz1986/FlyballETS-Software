@@ -35,8 +35,9 @@
 #define LaserOutputTimer 60     // Laser output timer in seconds
 
 #define LIGHTSCHAINS 1          // Numer of WS281x lights chains. 1 - one chain of 5 pixels/lights, 2 - two chains --> 10 pixels/lights, etc.
-
 #define WS_METHOD NeoWs2813Method
+//#define WS_METHOD Neo800KbpsMethod
+
 #define EEPROM_SIZE 4096        // EEPROM size in bytes
 #define SPI_FLASH_SEC_SIZE 4096 // Flash Sector Size declaration for ESP32 as it seems to become removed from embedded libraries
 
