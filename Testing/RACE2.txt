@@ -1,0 +1,13 @@
+RS:  START 
+RS: RUNNING
+Dog 0:   4.467|CR: +  0.002
+RT:  4.659
+Dog 1:   4.980|CR:      NOK
+RT:  9.696
+Dog 2:   6.133|CR:       OK
+RT: 15.729
+Dog 3:   4.765|CR: +  0.432
+RT: 21.038
+D1:   5.770|CR:       OK
+RT: 26.549
+RS:  STOP  
