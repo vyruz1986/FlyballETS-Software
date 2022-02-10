@@ -4,7 +4,10 @@ This project is a fork of Flyball ETS project by vyruz1986. Highlights described
 
 ## Major changes vs oryginal FlyballETS project by vyruz1986
 
-* Configurable results accuracy: 2 or 3 digits
+* Two modes of working:
+  - FCI lights with 2 digits accuracy
+  - NAFA lights with 3 digits accuracy
+  Swithing between modes by double press of side switch button
 * Total crossing time replaced with Net time
 * Modified main race handling algorithm to be in line with FCI EJS requirements:  only S1 line used for time calculations
 * Re-run algorithm changes to assure proper order of re-running dogs
@@ -57,10 +60,10 @@ This project was made possible by the following awesome libraries/projects and t
 
 - [TinyGPS++](http://arduiniana.org/libraries/tinygpsplus/) for interacting with the GPS module
 - [ArduinoJson](https://github.com/bblanchon/ArduinoJson) for easily building JSON objects in Arduino
-- [ESPAsyncWebServer](https://github.com/me-no-dev/ESPAsyncWebServer) for providing a very powerful and featured webserver & websocket interface
+- [ESPAsyncWebServer](https://github.com/BlueAndi/ESPAsyncWebServer) fork by BlueAndi of very powerful and featured webserver & websocket interface with improvements
 - [Arduino core SDK for ESP32](https://github.com/espressif/arduino-esp32) for being able to use the ESP32 platform at all
 - [Embedis](https://github.com/thingSoC/embedis) for providing an easy to use EEPROM interface to store settings
 - [NeoPixelBus](https://github.com/Makuna/NeoPixelBus) for reliably controlling WS2812 LEDs using ESP32
-- [Espurna Project](https://bitbucket.org/xoseperez/espurna) was used as a great example to solve several problems, such as the web UI and the settings interface.
+- [Espurna Project](https://github.com/xoseperez/espurna) was used as a great example to solve several problems, such as the web UI and the settings interface.
 - [Timezone](https://github.com/JChristensen/Timezone) used for local time adjustments: time zones and daylight saving time change
 - [AsyncElegantOTA](https://github.com/ayushsharma82/AsyncElegantOTA) used for firmware update via WebUI
