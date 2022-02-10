@@ -1,0 +1,13 @@
+div.teamTime {
+    font-family: monospace;
+    font-size: xx-large;
+    white-space: pre-wrap;
+}
+div.netTime {
+    font-family: monospace;
+    font-size: x-large;
+    white-space: pre-wrap;
+}
+div.teamTime > span {
+    font-size: medium;
+}

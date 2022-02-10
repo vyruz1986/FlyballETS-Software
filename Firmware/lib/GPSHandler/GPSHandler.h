@@ -27,6 +27,7 @@ public:
    void init(HardwareSerial* SerialPort);
    void loop();
    char* GetLocalDateAndTime();
+   char* GetUtcDateAndTime();
    char* GetLocalTimestamp();
    char* GetDate();
    time_t timeLocal;

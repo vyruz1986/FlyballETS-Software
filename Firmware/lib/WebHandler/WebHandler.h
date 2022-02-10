@@ -35,6 +35,7 @@ protected:
    void _WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
    boolean _DoAction(JsonObject ActionObj, String *ReturnError, AsyncWebSocketClient *Client);
    void _SendRaceData(int iRaceId, int8_t iClientId);
+   void _SendLightsData();
 
    boolean _ProcessConfig(JsonArray newConfig, String *ReturnError);
 
@@ -71,7 +72,6 @@ protected:
 public:
    void init(int webPort);
    void loop();
-   void SendLightsData();
    boolean _bUpdateLights = false;
    boolean _bSendRaceData = false;
 };

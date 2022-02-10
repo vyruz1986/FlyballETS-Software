@@ -1,17 +1,15 @@
-div.lightsContainer span.white {
-   color: rgb(255, 0, 255);
-}
+div.lightsContainer span.white { color: rgb(255, 0, 255); }
 div.lightsContainer span.orange { color: orange; }
 div.lightsContainer span.red { color: red; }
 div.lightsContainer span.blue { color: blue; }
 div.lightsContainer span.green { color: limegreen; }
 
-
 div.lightsContainer {
-   width: 60px;
+   margin: 0 auto;
+   width: 250px;
 }
 div.lightsContainer span:before {
-  content: '\25CF';
-  font-size: 50px;
-  line-height: 0.5em;
+   content: '\25CF';
+   font-size: 50px;
+   line-height: 0.8em;
 }

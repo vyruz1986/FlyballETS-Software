@@ -1,16 +1,10 @@
 <div>
-   <button type="button" class="btn btn-success" (click)="EmitCommand(0)" [disabled]="startDisabled" >Start</button>
-   &nbsp;
-   &nbsp;
-   &nbsp;
-   <button type="button" class="btn btn-danger" (click)="EmitCommand(1)" [disabled]="stopDisabled" >Stop</button>
-   &nbsp;
-   &nbsp;
-   &nbsp;
+   <button type="button" class="btn btn-success" (click)="EmitCommand(0)" [disabled]="startDisabled" >Start</button>&nbsp;&nbsp;&nbsp;
+   <button type="button" class="btn btn-danger" (click)="EmitCommand(1)" [disabled]="stopDisabled" >Stop</button>&nbsp;&nbsp;&nbsp;
    <button type="button" class="btn btn-info" (click)="EmitCommand(2)" [disabled]="resetDisabled" >Reset</button>
 </div>
 <div class="raceState">
-   <span [ngClass]="{'badge': true, 'badge-success': overallMaxState == 0, 'badge-warning': overallMaxState == 1, 'badge-danger': overallMaxState == 2}">
+   <span [ngClass]="{'badge': true, 'badge-success': overallMaxState == 0, 'badge-danger': overallMaxState == 1 || overallMaxState == 2, 'badge-warning': overallMaxState == 3}">
       {{overallMaxState | friendlyRaceState}}
    </span>
 </div>
