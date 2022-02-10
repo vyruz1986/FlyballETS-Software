@@ -22,7 +22,7 @@
 #ifndef GLOBALVAR_H
 #define GLOBALVAR_H
 
-#define FW_VER "0.9.19"         // Flyball ETS firmware version
+#define FW_VER "0.9.20"         // Flyball ETS firmware version
 
 #define Simulate false          // Set to true to enable race simulation (see Simulator.h/.cpp)
 #define NumSimulatedRaces 26    // number of prepeared simulated races. Sererial interface command to change interface: e.g. "race 1"
@@ -35,8 +35,7 @@
 #define LaserOutputTimer 60     // Laser output timer in seconds
 
 #define LIGHTSCHAINS 1          // Numer of WS281x lights chains. 1 - one chain of 5 pixels/lights, 2 - two chains --> 10 pixels/lights, etc.
-#define WS_METHOD NeoWs2813Method
-//#define WS_METHOD Neo800KbpsMethod
+#define WS_METHOD NeoEsp32Rmt0800KbpsMethod
 
 #define EEPROM_SIZE 4096        // EEPROM size in bytes
 #define SPI_FLASH_SEC_SIZE 4096 // Flash Sector Size declaration for ESP32 as it seems to become removed from embedded libraries

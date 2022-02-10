@@ -107,8 +107,6 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
 
       // Parse JSON input
       StaticJsonDocument<192> jsonRequestDoc;
-      //StaticJsonDocument<bsActionScheduleStartRace> jsonRequestDoc;
-      //DynamicJsonDocument jsonRequestDoc(128);
       DeserializationError error = deserializeJson(jsonRequestDoc, msg);
       JsonObject request = jsonRequestDoc.as<JsonObject>();
       if (error)
@@ -122,7 +120,6 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
       _lWebSocketReceivedTime = GET_MICROS / 1000;
       const size_t bufferSize = JSON_ARRAY_SIZE(50) + 50 * JSON_OBJECT_SIZE(3);
       StaticJsonDocument<bufferSize> jsonResponseDoc;
-      //DynamicJsonDocument jsonResponseDoc(48);
       JsonObject JsonResponseRoot = jsonResponseDoc.to<JsonObject>();
 
       if (request.containsKey("action"))
@@ -276,7 +273,6 @@ void WebHandlerClass::_SendLightsData()
 {
    stLightsState LightStates = LightsController.GetLightsState();
    StaticJsonDocument<96> jsonLightsDoc;
-   //DynamicJsonDocument jsonLightsDoc(96);
    JsonObject JsonRoot = jsonLightsDoc.to<JsonObject>();
 
    JsonArray JsonLightsData = JsonRoot.createNestedArray("LightsData");
@@ -401,7 +397,6 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
    else
    {
       StaticJsonDocument<bsRaceData> JsonRaceDataDoc;
-      //DynamicJsonDocument JsonRaceDataDoc(1536);
       JsonObject JsonRoot = JsonRaceDataDoc.to<JsonObject>();
       JsonObject JsonRaceData = JsonRoot.createNestedObject("RaceData");
 
@@ -419,13 +414,13 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
          JsonObject JsonDogData = JsonDogDataArray.createNestedObject();
          JsonDogData["dogNumber"] = RequestedRaceData.DogData[i].DogNumber;
          JsonArray JsonDogDataTimingArray = JsonDogData.createNestedArray("timing");
-         char cForJson[8];
+         char cForJson[9];
          for (uint8_t i2 = 0; i2 < 4; i2++)
          {
             JsonObject DogTiming = JsonDogDataTimingArray.createNestedObject();
-            RequestedRaceData.DogData[i].Timing[i2].Time.toCharArray(cForJson, 8);
+            RequestedRaceData.DogData[i].Timing[i2].Time.toCharArray(cForJson, 9);
             DogTiming["time"] = cForJson;
-            RequestedRaceData.DogData[i].Timing[i2].CrossingTime.toCharArray(cForJson, 8);
+            RequestedRaceData.DogData[i].Timing[i2].CrossingTime.toCharArray(cForJson, 9);
             DogTiming["crossingTime"] = cForJson;
          }
          JsonDogData["fault"] = RequestedRaceData.DogData[i].Fault;
@@ -535,18 +530,14 @@ void WebHandlerClass::_SendSystemData(int8_t iClientId)
    }
    else
    {
-      char _cLocalDateAndTime[29];
-      sprintf(_cLocalDateAndTime, "%i-%02i-%02iT%02i:%02i:%02iZ", year(), month(), day(), hour(), minute(), second());
       _SystemData.FreeHeap = esp_get_free_heap_size();
       _SystemData.RaceID = RaceHandler.iCurrentRaceId + 1;
       _SystemData.Uptime = GET_MICROS / 1000;
       _SystemData.NumClients = _ws->count();
-      _SystemData.LocalSystemTime =  (char*) _cLocalDateAndTime;;
+      _SystemData.LocalSystemTime =  (char*) GPSHandler.GetUtcDateAndTime();
       _SystemData.BatteryPercentage = BatterySensor.GetBatteryPercentage();
       
-      //const size_t bufferSize = JSON_OBJECT_SIZE(1) + JSON_OBJECT_SIZE(7) + 170;
       StaticJsonDocument<192> JsonSystemDataDoc;
-      //DynamicJsonDocument JsonSystemDataDoc(128);
       JsonObject JsonRoot = JsonSystemDataDoc.to<JsonObject>();
 
       JsonObject JsonSystemData = JsonRoot.createNestedObject("SystemData");
