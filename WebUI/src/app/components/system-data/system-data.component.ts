@@ -32,4 +32,7 @@ export class SystemDataComponent implements OnInit {
 
   ngOnInit() {}
 
+  ngOnDestroy() {
+    this.etsDataService.dataStream.unsubscribe();
+  }
 }

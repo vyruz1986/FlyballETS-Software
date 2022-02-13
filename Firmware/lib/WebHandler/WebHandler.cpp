@@ -6,16 +6,13 @@
 
 void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
 {
-   //FIXME: The next line works but introduces an unnecessary String. The 2nd line does not work, I don't know why...
    boolean isAdmin = String("/wsa").equals(server->url());
-   //boolean isAdmin = (server->url() == "/wsa");
 
    if (type == WS_EVT_CONNECT)
    {
       ESP_LOGI(__FILE__, "Client %i connected to %s!", client->id(), server->url());
-      //client->printf("Hello Client %u :)", client->id());
 
-      //Should we check authentication?
+      //Access via /wsa. Checking if clinet/consumer has already athenticated
       if (isAdmin)
       {
          if (!_wsAuth(client))
@@ -106,19 +103,19 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
       }
 
       // Parse JSON input
-      StaticJsonDocument<192> jsonRequestDoc;
+      StaticJsonDocument<512> jsonRequestDoc;
       DeserializationError error = deserializeJson(jsonRequestDoc, msg);
       JsonObject request = jsonRequestDoc.as<JsonObject>();
       if (error)
       {
          ESP_LOGE(__FILE__, "Error parsing JSON: %s", error.c_str());
-         //wsSend_P(client->id(), PSTR("{\"message\": 3}"));
          client->text("{\"error\":\"Invalid JSON received\"}");
          return;
       }
 
       _lWebSocketReceivedTime = GET_MICROS / 1000;
-      const size_t bufferSize = JSON_ARRAY_SIZE(50) + 50 * JSON_OBJECT_SIZE(3);
+      //const size_t bufferSize = JSON_ARRAY_SIZE(50) + 50 * JSON_OBJECT_SIZE(3);
+      const size_t bufferSize = 384;
       StaticJsonDocument<bufferSize> jsonResponseDoc;
       JsonObject JsonResponseRoot = jsonResponseDoc.to<JsonObject>();
 
@@ -216,7 +213,10 @@ void WebHandlerClass::init(int webPort)
    //Authentication handler
    _server->on("/auth", HTTP_GET, std::bind(&WebHandlerClass::_onAuth, this, std::placeholders::_1));
 
-   AsyncElegantOTA.begin(_server, "FlyballETS", "FlyballETS.1234");    // Start ElegantOTA
+   String password = SettingsManager.getSetting("AdminPass");
+   char httpPassword[password.length() + 1];
+   password.toCharArray(httpPassword, password.length() + 1);
+   AsyncElegantOTA.begin(_server, "Admin", httpPassword);    // Start ElegantOTA
 
    _server->begin();
 
@@ -468,7 +468,7 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
 boolean WebHandlerClass::_ProcessConfig(JsonArray newConfig, String *ReturnError)
 {
    bool save = false;
-   ESP_LOGD(__FILE__, "config is %i big\r\n", newConfig.size());
+   ESP_LOGD(__FILE__, "Config has %i elements\r\n", newConfig.size());
    for (unsigned int i = 0; i < newConfig.size(); i++)
    {
       String key = newConfig[i]["name"];
@@ -498,8 +498,10 @@ boolean WebHandlerClass::_GetData(String dataType, JsonObject Data)
    {
       Data["APName"] = SettingsManager.getSetting("APName");
       Data["APPass"] = SettingsManager.getSetting("APPass");
-      Data["UserPass"] = SettingsManager.getSetting("UserPass");
       Data["AdminPass"] = SettingsManager.getSetting("AdminPass");
+      Data["RunDirectionInverted"] = SettingsManager.getSetting("RunDirectionInverted");
+      Data["StartingSequenceNAFA"] = SettingsManager.getSetting("StartingSequenceNAFA");
+      //ESP_LOGD(__FILE__, "AdminPass: %s, RunDirection: %s", SettingsManager.getSetting("AdminPass").c_str(), SettingsManager.getSetting("RunDirectionInverted"));
    }
    else if (dataType == "triggerQueue")
    {
@@ -628,7 +630,6 @@ bool WebHandlerClass::_authenticate(AsyncWebServerRequest *request)
 
 bool WebHandlerClass::_wsAuth(AsyncWebSocketClient *client)
 {
-
    IPAddress ip = client->remoteIP();
    unsigned short index = 0;
 
