@@ -34,6 +34,7 @@
       "core-js": "^3.6.5",
       "nan": "^2.14.2",
       "ngx-loading": "^8.0.0",
+      "package": "^1.0.1",
       "rxjs": "^6.5.5",
       "typescript": "3.8.3",
       "zone.js": "^0.10.3"
@@ -60,7 +61,7 @@
       "gulp-util": "^3.0.8",
       "jasmine-core": "~3.5.0",
       "jasmine-spec-reporter": "~5.0.2",
-      "karma": "^5.0.2",
+      "karma": "^6.3.16",
       "karma-chrome-launcher": "~3.1.0",
       "karma-cli": "~2.0.0",
       "karma-coverage-istanbul-reporter": "^2.1.1",
