@@ -3,6 +3,7 @@ export class ConfigData {
       public APName: string,
       public APPass: string,
       public AdminPass: string,
-      public UserPass?: string
+      public RunDirectionInverted: string,
+      public StartingSequenceNAFA: string
    ) { }
 }

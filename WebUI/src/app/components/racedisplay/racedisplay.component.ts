@@ -41,6 +41,10 @@ export class RacedisplayComponent implements OnInit {
 
    ngOnInit() {}
 
+   ngOnDestroy() {
+      this.etsDataService.dataStream.unsubscribe();
+   }
+
    onRaceCommand(raceCommand: RaceCommandEnum) {
       let action: WebsocketAction = { actionType: "" };
       switch (raceCommand) {

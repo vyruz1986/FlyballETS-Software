@@ -1,58 +1,73 @@
 <div style="position: relative;" *ngIf="isAuthenticated">
-    <ngx-loading [show]="!secEtsDataService.isConnected" [config]="{ backdropBorderRadius: '14px' }"></ngx-loading>
-    <div class="container" *ngIf="!sessionEnded">
-      <div class="row">
-        <div class="col-lg-12">
-          <div class="alert alert-danger text-center" *ngIf="!secEtsDataService.isConnected" role="alert">Connecting to FlyballETS, please wait...</div>
-        </div>
+  <ngx-loading [show]="!secEtsDataService.isConnected" [config]="{ backdropBorderRadius: '14px' }"></ngx-loading>
+  <div class="container" *ngIf="!sessionEnded">
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="alert alert-danger text-center" *ngIf="!secEtsDataService.isConnected" role="alert">Connecting to FlyballETS, please wait...</div>
       </div>
-      <div class="row" *ngIf="isAuthenticated">
-        <form (ngSubmit)="onSubmitConfig()" #configForm="ngForm">
-          <ngx-loading [show]="submitted" [config]="{ backdropBorderRadius: '14px' }"></ngx-loading>
-          <div class="form-group">
-            <label for="APName">Access point name</label>
-            <input type="text" class="form-control" id="APName"
+    </div>
+    <div class="row" *ngIf="isAuthenticated">
+      <form (ngSubmit)="onSubmitConfig()" #configForm="ngForm">
+        <ngx-loading [show]="submitted" [config]="{ backdropBorderRadius: '14px' }"></ngx-loading>
+        <div class="form-group">
+          <label for="APName">WiFi Access Point name</label>
+          <input type="text" class="form-control" id="APName"
             required
             [(ngModel)]="configData.APName" name="APName"
             #APName="ngModel">
-            <div [hidden]="APName.valid || APName.pristine" class="alert alert-danger">
-              Name is required!
-            </div>
+          <div [hidden]="APName.valid || APName.pristine" class="alert alert-danger">
+            WiFi AP Name is required!
           </div>
-          <div class="form-group">
-            <label for="APPass">Access point password</label>
-            <input type="password" class="form-control" id="APPass"
+        </div>
+        <div class="form-group">
+          <label for="APPass">WiFi password</label>
+          <input type="text" class="form-control" id="APPass"
             required
             [(ngModel)]="configData.APPass" name="APPass"
             #APPass="ngModel">
-            <div [hidden]="APPass.valid || APPass.pristine" class="alert alert-danger">
-                AP Password is required!
-            </div>
+          <div [hidden]="APPass.valid || APPass.pristine" class="alert alert-danger">
+              WiFi password is required!
           </div>
-          <div class="form-group">
-            <label for="AdminPass">Admin password</label>
-            <input type="password" class="form-control" id="AdminPass"
+        </div>
+        <div class="form-group">
+          <label for="AdminPass">Admin password</label>
+          <input type="text" class="form-control" id="AdminPass"
             required
             [(ngModel)]="configData.AdminPass" name="AdminPass"
             #AdminPass="ngModel">
-            <div [hidden]="AdminPass.valid || AdminPass.pristine" class="alert alert-danger">
-                AP Password is required!
-            </div>
+          <div [hidden]="AdminPass.valid || AdminPass.pristine" class="alert alert-danger">
+              Admin password is required!
           </div>
+        </div>
+        <div class="form-group">
+          <label for="RunDirectionInverted">Run direction inverted?</label>
+          <input type="text" class="form-control" id="RunDirectionInverted"
+          required
+          [(ngModel)]="configData.RunDirectionInverted" name="RunDirectionInverted"
+            #RunDirectionInverted="ngModel">
+          <div [hidden]="RunDirectionInverted.valid || RunDirectionInverted.pristine" class="alert alert-danger">
+              Select run direction!
+          </div>
+        </div>
           <div class="form-group">
-              <label for="UserPass">User password</label>
-              <input type="password" class="form-control" id="UserPass"
-              [(ngModel)]="configData.UserPass" name="UserPass">
-            </div>
-          <button type="submit" class="btn btn-success" [disabled]="!configForm.form.valid">Submit</button>
-        </form>
-      </div>
-    </div>
-  </div>  
-  <div *ngIf="!secEtsDataService.isConnected && sessionEnded" class="container">
-    <div class="alert alert-success text-center" role="alert">
-      Session ended.<br>
-      <button type="button" class="btn btn-success" (click)="reconnect()" >Reconnect</button>
+          <label for="StartingSequenceNAFA">ETS mode NAFA?</label>
+          <input type="text" class="form-control" id="StartingSequenceNAFA"
+            required 
+            [(ngModel)]="configData.StartingSequenceNAFA" name="StartingSequenceNAFA"
+            #StartingSequenceNAFA="ngModel">
+          <div [hidden]="StartingSequenceNAFA.valid || StartingSequenceNAFA.pristine" class="alert alert-danger">
+              Select ETS mode!
+          </div>
+        </div>
+        <button type="submit" class="btn btn-success" [disabled]="!configForm.form.valid">Submit</button>
+      </form>
     </div>
   </div>
-  <app-login *ngIf="!isAuthenticated"></app-login>
+</div>
+<div *ngIf="secEtsDataService.isConnected && sessionEnded" class="container">
+  <div class="alert alert-success text-center" role="alert">
+    Settings saved!<br>
+    <!-- <button type="button" class="btn btn-success" (click)="reconnect()">Reconnect</button> -->
+  </div>
+</div>
+<app-login *ngIf="!isAuthenticated"></app-login>

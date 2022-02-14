@@ -6,25 +6,32 @@ import { WebsocketDataRequest } from '../interfaces/websocket-data-request';
 
 @Injectable()
 export class SecureEtsDataService {
-   ETS_URL:string = "ws://"+ window.location.host +"/wsa";
+   ETS_URL: string = "ws://" + window.location.host + "/wsa";
    //ETS_URL:string = "ws://192.168.20.1/wsa";
-   wsObservable:Observable<any>;
-   wsObserver:Observer<any>;
+   wsObservable: Observable<any>;
+   wsObserver: Observer<any>;
    private ws;
-   public dataStream:BehaviorSubject<any>;
-   isConnected:boolean;
-   sessionEnded:boolean;
-   
-   private _isAuthenticated = new BehaviorSubject<boolean>(true);
+   public dataStream: BehaviorSubject<any>;
+   isConnected: boolean;
+   sessionEnded: boolean;
+
+   private _isAuthenticated = new BehaviorSubject<boolean>(false);
    public isAuthenticated: Observable<boolean> = this._isAuthenticated.asObservable();
 
-   public setAuthenticated(authenticated:boolean): void {
+   private _isConnected = new BehaviorSubject<boolean>(false);
+   public isWsConnetced: Observable<boolean> = this._isConnected.asObservable();
+
+   public setAuthenticated(authenticated: boolean): void {
       console.log('authenticated: ' + authenticated);
       this._isAuthenticated.next(authenticated);
    }
 
    constructor() {
       this.initializeWebSocket();
+   }
+
+   getWsObservable(): Observable<any> {
+      return this.wsObservable;
    }
 
    initializeWebSocket() {
@@ -35,6 +42,7 @@ export class SecureEtsDataService {
          console.log('created wsa');
          this.ws.onopen = (e) => {
             this.isConnected = true;
+            this._isConnected.next(this.isConnected);
             console.log("Connected wsa!");
          };
 
@@ -45,23 +53,27 @@ export class SecureEtsDataService {
                observer.error(e);
             }
             this.isConnected = false;
+            this._isConnected.next(this.isConnected);
             console.log('onClose');
          };
-      
+
          this.ws.onerror = (e) => {
             observer.error(e);
             this.isConnected = false;
+            this._isConnected.next(this.isConnected);
             console.log('onError');
          }
-      
+
          this.ws.onmessage = (e) => {
             observer.next(JSON.parse(e.data));
          }
-      
+
          return () => {
             console.log("Connection closed gracefully");
             this.ws.close();
+            this.sessionEnded = true;
             this.isConnected = false;
+            this._isConnected.next(this.isConnected);
          };
       }).pipe(share());
       console.log('observer created');
@@ -85,11 +97,11 @@ export class SecureEtsDataService {
       this.dataStream = Subject.create(this.wsObserver, this.wsObservable);
    }
 
-   sendConfig(config:ConfigArray) {
+   sendConfig(config: ConfigArray) {
       this.dataStream.next(config);
    }
 
-   getData(dataRequest:WebsocketDataRequest) {
+   getData(dataRequest: WebsocketDataRequest) {
       this.dataStream.next(dataRequest);
    }
 }
