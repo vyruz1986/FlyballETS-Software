@@ -31,9 +31,11 @@
       "@ng-bootstrap/ng-bootstrap": "^6.1.0",
       "bootstrap": "^4.4.1",
       "core-js": "^3.6.5",
+      "jquery": "^3.6.0",
       "nan": "^2.14.2",
       "ngx-loading": "^8.0.0",
       "package": "^1.0.1",
+      "popper.js": "^1.16.1",
       "rxjs": "^6.5.5",
       "typescript": "4.0.8",
       "zone.js": "^0.10.3"
