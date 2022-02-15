@@ -8,6 +8,9 @@
 # dependencies
 /node_modules
 
+# cache
+.angular
+
 # IDEs and editors
 /.idea
 .project
