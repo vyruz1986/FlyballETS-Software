@@ -48,8 +48,6 @@ Make sure you have [NodeJS](https://nodejs.org/en/download/) installed, then run
 npm install
 npm run build
 ```
-APPLE USERS!!!
-In iOS 15 Safari setting => Advanced => Experimental Features => NSURLSession WebSocket is default On. It has to be turned Off, otherwise WebUI will be crashing.
 
 IOS USERS!!!
 In iOS 15 Safari setting => Advanced => Experimental Features => NSURLSession WebSocket is default On. It has to be turned Off, otherwise WebUI will be crashing.
