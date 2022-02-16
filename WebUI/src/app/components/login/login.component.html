@@ -1,12 +1,14 @@
 <div class="container" >
+    &nbsp;
     <div class="title">
-        Please login
+        &nbsp;&nbsp;&nbsp;Please login
     </div>
+    &nbsp;
     <div class="panel-body">
         <div class="row">
             <div class="input-field col-s-12">
                 <input [(ngModel)]="user.username" id="username" 
-                    type="username" class="validate">
+                    type="username" class="validate">&nbsp;
                 <label for="username">Username</label>
             </div>
         </div>
@@ -14,14 +16,12 @@
         <div class="row">
             <div class="input-field col-s-12">
                 <input [(ngModel)]="user.password" id="password" 
-                    type="password" class="validate">
+                    type="password" class="validate">&nbsp;
                 <label for="password">Password</label>
             </div>
         </div>
 
-        <span>{{errorMsg}}</span>
-        <button (click)="login()" 
-            class="btn waves-effect waves-light" 
-            type="submit" name="action">Login</button>
+        <span>{{errorMsg}}</span>&nbsp;&nbsp;&nbsp;&nbsp;
+        <button (click)="login()" type="submit" name="action">Login</button>
     </div>
 </div>

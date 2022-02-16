@@ -7,6 +7,7 @@
       </div>
     </div>
     <div class="row" *ngIf="isAuthenticated">
+      <div class="col-lg-4">
       <form (ngSubmit)="onSubmitConfig()" #configForm="ngForm">
         <ngx-loading [show]="submitted" [config]="{ backdropBorderRadius: '14px' }"></ngx-loading>
         <div class="form-group">
@@ -61,12 +62,13 @@
         </div>
         <button type="submit" class="btn btn-success" [disabled]="!configForm.form.valid">Submit</button>
       </form>
+      </div>
     </div>
   </div>
 </div>
 <div *ngIf="secEtsDataService.isConnected && sessionEnded" class="container">
   <div class="alert alert-success text-center" role="alert">
-    Settings saved!<br>
+    Settings saved! Reset ETS!<br>
     <!-- <button type="button" class="btn btn-success" (click)="reconnect()">Reconnect</button> -->
   </div>
 </div>
