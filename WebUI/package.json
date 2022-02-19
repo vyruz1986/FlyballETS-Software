@@ -30,9 +30,9 @@
       "@angular/router": "13.2.3",
       "@ng-bootstrap/ng-bootstrap": "^11.0.0",
       "bootstrap": "^4.6.1",
-      "core-js": "^3.6.5",
+      "core-js": "^3.21.1",
       "ngx-loading": "^13.0.0",
-      "rxjs": "^6.5.5",
+      "rxjs": "^6.6.7",
       "typescript": "4.5.5",
       "zone.js": "~0.11.4"
    },
