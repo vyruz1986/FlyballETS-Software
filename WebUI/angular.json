@@ -18,7 +18,14 @@
                   "polyfills": "src/polyfills.ts",
                   "assets": ["src/assets", "src/favicon.ico"],
                   "styles": ["src/styles.scss"],
-                  "scripts": []
+                  "scripts": [],
+                  "aot": false,
+                  "vendorChunk": true,
+                  "extractLicenses": false,
+                  "buildOptimizer": false,
+                  "sourceMap": true,
+                  "optimization": false,
+                  "namedChunks": true
                },
                "configurations": {
                   "production": {
@@ -37,7 +44,8 @@
                         }
                      ]
                   }
-               }
+               },
+               "defaultConfiguration": ""
             },
             "serve": {
                "builder": "@angular-devkit/build-angular:dev-server",
