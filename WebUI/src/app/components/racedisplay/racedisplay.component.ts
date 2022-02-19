@@ -39,7 +39,9 @@ export class RacedisplayComponent implements OnInit {
       );
    }
 
-   ngOnInit() {}
+   ngOnInit() {
+      this.onRaceCommand(3);
+   }
 
    ngOnDestroy() {
       this.etsDataService.dataStream.unsubscribe();
@@ -56,6 +58,9 @@ export class RacedisplayComponent implements OnInit {
             break;
          case RaceCommandEnum.CMD_RESET:
             action.actionType = "ResetRace";
+            break;
+         case RaceCommandEnum.CMD_UPDATE:
+            action.actionType = "UpdateRace";
             break;
       }
       this.etsDataService.sendAction(action);
@@ -87,5 +92,7 @@ export class RacedisplayComponent implements OnInit {
       });
    }
 
-   reconnect() {}
+   reconnect() {
+      this.onRaceCommand(3);
+   }
 }

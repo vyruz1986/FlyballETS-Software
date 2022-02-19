@@ -213,6 +213,9 @@ void WebHandlerClass::init(int webPort)
    //Authentication handler
    _server->on("/auth", HTTP_GET, std::bind(&WebHandlerClass::_onAuth, this, std::placeholders::_1));
 
+   //Favicon handler
+   _server->on("/favicon.ico", HTTP_GET, std::bind(&WebHandlerClass::_onFavicon, this, std::placeholders::_1));
+
    String password = SettingsManager.getSetting("AdminPass");
    char httpPassword[password.length() + 1];
    password.toCharArray(httpPassword, password.length() + 1);
@@ -307,6 +310,19 @@ void WebHandlerClass::_SendLightsData()
 boolean WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, AsyncWebSocketClient *Client)
 {
    String ActionType = ActionObj["actionType"];
+   if (ActionType == "UpdateRace")
+   {
+      if (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)
+      {
+         _bSendRaceData = true;
+         _bUpdateLights = true;
+         return true;
+      }
+      else
+      {
+         return false;
+      }
+   }
    if (ActionType == "StartRace")
    {
       if (RaceHandler.RaceState != RaceHandler.RESET)
@@ -660,7 +676,6 @@ void WebHandlerClass::_onHome(AsyncWebServerRequest *request)
 {
 
    //if (!_authenticate(request)) return request->requestAuthentication(getSetting("hostname").c_str());
-
    if (request->header("If-Modified-Since").equals(_last_modified))
    {
       request->send(304);
@@ -678,4 +693,15 @@ void WebHandlerClass::_onHome(AsyncWebServerRequest *request)
    }
 }
 
+
+void WebHandlerClass::_onFavicon(AsyncWebServerRequest *request)
+{
+   #ifndef WebUIonSDcard
+   AsyncWebServerResponse *response = request->beginResponse_P(200, "image/png", index_html_gz, index_html_gz_len);
+   response->addHeader("Content-Encoding", "gzip");
+   #else
+   AsyncWebServerResponse *response = request->beginResponse(SD_MMC, "/favicon.ico", "image/png");
+   #endif
+   request->send(response);
+}
 WebHandlerClass WebHandler;

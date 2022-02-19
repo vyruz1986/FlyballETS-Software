@@ -47,7 +47,7 @@ const appRoutes: Routes = [
     BrowserModule,
     FormsModule,
     BrowserAnimationsModule,
-    RouterModule.forRoot(appRoutes, { useHash: true }),
+    RouterModule.forRoot(appRoutes, { useHash: false }),
     NgxLoadingModule.forRoot({
       animationType: ngxLoadingAnimationTypes.rectangleBounce,
       backdropBorderRadius: "4px",

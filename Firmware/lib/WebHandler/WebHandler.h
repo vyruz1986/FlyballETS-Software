@@ -45,8 +45,8 @@ protected:
    void _onAuth(AsyncWebServerRequest *request);
    bool _authenticate(AsyncWebServerRequest *request);
    bool _wsAuth(AsyncWebSocketClient *client);
-
    void _onHome(AsyncWebServerRequest *request);
+   void _onFavicon(AsyncWebServerRequest *request);
 
    unsigned long _lLastRaceDataBroadcast;
    unsigned long _lRaceDataBroadcastInterval;
