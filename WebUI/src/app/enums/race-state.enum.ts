@@ -8,5 +8,6 @@ export enum RaceStateEnum {
 export enum RaceCommandEnum {
     CMD_START = 0,
     CMD_STOP = 1,
-    CMD_RESET = 2
+    CMD_RESET = 2,
+    CMD_UPDATE = 3
 }
