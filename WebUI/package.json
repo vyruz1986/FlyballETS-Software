@@ -31,7 +31,7 @@
       "@ng-bootstrap/ng-bootstrap": "^10.0.0",
       "bootstrap": "^4.5.0",
       "core-js": "^3.6.5",
-      "ngx-loading": "^8.0.0",
+      "ngx-loading": "^13.0.0",
       "rxjs": "^6.5.5",
       "typescript": "4.5.5",
       "zone.js": "~0.11.4"
