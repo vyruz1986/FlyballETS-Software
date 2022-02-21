@@ -145,10 +145,10 @@ void RaceHandlerClass::Main()
 
       //Calculate what our next dog will be
       uint8_t iNextDogChanged = iNextDog;
-      if (_bFault && iCurrentDog == 3)
+      if (_bFault && iCurrentDog == (iNumberOfRacingDogs - 1))
       {
-         //In case dog 4 is running and fault flag is active we have to check which the next offending dog is starting from dog 1
-         for (uint8_t i = 0; i < 4; i++)
+         //In case last dog before reruns is running and fault flag is active we have to check which the next offending dog starting from dog 1
+         for (uint8_t i = 0; i < iNumberOfRacingDogs; i++)
          {
             if (_bDogFaults[i] || _bDogManualFaults[i])
             {
@@ -161,7 +161,7 @@ void RaceHandlerClass::Main()
       else if (_bFault && _bRerunBusy)
       {
          //In case we have re-runs in progress we have to check which the next offending dog with proper order
-         for (uint8_t i = (iCurrentDog + 1); i < 4; i++)
+         for (uint8_t i = (iCurrentDog + 1); i < iNumberOfRacingDogs; i++)
          {
             if (_bDogFaults[i] || _bDogManualFaults[i])
             {
@@ -186,7 +186,7 @@ void RaceHandlerClass::Main()
          }
          _bNextDogFound = false;
       }
-      else if ((!_bFault && iCurrentDog == 3) || (!_bFault && _bRerunBusy))
+      else if ((!_bFault && iCurrentDog == (iNumberOfRacingDogs - 1)) || (!_bFault && _bRerunBusy))
       {
          iNextDog = iCurrentDog;
       }
@@ -247,7 +247,7 @@ void RaceHandlerClass::Main()
             //Handle next dog
             _llDogEnterTimes[iNextDog] = STriggerRecord.llTriggerTime;
             ESP_LOGI(__FILE__, "Dog %i FAULT as coming back dog was expected.", iNextDog + 1);
-            if ((iCurrentDog == 3 && _bFault && !_bRerunBusy) //If current dog is dog 4 and a fault exists, we have to initiate rerun sequence
+            if ((iCurrentDog == (iNumberOfRacingDogs - 1) && _bFault && !_bRerunBusy) //If current dog is last dog before reruns and a fault exists, we have to initiate rerun sequence
                 || _bRerunBusy)                               //Or if rerun is busy (and faults still exist)
             {
                //Dog 4 came in but there is a fault, we have to initiate the rerun sequence
@@ -332,15 +332,15 @@ void RaceHandlerClass::Main()
                _bDogPerfectCross[iNextDog][iDogRunCounters[iNextDog]] = true;
                ESP_LOGI(__FILE__, "PERFECT cross below 5ms detected for dog %i.", iNextDog + 1);
             }
-            if ((iCurrentDog == 3 && !_bFault && !_bRerunBusy) //If this is the 4th dog and there is no fault we have to stop the race
+            if ((iCurrentDog == (iNumberOfRacingDogs - 1) && !_bFault && !_bRerunBusy) //If this is the last dog and there are no faults (reruns) we have to stop the race
                 || (_bRerunBusy && !_bFault))                  //Or if the rerun sequence was started but no faults exist anymore
             {
                StopRace(STriggerRecord.llTriggerTime);
             }
-            else if ((iCurrentDog == 3 && _bFault && !_bRerunBusy) //If current dog is dog 4 and a fault exists, we have to initiate rerun sequence
+            else if ((iCurrentDog == (iNumberOfRacingDogs - 1) && _bFault && !_bRerunBusy) //If current dog is last dog and a fault(s) exists, we have to initiate rerun sequence
                      || _bRerunBusy)                               //Or if rerun is busy (and faults still exist)
             {
-               //Dog 4 came back but there is a fault, we have to initiate the rerun sequence
+               //Last dog came back but there is a fault, we have to initiate the rerun sequence
                _bRerunBusy = true;
                //Reset timers for this dog
                _llDogEnterTimes[iNextDog] = STriggerRecord.llTriggerTime;
@@ -1414,6 +1414,18 @@ void RaceHandlerClass::ToggleRunDirection()
 boolean RaceHandlerClass::GetRunDirection()
 {
    return _bRunDirectionInverted;
+}
+
+/// <summary>
+///   Toggles number of racing dogs
+/// </summary>
+void RaceHandlerClass::ToggleNumberOfDogs()
+{
+   if (iNumberOfRacingDogs == 1)
+      iNumberOfRacingDogs = 4;
+   else
+      iNumberOfRacingDogs--;
+   ESP_LOGI(__FILE__, "Number of Dogs in race %i.", iNumberOfRacingDogs);
 }
 
 /// <summary>
