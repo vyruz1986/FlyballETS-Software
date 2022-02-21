@@ -292,7 +292,7 @@ void setup()
    }
    else
    {
-      ESP_LOGI(__FILE__, "Wifi started successfully, AP name: %s, pass: %s!", strAPName.c_str(), strAPPass.c_str());
+      ESP_LOGI(__FILE__, "Wifi started successfully, AP name: %s, pass: %s", strAPName.c_str(), strAPPass.c_str());
    }
    WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
 
@@ -319,11 +319,8 @@ void setup()
          type = "sketch";
       else // U_SPIFFS
          type = "filesystem";
-
-      // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
       ESP_LOGI(__FILE__, "Start updating %s", type);
    });
-
    ArduinoOTA.onEnd([]()
    {
       ESP_LOGI(__FILE__, "[OTA]: End");
@@ -343,7 +340,6 @@ void setup()
       ESP_LOGE(__FILE__, "[OTA]: Error[%u]: ", error);
    });
    ArduinoOTA.begin();
-
    mdnsServerSetup();
 #endif
 
