@@ -35,6 +35,7 @@ public:
     void renameFile(fs::FS &fs, const char * path1, const char * path2);
     void deleteFile(fs::FS &fs, const char * path);
     void init();
+    void UpdateTagFile();
     void CheckSDcardSlot(uint8_t iSDdetectPin);
     boolean bSDCardDetected = false;
     String sTagValue;

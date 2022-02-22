@@ -81,19 +81,34 @@ void SDcardControllerClass::init()
          {
             uint16_t oldTagValue = tagfile.parseInt();
             tagfile.close();
-            iTagValue = oldTagValue + 1;
-            sTagValue = String(iTagValue);
-            ESP_LOGI(__FILE__, "Previous Tag value: %i. Updating tag.txt file...", oldTagValue);
-            deleteFile(SD_MMC, "/tag.txt");
-            String writeTagValue = sTagValue + "\r\n";
-            writeFile(SD_MMC, "/tag.txt", writeTagValue.c_str());
-            while (sTagValue.length() < 4)
-            {
-               sTagValue = "0" + sTagValue;
-            }
-            ESP_LOGI(__FILE__, "New tag.txt file value: %i. Tag string: %s", iTagValue, sTagValue);
-         }
+            ESP_LOGI(__FILE__, "Old tag.txt file value: %i.", oldTagValue);
+         }   
       }
+   }
+}
+
+
+/// <summary>
+///   Updating tag file. Function should be call while writing first race data after turning on ETS
+/// </summary>
+void SDcardControllerClass::UpdateTagFile()
+{
+   File tagfile = SD_MMC.open("/tag.txt");
+   uint16_t oldTagValue = tagfile.parseInt();
+   tagfile.close();
+   if (oldTagValue != 1)
+   {
+      iTagValue = oldTagValue + 1;
+      sTagValue = String(iTagValue);
+      //ESP_LOGI(__FILE__, "Previous Tag value: %i. Updating tag.txt file...", oldTagValue);
+      deleteFile(SD_MMC, "/tag.txt");
+      String writeTagValue = sTagValue + "\r\n";
+      writeFile(SD_MMC, "/tag.txt", writeTagValue.c_str());
+      while (sTagValue.length() < 4)
+      {
+         sTagValue = "0" + sTagValue;
+      }
+      ESP_LOGI(__FILE__, "New tag.txt file value: %i. Tag string: %s", iTagValue, sTagValue);
    }
 }
 

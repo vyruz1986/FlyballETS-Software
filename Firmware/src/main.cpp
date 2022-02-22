@@ -565,11 +565,26 @@ void loop()
    }
 
    //Handle individual dog info
-   for (uint8_t i = 0; i < RaceHandler.iNumberOfRacingDogs; i++)
+   LCDController.UpdateField(LCDController.D1Time, RaceHandler.GetDogTime(0));
+   LCDController.UpdateField(LCDController.D1CrossTime, RaceHandler.GetCrossingTime(0));
+   LCDController.UpdateField(LCDController.D1RerunInfo, RaceHandler.GetRerunInfo(0));
+   if (RaceHandler.iNumberOfRacingDogs > 1)
    {
-      LCDController.UpdateField(LCDController.D1Time, RaceHandler.GetDogTime(i));
-      LCDController.UpdateField(LCDController.D1CrossTime, RaceHandler.GetCrossingTime(i));
-      LCDController.UpdateField(LCDController.D1RerunInfo, RaceHandler.GetRerunInfo(i));
+      LCDController.UpdateField(LCDController.D2Time, RaceHandler.GetDogTime(1));
+      LCDController.UpdateField(LCDController.D2CrossTime, RaceHandler.GetCrossingTime(1));
+      LCDController.UpdateField(LCDController.D2RerunInfo, RaceHandler.GetRerunInfo(1));
+   }
+   if (RaceHandler.iNumberOfRacingDogs > 2)
+   {
+      LCDController.UpdateField(LCDController.D3Time, RaceHandler.GetDogTime(2));
+      LCDController.UpdateField(LCDController.D3CrossTime, RaceHandler.GetCrossingTime(2));
+      LCDController.UpdateField(LCDController.D3RerunInfo, RaceHandler.GetRerunInfo(2));
+   }
+   if (RaceHandler.iNumberOfRacingDogs > 3)
+   {
+      LCDController.UpdateField(LCDController.D4Time, RaceHandler.GetDogTime(3));
+      LCDController.UpdateField(LCDController.D4CrossTime, RaceHandler.GetCrossingTime(3));
+      LCDController.UpdateField(LCDController.D4RerunInfo, RaceHandler.GetRerunInfo(3));
    }
 
    if (RaceHandler.RaceState == RaceHandler.STOPPED && ((GET_MICROS / 1000 - (RaceHandler.llRaceStartTime / 1000 + RaceHandler.GetRaceTime() * 1000)) > 500) && !bRaceSummaryPrinted)
@@ -585,18 +600,19 @@ void loop()
       }
       ESP_LOGI(__FILE__, " Team: %s", cElapsedRaceTime);
       ESP_LOGI(__FILE__, "  Net: %s\n", cTeamNetTime);
-#if !Simulate
-      RaceHandler.PrintRaceTriggerRecords();
-      if (SDcardController.bSDCardDetected)
-      {
-         RaceHandler.PrintRaceTriggerRecordsToFile();
-      }
-#endif
+      #if !Simulate
+         RaceHandler.PrintRaceTriggerRecords();
+         if (SDcardController.bSDCardDetected)
+         {
+            RaceHandler.PrintRaceTriggerRecordsToFile();
+         }
+      #endif
       if (SDcardController.bSDCardDetected)
       {
          sDate = GPSHandler.GetDate();
          if (RaceHandler.iCurrentRaceId == 0)
          {
+            SDcardController.UpdateTagFile();
             raceDataFileName = "/" + SDcardController.sTagValue + "_ETS_" + sDate + ".csv";
             SDcardController.writeFile(SD_MMC, raceDataFileName.c_str(),
             "Tag;Race ID;Date;Race timestamp;Dog 1 time;Dog 1 starting;Dog 1 re-run time;Dog 1 re-run crossing;Dog 1 2nd re-run time;Dog 1 2nd re-run crossing;Dog 2 time;Dog 2 crossing;Dog 2 re-run time;Dog 2 re-run crossing;Dog 2 2nd re-run time;Dog 2 2nd re-run crossing;Dog 3 time;Dog 3 crossing;Dog 3 re-run time;Dog 3 re-run crossing;Dog 3 2nd re-run time;Dog 3 2nd re-run crossing;Dog 4 time;Dog 4 crossing;Dog 4 re-run time;Dog 4 re-run crossing;Dog 4 2nd re-run time;Dog 4 2nd re-run crossing;Team time; Net time;Comments\n");
@@ -678,14 +694,12 @@ void loop()
 
    //Handle side switch button (when race is not running)
    if ((((bitRead(bDataIn, 0) == HIGH) && (GET_MICROS / 1000 - llLastRCPress[0] > SideSwitchCoolDownTime)) //
-      || (bSerialStringComplete && strSerialData == "NAFA"))
+      || (bSerialStringComplete && strSerialData == "direction"))
       && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
    {
       if (((GET_MICROS / 1000 - llLastRCPress[0] < 1000) && bSideSwitchPressedOnce) || (bSerialStringComplete && strSerialData == "direction"))
       {
          //ESP_LOGI(__FILE__, "Mode button double pressed!");
-         //LightsController.ToggleStartingSequence();
-         //LCDController.reInit();
          RaceHandler.ToggleRunDirection();
          bSideSwitchPressedOnce = false;
       }
@@ -699,9 +713,17 @@ void loop()
          && (GET_MICROS / 1000 - llLastRCPress[0] > 1000) && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
    {
       //ESP_LOGI(__FILE__, "Mode button pressed!");
-      //RaceHandler.ToggleRunDirection();
       RaceHandler.ToggleNumberOfDogs();
+      WebHandler._bSendRaceData = true;
       bSideSwitchPressedOnce = false;
+   }
+
+   //Handle side switch button (when race is not running)
+   if (bSerialStringComplete && strSerialData == "mode")
+   {
+      LightsController.ToggleStartingSequence();
+      LCDController.reInit();
+      WebHandler._bSendRaceData = true;
    }
 
    //Check if we have serial data which we should handle

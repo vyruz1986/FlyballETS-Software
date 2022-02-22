@@ -1425,6 +1425,7 @@ void RaceHandlerClass::ToggleNumberOfDogs()
       iNumberOfRacingDogs = 4;
    else
       iNumberOfRacingDogs--;
+   LCDController.UpdateNumberOfDogsOnLCD(iNumberOfRacingDogs);
    ESP_LOGI(__FILE__, "Number of Dogs in race %i.", iNumberOfRacingDogs);
 }
 

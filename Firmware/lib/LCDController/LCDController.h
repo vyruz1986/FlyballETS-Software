@@ -29,6 +29,7 @@ protected:
 public:
    void init(LiquidCrystal *Clcd1, LiquidCrystal *Clcd2);
    void reInit();
+   void UpdateNumberOfDogsOnLCD(uint8_t iNumberOfDogs);
    void Main();
    enum LCDFields
    {
