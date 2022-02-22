@@ -4,10 +4,10 @@ This project is a fork of Flyball ETS project by vyruz1986. Highlights described
 
 ## Major changes vs oryginal FlyballETS project by vyruz1986
 
-* Two modes of working:
+* Two modes configurable in settings:
   - FCI lights with 2 digits accuracy
   - NAFA lights with 3 digits accuracy
-  Swithing between modes by double press of side switch button
+* Possibility to select number of running dogs in training race by pressing mode button.
 * Total crossing time replaced with Net time
 * Modified main race handling algorithm to be in line with FCI EJS requirements:  only S1 line used for time calculations
 * Re-run algorithm changes to assure proper order of re-running dogs
