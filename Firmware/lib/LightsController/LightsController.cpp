@@ -394,6 +394,9 @@ void LightsControllerClass::ToggleStartingSequence()
    {
       ESP_LOGD(__FILE__, "Starting sequence: FCI");
    }
+   #ifdef WiFiON
+   WebHandler._bSendRaceData = true;
+   #endif
 }
 
 LightsControllerClass::SNeoPixelConfig LightsControllerClass::_GetNeoPixelConfig(LightsControllerClass::Lights byLight)

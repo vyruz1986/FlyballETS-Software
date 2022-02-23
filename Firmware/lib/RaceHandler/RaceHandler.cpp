@@ -1426,7 +1426,23 @@ void RaceHandlerClass::ToggleNumberOfDogs()
    else
       iNumberOfRacingDogs--;
    LCDController.UpdateNumberOfDogsOnLCD(iNumberOfRacingDogs);
-   ESP_LOGI(__FILE__, "Number of Dogs in race %i.", iNumberOfRacingDogs);
+   #ifdef WiFiON
+   WebHandler._bSendRaceData = true;
+   #endif
+   ESP_LOGI(__FILE__, "Number of dogs changed to: %i.", iNumberOfRacingDogs);
+}
+
+/// <summary>
+///   Set number of racing dogs
+/// </summary>
+void RaceHandlerClass::SetNumberOfDogs(uint8_t _iNumberOfRacingDogs)
+{
+   iNumberOfRacingDogs = _iNumberOfRacingDogs;
+   LCDController.UpdateNumberOfDogsOnLCD(iNumberOfRacingDogs);
+   #ifdef WiFiON
+   WebHandler._bSendRaceData = true;
+   #endif
+   ESP_LOGI(__FILE__, "Number of dogs set to: %i.", iNumberOfRacingDogs);
 }
 
 /// <summary>

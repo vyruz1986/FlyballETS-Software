@@ -69,6 +69,7 @@ public:
    boolean GetRunDirection();
    void ToggleRunDirection();
    void ToggleNumberOfDogs();
+   void SetNumberOfDogs(uint8_t _iNumberOfRacingDogs);
 
 
 private:

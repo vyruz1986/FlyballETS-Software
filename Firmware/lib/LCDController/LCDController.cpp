@@ -111,18 +111,30 @@ void LCDControllerClass::UpdateNumberOfDogsOnLCD(uint8_t iNumberOfDogs)
 {
    if (iNumberOfDogs == 3)
    {
+      _UpdateLCD(1, 0, String("1:                      |               "), 40);
+      _UpdateLCD(2, 0, String("2:                      | Team:         "), 40);
+      _UpdateLCD(3, 0, String("3:                      |  Net:         "), 40);
       _UpdateLCD(4, 0, String("                        |     %         "), 40);
       _SlcdfieldFields[D4Time].strText = "       ";
    }
    else if (iNumberOfDogs == 2)
    {
+      _UpdateLCD(1, 0, String("1:                      |               "), 40);
+      _UpdateLCD(2, 0, String("2:                      | Team:         "), 40);
       _UpdateLCD(3, 0, String("                        |  Net:         "), 40);
+      _UpdateLCD(4, 0, String("                        |     %         "), 40);
       _SlcdfieldFields[D3Time].strText = "       ";
+      _SlcdfieldFields[D4Time].strText = "       ";
    }
    else if (iNumberOfDogs == 1)
    {
+      _UpdateLCD(1, 0, String("1:                      |               "), 40);
       _UpdateLCD(2, 0, String("                        | Team:         "), 40);
+      _UpdateLCD(3, 0, String("                        |  Net:         "), 40);
+      _UpdateLCD(4, 0, String("                        |     %         "), 40);
       _SlcdfieldFields[D2Time].strText = "       ";
+      _SlcdfieldFields[D3Time].strText = "       ";
+      _SlcdfieldFields[D4Time].strText = "       ";
    }
    else
    {

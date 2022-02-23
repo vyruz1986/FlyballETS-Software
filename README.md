@@ -25,7 +25,6 @@ This project is a fork of Flyball ETS project by vyruz1986. Highlights described
 * Battery calibration improvements
 * Local system time
 * WebUI and LCD layout changes
-* Firmware update via WebUI -> thanks to AsyncElegantOTA by ayushsharma82
 * Reset and Manual stop indicated by white fault light blink
 * Configurable ON time for laser diodes
 

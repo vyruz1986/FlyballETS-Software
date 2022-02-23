@@ -18,7 +18,6 @@
 
 #include "SDcardController.h"
 #include "config.h"
-#include "LCDController.h"
 
 /// <summary>
 ///   Initialises SD card.
@@ -87,6 +86,48 @@ void SDcardControllerClass::init()
    }
 }
 
+/// <summary>
+///   Saving race data to file. Function called after race has been stopped.
+/// </summary>
+void SDcardControllerClass::SaveRaceDataToFile()
+{
+   File raceDataFile;
+   String sDate = GPSHandler.GetDate();
+   if (RaceHandler.iCurrentRaceId == 0)
+   {
+      UpdateTagFile();
+      raceDataFileName = "/" + sTagValue + "_ETS_" + sDate + ".csv";
+      writeFile(SD_MMC, raceDataFileName.c_str(),
+      "Tag;Race ID;Date;Race timestamp;Dog 1 time;Dog 1 starting;Dog 1 re-run time;Dog 1 re-run crossing;Dog 1 2nd re-run time;Dog 1 2nd re-run crossing;Dog 2 time;Dog 2 crossing;Dog 2 re-run time;Dog 2 re-run crossing;Dog 2 2nd re-run time;Dog 2 2nd re-run crossing;Dog 3 time;Dog 3 crossing;Dog 3 re-run time;Dog 3 re-run crossing;Dog 3 2nd re-run time;Dog 3 2nd re-run crossing;Dog 4 time;Dog 4 crossing;Dog 4 re-run time;Dog 4 re-run crossing;Dog 4 2nd re-run time;Dog 4 2nd re-run crossing;Team time; Net time;Comments\n");
+   }
+   raceDataFile = SD_MMC.open(raceDataFileName.c_str(), FILE_APPEND);
+   if(raceDataFile)
+   {
+      raceDataFile.print(iTagValue);
+      raceDataFile.print(";");
+      raceDataFile.print(RaceHandler.iCurrentRaceId + 1);
+      raceDataFile.print(";");
+      raceDataFile.print(sDate);
+      raceDataFile.print(";");
+      raceDataFile.print(RaceHandler.cRaceStartTimestamp);
+      raceDataFile.print(";");
+      for (uint8_t i = 0; i < 4; i++)
+      {
+         for (uint8_t i2 = 0; i2 < 3; i2++)
+         {
+            raceDataFile.print(RaceHandler.GetStoredDogTimes(i, i2));
+            raceDataFile.print(";");
+            raceDataFile.print(RaceHandler.TransformCrossingTime(i, i2, true));
+            raceDataFile.print(";");
+         }
+      }
+      raceDataFile.print(RaceHandler.GetRaceTime());
+      raceDataFile.print(";");
+      raceDataFile.print(RaceHandler.GetNetTime());
+      raceDataFile.println(";");
+      raceDataFile.close();    
+   }    
+}
 
 /// <summary>
 ///   Updating tag file. Function should be call while writing first race data after turning on ETS

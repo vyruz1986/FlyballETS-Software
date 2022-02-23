@@ -19,13 +19,19 @@
 
 #include "Arduino.h"
 #include "GPSHandler.h"
+#include "RaceHandler.h"
+#include "LCDController.h"
 #include <FS.h>
 #include <SD_MMC.h>
 
 class SDcardControllerClass
 {
 protected:
+
 public:
+    boolean bSDCardDetected = false;
+    String sTagValue;
+    uint16_t iTagValue;
     void listDir(fs::FS &fs, const char * dirname, uint8_t levels);
     void createDir(fs::FS &fs, const char * path);
     void removeDir(fs::FS &fs, const char * path);
@@ -37,14 +43,13 @@ public:
     void init();
     void UpdateTagFile();
     void CheckSDcardSlot(uint8_t iSDdetectPin);
-    boolean bSDCardDetected = false;
-    String sTagValue;
-    uint16_t iTagValue;
+    void SaveRaceDataToFile();
 
 private:
+    uint8_t _iSDdetectPinStatus;
+    String raceDataFileName;
     void testFileIO(fs::FS &fs, const char * path);
 
-    uint8_t _iSDdetectPinStatus;
 };
 
 extern SDcardControllerClass SDcardController;
