@@ -468,7 +468,6 @@ boolean WebHandlerClass::_GetData(String dataType, JsonObject &Data)
    {
       Data["APName"] = SettingsManager.getSetting("APName");
       Data["APPass"] = SettingsManager.getSetting("APPass");
-      Data["UserPass"] = SettingsManager.getSetting("UserPass");
       Data["AdminPass"] = SettingsManager.getSetting("AdminPass");
    }
    else if (dataType == "triggerQueue")

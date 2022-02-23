@@ -16,10 +16,11 @@ export class ConfigComponent implements OnInit {
 
    configData = new ConfigData("", "", "");
 
-   constructor(public secEtsDataService: SecureEtsDataService) {
-      //TODO why does making etsDataService private cause build to fail?
+   constructor(public secEtsDataService: SecureEtsDataService) { }
+
+   ngOnInit() {
       this.subscribeToAuth();
-      //this.setupDataService();
+      this.subscribeToConnected();
    }
 
    subscribeToAuth() {
@@ -29,12 +30,20 @@ export class ConfigComponent implements OnInit {
             if (authenticated) {
                this.secEtsDataService.initializeWebSocket();
                this.setupDataService();
-
-               //TODO: This is not working for some reason. The config data is requested too soon, before the ws connection is established
-               //setTimeout(this.requestConfigData(), 3000);
-               //this.requestConfigData();
             } else {
+               console.log("Not authenticated. /wsa monitoring inactive.");
                this.secEtsDataService.dataStream.unsubscribe();
+            }
+         }
+      );
+   }
+
+   subscribeToConnected() {
+      this.secEtsDataService.isWsConnetced.subscribe(
+         (connected: boolean) => {
+            console.log(['Is wsa connected? = ', connected])
+            if (connected) {
+               this.requestConfigData();
             }
          }
       );
@@ -47,6 +56,16 @@ export class ConfigComponent implements OnInit {
             console.log(data);
             if (data.dataResult && data.dataResult.success) {
                this.handleConfigData(data.dataResult.configData);
+            }
+            if (data.configResult) {
+               this.submitted = false;
+               if (data.configResult.success) {
+                  console.log("Config saved successfully!");
+                  this.sessionEnded = true;
+               }
+               else {
+                  console.log("Config not saved!");
+               }
             }
             if (data.authenticated === false) {
                this.secEtsDataService.setAuthenticated(false);
@@ -61,11 +80,9 @@ export class ConfigComponent implements OnInit {
       );
    }
 
-   ngOnInit() {}
-
    handleConfigData(newConfigData) {
       this.configData = newConfigData;
-      console.log(this.configData);
+      //console.log(this.configData);
    }
 
    requestConfigData() {
@@ -76,27 +93,23 @@ export class ConfigComponent implements OnInit {
       this.secEtsDataService.getData(request);
    }
 
-   handleConfigResult(configResult) {
-      this.submitted = false;
-      if (configResult.success) {
-         console.log("Config saved successfully!");
-      }
-   }
-
    onSubmitConfig() {
       let newConfigArray: ConfigArray = {
          config: [
             { name: "APName", value: this.configData.APName },
             { name: "APPass", value: this.configData.APPass },
             { name: "AdminPass", value: this.configData.AdminPass },
-            { name: "UserPass", value: this.configData.UserPass },
          ],
       };
       console.log(newConfigArray);
       this.submitted = true;
-      //this.secEtsDataService.sendConfig(newConfigArray);
+      this.secEtsDataService.sendConfig(newConfigArray);
       console.log("new config sent!");
    }
 
+   ngOnDestroy() {
+      this.secEtsDataService.dataStream.unsubscribe();
+   }
+   
    reconnect() {}
 }

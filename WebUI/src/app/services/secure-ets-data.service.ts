@@ -14,8 +14,11 @@ export class SecureEtsDataService {
    isConnected:boolean;
    sessionEnded:boolean;
    
-   private _isAuthenticated = new BehaviorSubject<boolean>(true);
+   private _isAuthenticated = new BehaviorSubject<boolean>(false);
    public isAuthenticated: Observable<boolean> = this._isAuthenticated.asObservable();
+
+   private _isConnected = new BehaviorSubject<boolean>(false);
+   public isWsConnetced: Observable<boolean> = this._isConnected.asObservable();
 
    public setAuthenticated(authenticated:boolean): void {
      console.log('authenticated: ' + authenticated);
@@ -24,6 +27,10 @@ export class SecureEtsDataService {
 
    constructor() {
       this.initializeWebSocket();
+   }
+
+   getWsObservable(): Observable<any> {
+      return this.wsObservable;
    }
 
    initializeWebSocket() {
@@ -44,12 +51,14 @@ export class SecureEtsDataService {
               observer.error(e);
             }
             this.isConnected = false;
+            this._isConnected.next(this.isConnected);
             console.log('onClose');
          };
       
          this.ws.onerror = (e) => {
             observer.error(e);
             this.isConnected = false;
+            this._isConnected.next(this.isConnected);
             console.log('onError');
          }
       
@@ -60,7 +69,9 @@ export class SecureEtsDataService {
          return () => {
             console.log("Connection closed gracefully");
             this.ws.close();
+            this.sessionEnded = true;
             this.isConnected = false;
+            this._isConnected.next(this.isConnected);
          };
       }).pipe(share());
       console.log('observer created');
