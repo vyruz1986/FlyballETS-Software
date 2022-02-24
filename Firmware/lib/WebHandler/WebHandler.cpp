@@ -425,13 +425,13 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
       JsonRaceData["raceState"] = RequestedRaceData.RaceState;
 
       JsonArray JsonDogDataArray = JsonRaceData.createNestedArray("dogData");
-      for (uint8_t i = 0; i < 4; i++)
+      for (uint8_t i = 0; i < RaceHandler.iNumberOfRacingDogs; i++)
       {
          JsonObject JsonDogData = JsonDogDataArray.createNestedObject();
          JsonDogData["dogNumber"] = RequestedRaceData.DogData[i].DogNumber;
          JsonArray JsonDogDataTimingArray = JsonDogData.createNestedArray("timing");
          char cForJson[9];
-         for (uint8_t i2 = 0; i2 < 4; i2++)
+         for (uint8_t i2 = 0; i2 <= RaceHandler.iDogRunCounters[i]; i2++)
          {
             JsonObject DogTiming = JsonDogDataTimingArray.createNestedObject();
             RequestedRaceData.DogData[i].Timing[i2].Time.toCharArray(cForJson, 9);

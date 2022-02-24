@@ -1365,11 +1365,11 @@ stRaceData RaceHandlerClass::GetRaceData(int iRaceId)
       RequestedRaceData.RaceState = RaceState;
 
       //Get Dog info
-      for (uint8_t i = 0; i < 4; i++)
+      for (uint8_t i = 0; i < iNumberOfRacingDogs; i++)
       {
          RequestedRaceData.DogData[i].DogNumber = i;
 
-         for (uint8_t i2 = 0; i2 < 4; i2++)
+         for (uint8_t i2 = 0; i2 <= iDogRunCounters[i]; i2++)
          {
             RequestedRaceData.DogData[i].Timing[i2].Time = GetDogTime(i, i2);
             RequestedRaceData.DogData[i].Timing[i2].CrossingTime = GetCrossingTime(i, i2);
