@@ -1363,6 +1363,7 @@ stRaceData RaceHandlerClass::GetRaceData(int iRaceId)
       RequestedRaceData.ElapsedTime = cElapsedTime;
       RequestedRaceData.NetTime = cNetTime;
       RequestedRaceData.RaceState = RaceState;
+      RequestedRaceData.RacingDogs = iNumberOfRacingDogs;
 
       //Get Dog info
       for (uint8_t i = 0; i < iNumberOfRacingDogs; i++)

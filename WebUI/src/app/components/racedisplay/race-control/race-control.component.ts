@@ -10,9 +10,12 @@ import { RaceStateEnum, RaceCommandEnum } from '../../../enums/race-state.enum';
 export class RaceControlComponent implements OnChanges, OnInit {
    @Input() raceStates: RaceState;
    @Output() raceCommand = new EventEmitter<RaceCommandEnum>();
+   @Output() dogsCommand = new EventEmitter<number>();
    startDisabled: boolean = true;
    stopDisabled: boolean = true;
    resetDisabled: boolean = true;
+   dogsChangeDisabled: boolean = true;
+   receivedRacingDogs: number;
 
    overallMaxState: number;
 
@@ -31,12 +34,17 @@ export class RaceControlComponent implements OnChanges, OnInit {
       this.UpdateDisabled();
    }
 
+   dogsChange(dogsValue: number) {
+      this.dogsCommand.emit(dogsValue);
+   }
+
    UpdateDisabled() {
       this.overallMaxState = Math.max(...this.raceStates.RaceStates);
 
       this.startDisabled = !(this.overallMaxState == 0);
       this.stopDisabled = !(this.overallMaxState == 1 || this.overallMaxState == 2);
       this.resetDisabled = !(this.overallMaxState == 3);
+      this.dogsChangeDisabled = !(this.overallMaxState == 0);
    }
 
    EmitCommand(command: RaceCommandEnum) {

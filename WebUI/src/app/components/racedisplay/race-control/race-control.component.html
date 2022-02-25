@@ -1,7 +1,13 @@
 <div>
    <button type="button" class="btn btn-success" (click)="EmitCommand(0)" [disabled]="startDisabled" >Start</button>&nbsp;&nbsp;&nbsp;
    <button type="button" class="btn btn-danger" (click)="EmitCommand(1)" [disabled]="stopDisabled" >Stop</button>&nbsp;&nbsp;&nbsp;
-   <button type="button" class="btn btn-info" (click)="EmitCommand(2)" [disabled]="resetDisabled" >Reset</button>
+   <button type="button" class="btn btn-info" (click)="EmitCommand(2)" [disabled]="resetDisabled" >Reset</button>&nbsp;&nbsp;&nbsp;
+   <select ng-model='selectDogsInRace' (change)="dogsChange($event.target.value)" [ngStyle]="{'font-size':'25px'}" [disabled]="dogsChangeDisabled">
+      <option value='4' selected>4</option>
+      <option value='5'>3</option>
+      <option value='6'>2</option>
+      <option value='7'>1</option>
+   </select>
 </div>
 <div class="raceState">
    <span [ngClass]="{'badge': true, 'badge-success': overallMaxState == 0, 'badge-danger': overallMaxState == 2, 'badge-warning': overallMaxState == 1 || overallMaxState == 3}">
