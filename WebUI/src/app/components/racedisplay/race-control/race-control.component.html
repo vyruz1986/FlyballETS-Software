@@ -2,11 +2,9 @@
    <button type="button" class="btn btn-success" (click)="EmitCommand(0)" [disabled]="startDisabled" >Start</button>&nbsp;&nbsp;&nbsp;
    <button type="button" class="btn btn-danger" (click)="EmitCommand(1)" [disabled]="stopDisabled" >Stop</button>&nbsp;&nbsp;&nbsp;
    <button type="button" class="btn btn-info" (click)="EmitCommand(2)" [disabled]="resetDisabled" >Reset</button>&nbsp;&nbsp;&nbsp;
-   <select ng-model='selectDogsInRace' (change)="dogsChange($event.target.value)" [ngStyle]="{'font-size':'25px'}" [disabled]="dogsChangeDisabled">
-      <option value='4' selected>4</option>
-      <option value='5'>3</option>
-      <option value='6'>2</option>
-      <option value='7'>1</option>
+   <select name="NumberOfRacingDogs" id="NumberOfRacingDogs" (change)="dogsChange($event.target.value)" [(ngModel)]="raceStates.RacingDogs"
+      [ngStyle]="{'font-size':'25px'}" [disabled]="dogsChangeDisabled">
+         <option *ngFor="let dog of numberOfDogs" [value]="dog.id">{{ dog.label }}</option>
    </select>
 </div>
 <div class="raceState">

@@ -4,6 +4,7 @@ export class RaceState {
    
    constructor(
       public RaceStates: Array<RaceStateEnum>,
-      public StartTimes: Array<number>
+      public StartTimes: Array<number>,
+      public RacingDogs: Array<number>
    ) { }
 }
