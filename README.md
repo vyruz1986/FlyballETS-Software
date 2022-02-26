@@ -2,7 +2,22 @@
 
 This project is a fork of Flyball ETS project by vyruz1986. Highlights described below.
 
-## Major changes vs oryginal FlyballETS project by vyruz1986
+## Change log of 1.1.0 release
+
+#Features:
+* Added possibility to define number of racing dogs (remote control + WebUI)
+* Laser ON time now configurable via WebUI config
+* Side switched renamed to Mode button. Single press --> Mode change (NAFA, FCI). Double press --> Run direction switch
+
+#Bugs:
+* Old string based sensor noise filtering could cause issues and has been turned off. Only time based filtering is now active
+
+#Improvements:
+* WiFi interface optimization (no "zero" data send during the race)
+* Main.cpp refactoring
+
+
+## Change log of 1.0.0 release
 
 * Two modes configurable in settings:
   - FCI lights with 2 digits accuracy
