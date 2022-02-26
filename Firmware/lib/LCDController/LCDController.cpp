@@ -107,6 +107,44 @@ void LCDControllerClass::reInit()
    _UpdateLCD(4, 0, String("4:                      |     %         "), 40);
 }
 
+void LCDControllerClass::UpdateNumberOfDogsOnLCD(uint8_t iNumberOfDogs)
+{
+   if (iNumberOfDogs == 3)
+   {
+      _UpdateLCD(1, 0, String("1:                      |               "), 40);
+      _UpdateLCD(2, 0, String("2:                      | Team:         "), 40);
+      _UpdateLCD(3, 0, String("3:                      |  Net:         "), 40);
+      _UpdateLCD(4, 0, String("                        |     %         "), 40);
+      _SlcdfieldFields[D4Time].strText = "       ";
+   }
+   else if (iNumberOfDogs == 2)
+   {
+      _UpdateLCD(1, 0, String("1:                      |               "), 40);
+      _UpdateLCD(2, 0, String("2:                      | Team:         "), 40);
+      _UpdateLCD(3, 0, String("                        |  Net:         "), 40);
+      _UpdateLCD(4, 0, String("                        |     %         "), 40);
+      _SlcdfieldFields[D3Time].strText = "       ";
+      _SlcdfieldFields[D4Time].strText = "       ";
+   }
+   else if (iNumberOfDogs == 1)
+   {
+      _UpdateLCD(1, 0, String("1:                      |               "), 40);
+      _UpdateLCD(2, 0, String("                        | Team:         "), 40);
+      _UpdateLCD(3, 0, String("                        |  Net:         "), 40);
+      _UpdateLCD(4, 0, String("                        |     %         "), 40);
+      _SlcdfieldFields[D2Time].strText = "       ";
+      _SlcdfieldFields[D3Time].strText = "       ";
+      _SlcdfieldFields[D4Time].strText = "       ";
+   }
+   else
+   {
+      _UpdateLCD(1, 0, String("1:                      |               "), 40);
+      _UpdateLCD(2, 0, String("2:                      | Team:         "), 40);
+      _UpdateLCD(3, 0, String("3:                      |  Net:         "), 40);
+      _UpdateLCD(4, 0, String("4:                      |     %         "), 40);
+   }
+}
+
 /// <summary>
 ///   Main entry-point for this application, this function should be called in every main loop
 ///   cycle. It will check whether the last time we updated the LCD screen is more than the given
@@ -117,12 +155,10 @@ void LCDControllerClass::Main()
    //This is the main loop which handles LCD updates
    if ((GET_MICROS / 1000 - _lLastLCDUpdate) > _lLCDUpdateInterval)
    {
-
       for (const SLCDField &lcdField : _SlcdfieldFields)
       {
          _UpdateLCD(lcdField.iLine, lcdField.iStartingPosition, lcdField.strText, lcdField.iFieldLength);
       }
-
       _lLastLCDUpdate = GET_MICROS / 1000;
    }
 }

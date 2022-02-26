@@ -121,6 +121,13 @@ void RaceHandlerClass::Main()
             _bS1StillSafe = true;
             ESP_LOGD(__FILE__, "False entering dog detected. S1 is again safe.");
          }
+         //If going back dog cased S1 sensor noise after gate clear detection and we had false detection of entering dong (simulated race 21) 
+         if (_byDogState == COMINGBACK && _strTransition.substring(0, 1) == "A")
+         {
+            _bS1StillSafe = true;
+            _ChangeDogState(GOINGIN);
+            ESP_LOGD(__FILE__, "False entering dog detected by sensor noise. S1 is again safe.");
+         }
          _strTransition = "";
          _bGatesClear = true;
          ESP_LOGD(__FILE__, "Reset transition strings as not updated since 350ms.");
@@ -138,10 +145,10 @@ void RaceHandlerClass::Main()
 
       //Calculate what our next dog will be
       uint8_t iNextDogChanged = iNextDog;
-      if (_bFault && iCurrentDog == 3)
+      if (_bFault && iCurrentDog == (iNumberOfRacingDogs - 1))
       {
-         //In case dog 4 is running and fault flag is active we have to check which the next offending dog is starting from dog 1
-         for (uint8_t i = 0; i < 4; i++)
+         //In case last dog before reruns is running and fault flag is active we have to check which the next offending dog starting from dog 1
+         for (uint8_t i = 0; i < iNumberOfRacingDogs; i++)
          {
             if (_bDogFaults[i] || _bDogManualFaults[i])
             {
@@ -154,7 +161,7 @@ void RaceHandlerClass::Main()
       else if (_bFault && _bRerunBusy)
       {
          //In case we have re-runs in progress we have to check which the next offending dog with proper order
-         for (uint8_t i = (iCurrentDog + 1); i < 4; i++)
+         for (uint8_t i = (iCurrentDog + 1); i < iNumberOfRacingDogs; i++)
          {
             if (_bDogFaults[i] || _bDogManualFaults[i])
             {
@@ -179,7 +186,7 @@ void RaceHandlerClass::Main()
          }
          _bNextDogFound = false;
       }
-      else if ((!_bFault && iCurrentDog == 3) || (!_bFault && _bRerunBusy))
+      else if ((!_bFault && iCurrentDog == (iNumberOfRacingDogs - 1)) || (!_bFault && _bRerunBusy))
       {
          iNextDog = iCurrentDog;
       }
@@ -240,7 +247,7 @@ void RaceHandlerClass::Main()
             //Handle next dog
             _llDogEnterTimes[iNextDog] = STriggerRecord.llTriggerTime;
             ESP_LOGI(__FILE__, "Dog %i FAULT as coming back dog was expected.", iNextDog + 1);
-            if ((iCurrentDog == 3 && _bFault && !_bRerunBusy) //If current dog is dog 4 and a fault exists, we have to initiate rerun sequence
+            if ((iCurrentDog == (iNumberOfRacingDogs - 1) && _bFault && !_bRerunBusy) //If current dog is last dog before reruns and a fault exists, we have to initiate rerun sequence
                 || _bRerunBusy)                               //Or if rerun is busy (and faults still exist)
             {
                //Dog 4 came in but there is a fault, we have to initiate the rerun sequence
@@ -253,7 +260,7 @@ void RaceHandlerClass::Main()
             }
             _ChangeDogNumber(iNextDog);
          }        
-         //Special case after false detection of "ok crossing" --> S1 activated 100ms after "ok crossing" detection or re-rung with next dog = current dog
+         //Special case after false detection of "ok crossing" --> S1 activated 100ms after "ok crossing" detection or re-run with next dog = current dog
          else if (_byDogState == COMINGBACK && _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] && !_bS1StillSafe &&
                   (((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) > 100000
                   && (STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) < 1000000) || (_bRerunBusy && iCurrentDog == iNextDog)))
@@ -325,15 +332,15 @@ void RaceHandlerClass::Main()
                _bDogPerfectCross[iNextDog][iDogRunCounters[iNextDog]] = true;
                ESP_LOGI(__FILE__, "PERFECT cross below 5ms detected for dog %i.", iNextDog + 1);
             }
-            if ((iCurrentDog == 3 && !_bFault && !_bRerunBusy) //If this is the 4th dog and there is no fault we have to stop the race
+            if ((iCurrentDog == (iNumberOfRacingDogs - 1) && !_bFault && !_bRerunBusy) //If this is the last dog and there are no faults (reruns) we have to stop the race
                 || (_bRerunBusy && !_bFault))                  //Or if the rerun sequence was started but no faults exist anymore
             {
                StopRace(STriggerRecord.llTriggerTime);
             }
-            else if ((iCurrentDog == 3 && _bFault && !_bRerunBusy) //If current dog is dog 4 and a fault exists, we have to initiate rerun sequence
+            else if ((iCurrentDog == (iNumberOfRacingDogs - 1) && _bFault && !_bRerunBusy) //If current dog is last dog and a fault(s) exists, we have to initiate rerun sequence
                      || _bRerunBusy)                               //Or if rerun is busy (and faults still exist)
             {
-               //Dog 4 came back but there is a fault, we have to initiate the rerun sequence
+               //Last dog came back but there is a fault, we have to initiate the rerun sequence
                _bRerunBusy = true;
                //Reset timers for this dog
                _llDogEnterTimes[iNextDog] = STriggerRecord.llTriggerTime;
@@ -454,11 +461,6 @@ void RaceHandlerClass::Main()
                _ChangeDogState(GOINGIN);
                ESP_LOGI(__FILE__, "New dog state: GOINGING.");
             }
-            else if (_strTransition == "BAba" && _bNegativeCrossDetected && RaceState != STOPPED) //Dog commin back after negative cross
-            {
-               _bNegativeCrossDetected = false;
-               ESP_LOGI(__FILE__, "Dog state still COMINGBACK. Dog commin back after negative cross of next dog.");
-            }
             else if (_strTransition == "BAba" && RaceState == STOPPED) //Last returning dog
             {
                ESP_LOGI(__FILE__, "Last dog came back.");
@@ -469,6 +471,11 @@ void RaceHandlerClass::Main()
                String strFirstTransitionChar = _strTransition.substring(0, 1);
                if (_byDogState == COMINGBACK && strFirstTransitionChar == "B")
                {
+                  if (_bNegativeCrossDetected && RaceState != STOPPED) //Dog comming back after negative cross
+                  {
+                     _bNegativeCrossDetected = false;
+                     ESP_LOGI(__FILE__, "Dog state still COMINGBACK. Dog commin back after negative cross of next dog.");
+                  }
                   //We increase the dog number
                   //_ChangeDogNumber(iNextDog);
                   //If this is Re-run and dog had fault active we need to turn it OFF if this is perfect crossing case (string starts with B) during re-run
@@ -479,10 +486,10 @@ void RaceHandlerClass::Main()
                   _bS1StillSafe = false;
                   _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = 0;
                   _llDogEnterTimes[iCurrentDog] = _llDogExitTimes[iPreviousDog];
-                  if (_strTransition == "BAab") //Big OK cross
+                  if (_strTransition == "BAab" || _strTransition == "BAba") //Big OK cross
                   {
                      _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
-                     ESP_LOGI(__FILE__, "Unmeasurable OK crossing for dog %i. BAab.", iCurrentDog + 1);
+                     ESP_LOGI(__FILE__, "Unmeasurable OK crossing for dog %i. BAab or BAba.", iCurrentDog + 1);
                   }
                   else
                   {
@@ -1356,13 +1363,14 @@ stRaceData RaceHandlerClass::GetRaceData(int iRaceId)
       RequestedRaceData.ElapsedTime = cElapsedTime;
       RequestedRaceData.NetTime = cNetTime;
       RequestedRaceData.RaceState = RaceState;
+      RequestedRaceData.RacingDogs = iNumberOfRacingDogs;
 
       //Get Dog info
-      for (uint8_t i = 0; i < 4; i++)
+      for (uint8_t i = 0; i < iNumberOfRacingDogs; i++)
       {
          RequestedRaceData.DogData[i].DogNumber = i;
 
-         for (uint8_t i2 = 0; i2 < 4; i2++)
+         for (uint8_t i2 = 0; i2 <= iDogRunCounters[i]; i2++)
          {
             RequestedRaceData.DogData[i].Timing[i2].Time = GetDogTime(i, i2);
             RequestedRaceData.DogData[i].Timing[i2].CrossingTime = GetCrossingTime(i, i2);
@@ -1407,6 +1415,35 @@ void RaceHandlerClass::ToggleRunDirection()
 boolean RaceHandlerClass::GetRunDirection()
 {
    return _bRunDirectionInverted;
+}
+
+/// <summary>
+///   Toggles number of racing dogs
+/// </summary>
+void RaceHandlerClass::ToggleNumberOfDogs()
+{
+   if (iNumberOfRacingDogs == 1)
+      iNumberOfRacingDogs = 4;
+   else
+      iNumberOfRacingDogs--;
+   LCDController.UpdateNumberOfDogsOnLCD(iNumberOfRacingDogs);
+   #ifdef WiFiON
+   WebHandler._bSendRaceData = true;
+   #endif
+   ESP_LOGI(__FILE__, "Number of dogs changed to: %i.", iNumberOfRacingDogs);
+}
+
+/// <summary>
+///   Set number of racing dogs
+/// </summary>
+void RaceHandlerClass::SetNumberOfDogs(uint8_t _iNumberOfRacingDogs)
+{
+   iNumberOfRacingDogs = _iNumberOfRacingDogs;
+   LCDController.UpdateNumberOfDogsOnLCD(iNumberOfRacingDogs);
+   #ifdef WiFiON
+   WebHandler._bSendRaceData = true;
+   #endif
+   ESP_LOGI(__FILE__, "Number of dogs set to: %i.", iNumberOfRacingDogs);
 }
 
 /// <summary>
@@ -1600,7 +1637,6 @@ void RaceHandlerClass::_AddToTransitionString(STriggerRecord _InterruptTrigger)
    case 1:
       cTemp = 'A';
       break;
-
    case 2:
       cTemp = 'B';
       break;
@@ -1617,9 +1653,9 @@ void RaceHandlerClass::_AddToTransitionString(STriggerRecord _InterruptTrigger)
    //Add the character to the transition string
    _strTransition += cTemp;
 
-   //Filtering for unwanted sensor jitter
+   //Filtering for unwanted sensor jitter - DEACTIVATED DUE TO RACE 25
    //Filter consecutive alternating changes out
-   if (_strTransition.endsWith("AaA"))
+   /*if (_strTransition.endsWith("AaA"))
    {
       _strTransition.replace("AaA", "A");
       ESP_LOGD(__FILE__, "Tstring AaA replaced with A");
@@ -1639,10 +1675,7 @@ void RaceHandlerClass::_AddToTransitionString(STriggerRecord _InterruptTrigger)
       _strTransition.replace("bBb", "b");
       ESP_LOGD(__FILE__, "Tstring bBb replaced with b");
       
-   }
+   }*/
 }
 
-/// <summary>
-///   The race handler class.
-/// </summary>
 RaceHandlerClass RaceHandler;

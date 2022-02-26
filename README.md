@@ -1,13 +1,28 @@
 ## FlyballETS-Software by simonttp78
 
-This project is a fork of Flyball ETS project by vyruz1986. Highlights described below.
+This project is a fork of Flyball ETS project by vyruz1986.
 
-## Major changes vs oryginal FlyballETS project by vyruz1986
+## Change log of 1.1.0 release
 
-* Two modes of working:
+#### Features:
+* Added possibility to define number of racing dogs (remote control + WebUI)
+* Laser ON time now configurable via WebUI config
+* Side switched renamed to Mode button. Single press --> Mode change (NAFA, FCI). Double press --> Run direction switch
+
+#### Bugs:
+* Old string based sensor noise filtering could cause issues and has been turned off. Only time based filtering is now active
+
+#### Improvements:
+* WiFi interface optimization (no "zero" data send during the race)
+* Main.cpp refactoring
+
+
+## Change log of 1.0.0 release
+
+* Two modes configurable in settings:
   - FCI lights with 2 digits accuracy
   - NAFA lights with 3 digits accuracy
-  Swithing between modes by double press of side switch button
+* Possibility to select number of running dogs in training race by pressing mode button.
 * Total crossing time replaced with Net time
 * Modified main race handling algorithm to be in line with FCI EJS requirements:  only S1 line used for time calculations
 * Re-run algorithm changes to assure proper order of re-running dogs
@@ -25,7 +40,6 @@ This project is a fork of Flyball ETS project by vyruz1986. Highlights described
 * Battery calibration improvements
 * Local system time
 * WebUI and LCD layout changes
-* Firmware update via WebUI -> thanks to AsyncElegantOTA by ayushsharma82
 * Reset and Manual stop indicated by white fault light blink
 * Configurable ON time for laser diodes
 

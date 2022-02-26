@@ -21,38 +21,7 @@
 //
 // You should have received a copy of the GNU General Public License along with this program.If not,
 // see <http://www.gnu.org/licenses/>
-#include "Arduino.h"
-
-//Includes
-#include "Structs.h"
-#include "config.h"
-
-//Public libs
-#include <LiquidCrystal.h>
-#ifdef WiFiON
-#include <WiFi.h>
-#include <WiFiMulti.h>
-#include <ESPmDNS.h>
-#include <ArduinoOTA.h>
-#include <WiFiUdp.h>
-#include <WiFiClientSecure.h>
-#endif
-#include <EEPROM.h>
-#include <NeoPixelBus.h>
-#include <ESPmDNS.h>
-//#include <time.h>
-
-//Private libs
-#include "GPSHandler.h"
-#include "SettingsManager.h"
-#ifdef WiFiON
-#include "WebHandler.h"
-#endif
-#include "LCDController.h"
-#include "RaceHandler.h"
-#include "LightsController.h"
-#include "BatterySensor.h"
-#include "SDcardController.h"
+#include "main.h"
 
 /*List of pins and the ones used (Lolin32 board):
    - 34: S1 (handler side) photoelectric sensor. ESP32 has no pull-down resistor on 34 pin, but pull-down anyway by 1kohm resistor on sensor board
@@ -103,11 +72,6 @@ SD card in MMC mode (require HW 5.0.0 rev.S or higher)
       - D7: Laser trigger button
 */
 
-//Set simulate to true to enable simulator class (see Simulator.cpp/h)
-#if Simulate
-#include "Simulator.h"
-#endif
-
 uint8_t iS1Pin = 34;
 uint8_t iS2Pin = 33;
 uint8_t iCurrentDog;
@@ -119,9 +83,6 @@ char cTeamNetTime[8];
 long long llHeapPreviousMillis = 0;
 long long llHeapInterval = 5000;
 bool error = false;
-File raceDataFile;
-String raceDataFileName;
-String sDate;
 
 //Initialise Lights stuff
 uint8_t iLightsDataPin = 21;
@@ -133,6 +94,7 @@ uint16_t iBatteryVoltage = 0;
 
 //Other IO's
 uint8_t iLaserOutputPin = 12;
+uint8_t iLaserOnTime = 60;
 boolean bLaserActive = false;
 uint16_t SideSwitchCoolDownTime = 300;
 bool bSideSwitchPressedOnce = false;
@@ -178,7 +140,6 @@ LiquidCrystal lcd2(iLCDRSPin, iLCDE2Pin, iLCDData4Pin, iLCDData5Pin, iLCDData6Pi
 
 //String for serial comms storage
 String strSerialData;
-uint iSimulatedRaceID = 0;
 byte bySerialIndex = 0;
 boolean bSerialStringComplete = false;
 boolean bRaceSummaryPrinted = false;
@@ -194,21 +155,6 @@ HardwareSerial GPSSerial(1);
 
 //Keep last reported OTA progress so we can send message for every % increment
 unsigned int uiLastProgress = 0;
-
-//Function prototypes
-void Sensor1Wrapper();
-void Sensor2Wrapper();
-#ifdef WiFiON
-void WiFiEvent(WiFiEvent_t event);
-#endif
-void ResetRace();
-void mdnsServerSetup();
-void StartStopRace();
-void StopRaceMain();
-void StartRaceMain();
-void serialEvent();
-void ButtonsRead();
-String GetButtonString();
 
 void setup()
 {
@@ -253,7 +199,7 @@ void setup()
 
    //Print SW version
    ESP_LOGI(__FILE__, "Firmware version %s", FW_VER);
- 
+
    //Initialize BatterySensor class with correct pin
    BatterySensor.init(iBatterySensorPin);
 
@@ -292,7 +238,7 @@ void setup()
    }
    else
    {
-      ESP_LOGI(__FILE__, "Wifi started successfully, AP name: %s, pass: %s!", strAPName.c_str(), strAPPass.c_str());
+      ESP_LOGI(__FILE__, "Wifi started successfully, AP name: %s, pass: %s", strAPName.c_str(), strAPPass.c_str());
    }
    WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
 
@@ -319,11 +265,8 @@ void setup()
          type = "sketch";
       else // U_SPIFFS
          type = "filesystem";
-
-      // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
       ESP_LOGI(__FILE__, "Start updating %s", type);
    });
-
    ArduinoOTA.onEnd([]()
    {
       ESP_LOGI(__FILE__, "[OTA]: End");
@@ -343,11 +286,12 @@ void setup()
       ESP_LOGE(__FILE__, "[OTA]: Error[%u]: ", error);
    });
    ArduinoOTA.begin();
-
    mdnsServerSetup();
 #endif
-
    ESP_LOGI(__FILE__, "Setup running on core %d", xPortGetCoreID());
+
+   iLaserOnTime = atoi(SettingsManager.getSetting("LaserOnTimer").c_str());
+   ESP_LOGI(__FILE__, "Configured laser ON time: %is", iLaserOnTime);
 }
 
 void loop()
@@ -376,9 +320,6 @@ void loop()
    //Check for serial events
    serialEvent();
 
-   //Check Remote and Side switch buttons state
-   ButtonsRead();
-
    //Handle lights main processing
    LightsController.Main();
 
@@ -398,6 +339,16 @@ void loop()
    WebHandler.loop();
 #endif
 
+   //Handle serial console commands
+   if (bSerialStringComplete)
+      HandleSerialCommands();
+
+   //Handle remote control and buttons states
+   HandleRemoteAndButtons();
+
+   //Handle LCD data updates
+   HandleLCDUpdates();
+
    //Reset variables when state RESET
    if (RaceHandler.RaceState == RaceHandler.RESET)
    {
@@ -405,190 +356,10 @@ void loop()
       bRaceSummaryPrinted = false;
    }
 
-   //Race start/stop button (remote D0 output)
-   if (bitRead(bDataIn, 1) == HIGH && (GET_MICROS / 1000 - llLastRCPress[1]) > 2500)
-   {
-      StartStopRace();
-   }
-
-   //Race start (serial command only)
-   if (bSerialStringComplete && strSerialData == "start" && (RaceHandler.RaceState == RaceHandler.RESET))
-   {
-      StartRaceMain();
-   }
-
-   //Race stop (serial command only)
-   if (bSerialStringComplete && strSerialData == "stop" && ((RaceHandler.RaceState == RaceHandler.STARTING) || (RaceHandler.RaceState == RaceHandler.RUNNING)))
-   {
-      StopRaceMain();
-   }
-
-   //Race reset button (remote D1 output)
-   if ((bitRead(bDataIn, 2) == HIGH && (GET_MICROS / 1000 - llLastRCPress[2] > 2000)) || (bSerialStringComplete && strSerialData == "reset"))
-   {
-      ResetRace();
-   }
-
-   //Print time
-   if (bSerialStringComplete && strSerialData == "time")
-   {
-      ESP_LOGI(__FILE__, "System time:  %s", GPSHandler.GetLocalTimestamp());
-   }
-
-   //Delete tag file
-   if (bSerialStringComplete && strSerialData == "deltagfile")
-   {
-      SDcardController.deleteFile(SD_MMC, "/tag.txt");
-   }
-
-   //List files on SD card
-   if (bSerialStringComplete && strSerialData == "list")
-   {
-      SDcardController.listDir(SD_MMC, "/", 0);
-      SDcardController.listDir(SD_MMC, "/SENSORS_DATA", 0);
-   }
-
-   //Reboot ESP32
-   if (bSerialStringComplete && strSerialData == "reboot")
-   {
-      ESP.restart();
-   }
-
-#if Simulate
-   //Change Race ID (only serial command), e.g. race 1 or race 2
-   if (bSerialStringComplete && strSerialData.startsWith("race"))
-   {
-      strSerialData.remove(0, 5);
-      iSimulatedRaceID = strSerialData.toInt();
-      if (iSimulatedRaceID < 0 || iSimulatedRaceID >= NumSimulatedRaces)
-      {
-         iSimulatedRaceID = 0;
-      }
-      Simulator.ChangeSimulatedRaceID(iSimulatedRaceID);
-   }
-#endif
-
-   //Dog 1 fault RC button
-   if ((bitRead(bDataIn, 3) == HIGH && (GET_MICROS / 1000 - llLastRCPress[3] > 2000)) || (bSerialStringComplete && strSerialData == "d1f"))
-   {
-      llLastRCPress[3] = GET_MICROS / 1000;
-      //Toggle fault for dog
-      RaceHandler.SetDogFault(0);
-   }
-
-   //Dog 2 fault RC button
-   if ((bitRead(bDataIn, 6) == HIGH && (GET_MICROS / 1000 - llLastRCPress[6] > 2000)) || (bSerialStringComplete && strSerialData == "d2f"))
-   {
-      llLastRCPress[6] = GET_MICROS / 1000;
-      //Toggle fault for dog
-      RaceHandler.SetDogFault(1);
-   }
-   //Dog 3 fault RC button
-   if ((bitRead(bDataIn, 5) == HIGH && (GET_MICROS / 1000 - llLastRCPress[5] > 2000)) || (bSerialStringComplete && strSerialData == "d3f"))
-   {
-      llLastRCPress[5] = GET_MICROS / 1000;
-      //Toggle fault for dog
-      RaceHandler.SetDogFault(2);
-   }
-
-   //Dog 4 fault RC button
-   if ((bitRead(bDataIn, 4) == HIGH && (GET_MICROS / 1000 - llLastRCPress[4] > 2000)) || (bSerialStringComplete && strSerialData == "d4f"))
-   {
-      llLastRCPress[4] = GET_MICROS / 1000;
-      //Toggle fault for dog
-      RaceHandler.SetDogFault(3);
-   }
-
-//Update LCD Display fields
-//Update team time to display
-   if (!LightsController.bModeNAFA)
-   {
-      dtostrf(RaceHandler.GetRaceTime(), 6, 2, cElapsedRaceTime);
-   }
-   else
-   {
-      dtostrf(RaceHandler.GetRaceTime(), 7, 3, cElapsedRaceTime);
-   }
-   LCDController.UpdateField(LCDController.TeamTime, cElapsedRaceTime);
-
-   //Update battery percentage to display
-   if ((GET_MICROS / 1000 < 2000 || ((GET_MICROS / 1000 - llLastBatteryLCDupdate) > 30000)) //
-      && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
-   {
-      iBatteryVoltage = BatterySensor.GetBatteryVoltage();
-      uint16_t iBatteryPercentage = BatterySensor.GetBatteryPercentage();
-      String sBatteryPercentage;
-      if (iBatteryPercentage == 9999)
-      {
-         sBatteryPercentage = "!!!";
-         LCDController.UpdateField(LCDController.BattLevel, sBatteryPercentage);
-         LightsController.ResetLights();
-         delay(3000);
-         esp_deep_sleep_start();
-      }
-      else if (iBatteryPercentage == 9911)
-      {
-         sBatteryPercentage = "USB";
-      }
-      else if (iBatteryPercentage == 0)
-      {
-         sBatteryPercentage = "LOW";
-      }
-      else
-      {
-         sBatteryPercentage = String(iBatteryPercentage);
-      }
-
-      while (sBatteryPercentage.length() < 3)
-      {
-         sBatteryPercentage = " " + sBatteryPercentage;
-      }
-      LCDController.UpdateField(LCDController.BattLevel, sBatteryPercentage);
-      //ESP_LOGD(__FILE__, "Battery: analog: %i ,voltage: %i, level: %i%%", BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
-      llLastBatteryLCDupdate = GET_MICROS / 1000;
-   }
-
-//Update team netto time
-   if (!LightsController.bModeNAFA)
-   {
-      dtostrf(RaceHandler.GetNetTime(), 6, 2, cTeamNetTime);
-   }
-   else
-   {
-      dtostrf(RaceHandler.GetNetTime(), 7, 3, cTeamNetTime);
-   }
-   LCDController.UpdateField(LCDController.NetTime, cTeamNetTime);
-
-   if (iCurrentRaceState != RaceHandler.RaceState)
-   {
-      iCurrentRaceState = RaceHandler.RaceState;
-      String sRaceStateMain = RaceHandler.GetRaceStateString();
-      ESP_LOGI(__FILE__, "RS: %s", sRaceStateMain);
-      //Update race status to display
-      LCDController.UpdateField(LCDController.RaceState, sRaceStateMain);
-   }
-
-   //Handle individual dog info
-   LCDController.UpdateField(LCDController.D1Time, RaceHandler.GetDogTime(0));
-   LCDController.UpdateField(LCDController.D1CrossTime, RaceHandler.GetCrossingTime(0));
-   LCDController.UpdateField(LCDController.D1RerunInfo, RaceHandler.GetRerunInfo(0));
-
-   LCDController.UpdateField(LCDController.D2Time, RaceHandler.GetDogTime(1));
-   LCDController.UpdateField(LCDController.D2CrossTime, RaceHandler.GetCrossingTime(1));
-   LCDController.UpdateField(LCDController.D2RerunInfo, RaceHandler.GetRerunInfo(1));
-
-   LCDController.UpdateField(LCDController.D3Time, RaceHandler.GetDogTime(2));
-   LCDController.UpdateField(LCDController.D3CrossTime, RaceHandler.GetCrossingTime(2));
-   LCDController.UpdateField(LCDController.D3RerunInfo, RaceHandler.GetRerunInfo(2));
-
-   LCDController.UpdateField(LCDController.D4Time, RaceHandler.GetDogTime(3));
-   LCDController.UpdateField(LCDController.D4CrossTime, RaceHandler.GetCrossingTime(3));
-   LCDController.UpdateField(LCDController.D4RerunInfo, RaceHandler.GetRerunInfo(3));
-
    if (RaceHandler.RaceState == RaceHandler.STOPPED && ((GET_MICROS / 1000 - (RaceHandler.llRaceStartTime / 1000 + RaceHandler.GetRaceTime() * 1000)) > 500) && !bRaceSummaryPrinted)
    {
       //Race has been stopped 0.5 second ago: print race summary to console
-      for (uint8_t i = 0; i < 4; i++)
+      for (uint8_t i = 0; i < RaceHandler.iNumberOfRacingDogs; i++)
       {
          //ESP_LOGD(__FILE__, "Dog %i -> %i run(s).", i + 1, RaceHandler.iDogRunCounters[i] + 1);
          for (uint8_t i2 = 0; i2 < (RaceHandler.iDogRunCounters[i] + 1); i2++)
@@ -598,129 +369,28 @@ void loop()
       }
       ESP_LOGI(__FILE__, " Team: %s", cElapsedRaceTime);
       ESP_LOGI(__FILE__, "  Net: %s\n", cTeamNetTime);
-#if !Simulate
-      RaceHandler.PrintRaceTriggerRecords();
-      if (SDcardController.bSDCardDetected)
-      {
-         RaceHandler.PrintRaceTriggerRecordsToFile();
-      }
-#endif
-      if (SDcardController.bSDCardDetected)
-      {
-         sDate = GPSHandler.GetDate();
-         if (RaceHandler.iCurrentRaceId == 0)
+      #if !Simulate
+         RaceHandler.PrintRaceTriggerRecords();
+         if (SDcardController.bSDCardDetected)
          {
-            raceDataFileName = "/" + SDcardController.sTagValue + "_ETS_" + sDate + ".csv";
-            SDcardController.writeFile(SD_MMC, raceDataFileName.c_str(),
-            "Tag;Race ID;Date;Race timestamp;Dog 1 time;Dog 1 starting;Dog 1 re-run time;Dog 1 re-run crossing;Dog 1 2nd re-run time;Dog 1 2nd re-run crossing;Dog 2 time;Dog 2 crossing;Dog 2 re-run time;Dog 2 re-run crossing;Dog 2 2nd re-run time;Dog 2 2nd re-run crossing;Dog 3 time;Dog 3 crossing;Dog 3 re-run time;Dog 3 re-run crossing;Dog 3 2nd re-run time;Dog 3 2nd re-run crossing;Dog 4 time;Dog 4 crossing;Dog 4 re-run time;Dog 4 re-run crossing;Dog 4 2nd re-run time;Dog 4 2nd re-run crossing;Team time; Net time;Comments\n");
+            RaceHandler.PrintRaceTriggerRecordsToFile();
          }
-         raceDataFile = SD_MMC.open(raceDataFileName.c_str(), FILE_APPEND);
-         if(raceDataFile)
-         {
-            raceDataFile.print(SDcardController.iTagValue);
-            raceDataFile.print(";");
-            raceDataFile.print(RaceHandler.iCurrentRaceId + 1);
-            raceDataFile.print(";");
-            raceDataFile.print(sDate);
-            raceDataFile.print(";");
-            raceDataFile.print(RaceHandler.cRaceStartTimestamp);
-            raceDataFile.print(";");
-            for (uint8_t i = 0; i < 4; i++)
-            {
-               for (uint8_t i2 = 0; i2 < 3; i2++)
-               {
-                  raceDataFile.print(RaceHandler.GetStoredDogTimes(i, i2));
-                  raceDataFile.print(";");
-                  raceDataFile.print(RaceHandler.TransformCrossingTime(i, i2, true));
-                  raceDataFile.print(";");
-               }
-            }
-            raceDataFile.print(RaceHandler.GetRaceTime());
-            raceDataFile.print(";");
-            raceDataFile.print(RaceHandler.GetNetTime());
-            raceDataFile.println(";");
-            raceDataFile.close();    
-         }    
+      #endif
+      if (SDcardController.bSDCardDetected)
+      {
+         SDcardController.SaveRaceDataToFile();
       }
       bRaceSummaryPrinted = true;
    }
 
-   /*//heap memory monitor
-   long long llCurrentMillis = GET_MICROS / 1000;
-   if (llCurrentMillis - llHeapPreviousMillis > llHeapInterval)
-   {
-      ESP_LOGI(__FILE__, "Elapsed system time: %llu. Heap caps free size: %i", GET_MICROS / 1000, heap_caps_get_free_size(MALLOC_CAP_8BIT));
-      ESP_LOGI(__FILE__, "Heap integrity OK? %i", heap_caps_check_integrity_all(error));
-      llHeapPreviousMillis = llCurrentMillis;
-   }
-   */
    if (RaceHandler.iCurrentDog != iCurrentDog && RaceHandler.RaceState == RaceHandler.RUNNING)
    {
       ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", RaceHandler.iPreviousDog + 1, RaceHandler.GetDogTime(RaceHandler.iPreviousDog, -2), RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
       ESP_LOGI(__FILE__, "Running dog: %i.", RaceHandler.iCurrentDog + 1);
    }
 
-   //Enable (uncomment) the following if you want periodic status updates on the serial port
-   /*
-   if ((GET_MICROS / 1000 - lLastSerialOutput) > 60000)
-   {
-      //ESP_LOGI(__FILE__, "%llu: Elapsed time: %s", GET_MICROS / 1000, cElapsedRaceTime);
-      ESP_LOGI(__FILE__, "Free heap: %i", esp_get_free_heap_size());
-      lLastSerialOutput = GET_MICROS / 1000;
-   }*/
-
    //Cleanup variables used for checking if something changed
    iCurrentDog = RaceHandler.iCurrentDog;
-
-   //Laser activation
-   if (bitRead(bDataIn, 7) == HIGH && ((GET_MICROS / 1000 - llLastRCPress[7] > LaserOutputTimer * 1000) || llLastRCPress[7] == 0) //
-      && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
-   {
-      llLastRCPress[7] = GET_MICROS / 1000;
-      digitalWrite(iLaserOutputPin, HIGH);
-      bLaserActive = true;
-      ESP_LOGI(__FILE__, "Turn Laser ON.");
-   }
-   //Laser deativation
-   if ((bLaserActive) && ((GET_MICROS / 1000 - llLastRCPress[7] > LaserOutputTimer * 1000) || RaceHandler.RaceState == RaceHandler.STARTING || RaceHandler.RaceState == RaceHandler.RUNNING))
-   {
-      digitalWrite(iLaserOutputPin, LOW);
-      bLaserActive = false;
-      ESP_LOGI(__FILE__, "Turn Laser OFF.");
-   }
-
-   //Handle side switch button (when race is not running)
-   if ((((bitRead(bDataIn, 0) == HIGH) && (GET_MICROS / 1000 - llLastRCPress[0] > SideSwitchCoolDownTime)) //
-      || (bSerialStringComplete && strSerialData == "NAFA"))
-      && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
-   {
-      if (((GET_MICROS / 1000 - llLastRCPress[0] < 1000) && bSideSwitchPressedOnce) || (bSerialStringComplete && strSerialData == "NAFA"))
-      {
-         ESP_LOGI(__FILE__, "Switch sides button double pressed!");
-         LightsController.ToggleStartingSequence();
-         LCDController.reInit();
-         bSideSwitchPressedOnce = false;
-      }
-      else
-      { bSideSwitchPressedOnce = true; }
-      llLastRCPress[0] = GET_MICROS / 1000;
-      
-      
-   }
-   if ((bSideSwitchPressedOnce || (bSerialStringComplete && strSerialData == "direction"))
-         && (GET_MICROS / 1000 - llLastRCPress[0] > 1000) && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
-   {
-      ESP_LOGI(__FILE__, "Switch sides button pressed!");
-      RaceHandler.ToggleRunDirection();
-      bSideSwitchPressedOnce = false;
-   }
-
-   //Check if we have serial data which we should handle
-   if (strSerialData.length() > 0 && bSerialStringComplete)
-   {
-      strSerialData = "";
-      bSerialStringComplete = false;
-   }
 }
 
 void serialEvent()
@@ -740,76 +410,6 @@ void serialEvent()
       }
       strSerialData += cInChar; // Store it
    }
-}
-
-/// <summary>
-///   Read 74HC166 pins status to detect remote buttons or switch side button press.
-/// </summary>
-void ButtonsRead()
-{
-   byte bOldDataIn = bDataIn;
-   bDataIn = 0;
-   digitalWrite(iLatchPin, LOW);
-   digitalWrite(iClockPin, LOW);
-   digitalWrite(iClockPin, HIGH);
-   digitalWrite(iLatchPin, HIGH);
-   for (uint8_t i = 0; i < 8; ++i)
-   {
-      bDataIn |= digitalRead(iDataInPin) << (7 - i);
-      digitalWrite(iClockPin, LOW);
-      digitalWrite(iClockPin, HIGH);
-   }
-   // It's assumed that only one button can be pressed at the same time, therefore any multiple high states are treated as false read and ingored
-   if (bDataIn != 0 && bDataIn != 1 && bDataIn != 2 && bDataIn != 4 && bDataIn != 8 && bDataIn != 16 && bDataIn != 32 && bDataIn != 64 && bDataIn != 128)
-   {
-      ESP_LOGD(__FILE__, "%s", GetButtonString().c_str());
-      bDataIn = 0;
-   }
-   // Print to console if button press detected
-   if (bDataIn != bOldDataIn && bDataIn != 0)
-   {
-      //ESP_LOGD(__FILE__, "%s", GetButtonString().c_str());
-   }
-}
-
-/// <summary>
-///   Gets pressed button string for consol printing.
-/// </summary>
-String GetButtonString()
-{
-   String strButton;
-   switch (bDataIn)
-   {
-   case 1:
-      strButton = "Side switch";
-      break;
-   case 2:
-      strButton = "Remote 1: start/stop";
-      break;
-   case 4:
-      strButton = "Remote 2: reset";
-      break;
-   case 8:
-      strButton = "Remote 3: dog 1 fault";
-      break;
-   case 16:
-      strButton = "Remote 6: dog 4 fault";
-      break;
-   case 32:
-      strButton = "Remote 5: dog 3 fault";
-      break;
-   case 64:
-      strButton = "Remote 4: dog 2 fault";
-      break;
-   case 128:
-      strButton = "Laser trigger";
-      break;
-   default:
-      strButton = "Unknown --> Ingored";
-      break;
-   }
-
-   return strButton;
 }
 
 /// <summary>
@@ -913,3 +513,329 @@ void mdnsServerSetup()
    MDNS.begin("flyballets");
 }
 #endif
+
+void HandleSerialCommands()
+{
+   //Race start
+   if (strSerialData == "start" && (RaceHandler.RaceState == RaceHandler.RESET))
+      StartRaceMain();
+   //Race stop
+   if (strSerialData == "stop" && ((RaceHandler.RaceState == RaceHandler.STARTING) || (RaceHandler.RaceState == RaceHandler.RUNNING)))
+      StopRaceMain();
+   //Race reset button
+   if (strSerialData == "reset")
+      ResetRace();
+   //Print time
+   if (strSerialData == "time")
+      ESP_LOGI(__FILE__, "System time:  %s", GPSHandler.GetLocalTimestamp());
+   //Delete tag file
+   if (strSerialData == "deltagfile")
+      SDcardController.deleteFile(SD_MMC, "/tag.txt");
+   //List files on SD card
+   if (strSerialData == "list")
+   {
+      SDcardController.listDir(SD_MMC, "/", 0);
+      SDcardController.listDir(SD_MMC, "/SENSORS_DATA", 0);
+   }
+   //Reboot ESP32
+   if (strSerialData == "reboot")
+      ESP.restart();
+   #if Simulate
+      //Change Race ID (only serial command), e.g. race 1 or race 2
+      if (strSerialData.startsWith("race"))
+      {
+         strSerialData.remove(0, 5);
+         uint iSimulatedRaceID = strSerialData.toInt();
+         if (iSimulatedRaceID < 0 || iSimulatedRaceID >= NumSimulatedRaces)
+         {
+            iSimulatedRaceID = 0;
+         }
+         Simulator.ChangeSimulatedRaceID(iSimulatedRaceID);
+      }
+   #endif
+   //Dog 1 fault
+   if (strSerialData == "d1f")
+      RaceHandler.SetDogFault(0);
+   //Dog 2 fault
+   if (strSerialData == "d2f")
+      RaceHandler.SetDogFault(1);
+   //Dog 3 fault
+   if (strSerialData == "d3f")
+      RaceHandler.SetDogFault(2);
+   //Dog 4 fault
+   if (strSerialData == "d4f")
+      RaceHandler.SetDogFault(3);
+   //Toggle race direction
+   if (strSerialData == "direction" && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
+      RaceHandler.ToggleRunDirection();
+   //Toggle number of racing dogs
+   if (strSerialData == "toggledogs" && RaceHandler.RaceState == RaceHandler.RESET)
+      RaceHandler.ToggleNumberOfDogs();
+   //Set explicitly number of racing dogs
+   if (strSerialData.startsWith("setdogs") && RaceHandler.RaceState == RaceHandler.RESET)
+      {
+         strSerialData.remove(0, 8);
+         uint8_t iNumberofRacingDogs = strSerialData.toInt();
+         if (iNumberofRacingDogs < 1 || iNumberofRacingDogs > 4)
+         {
+            iNumberofRacingDogs = 4;
+         }
+         RaceHandler.SetNumberOfDogs(iNumberofRacingDogs);
+      }
+   //Toggle between modes
+   if (strSerialData == "mode")
+   {
+      LightsController.ToggleStartingSequence();
+      LCDController.reInit();
+   }
+   //Make sure this stays last in the function!
+   if (strSerialData.length() > 0 )
+   {
+      strSerialData = "";
+      bSerialStringComplete = false;
+   }
+}
+
+void HandleLCDUpdates()
+{
+   //Update team time to display
+   if (!LightsController.bModeNAFA)
+   {
+      dtostrf(RaceHandler.GetRaceTime(), 6, 2, cElapsedRaceTime);
+   }
+   else
+   {
+      dtostrf(RaceHandler.GetRaceTime(), 7, 3, cElapsedRaceTime);
+   }
+   LCDController.UpdateField(LCDController.TeamTime, cElapsedRaceTime);
+
+   //Update battery percentage to display
+   if ((GET_MICROS / 1000 < 2000 || ((GET_MICROS / 1000 - llLastBatteryLCDupdate) > 30000)) //
+      && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
+   {
+      iBatteryVoltage = BatterySensor.GetBatteryVoltage();
+      uint16_t iBatteryPercentage = BatterySensor.GetBatteryPercentage();
+      String sBatteryPercentage;
+      if (iBatteryPercentage == 9999)
+      {
+         sBatteryPercentage = "!!!";
+         LCDController.UpdateField(LCDController.BattLevel, sBatteryPercentage);
+         LightsController.ResetLights();
+         delay(3000);
+         esp_deep_sleep_start();
+      }
+      else if (iBatteryPercentage == 9911)
+      {
+         sBatteryPercentage = "USB";
+      }
+      else if (iBatteryPercentage == 0)
+      {
+         sBatteryPercentage = "LOW";
+      }
+      else
+      {
+         sBatteryPercentage = String(iBatteryPercentage);
+      }
+
+      while (sBatteryPercentage.length() < 3)
+      {
+         sBatteryPercentage = " " + sBatteryPercentage;
+      }
+      LCDController.UpdateField(LCDController.BattLevel, sBatteryPercentage);
+      //ESP_LOGD(__FILE__, "Battery: analog: %i ,voltage: %i, level: %i%%", BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
+      llLastBatteryLCDupdate = GET_MICROS / 1000;
+   }
+
+   //Update team netto time
+   if (!LightsController.bModeNAFA)
+   {
+      dtostrf(RaceHandler.GetNetTime(), 6, 2, cTeamNetTime);
+   }
+   else
+   {
+      dtostrf(RaceHandler.GetNetTime(), 7, 3, cTeamNetTime);
+   }
+   LCDController.UpdateField(LCDController.NetTime, cTeamNetTime);
+
+   if (iCurrentRaceState != RaceHandler.RaceState)
+   {
+      iCurrentRaceState = RaceHandler.RaceState;
+      String sRaceStateMain = RaceHandler.GetRaceStateString();
+      ESP_LOGI(__FILE__, "RS: %s", sRaceStateMain);
+      //Update race status to display
+      LCDController.UpdateField(LCDController.RaceState, sRaceStateMain);
+   }
+
+   //Handle individual dog info
+   LCDController.UpdateField(LCDController.D1Time, RaceHandler.GetDogTime(0));
+   LCDController.UpdateField(LCDController.D1CrossTime, RaceHandler.GetCrossingTime(0));
+   LCDController.UpdateField(LCDController.D1RerunInfo, RaceHandler.GetRerunInfo(0));
+   if (RaceHandler.iNumberOfRacingDogs > 1)
+   {
+      LCDController.UpdateField(LCDController.D2Time, RaceHandler.GetDogTime(1));
+      LCDController.UpdateField(LCDController.D2CrossTime, RaceHandler.GetCrossingTime(1));
+      LCDController.UpdateField(LCDController.D2RerunInfo, RaceHandler.GetRerunInfo(1));
+   }
+   if (RaceHandler.iNumberOfRacingDogs > 2)
+   {
+      LCDController.UpdateField(LCDController.D3Time, RaceHandler.GetDogTime(2));
+      LCDController.UpdateField(LCDController.D3CrossTime, RaceHandler.GetCrossingTime(2));
+      LCDController.UpdateField(LCDController.D3RerunInfo, RaceHandler.GetRerunInfo(2));
+   }
+   if (RaceHandler.iNumberOfRacingDogs > 3)
+   {
+      LCDController.UpdateField(LCDController.D4Time, RaceHandler.GetDogTime(3));
+      LCDController.UpdateField(LCDController.D4CrossTime, RaceHandler.GetCrossingTime(3));
+      LCDController.UpdateField(LCDController.D4RerunInfo, RaceHandler.GetRerunInfo(3));
+   }
+}
+
+void HandleRemoteAndButtons()
+{
+   byte bOldDataIn = bDataIn;
+   bDataIn = 0;
+   digitalWrite(iLatchPin, LOW);
+   digitalWrite(iClockPin, LOW);
+   digitalWrite(iClockPin, HIGH);
+   digitalWrite(iLatchPin, HIGH);
+   for (uint8_t i = 0; i < 8; ++i)
+   {
+      bDataIn |= digitalRead(iDataInPin) << (7 - i);
+      digitalWrite(iClockPin, LOW);
+      digitalWrite(iClockPin, HIGH);
+   }
+   // It's assumed that only one button can be pressed at the same time, therefore any multiple high states are treated as false read and ingored
+   if (bDataIn != 0 && bDataIn != 1 && bDataIn != 2 && bDataIn != 4 && bDataIn != 8 && bDataIn != 16 && bDataIn != 32 && bDataIn != 64 && bDataIn != 128)
+   {
+      ESP_LOGD(__FILE__, "%s", GetButtonString().c_str());
+      bDataIn = 0;
+   }
+   // Print to console if button press detected
+   if (bDataIn != bOldDataIn && bDataIn != 0)
+   {
+      //ESP_LOGD(__FILE__, "%s", GetButtonString().c_str());
+   }
+
+   //Race start/stop button (remote D0 output)
+   if (bitRead(bDataIn, 1) == HIGH && (GET_MICROS / 1000 - llLastRCPress[1]) > 2500)
+   {
+      StartStopRace();
+   }
+   //Race reset button (remote D1 output)
+   if (bitRead(bDataIn, 2) == HIGH && (GET_MICROS / 1000 - llLastRCPress[2] > 2000))
+   {
+      ResetRace();
+   }
+   //Dog 1 fault RC button
+   if (bitRead(bDataIn, 3) == HIGH && (GET_MICROS / 1000 - llLastRCPress[3] > 2000))
+   {
+      llLastRCPress[3] = GET_MICROS / 1000;
+      if (RaceHandler.RaceState == RaceHandler.RESET)
+         RaceHandler.SetNumberOfDogs(1);
+      else
+         RaceHandler.SetDogFault(0);
+   }
+   //Dog 2 fault RC button
+   if (bitRead(bDataIn, 6) == HIGH && (GET_MICROS / 1000 - llLastRCPress[6] > 2000))
+   {
+      llLastRCPress[6] = GET_MICROS / 1000;
+      if (RaceHandler.RaceState == RaceHandler.RESET)
+         RaceHandler.SetNumberOfDogs(2);
+      else
+         RaceHandler.SetDogFault(1);
+   }
+   //Dog 3 fault RC button
+   if (bitRead(bDataIn, 5) == HIGH && (GET_MICROS / 1000 - llLastRCPress[5] > 2000))
+   {
+      llLastRCPress[5] = GET_MICROS / 1000;
+      if (RaceHandler.RaceState == RaceHandler.RESET)
+         RaceHandler.SetNumberOfDogs(3);
+      else
+         RaceHandler.SetDogFault(2);
+   }
+   //Dog 4 fault RC button
+   if (bitRead(bDataIn, 4) == HIGH && (GET_MICROS / 1000 - llLastRCPress[4] > 2000))
+   {
+      llLastRCPress[4] = GET_MICROS / 1000;
+      if (RaceHandler.RaceState == RaceHandler.RESET)
+         RaceHandler.SetNumberOfDogs(4);
+      else
+         RaceHandler.SetDogFault(3);
+   }
+   //Laser activation
+   if (bitRead(bDataIn, 7) == HIGH && ((GET_MICROS / 1000 - llLastRCPress[7] > iLaserOnTime * 1000) || llLastRCPress[7] == 0) //
+      && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
+   {
+      llLastRCPress[7] = GET_MICROS / 1000;
+      digitalWrite(iLaserOutputPin, HIGH);
+      bLaserActive = true;
+      ESP_LOGI(__FILE__, "Turn Laser ON.");
+   }
+   //Laser deativation
+   if ((bLaserActive) && ((GET_MICROS / 1000 - llLastRCPress[7] > iLaserOnTime * 1000) || RaceHandler.RaceState == RaceHandler.STARTING || RaceHandler.RaceState == RaceHandler.RUNNING))
+   {
+      digitalWrite(iLaserOutputPin, LOW);
+      bLaserActive = false;
+      ESP_LOGI(__FILE__, "Turn Laser OFF.");
+   }
+   //Handle mode button
+   if (((bitRead(bDataIn, 0) == HIGH) && (GET_MICROS / 1000 - llLastRCPress[0] > SideSwitchCoolDownTime))
+         && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
+   {
+      if ((GET_MICROS / 1000 - llLastRCPress[0] < 1000) && bSideSwitchPressedOnce)
+      {
+         //ESP_LOGI(__FILE__, "Mode button double pressed!");
+         RaceHandler.ToggleRunDirection();
+         bSideSwitchPressedOnce = false;
+      }
+      else
+      { bSideSwitchPressedOnce = true; }
+      llLastRCPress[0] = GET_MICROS / 1000;
+   }
+   if (bSideSwitchPressedOnce && (GET_MICROS / 1000 - llLastRCPress[0] > 1000))
+   {
+      //ESP_LOGI(__FILE__, "Mode button pressed once!");
+      LightsController.ToggleStartingSequence();
+      bSideSwitchPressedOnce = false;
+   }
+}
+
+/// <summary>
+///   Gets pressed button string for consol printing.
+/// </summary>
+String GetButtonString()
+{
+   String strButton;
+   switch (bDataIn)
+   {
+   case 1:
+      strButton = "Mode button";
+      break;
+   case 2:
+      strButton = "Remote 1: start/stop";
+      break;
+   case 4:
+      strButton = "Remote 2: reset";
+      break;
+   case 8:
+      strButton = "Remote 3: dog 1 fault";
+      break;
+   case 16:
+      strButton = "Remote 6: dog 4 fault";
+      break;
+   case 32:
+      strButton = "Remote 5: dog 3 fault";
+      break;
+   case 64:
+      strButton = "Remote 4: dog 2 fault";
+      break;
+   case 128:
+      strButton = "Laser trigger";
+      break;
+   default:
+      strButton = "Unknown --> Ingored";
+      break;
+   }
+
+   return strButton;
+}

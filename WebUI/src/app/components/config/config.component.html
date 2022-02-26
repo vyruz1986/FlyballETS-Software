@@ -41,6 +41,16 @@
           </div>
         </div>
         <div class="form-group">
+          <label for="LaserOnTimer">Laser ON time [s] (max 240)</label>
+          <input type="number" min="0" max="240" class="form-control" id="LaserOnTimer"
+            required
+            [(ngModel)]="configData.LaserOnTimer" name="LaserOnTimer"
+            #LaserOnTimer="ngModel">
+          <div [hidden]="LaserOnTimer.valid || LaserOnTimer.pristine" class="alert alert-danger">
+              Laser ON time is required with max value 240s!
+          </div>
+        </div>
+        <div class="form-group">
           <label for="RunDirectionInverted">Run direction inverted?</label>
           <input type="text" class="form-control" id="RunDirectionInverted"
           required

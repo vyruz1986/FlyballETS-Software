@@ -1,3 +1,21 @@
 div.raceState {
     font-size: large;
 }
+
+.row {
+    width: 345px;
+    margin:0px auto;
+}
+
+/* Create four equal columns that floats next to each other */
+.column {
+    padding: 5px;
+}
+
+select {
+    width: auto;
+}
+select:focus {
+    max-width: 100px;
+    width: auto;
+} 

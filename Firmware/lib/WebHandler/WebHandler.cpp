@@ -396,6 +396,62 @@ boolean WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, As
       _bUpdateLights = true;
       return true;
    }
+   else if (ActionType == "SetDogs4")
+   {
+      if (RaceHandler.RaceState != RaceHandler.RESET)
+      {
+         _bSendRaceData = true;
+         _bUpdateLights = true;
+         return false;
+      }
+      else
+      {
+         RaceHandler.SetNumberOfDogs(4);
+         return true;
+      }
+   }
+   else if (ActionType == "SetDogs3")
+   {
+      if (RaceHandler.RaceState != RaceHandler.RESET)
+      {
+         _bSendRaceData = true;
+         _bUpdateLights = true;
+         return false;
+      }
+      else
+      {
+         RaceHandler.SetNumberOfDogs(3);
+         return true;
+      }
+   }
+   else if (ActionType == "SetDogs2")
+   {
+      if (RaceHandler.RaceState != RaceHandler.RESET)
+      {
+         _bSendRaceData = true;
+         _bUpdateLights = true;
+         return false;
+      }
+      else
+      {
+         RaceHandler.SetNumberOfDogs(2);
+         return true;
+      }
+   }
+   else if (ActionType == "SetDogs1")
+   {
+      if (RaceHandler.RaceState != RaceHandler.RESET)
+      {
+         _bSendRaceData = true;
+         _bUpdateLights = true;
+         return false;
+      }
+      else
+      {
+         RaceHandler.SetNumberOfDogs(1);
+         return true;
+      }
+   }
    else
    {
       //ReturnError = "Unknown action received!";
@@ -423,15 +479,16 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
       JsonRaceData["elapsedTime"] = RequestedRaceData.ElapsedTime;
       JsonRaceData["NetTime"] = RequestedRaceData.NetTime;
       JsonRaceData["raceState"] = RequestedRaceData.RaceState;
+      JsonRaceData["racingDogs"] = RequestedRaceData.RacingDogs;
 
       JsonArray JsonDogDataArray = JsonRaceData.createNestedArray("dogData");
-      for (uint8_t i = 0; i < 4; i++)
+      for (uint8_t i = 0; i < RaceHandler.iNumberOfRacingDogs; i++)
       {
          JsonObject JsonDogData = JsonDogDataArray.createNestedObject();
          JsonDogData["dogNumber"] = RequestedRaceData.DogData[i].DogNumber;
          JsonArray JsonDogDataTimingArray = JsonDogData.createNestedArray("timing");
          char cForJson[9];
-         for (uint8_t i2 = 0; i2 < 4; i2++)
+         for (uint8_t i2 = 0; i2 <= RaceHandler.iDogRunCounters[i]; i2++)
          {
             JsonObject DogTiming = JsonDogDataTimingArray.createNestedObject();
             RequestedRaceData.DogData[i].Timing[i2].Time.toCharArray(cForJson, 9);
@@ -517,6 +574,7 @@ boolean WebHandlerClass::_GetData(String dataType, JsonObject Data)
       Data["AdminPass"] = SettingsManager.getSetting("AdminPass");
       Data["RunDirectionInverted"] = SettingsManager.getSetting("RunDirectionInverted");
       Data["StartingSequenceNAFA"] = SettingsManager.getSetting("StartingSequenceNAFA");
+      Data["LaserOnTimer"] = SettingsManager.getSetting("LaserOnTimer");
       //ESP_LOGD(__FILE__, "AdminPass: %s, RunDirection: %s", SettingsManager.getSetting("AdminPass").c_str(), SettingsManager.getSetting("RunDirectionInverted"));
    }
    else if (dataType == "triggerQueue")

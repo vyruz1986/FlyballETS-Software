@@ -25,6 +25,7 @@ struct stRaceData
    uint8_t RaceState;
    stDogData DogData[4];
    String NetTime;
+   uint8_t RacingDogs;
 };
 
 struct stSystemData
