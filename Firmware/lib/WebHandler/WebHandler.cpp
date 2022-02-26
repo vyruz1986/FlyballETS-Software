@@ -574,6 +574,7 @@ boolean WebHandlerClass::_GetData(String dataType, JsonObject Data)
       Data["AdminPass"] = SettingsManager.getSetting("AdminPass");
       Data["RunDirectionInverted"] = SettingsManager.getSetting("RunDirectionInverted");
       Data["StartingSequenceNAFA"] = SettingsManager.getSetting("StartingSequenceNAFA");
+      Data["LaserOnTimer"] = SettingsManager.getSetting("LaserOnTimer");
       //ESP_LOGD(__FILE__, "AdminPass: %s, RunDirection: %s", SettingsManager.getSetting("AdminPass").c_str(), SettingsManager.getSetting("RunDirectionInverted"));
    }
    else if (dataType == "triggerQueue")

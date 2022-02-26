@@ -92,6 +92,12 @@ void SettingsManagerClass::setDefaultSettings()
       setSetting("StartingSequenceNAFA", String("0"));
       saveSettings();
    }   
+
+   if (!hasSetting("LaserOnTimer"))
+   {
+      setSetting("LaserOnTimer", String("60"));
+      saveSettings();
+   }   
 }
 
 SettingsManagerClass SettingsManager;

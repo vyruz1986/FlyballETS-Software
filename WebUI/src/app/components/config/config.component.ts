@@ -13,7 +13,7 @@ export class ConfigComponent implements OnInit {
    sessionEnded: boolean;
    submitted: boolean = false;
    isAuthenticated: boolean = false;
-   configData = new ConfigData("", "", "", "", "");
+   configData = new ConfigData("", "", "", "", "", "");
 
    constructor(public secEtsDataService: SecureEtsDataService) {}
 
@@ -100,9 +100,9 @@ export class ConfigComponent implements OnInit {
             { name: "AdminPass", value: this.configData.AdminPass },
             { name: "RunDirectionInverted", value: this.configData.RunDirectionInverted },
             { name: "StartingSequenceNAFA", value: this.configData.StartingSequenceNAFA },
+            { name: "LaserOnTimer", value: this.configData.LaserOnTimer },
          ],
       };
-      console.log(newConfigArray);
       this.submitted = true;
       this.secEtsDataService.sendConfig(newConfigArray);
       console.log("new config sent!");

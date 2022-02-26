@@ -94,6 +94,7 @@ uint16_t iBatteryVoltage = 0;
 
 //Other IO's
 uint8_t iLaserOutputPin = 12;
+uint8_t iLaserOnTime = 60;
 boolean bLaserActive = false;
 uint16_t SideSwitchCoolDownTime = 300;
 bool bSideSwitchPressedOnce = false;
@@ -287,8 +288,10 @@ void setup()
    ArduinoOTA.begin();
    mdnsServerSetup();
 #endif
-
    ESP_LOGI(__FILE__, "Setup running on core %d", xPortGetCoreID());
+
+   iLaserOnTime = atoi(SettingsManager.getSetting("LaserOnTimer").c_str());
+   ESP_LOGI(__FILE__, "Configured laser ON time: %is", iLaserOnTime);
 }
 
 void loop()
@@ -760,7 +763,7 @@ void HandleRemoteAndButtons()
          RaceHandler.SetDogFault(3);
    }
    //Laser activation
-   if (bitRead(bDataIn, 7) == HIGH && ((GET_MICROS / 1000 - llLastRCPress[7] > LaserOutputTimer * 1000) || llLastRCPress[7] == 0) //
+   if (bitRead(bDataIn, 7) == HIGH && ((GET_MICROS / 1000 - llLastRCPress[7] > iLaserOnTime * 1000) || llLastRCPress[7] == 0) //
       && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
    {
       llLastRCPress[7] = GET_MICROS / 1000;
@@ -769,13 +772,13 @@ void HandleRemoteAndButtons()
       ESP_LOGI(__FILE__, "Turn Laser ON.");
    }
    //Laser deativation
-   if ((bLaserActive) && ((GET_MICROS / 1000 - llLastRCPress[7] > LaserOutputTimer * 1000) || RaceHandler.RaceState == RaceHandler.STARTING || RaceHandler.RaceState == RaceHandler.RUNNING))
+   if ((bLaserActive) && ((GET_MICROS / 1000 - llLastRCPress[7] > iLaserOnTime * 1000) || RaceHandler.RaceState == RaceHandler.STARTING || RaceHandler.RaceState == RaceHandler.RUNNING))
    {
       digitalWrite(iLaserOutputPin, LOW);
       bLaserActive = false;
       ESP_LOGI(__FILE__, "Turn Laser OFF.");
    }
-   //Handle mode (former name: side switch) button when race is in READY state
+   //Handle mode button
    if (((bitRead(bDataIn, 0) == HIGH) && (GET_MICROS / 1000 - llLastRCPress[0] > SideSwitchCoolDownTime))
          && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
    {
@@ -789,13 +792,10 @@ void HandleRemoteAndButtons()
       { bSideSwitchPressedOnce = true; }
       llLastRCPress[0] = GET_MICROS / 1000;
    }
-   if (bSideSwitchPressedOnce && (GET_MICROS / 1000 - llLastRCPress[0] > 1000) && RaceHandler.RaceState == RaceHandler.RESET)
+   if (bSideSwitchPressedOnce && (GET_MICROS / 1000 - llLastRCPress[0] > 1000))
    {
-      //ESP_LOGI(__FILE__, "Mode button pressed!");
-      RaceHandler.ToggleNumberOfDogs();
-      #ifdef WiFiON
-      WebHandler._bSendRaceData = true;
-      #endif
+      //ESP_LOGI(__FILE__, "Mode button pressed once!");
+      LightsController.ToggleStartingSequence();
       bSideSwitchPressedOnce = false;
    }
 }

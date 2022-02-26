@@ -32,8 +32,6 @@
 //#define WebUIonSDcard           // When defined webserver data will be loaded from SC card (MMC 1 bit mode) and not taken compiled into fimrware package. Precondition: SDcard defined too.
 #define BatteryCalibration false// after setting to true LCD will display analog read value from battery pin (range 0-4095). This is handfull for battery volate curve definition (dPinVoltage)
 
-#define LaserOutputTimer 60     // Laser output timer in seconds
-
 #define LIGHTSCHAINS 1          // Numer of WS281x lights chains. 1 - one chain of 5 pixels/lights, 2 - two chains --> 10 pixels/lights, etc.
 #define WS_METHOD NeoEsp32Rmt0800KbpsMethod
 
