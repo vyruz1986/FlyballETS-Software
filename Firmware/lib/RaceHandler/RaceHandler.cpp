@@ -125,10 +125,11 @@ void RaceHandlerClass::Main()
          if (_byDogState == COMINGBACK && _strTransition.substring(0, 1) == "A")
          {
             _bS1StillSafe = true;
-            _ChangeDogState(GOINGIN);
+            //_ChangeDogState(GOINGIN);
             ESP_LOGD(__FILE__, "False entering dog detected by sensor noise. S1 is again safe.");
          }
          _strTransition = "";
+         _bSensorNoise = false;
          _bGatesClear = true;
          ESP_LOGD(__FILE__, "Reset transition strings as not updated since 350ms.");
          ESP_LOGI(__FILE__, "Gate: CLEAR.");
@@ -384,11 +385,16 @@ void RaceHandlerClass::Main()
          {
             //TODO: The current dog could also have a fault which is not caused by being too early (manually triggered fault).
             //S2 is triggered less than 2s after current dog's enter time what means we have early (negative) cross
-            if ((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) < 2000000)
+            if (((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) < 2000000) && _bDogFaults[iCurrentDog])
             {
                _bPotentialNegativeCrossDetected = true;
                _llS2CrossedUnsafeTime = STriggerRecord.llTriggerTime;
                ESP_LOGI(__FILE__, "Dog %i potential negative cross detected.", iCurrentDog + 1);
+            }
+            else if ((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) < 2000000 && !_bDogFaults[iCurrentDog])
+            {
+               _bSensorNoise = true;
+               ESP_LOGI(__FILE__, "Dog %i S2 sensor noise.", iCurrentDog + 1);
             }
             else //S2 was triggered after 2s since current dog entry time
             {
@@ -444,7 +450,12 @@ void RaceHandlerClass::Main()
          {
             //Transition string is 4 characters or longer
             //So we can check what happened
-            if (_strTransition == "ABab") //Dog going to box
+            if (_bSensorNoise)
+            {
+               ESP_LOGI(__FILE__, "Sensor noise was detected. Ignore Tstring");
+               _bSensorNoise = false;
+            }
+            else if (_strTransition == "ABab") //Dog going to box
             {
                //Change dog state to coming back
                _ChangeDogState(COMINGBACK);
@@ -640,6 +651,7 @@ void RaceHandlerClass::ResetRace()
       _bNextDogFound = false;
       _bNegativeCrossDetected = false;
       _bPotentialNegativeCrossDetected = false;
+      _bSensorNoise = false;
 
       for (auto &bFault : _bDogFaults)
       {

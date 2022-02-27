@@ -85,6 +85,7 @@ private:
    uint8_t  _iS2Pin;
    boolean _bRunDirectionInverted = false;
    boolean _bNextDogFound = false;
+   boolean _bSensorNoise = false;
 
    struct STriggerRecord
    {
