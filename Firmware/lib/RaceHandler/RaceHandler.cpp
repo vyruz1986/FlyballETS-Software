@@ -487,27 +487,30 @@ void RaceHandlerClass::Main()
                   //We increase the dog number
                   //_ChangeDogNumber(iNextDog);
                   //If this is Re-run and dog had fault active we need to turn it OFF if this is perfect crossing case (string starts with B) during re-run
-                  if ((_bRerunBusy && _bFault))
-                  {
-                     SetDogFault(iCurrentDog, OFF);
-                  }
-                  _bS1StillSafe = false;
-                  _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = 0;
-                  _llDogEnterTimes[iCurrentDog] = _llDogExitTimes[iPreviousDog];
                   if (_bNegativeCrossDetected && RaceState != STOPPED) //Dog comming back after negative cross
                   {
                      _bNegativeCrossDetected = false;
                      ESP_LOGI(__FILE__, "Dog state still COMINGBACK. Dog commin back after negative cross of next dog.");
                   }
-                  else if (_strTransition == "BAab" || _strTransition == "BAba") //Big OK cross
-                  {
-                     _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
-                     ESP_LOGI(__FILE__, "Unmeasurable OK crossing for dog %i. BAab or BAba.", iCurrentDog + 1);
-                  }
                   else
                   {
-                     _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
-                     ESP_LOGI(__FILE__, "Unmeasurable ok crossing for dog %i.", iCurrentDog + 1);
+                     if ((_bRerunBusy && _bFault))
+                     {
+                        SetDogFault(iCurrentDog, OFF);
+                     }
+                     _bS1StillSafe = false;
+                     _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = 0;
+                     _llDogEnterTimes[iCurrentDog] = _llDogExitTimes[iPreviousDog];
+                     if (_strTransition == "BAab" || _strTransition == "BAba") //Big OK cross
+                     {
+                        _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+                        ESP_LOGI(__FILE__, "Unmeasurable OK crossing for dog %i. BAab or BAba.", iCurrentDog + 1);
+                     }
+                     else
+                     {
+                        _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+                        ESP_LOGI(__FILE__, "Unmeasurable ok crossing for dog %i.", iCurrentDog + 1);
+                     }
                   }
                }
                else if (_byDogState == COMINGBACK && strFirstTransitionChar == "A")
