@@ -25,7 +25,7 @@
 #define FW_VER "1.1.1"          // Flyball ETS firmware version
 
 #define Simulate true           // Set to true to enable race simulation (see Simulator.h/.cpp)
-#define NumSimulatedRaces 18    // number of prepeared simulated races. Sererial interface command to change interface: e.g. "race 1"
+#define NumSimulatedRaces 44    // number of prepeared simulated races. Sererial interface command to change interface: e.g. "race 1"
 
 #define WiFiON                  // If defined all WiFi features are on: OTA, Web server. Please be carefull. Keep remote receiver board (antenna) away from ESP32 to avoid interferences.
 #define SDcardForcedDetect false// Forcing SD Card initialization even SDdetectPin state isn't LOW

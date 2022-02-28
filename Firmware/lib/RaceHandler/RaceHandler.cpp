@@ -315,7 +315,9 @@ void RaceHandlerClass::Main()
             _llRaceElapsedTime = STriggerRecord.llTriggerTime - llRaceStartTime;
             //_bNegativeCrossDetected = false; // moved to Tstring section and used as "if" condition in BAba scenario
             //
+            
             ESP_LOGI(__FILE__, "Calculate negative cross time for dog %i and update times for previous dog %i.", iCurrentDog + 1, iPreviousDog + 1);
+            ESP_LOGI(__FILE__, "Dod %i updated crossing time [ms]: %lld", iCurrentDog + 1, (_llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] +500) / 1000);
             ESP_LOGI(__FILE__, "Dog %i updated time [ms]: %lld", iPreviousDog + 1, ((_llDogTimes[iPreviousDog][iDogRunCounters[iPreviousDog]] + 500) / 1000));
          }        
          if (_bS1isSafe) //If S2 crossed before S1 (ok or positive cross scenarios)
@@ -482,11 +484,6 @@ void RaceHandlerClass::Main()
                String strFirstTransitionChar = _strTransition.substring(0, 1);
                if (_byDogState == COMINGBACK && strFirstTransitionChar == "B")
                {
-                  if (_bNegativeCrossDetected && RaceState != STOPPED) //Dog comming back after negative cross
-                  {
-                     _bNegativeCrossDetected = false;
-                     ESP_LOGI(__FILE__, "Dog state still COMINGBACK. Dog commin back after negative cross of next dog.");
-                  }
                   //We increase the dog number
                   //_ChangeDogNumber(iNextDog);
                   //If this is Re-run and dog had fault active we need to turn it OFF if this is perfect crossing case (string starts with B) during re-run
@@ -497,7 +494,12 @@ void RaceHandlerClass::Main()
                   _bS1StillSafe = false;
                   _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = 0;
                   _llDogEnterTimes[iCurrentDog] = _llDogExitTimes[iPreviousDog];
-                  if (_strTransition == "BAab" || _strTransition == "BAba") //Big OK cross
+                  if (_bNegativeCrossDetected && RaceState != STOPPED) //Dog comming back after negative cross
+                  {
+                     _bNegativeCrossDetected = false;
+                     ESP_LOGI(__FILE__, "Dog state still COMINGBACK. Dog commin back after negative cross of next dog.");
+                  }
+                  else if (_strTransition == "BAab" || _strTransition == "BAba") //Big OK cross
                   {
                      _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
                      ESP_LOGI(__FILE__, "Unmeasurable OK crossing for dog %i. BAab or BAba.", iCurrentDog + 1);
