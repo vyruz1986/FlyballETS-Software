@@ -85,6 +85,7 @@ private:
    uint8_t  _iS2Pin;
    boolean _bRunDirectionInverted = false;
    boolean _bNextDogFound = false;
+   boolean _bSensorNoise = false;
 
    struct STriggerRecord
    {
@@ -123,6 +124,7 @@ private:
    long long _llCrossingTimes[4][4];
 
    String _strTransition;
+   String _strPreviousTransitionFirstLetter=""; // fix for simulated race 18-41
    
    enum _byDogStates {
       GOINGIN,
