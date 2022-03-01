@@ -926,7 +926,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
-   // TestCase 15: Dog 3 fault with ok re-run. Dog 4 fautl with re-run negative and second positive
+   // TestCase 15: Dog 3 fault with ok re-run. Dog 4 fautl with re-run negative and second positive (corrected in v1.1.1)
    {1, 230734, 1},
    {2, 273519, 1},
    {1, 308132, 0},
@@ -951,8 +951,8 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {1, 14777193, 0},
    {2, 19078752, 1},
    {1, 19090103, 1},
-   {2, 19243665, 0},
-   {1, 19262289, 0},
+   {1, 19243665, 0},
+   {2, 19262289, 0},
    {1, 22284328, 1},
    {2, 22342700, 1},
    {1, 22389880, 0},
@@ -1170,15 +1170,15 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
-   // TestCase 19: Dog 2 enter as invisible dog + negative cross of dog 3
+   // TestCase 19: Dog 2 enter as invisible dog + negative cross of dog 3 (corrected in v1.1.1)
    {1, 49140, 1},
    {2, 90878, 1},
    {1, 128477, 0},
    {2, 172676, 0},
    {2, 4231363, 1},
    {1, 4272941, 1},
-   {2, 4451008, 0},
-   {1, 4519336, 0},
+   {1, 4451008, 0},
+   {2, 4519336, 0},
    {1, 9349056, 1},
    {2, 9386674, 1},
    {1, 9421198, 0},
