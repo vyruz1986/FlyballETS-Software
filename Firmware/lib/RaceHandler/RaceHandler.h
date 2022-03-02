@@ -77,7 +77,8 @@ private:
    long long _llRaceTime;
    long long _llLastDogExitTime;
    long long _llS2CrossedSafeTime;
-   long long _llS2CrossedUnsafeTime;
+   long long _llS2CrossedUnsafeTriggerTime;
+   long long _llS2CrossedUnsafeGetMicrosTime;
    long long _llLastTransitionStringUpdate;
    long long _llRaceElapsedTime;
 
