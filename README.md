@@ -2,46 +2,9 @@
 
 This project is a fork of Flyball ETS project by vyruz1986.
 
-## Change log of 1.1.0 release
+## Change log
 
-#### Features:
-* Added possibility to define number of racing dogs (remote control + WebUI)
-* Laser ON time now configurable via WebUI config
-* Side switched renamed to Mode button. Single press --> Mode change (NAFA, FCI). Double press --> Run direction switch
-
-#### Bugs:
-* Old string based sensor noise filtering could cause issues and has been turned off. Only time based filtering is now active
-
-#### Improvements:
-* WiFi interface optimization (no "zero" data send during the race)
-* Main.cpp refactoring
-
-
-## Change log of 1.0.0 release
-
-* Two modes configurable in settings:
-  - FCI lights with 2 digits accuracy
-  - NAFA lights with 3 digits accuracy
-* Possibility to select number of running dogs in training race by pressing mode button.
-* Total crossing time replaced with Net time
-* Modified main race handling algorithm to be in line with FCI EJS requirements:  only S1 line used for time calculations
-* Re-run algorithm changes to assure proper order of re-running dogs
-* Added "perfect crossing": below 5ms
-* Code optimizations to reduce non essential tasks execution while race is running
-* Added simulated scenarios for code functional and regression testing
-* New console commands for runtime interfacing and test automation
-* Modified lights set-up and starting sequence in order to assure more accurate sync between lights and race start
-* Added PISO register for interfacing with remote control and buttons: released ESP32 lines used for SD card communication
-* SD card support
-  - saving race data to file
-  - saving sensors reading to file
-* GPS PPS line support - readiness for system time synchronization
-* Removed support for legacy lights: only WS2811B type lights supported
-* Battery calibration improvements
-* Local system time
-* WebUI and LCD layout changes
-* Reset and Manual stop indicated by white fault light blink
-* Configurable ON time for laser diodes
+#### Check CHANGELOG.md file
 
 ## Source files
 

@@ -77,7 +77,8 @@ private:
    long long _llRaceTime;
    long long _llLastDogExitTime;
    long long _llS2CrossedSafeTime;
-   long long _llS2CrossedUnsafeTime;
+   long long _llS2CrossedUnsafeTriggerTime;
+   long long _llS2CrossedUnsafeGetMicrosTime;
    long long _llLastTransitionStringUpdate;
    long long _llRaceElapsedTime;
 
@@ -85,6 +86,7 @@ private:
    uint8_t  _iS2Pin;
    boolean _bRunDirectionInverted = false;
    boolean _bNextDogFound = false;
+   boolean _bSensorNoise = false;
 
    struct STriggerRecord
    {
@@ -123,6 +125,7 @@ private:
    long long _llCrossingTimes[4][4];
 
    String _strTransition;
+   String _strPreviousTransitionFirstLetter=""; // fix for simulated race 18-41
    
    enum _byDogStates {
       GOINGIN,

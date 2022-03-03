@@ -115,27 +115,47 @@ void RaceHandlerClass::Main()
       //If the transition string is not empty and it wasn't updated for 350ms then it was noise and we have to clear it.
       if (_strTransition.length() != 0 && (GET_MICROS - _llLastTransitionStringUpdate) > 350000)
       {
-         //If dog state is GOINGIN we could have false detection of entering dog so we need to set S1StillSafe flag
          if (_byDogState == GOINGIN)
          {
-            _bS1StillSafe = true;
-            ESP_LOGD(__FILE__, "False entering dog detected. S1 is again safe.");
+            //If dog state is GOINGIN, but we have noise of S2 line, then next dog had to go invisibly by the gate (simulated race 25 & 18-41)
+            if (_strTransition.substring(_strTransition.length() - 1) == "b" && _strPreviousTransitionFirstLetter == "B")
+            {
+               _ChangeDogState(COMINGBACK);
+               _bS1StillSafe = false;
+               _llDogEnterTimes[iCurrentDog] = _llLastDogExitTime;
+               ESP_LOGD(__FILE__, "Seems next dog entered gate already as S2 state 'b' detected. S1 is not safe anymore.");
+            }   
+            //If dog state is GOINGIN we could have false detection of entering dog so we need to set S1StillSafe flag
+            else
+            {
+               _bS1StillSafe = true;
+               ESP_LOGD(__FILE__, "False entering dog detected. S1 is again safe.");
+            }
          }
-         //If going back dog cased S1 sensor noise after gate clear detection and we had false detection of entering dong (simulated race 21) 
-         if (_byDogState == COMINGBACK && _strTransition.substring(0, 1) == "A")
+         else
          {
-            _bS1StillSafe = true;
-            _ChangeDogState(GOINGIN);
-            ESP_LOGD(__FILE__, "False entering dog detected by sensor noise. S1 is again safe.");
+            //Coming back dog caused S1 sensor noise after gate clear detection (simulated race 21 & 18-41) 
+            if (_strTransition.substring(_strTransition.length() - 1) == "a" && _strPreviousTransitionFirstLetter == "B")
+            {
+               _ChangeDogState(GOINGIN);
+               _bS1StillSafe = true;
+               ESP_LOGD(__FILE__, "Seems next dog stil didn't enter gate as S1 state 'a' detected.");
+            }   
+            else
+            {
+               _bS1StillSafe = false;
+               ESP_LOGD(__FILE__, "Noise caused by entering dog detected. S1 is not safe anymore.");
+            }
          }
          _strTransition = "";
+         _bSensorNoise = false;
          _bGatesClear = true;
          ESP_LOGD(__FILE__, "Reset transition strings as not updated since 350ms.");
          ESP_LOGI(__FILE__, "Gate: CLEAR.");
       }
 
       //If we have potential negative cross detected on S2, but S1 wasn't crossed for 100ms since then it had to be sensor noise and we need to reset flag
-      if (_bPotentialNegativeCrossDetected && (GET_MICROS - _llS2CrossedUnsafeTime) > 100000)
+      if (_bPotentialNegativeCrossDetected && (GET_MICROS - _llS2CrossedUnsafeGetMicrosTime) > 100000)
       {
          _bPotentialNegativeCrossDetected = false;
          ESP_LOGD(__FILE__, "Potential negative cross flag reset as S1 not crossed for 100ms");
@@ -275,9 +295,10 @@ void RaceHandlerClass::Main()
       ////Handle sensor 1 events (handlers side) with gates state DOG IN
       if (STriggerRecord.iSensorNumber == 1 && STriggerRecord.iSensorState == 1 && !_bGatesClear) //Only if gates are busy (dog in) and S1 sensor is HIGH (A)
       {
-         _llRaceElapsedTime = STriggerRecord.llTriggerTime - llRaceStartTime;
-         if (_bPotentialNegativeCrossDetected) //If negative cross detected
+         //If negative cross detected and S1 crossed above 6ms from S2 crossing
+         if (_bPotentialNegativeCrossDetected && ((STriggerRecord.llTriggerTime - _llS2CrossedUnsafeTriggerTime) > 6000))
          {
+            _llRaceElapsedTime = STriggerRecord.llTriggerTime - llRaceStartTime;
             _bPotentialNegativeCrossDetected = false;
             _bNegativeCrossDetected = true;
             if (_bDogMissedGateComingback[iPreviousDog][iDogRunCounters[iPreviousDog]]) // Clear flag if set as previous dog is comming back so he didn't missed the gate
@@ -314,12 +335,21 @@ void RaceHandlerClass::Main()
             _llRaceElapsedTime = STriggerRecord.llTriggerTime - llRaceStartTime;
             //_bNegativeCrossDetected = false; // moved to Tstring section and used as "if" condition in BAba scenario
             //
+            
             ESP_LOGI(__FILE__, "Calculate negative cross time for dog %i and update times for previous dog %i.", iCurrentDog + 1, iPreviousDog + 1);
+            ESP_LOGI(__FILE__, "Dod %i updated crossing time [ms]: %lld", iCurrentDog + 1, (_llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] +500) / 1000);
             ESP_LOGI(__FILE__, "Dog %i updated time [ms]: %lld", iPreviousDog + 1, ((_llDogTimes[iPreviousDog][iDogRunCounters[iPreviousDog]] + 500) / 1000));
-         }        
+         }
+         // Negative cross detected, but S1 was crossed below 6ms from S2 crossing. This can't be a dog and it has to be sensor noise  (fix for simulated race 15-39 & 18-41)
+         else if (_bPotentialNegativeCrossDetected && ((STriggerRecord.llTriggerTime - _llS2CrossedUnsafeTriggerTime) <= 6000))
+         {
+            _bSensorNoise = true;
+            ESP_LOGI(__FILE__, "S2/S1 sensors noise.");
+         }
          if (_bS1isSafe) //If S2 crossed before S1 (ok or positive cross scenarios)
          {
             //Normal handling for dog coming back or dog going in after S2 crossed safely
+            _llRaceElapsedTime = STriggerRecord.llTriggerTime - llRaceStartTime;
             _llDogExitTimes[iCurrentDog] = STriggerRecord.llTriggerTime;
             _llLastDogExitTime = _llDogExitTimes[iCurrentDog];
             _llDogTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = _llDogExitTimes[iCurrentDog] - _llDogEnterTimes[iCurrentDog];
@@ -383,11 +413,12 @@ void RaceHandlerClass::Main()
          else if (_byDogState == COMINGBACK)
          {
             //TODO: The current dog could also have a fault which is not caused by being too early (manually triggered fault).
-            //S2 is triggered less than 2s after current dog's enter time what means we have early (negative) cross
-            if ((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) < 2000000)
+            //S2 is triggered less than 1.5s after current dog's enter time what means we have early (negative) cross
+            if ((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) < 1500000)
             {
                _bPotentialNegativeCrossDetected = true;
-               _llS2CrossedUnsafeTime = STriggerRecord.llTriggerTime;
+               _llS2CrossedUnsafeTriggerTime = STriggerRecord.llTriggerTime;
+               _llS2CrossedUnsafeGetMicrosTime = GET_MICROS; // fix for simulated race 13-37
                ESP_LOGI(__FILE__, "Dog %i potential negative cross detected.", iCurrentDog + 1);
             }
             else //S2 was triggered after 2s since current dog entry time
@@ -432,11 +463,11 @@ void RaceHandlerClass::Main()
       if (_strTransition.length() == 0                                             //String might still be empty, in which case the gates were clear
           || (strLast2TransitionChars == "ab" || strLast2TransitionChars == "ba")) //Sensors going low in either direction indicate gates are clear
       {
+         //Print the transition string up til now for debugging purposes
+         ESP_LOGI(__FILE__, "Tstring: %s", _strTransition.c_str());
          //The gates are clear, set boolean
          _bGatesClear = true;
          ESP_LOGI(__FILE__, "Gate: CLEAR.");
-         //Print the transition string up til now for debugging purposes
-         ESP_LOGI(__FILE__, "Tstring: %s", _strTransition.c_str());
 
          //Only check transition string when gates are clear
          //TODO: If transistion string is 3 or longer but actually more events are coming related to same transition, these are not considered.
@@ -444,10 +475,16 @@ void RaceHandlerClass::Main()
          {
             //Transition string is 4 characters or longer
             //So we can check what happened
-            if (_strTransition == "ABab") //Dog going to box
+            if (_bSensorNoise) // fix for simulated race 15-39
+            {
+               ESP_LOGI(__FILE__, "Sensor noise was detected. Ignore Tstring");
+               _bSensorNoise = false;
+            }
+            else if (_strTransition == "ABab") //Dog going to box
             {
                //Change dog state to coming back
                _ChangeDogState(COMINGBACK);
+               _strPreviousTransitionFirstLetter = "A";
                ESP_LOGI(__FILE__, "New dog state: COMINGBACK. ABab.");
                if (_bDogManualFaults[iPreviousDog]) // If previous dog has manual fault we assume it's because he missed gate while coming back
                                                     // If however this will be negative cross scenario flag will be deactivated in S2 sensor section
@@ -459,6 +496,7 @@ void RaceHandlerClass::Main()
             {
                //Normal handling, change dog state to GOING IN
                _ChangeDogState(GOINGIN);
+               _strPreviousTransitionFirstLetter = "B";
                ESP_LOGI(__FILE__, "New dog state: GOINGING.");
             }
             else if (_strTransition == "BAba" && RaceState == STOPPED) //Last returning dog
@@ -471,40 +509,46 @@ void RaceHandlerClass::Main()
                String strFirstTransitionChar = _strTransition.substring(0, 1);
                if (_byDogState == COMINGBACK && strFirstTransitionChar == "B")
                {
+                  _strPreviousTransitionFirstLetter = "B";
+                  //We increase the dog number
+                  //_ChangeDogNumber(iNextDog);
                   if (_bNegativeCrossDetected && RaceState != STOPPED) //Dog comming back after negative cross
                   {
                      _bNegativeCrossDetected = false;
-                     ESP_LOGI(__FILE__, "Dog state still COMINGBACK. Dog commin back after negative cross of next dog.");
+                     ESP_LOGI(__FILE__, "Dog state still COMINGBACK. Dog coming back after negative cross of next dog.");
                   }
-                  //We increase the dog number
-                  //_ChangeDogNumber(iNextDog);
                   //If this is Re-run and dog had fault active we need to turn it OFF if this is perfect crossing case (string starts with B) during re-run
-                  if ((_bRerunBusy && _bFault))
-                  {
-                     SetDogFault(iCurrentDog, OFF);
-                  }
-                  _bS1StillSafe = false;
-                  _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = 0;
-                  _llDogEnterTimes[iCurrentDog] = _llDogExitTimes[iPreviousDog];
-                  if (_strTransition == "BAab" || _strTransition == "BAba") //Big OK cross
-                  {
-                     _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
-                     ESP_LOGI(__FILE__, "Unmeasurable OK crossing for dog %i. BAab or BAba.", iCurrentDog + 1);
-                  }
                   else
                   {
-                     _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
-                     ESP_LOGI(__FILE__, "Unmeasurable ok crossing for dog %i.", iCurrentDog + 1);
+                     if ((_bRerunBusy && _bFault))
+                     {
+                        SetDogFault(iCurrentDog, OFF);
+                     }
+                     _bS1StillSafe = false;
+                     _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = 0;
+                     _llDogEnterTimes[iCurrentDog] = _llDogExitTimes[iPreviousDog];
+                     if (_strTransition == "BAab" || _strTransition == "BAba") //Big OK cross
+                     {
+                        _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+                        ESP_LOGI(__FILE__, "Unmeasurable OK crossing for dog %i. BAab or BAba", iCurrentDog + 1);
+                     }
+                     else
+                     {
+                        _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+                        ESP_LOGI(__FILE__, "Unmeasurable ok crossing for dog %i.", iCurrentDog + 1);
+                     }
                   }
                }
                else if (_byDogState == COMINGBACK && strFirstTransitionChar == "A")
                {
+                  _strPreviousTransitionFirstLetter = "A";
                   ESP_LOGD(__FILE__, "Dog %i fault. Tstring starting with A.", iCurrentDog + 1);
                }
                else
                //It has to be dog going in + sensors noise
                {
                   _ChangeDogState(COMINGBACK);
+                  _strPreviousTransitionFirstLetter = _strTransition.substring(0, 1);
                   ESP_LOGI(__FILE__, "New dog %i state: COMINGBACK. Uncertain.", iCurrentDog + 1);
                }
             }
@@ -625,6 +669,8 @@ void RaceHandlerClass::ResetRace()
       _llRaceTime = 0;
       _llRaceElapsedTime = 0;
       _llLastDogExitTime = 0;
+      _llS2CrossedUnsafeTriggerTime = 0;
+      _llS2CrossedUnsafeGetMicrosTime = 0;
       _byDogState = GOINGIN;
       _ChangeDogNumber(0);
       _bFault = false;
@@ -634,12 +680,14 @@ void RaceHandlerClass::ResetRace()
       _iOutputQueueWriteIndex = 0;
       _iInputQueueWriteIndex = 0;
       _strTransition = "";
+      _strPreviousTransitionFirstLetter="";
       _bGatesClear = true;
       _bS1isSafe = false;
       _bS1StillSafe = false;
       _bNextDogFound = false;
       _bNegativeCrossDetected = false;
       _bPotentialNegativeCrossDetected = false;
+      _bSensorNoise = false;
 
       for (auto &bFault : _bDogFaults)
       {
@@ -1481,13 +1529,13 @@ void RaceHandlerClass::_QueueFilter()
    {
       STriggerRecord _NextRecord = _InputTriggerQueue[_iInputQueueReadIndex + 1];
 
-      // If 2 records are from the same sensors line and delta time is below 4ms ignore both
-      if (_CurrentRecord.iSensorNumber == _NextRecord.iSensorNumber && _NextRecord.llTriggerTime - _CurrentRecord.llTriggerTime <= 5000)
+      // If 2 records are from the same sensors line and delta time is below 6ms ignore both
+      if (_CurrentRecord.iSensorNumber == _NextRecord.iSensorNumber && _NextRecord.llTriggerTime - _CurrentRecord.llTriggerTime <= 6000)
       {
-         //ESP_LOGD(__FILE__, "Next record %lld - Current record %lld = %lld < 4ms.", _NextRecord.llTriggerTime, _CurrentRecord.llTriggerTime, _NextRecord.llTriggerTime - _CurrentRecord.llTriggerTime);
+         //ESP_LOGD(__FILE__, "Next record %lld - Current record %lld = %lld < 6ms.", _NextRecord.llTriggerTime, _CurrentRecord.llTriggerTime, _NextRecord.llTriggerTime - _CurrentRecord.llTriggerTime);
          ESP_LOGI(__FILE__, "S%i | TT:%lld | T:%lld | St:%i | IGNORED", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime,
                   _CurrentRecord.llTriggerTime - llRaceStartTime, _CurrentRecord.iSensorState);
-         ESP_LOGI(__FILE__, "S%i | TT:%lld | T:%lld | St:%i | IGNORED < 5ms", _NextRecord.iSensorNumber, _NextRecord.llTriggerTime,
+         ESP_LOGI(__FILE__, "S%i | TT:%lld | T:%lld | St:%i | IGNORED < 6ms", _NextRecord.iSensorNumber, _NextRecord.llTriggerTime,
                   _NextRecord.llTriggerTime - llRaceStartTime, _NextRecord.iSensorState);
 
          //Input Read index has to be increased, check it we should wrap-around
@@ -1655,7 +1703,7 @@ void RaceHandlerClass::_AddToTransitionString(STriggerRecord _InterruptTrigger)
 
    //Filtering for unwanted sensor jitter - DEACTIVATED DUE TO RACE 25
    //Filter consecutive alternating changes out
-   /*if (_strTransition.endsWith("AaA"))
+   if (_strTransition.endsWith("AaA"))
    {
       _strTransition.replace("AaA", "A");
       ESP_LOGD(__FILE__, "Tstring AaA replaced with A");
@@ -1674,8 +1722,7 @@ void RaceHandlerClass::_AddToTransitionString(STriggerRecord _InterruptTrigger)
    {
       _strTransition.replace("bBb", "b");
       ESP_LOGD(__FILE__, "Tstring bBb replaced with b");
-      
-   }*/
+   }
 }
 
 RaceHandlerClass RaceHandler;
