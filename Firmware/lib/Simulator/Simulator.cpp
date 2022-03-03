@@ -377,7 +377,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
-   // TestCase 6: False start + dog 0 re-run fault
+   // TestCase 6: False start + dog 0 re-run fault (v1.1.2 change for reliable results)
    {1, -312563, 1},
    {2, -265863, 1},
    {1, -226969, 0},
@@ -394,7 +394,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {1, 8161764, 1},
    {2, 8211291, 0},
    {1, 8265749, 0},
-   {1, 8271020, 1},
+   {1, 8272020, 1},
    {2, 8321874, 1},
    {1, 8367949, 0},
    {2, 8417270, 0},
