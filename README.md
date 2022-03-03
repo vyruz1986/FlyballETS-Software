@@ -4,7 +4,7 @@ This project is a fork of Flyball ETS project by vyruz1986.
 
 ## Change log
 
-#### Check CHANGELOG.md file
+#### Check [CHANGELOG.md](https://github.com/simonttp78/FlyballETS-Software/blob/master/CHANGELOG.md) file
 
 ## Source files
 
