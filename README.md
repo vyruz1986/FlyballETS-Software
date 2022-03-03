@@ -1,6 +1,7 @@
 ## FlyballETS-Software by simonttp78
 
 This project is a fork of Flyball ETS project by vyruz1986.
+ETS stands for Electronic Training System and it's kind of Electronig Judging System (EJS - used during official Flyball competitions) adjusted to needs of regular Flyball trainings.
 
 ## Change log
 
