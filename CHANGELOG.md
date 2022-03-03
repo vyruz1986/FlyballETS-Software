@@ -27,6 +27,7 @@ All notable changes to this project will be documented in this file.
 - Websocket interface optimisation by reducing size of RaceData JSON
 - main.cpp refactoring
 - Sensor filtering time changed from 5ms to 6ms
+- Migratino to Angular 13
 
 ## [1.0.0] - 2022-02-16
 
