@@ -1,4 +1,5 @@
 #include "WebHandler.h"
+#include <AsyncElegantOTA.h>
 
 void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
 {
@@ -204,6 +205,11 @@ void WebHandlerClass::init(int webPort)
 
    //Authentication handler
    _server->on("/auth", HTTP_GET, std::bind(&WebHandlerClass::_onAuth, this, std::placeholders::_1));
+
+   String password = SettingsManager.getSetting("AdminPass");
+   char httpPassword[password.length() + 1];
+   password.toCharArray(httpPassword, password.length() + 1);
+   AsyncElegantOTA.begin(_server, "Admin", httpPassword);    // Start ElegantOTA
 
    _server->begin();
 
