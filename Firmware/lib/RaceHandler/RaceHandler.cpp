@@ -1307,7 +1307,11 @@ String RaceHandlerClass::GetRerunInfo(uint8_t iDogNumber)
    String strRerunInfo = "  ";
 
    uint8_t iRunNumber = _iLastReturnedRunNumber[iDogNumber];
-   if (iDogRunCounters[iDogNumber] > 0)
+   if (bRerunsOff)
+   {
+      strRerunInfo = "*X";
+   }
+   else if (iDogRunCounters[iDogNumber] > 0)
    {
       strRerunInfo = "*";
       strRerunInfo += (iRunNumber + 1);
@@ -1466,6 +1470,29 @@ void RaceHandlerClass::ToggleRunDirection()
       LCDController.UpdateField(LCDController.BoxDirection, ">");
       ESP_LOGD(__FILE__, "Run direction changed to: normal");
    }
+}
+
+
+/// <summary>
+///   Toggles status or reruns off/on
+/// </summary>
+void RaceHandlerClass::ToggleRerunsOffOn(uint8_t _iState)
+{
+   if (_iState == 2)
+      bRerunsOff = !bRerunsOff;
+   else if (_iState == 1)
+      bRerunsOff = true;
+   else if (_iState == 0)
+      bRerunsOff = false;
+   
+   if (bRerunsOff)
+      ESP_LOGI(__FILE__, "Reruns turned off.");
+   else
+      ESP_LOGI(__FILE__, "Reruns turned on.");
+   
+   #ifdef WiFiON
+   WebHandler._bSendRaceData = true;
+   #endif
 }
 
 /// <summary>

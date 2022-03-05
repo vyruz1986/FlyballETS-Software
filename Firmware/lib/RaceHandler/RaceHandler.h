@@ -69,6 +69,7 @@ public:
    stRaceData GetRaceData(int iRaceId);
    boolean GetRunDirection();
    void ToggleRunDirection();
+   void ToggleRerunsOffOn(uint8_t _iState);
    void SetNumberOfDogs(uint8_t _iNumberOfRacingDogs);
 
 
