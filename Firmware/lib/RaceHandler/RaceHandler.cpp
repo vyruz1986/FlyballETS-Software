@@ -167,14 +167,22 @@ void RaceHandlerClass::Main()
       uint8_t iNextDogChanged = iNextDog;
       if (_bFault && iCurrentDog == (iNumberOfRacingDogs - 1))
       {
-         //In case last dog before reruns is running and fault flag is active we have to check which the next offending dog starting from dog 1
-         for (uint8_t i = 0; i < iNumberOfRacingDogs; i++)
+         // If reruns are turned off set next do to dummy value 5
+         if (bRerunsOff)
          {
-            if (_bDogFaults[i] || _bDogManualFaults[i])
+            iNextDog = 5;
+         }
+         else
+         {
+            //In case last dog before reruns is running and fault flag is active we have to check which the next offending dog starting from dog 1
+            for (uint8_t i = 0; i < iNumberOfRacingDogs; i++)
             {
-               //Set dognumber to next/first offending dog
-               iNextDog = i;
-               break;
+               if (_bDogFaults[i] || _bDogManualFaults[i])
+               {
+                  //Set dognumber to next/first offending dog
+                  iNextDog = i;
+                  break;
+               }
             }
          }
       }
@@ -267,16 +275,22 @@ void RaceHandlerClass::Main()
             //Handle next dog
             _llDogEnterTimes[iNextDog] = STriggerRecord.llTriggerTime;
             ESP_LOGI(__FILE__, "Dog %i FAULT as coming back dog was expected.", iNextDog + 1);
-            if ((iCurrentDog == (iNumberOfRacingDogs - 1) && _bFault && !_bRerunBusy) //If current dog is last dog before reruns and a fault exists, we have to initiate rerun sequence
-                || _bRerunBusy)                               //Or if rerun is busy (and faults still exist)
+            if ((iCurrentDog == (iNumberOfRacingDogs - 1) && _bFault && !_bRerunBusy && !bRerunsOff)  //If current dog is last dog before reruns and a fault exists, we have to initiate rerun sequence
+               || _bRerunBusy)                                                                        //or if rerun is busy (and faults still exist)
             {
-               //Dog 4 came in but there is a fault, we have to initiate the rerun sequence
+               //Last dog came in but there is a fault, we have to initiate the rerun sequence
                _bRerunBusy = true;
                //Reset timers for this dog
                _llDogExitTimes[iNextDog] = 0;
                //Increase run counter for this dog
                iDogRunCounters[iNextDog]++;
                ESP_LOGI(__FILE__, "Re-run for dog %i", iNextDog + 1);
+            }
+            //In case reruns are turned off and current dog is last racing dog
+            else if (iNextDog == 5)
+            {
+               StopRace(STriggerRecord.llTriggerTime);
+               ESP_LOGI(__FILE__, "Reruns off. No more dogs was expected. Race stopped.");
             }
             _ChangeDogNumber(iNextDog);
          }        
@@ -363,7 +377,8 @@ void RaceHandlerClass::Main()
                ESP_LOGI(__FILE__, "PERFECT cross below 5ms detected for dog %i.", iNextDog + 1);
             }
             if ((iCurrentDog == (iNumberOfRacingDogs - 1) && !_bFault && !_bRerunBusy) //If this is the last dog and there are no faults (reruns) we have to stop the race
-                || (_bRerunBusy && !_bFault))                  //Or if the rerun sequence was started but no faults exist anymore
+                || (_bRerunBusy && !_bFault)                                           //or if the rerun sequence was started but no faults exist anymore
+                || iNextDog == 5)                                                      //or reruns are turned off and this is last dog
             {
                StopRace(STriggerRecord.llTriggerTime);
             }
@@ -1463,22 +1478,6 @@ void RaceHandlerClass::ToggleRunDirection()
 boolean RaceHandlerClass::GetRunDirection()
 {
    return _bRunDirectionInverted;
-}
-
-/// <summary>
-///   Toggles number of racing dogs
-/// </summary>
-void RaceHandlerClass::ToggleNumberOfDogs()
-{
-   if (iNumberOfRacingDogs == 1)
-      iNumberOfRacingDogs = 4;
-   else
-      iNumberOfRacingDogs--;
-   LCDController.UpdateNumberOfDogsOnLCD(iNumberOfRacingDogs);
-   #ifdef WiFiON
-   WebHandler._bSendRaceData = true;
-   #endif
-   ESP_LOGI(__FILE__, "Number of dogs changed to: %i.", iNumberOfRacingDogs);
 }
 
 /// <summary>

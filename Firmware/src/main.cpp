@@ -568,9 +568,6 @@ void HandleSerialCommands()
    //Toggle race direction
    if (strSerialData == "direction" && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
       RaceHandler.ToggleRunDirection();
-   //Toggle number of racing dogs
-   if (strSerialData == "toggledogs" && RaceHandler.RaceState == RaceHandler.RESET)
-      RaceHandler.ToggleNumberOfDogs();
    //Set explicitly number of racing dogs
    if (strSerialData.startsWith("setdogs") && RaceHandler.RaceState == RaceHandler.RESET)
       {
@@ -588,6 +585,19 @@ void HandleSerialCommands()
       LightsController.ToggleStartingSequence();
       LCDController.reInit();
    }
+   //Reruns off
+   if (strSerialData == "reruns off")
+   {
+      RaceHandler.bRerunsOff = true;
+      ESP_LOGI(__FILE__, "Reruns turned off.");
+   }
+   //Reruns on
+   if (strSerialData == "reruns on")
+   {
+      RaceHandler.bRerunsOff = false;
+      ESP_LOGI(__FILE__, "Reruns turned on.");
+   }
+   
    //Make sure this stays last in the function!
    if (strSerialData.length() > 0 )
    {
