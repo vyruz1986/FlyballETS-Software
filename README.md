@@ -18,7 +18,7 @@ ETS stands for Electronic Training System and it's kind of Electronig Judging Sy
 - When race is in RESET (READY) state remote control 3-6 buttons are used to define number of running dogs in race as during trainings less then 4 dogs might be racing
 - When race is in RESET (READY) state long press of button 3 will toggle reruns function OFF/ON. When reruns are truned off ETS is not expecting dogs to correct/rerun their faulty runs (each dog will run only once and race will be stopped). Reruns set to OFF are highlighted on LCD by "*X" at the end of each dog time line.
 - SD card need to be formatted in FAT32. Plging in or out SD card while ETS system is on will trigger auto-reboot. Properly detected SD card is indicated on LCD with "sd" letters.
-- On SD card there is tag file used to generate unique ID for each power-on session. This tag id is visible in top right corner of LCD. For each session there is CSV format file with results and in folder SENSORS_DATA also sensors readings that can be use for race simulation and issues debugging.
+- On SD card there is tag file used to generate unique ID for each power-on session. Every race in the sesssion got race id that is stored in CSV file with results on SD card and displayed in top right corner of LCD. Beside race results in csv file in folder SENSORS_DATA also sensors readings are stored for debugging purposes.
 - When GPS communication is established there will be "gps" letters visible on LCD. GPS time is used mainly for timestamp in races data saving to SD card. When GPS is not active logging will alway start with dummy timestamp of 2021-01-01 13:00:00 (CET time is default time. Other popular timezones will be added in future Frimware versions)
 
 
