@@ -17,8 +17,21 @@
    </div>
    <div class="column" style="width:6%;"></div>
 </div>
-<div class="raceState">
-   <span [ngClass]="{'badge': true, 'badge-success': overallMaxState == 0, 'badge-danger': overallMaxState == 2, 'badge-warning': overallMaxState == 1 || overallMaxState == 3}">
-      {{overallMaxState | friendlyRaceState}}
-   </span>
+<div class="row">
+   <div class="column" style="width:50%;">
+      <div class="form-check checkbox-slider--c-weight checkbox-slider-danger checkbox-slider-md d-inline">
+         <label>
+            <input type="checkbox" [disabled]="rerunsOffDisabled" [(ngModel)]="raceStates.RerunsOff[0]" (click)="EmitRerunsOff(!raceStates.RerunsOff[0])">
+            <span style="font-size: x-small;" >Reruns OFF</span>
+         </label>           
+      </div>
+   </div>
+   <div class="column" style="width:50%;">
+      <div class="raceState">
+         <span [ngClass]="{'badge': true, 'badge-success': overallMaxState == 0, 'badge-danger': overallMaxState == 2,
+                           'badge-warning': overallMaxState == 1 || overallMaxState == 3}">
+            {{overallMaxState | friendlyRaceState}}
+         </span>
+      </div>
+   </div>
 </div>

@@ -452,6 +452,21 @@ boolean WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, As
          return true;
       }
    }
+   else if (ActionType == "SetRerunsOff")
+   {
+      if (!ActionObj.containsKey("actionData") || (RaceHandler.RaceState != RaceHandler.RESET))
+      {
+         //ReturnError = "No actionData found!";
+         return false;
+      }
+      boolean _bRerunsOff = ActionObj["actionData"]["rerunsOff"];
+      //ESP_LOGD(__FILE__, "Received rerunsOff: %o", _bRerunsOff);
+      if (_bRerunsOff)
+         RaceHandler.ToggleRerunsOffOn(1);
+      else
+         RaceHandler.ToggleRerunsOffOn(0);
+      return true;
+   }
    else
    {
       //ReturnError = "Unknown action received!";
@@ -480,6 +495,7 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
       JsonRaceData["NetTime"] = RequestedRaceData.NetTime;
       JsonRaceData["raceState"] = RequestedRaceData.RaceState;
       JsonRaceData["racingDogs"] = RequestedRaceData.RacingDogs;
+      JsonRaceData["rerunsOff"] = RequestedRaceData.RerunsOff;
 
       JsonArray JsonDogDataArray = JsonRaceData.createNestedArray("dogData");
       for (uint8_t i = 0; i < RaceHandler.iNumberOfRacingDogs; i++)
