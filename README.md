@@ -7,7 +7,7 @@ ETS stands for Electronic Training System and it's kind of Electronig Judging Sy
 
 #### Check [CHANGELOG.md](https://github.com/simonttp78/FlyballETS-Software/blob/master/CHANGELOG.md) file
 
-## Basic use instruction
+## Usage instruction
 - During powering on Frimware version is visible on LCD
 - Pressing Laser button activate two red LEDs for ETS setup/positioning. Default time is 60s, but it can be changed via WebUI Config menu
 - Short press of Mode button will switch betweeen modes: FCI with 2 digits accuracy and NAFA with 3 digits accuracy. New mode name is visible for short time on LCD.
