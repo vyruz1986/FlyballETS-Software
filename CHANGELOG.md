@@ -13,6 +13,17 @@ All notable changes to this project will be documented in this file.
 
 - 
 
+## [1.2.0] - 2022-03-10
+
+### Added
+
+- Possibility to deactivate re-runs (race will stop without expecting dogs to correct/reruns their faults)
+
+### Changed
+
+- Buttons handling function with possibility to detect short and long button press
+
+
 ## [1.1.2] - 2022-03-03
 
 ### Added
@@ -63,6 +74,7 @@ All notable changes to this project will be documented in this file.
 
 
 
-[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.1.2...HEAD
+[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.1.2...v1.2.0
 [1.1.2]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.0.0...v1.1.2
 [1.0.0]: https://github.com/simonttp78/FlyballETS-Software/releases/tag/v1.0.0
