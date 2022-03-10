@@ -5,14 +5,6 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-### Added 
-
-- 
-
-### Fixed
-
-- 
-
 ## [1.2.0] - 2022-03-10
 
 ### Added
@@ -47,7 +39,7 @@ All notable changes to this project will be documented in this file.
 - Two modes configurable in settings:
   - FCI lights with 2 digits accuracy
   - NAFA lights with 3 digits accuracy
-- "perfect crossing" (belo 5ms)
+- "perfect crossing" (below 5ms)
 - Simulated scenarios for code functional and regression testing
 - New console commands for runtime interfacing and test automation
 - PISO register for interfacing with remote control and buttons: released ESP32 lines used for SD card communication
