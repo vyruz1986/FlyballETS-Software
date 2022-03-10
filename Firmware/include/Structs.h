@@ -26,6 +26,7 @@ struct stRaceData
    stDogData DogData[4];
    String NetTime;
    uint8_t RacingDogs;
+   boolean RerunsOff;
 };
 
 struct stSystemData

@@ -15,7 +15,7 @@ import { LightStates } from "../../interfaces/light-states";
 export class RacedisplayComponent implements OnInit {
    currentRaces: RaceData[] = [];
 
-   raceStates: RaceState = { RaceStates: [], StartTimes: [], RacingDogs: [] };
+   raceStates: RaceState = { RaceStates: [], StartTimes: [], RacingDogs: [], RerunsOff: [] };
 
    lightStates: LightStates[] = [{ State: [0, 0, 0, 0, 0] }];
 
@@ -92,14 +92,23 @@ export class RacedisplayComponent implements OnInit {
 
    onSetDogFault(dogFault: { raceNum: number; dogNum: number; fault: boolean }) {
       console.log("Setting fault for race %i, dog %i to value: %o", dogFault.raceNum, dogFault.dogNum, dogFault.fault);
-      let StopAction: WebsocketAction = {
+      let DogAction: WebsocketAction = {
          actionType: "SetDogFault",
          actionData: {
             dogNumber: dogFault.dogNum,
             faultState: dogFault.fault,
          },
       };
-      this.etsDataService.sendAction(StopAction);
+      this.etsDataService.sendAction(DogAction);
+   }
+
+   onSetRerunsOff(rerunsOff: boolean) {
+      console.log("Setting reruns off to %o", rerunsOff);
+      let Action: WebsocketAction = {
+         actionType: "SetRerunsOff",
+         actionData: { rerunsOff: rerunsOff, },
+      };
+      this.etsDataService.sendAction(Action);
    }
 
    HandleCurrentRaceData(raceData: RaceData[]) {
@@ -109,11 +118,12 @@ export class RacedisplayComponent implements OnInit {
             this.currentRaces.push(element);
          }
       });
-      this.raceStates = { RaceStates: [], StartTimes: [], RacingDogs: [] };
+      this.raceStates = { RaceStates: [], StartTimes: [], RacingDogs: [], RerunsOff: [] };
       this.currentRaces.forEach((element) => {
          this.raceStates.RaceStates.push(element.raceState);
          this.raceStates.StartTimes.push(element.startTime);
          this.raceStates.RacingDogs.push(element.racingDogs);
+         this.raceStates.RerunsOff.push(element.rerunsOff);
       });
    }
 

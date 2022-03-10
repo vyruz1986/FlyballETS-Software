@@ -5,6 +5,7 @@ export class RaceState {
    constructor(
       public RaceStates: Array<RaceStateEnum>,
       public StartTimes: Array<number>,
-      public RacingDogs: Array<number>
+      public RacingDogs: Array<number>,
+      public RerunsOff: Array<boolean>
    ) { }
 }

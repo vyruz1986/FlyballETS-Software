@@ -34,6 +34,7 @@ public:
    long long llRaceStartTime;
    int iCurrentRaceId = -1;
    char* cRaceStartTimestamp;
+   boolean bRerunsOff = false;
    
    void Main();
    void ChangeRaceStateToRunning();
@@ -68,7 +69,7 @@ public:
    stRaceData GetRaceData(int iRaceId);
    boolean GetRunDirection();
    void ToggleRunDirection();
-   void ToggleNumberOfDogs();
+   void ToggleRerunsOffOn(uint8_t _iState);
    void SetNumberOfDogs(uint8_t _iNumberOfRacingDogs);
 
 
@@ -105,11 +106,11 @@ private:
    volatile uint8_t _iInputQueueWriteIndex = 0;
 
    bool _bFault;
-   bool _bDogFaults[4];
+   bool _bDogFaults[5];
    bool _bDogManualFaults[4];
-   bool _bDogPerfectCross[4][4];
-   bool _bDogBigOK[4][4];
-   bool _bDogSmallok[4][4];
+   bool _bDogPerfectCross[5][4];
+   bool _bDogBigOK[5][4];
+   bool _bDogSmallok[5][4];
    bool _bDogMissedGateGoingin[4][4];
    bool _bDogMissedGateComingback[4][4];
    bool _bRerunBusy;
@@ -119,10 +120,10 @@ private:
    bool _bPotentialNegativeCrossDetected;
    long long _llLastDogTimeReturnTimeStamp[4];
    uint8_t _iLastReturnedRunNumber[4];
-   long long _llDogEnterTimes[4];
+   long long _llDogEnterTimes[5];
    long long _llDogExitTimes[4];
    long long _llDogTimes[4][4];
-   long long _llCrossingTimes[4][4];
+   long long _llCrossingTimes[5][4];
 
    String _strTransition;
    String _strPreviousTransitionFirstLetter=""; // fix for simulated race 18-41

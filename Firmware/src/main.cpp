@@ -109,7 +109,7 @@ long long llLastBatteryLCDupdate = -25000;
 uint8_t iLatchPin = 23;
 uint8_t iClockPin = 18;
 uint8_t iDataInPin = 19;
-byte bDataIn = 0;
+
 
 //control pins for SD card
 uint8_t iSDdata0Pin = 2;
@@ -123,8 +123,16 @@ uint8_t iGPStxPin = 36;
 uint8_t iGPSrxPin = 39;
 uint8_t iGPSppsPin = 22;
 
-//Array to hold last time button presses
-unsigned long long llLastRCPress[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+//Buttons handling variables and constans
+unsigned long long llLastDebounceTime = 0;
+unsigned long long llPressedTime [8] = {0, 0, 0, 0, 0, 0, 0, 0};
+unsigned long long llReleasedTime [8] = {0, 0, 0, 0, 0, 0, 0, 0};
+uint8_t iLastActiveBit = 0;
+byte byDataIn = 0;
+byte byLastStadyState = 0;
+byte byLastFlickerableState = 0;
+const uint16_t DEBOUNCE_DELAY = 30;      //in ms
+const uint16_t SHORT_PRESS_TIME = 700;   //in ms
 
 //control pins for LCD
 uint8_t iLCDE1Pin = 16;
@@ -453,7 +461,6 @@ void StopRaceMain()
 /// </summary>
 void StartStopRace()
 {
-   llLastRCPress[1] = GET_MICROS / 1000;
    if (RaceHandler.RaceState == RaceHandler.RESET) //If race is reset
    {
       //Then start the race
@@ -474,7 +481,6 @@ void ResetRace()
    {
       return;
    }
-   llLastRCPress[2] = GET_MICROS / 1000;
    RaceHandler.ResetRace();
    LightsController.ResetLights();
 }
@@ -568,9 +574,6 @@ void HandleSerialCommands()
    //Toggle race direction
    if (strSerialData == "direction" && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
       RaceHandler.ToggleRunDirection();
-   //Toggle number of racing dogs
-   if (strSerialData == "toggledogs" && RaceHandler.RaceState == RaceHandler.RESET)
-      RaceHandler.ToggleNumberOfDogs();
    //Set explicitly number of racing dogs
    if (strSerialData.startsWith("setdogs") && RaceHandler.RaceState == RaceHandler.RESET)
       {
@@ -588,6 +591,13 @@ void HandleSerialCommands()
       LightsController.ToggleStartingSequence();
       LCDController.reInit();
    }
+   //Reruns off
+   if (strSerialData == "reruns off")
+      RaceHandler.ToggleRerunsOffOn(1);
+   //Reruns on
+   if (strSerialData == "reruns on")
+      RaceHandler.ToggleRerunsOffOn(0);
+   
    //Make sure this stays last in the function!
    if (strSerialData.length() > 0 )
    {
@@ -692,37 +702,121 @@ void HandleLCDUpdates()
 
 void HandleRemoteAndButtons()
 {
-   byte bOldDataIn = bDataIn;
-   bDataIn = 0;
+   byDataIn = 0;
    digitalWrite(iLatchPin, LOW);
    digitalWrite(iClockPin, LOW);
    digitalWrite(iClockPin, HIGH);
    digitalWrite(iLatchPin, HIGH);
    for (uint8_t i = 0; i < 8; ++i)
    {
-      bDataIn |= digitalRead(iDataInPin) << (7 - i);
+      byDataIn |= digitalRead(iDataInPin) << (7 - i);
       digitalWrite(iClockPin, LOW);
       digitalWrite(iClockPin, HIGH);
    }
    // It's assumed that only one button can be pressed at the same time, therefore any multiple high states are treated as false read and ingored
-   if (bDataIn != 0 && bDataIn != 1 && bDataIn != 2 && bDataIn != 4 && bDataIn != 8 && bDataIn != 16 && bDataIn != 32 && bDataIn != 64 && bDataIn != 128)
+   if (byDataIn != 0 && byDataIn != 1 && byDataIn != 2 && byDataIn != 4 && byDataIn != 8 && byDataIn != 16 && byDataIn != 32 && byDataIn != 64 && byDataIn != 128)
    {
-      ESP_LOGD(__FILE__, "%s", GetButtonString().c_str());
-      bDataIn = 0;
+      //ESP_LOGD(__FILE__, "Unknown buttons data --> Ignored");
+      byDataIn = 0;
    }
-   // Print to console if button press detected
-   if (bDataIn != bOldDataIn && bDataIn != 0)
+   // Check if the switch/button changed, due to noise or pressing:
+   if (byDataIn != byLastFlickerableState)
    {
-      //ESP_LOGD(__FILE__, "%s", GetButtonString().c_str());
+      // reset the debouncing timer
+      llLastDebounceTime = GET_MICROS / 1000;
+      // save the the last flickerable state
+      byLastFlickerableState = byDataIn;
    }
-
+   if ((byLastStadyState != byDataIn) && ((GET_MICROS / 1000 - llLastDebounceTime) > DEBOUNCE_DELAY))
+   {
+      if (byDataIn != 0)
+      {
+         iLastActiveBit = log2(byDataIn & -byDataIn);
+         //ESP_LOGD(__FILE__, "byDataIn is: %i, iLastActiveBit is: %i", byDataIn, iLastActiveBit);
+      }
+      // whatever the reading is at, it's been there for longer than the debounce
+      // delay, so take it as the actual current state:
+      // if the button state has changed:
+      if (bitRead(byLastStadyState, iLastActiveBit) == LOW && bitRead(byDataIn, iLastActiveBit) == HIGH)
+      {
+         llPressedTime[iLastActiveBit] = GET_MICROS / 1000;
+         //ESP_LOGD(__FILE__, "The button is pressed: %lld", llPressedTime[iLastActiveBit]);
+      }
+      else if (bitRead(byLastStadyState, iLastActiveBit) == HIGH && bitRead(byDataIn, iLastActiveBit) == LOW)
+      {
+         llReleasedTime[iLastActiveBit] = GET_MICROS / 1000;
+         //ESP_LOGD(__FILE__, "The button is released: %lld", llReleasedTime[iLastActiveBit]);
+      }
+      // save the the last state
+      byLastStadyState = byDataIn;
+      long long llPressDuration = (llReleasedTime[iLastActiveBit] - llPressedTime[iLastActiveBit]);
+      if (llPressDuration > 0)
+      {
+         // Action not dependent on short/long button press
+         if (iLastActiveBit == 1)      //Race start/stop button (remote D0 output)
+            StartStopRace();
+         else if (iLastActiveBit == 2) //Race reset button (remote D1 output)
+            ResetRace();
+         else if (iLastActiveBit == 7 && !bLaserActive && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)) //Laser activation
+                  
+         {
+            digitalWrite(iLaserOutputPin, HIGH);
+            bLaserActive = true;
+            ESP_LOGI(__FILE__, "Turn Laser ON.");
+         }         
+         // Actions for SHORT button press
+         if (llPressDuration <= SHORT_PRESS_TIME)
+         {
+            ESP_LOGI(__FILE__, "%s SHORT press detected: %lldms", GetButtonString(iLastActiveBit).c_str(), llPressDuration);
+            if (iLastActiveBit == 3) //Dog 1 fault RC button
+               if (RaceHandler.RaceState == RaceHandler.RESET)
+                  RaceHandler.SetNumberOfDogs(1);
+               else
+                  RaceHandler.SetDogFault(0);
+            else if (iLastActiveBit == 6) //Dog 2 fault RC button
+               if (RaceHandler.RaceState == RaceHandler.RESET)
+                  RaceHandler.SetNumberOfDogs(2);
+               else
+                  RaceHandler.SetDogFault(1);
+            else if (iLastActiveBit == 5) //Dog 3 fault RC button
+               if (RaceHandler.RaceState == RaceHandler.RESET)
+                  RaceHandler.SetNumberOfDogs(3);
+               else
+                  RaceHandler.SetDogFault(2);
+            else if (iLastActiveBit == 4) //Dog 4 fault RC button
+               if (RaceHandler.RaceState == RaceHandler.RESET)
+                  RaceHandler.SetNumberOfDogs(4);
+               else
+                  RaceHandler.SetDogFault(3);
+            else if (iLastActiveBit == 0 && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)) //Mode button - mode change
+               LightsController.ToggleStartingSequence();
+         }
+         // Actions for LONG button press
+         else if (llPressDuration > SHORT_PRESS_TIME)
+         {
+            ESP_LOGI(__FILE__, "%s LONG press detected: %lldms", GetButtonString(iLastActiveBit).c_str(), llPressDuration);
+            if (iLastActiveBit == 3 && RaceHandler.RaceState == RaceHandler.RESET) //Dog 1 fault RC button - toggling reruns off/on
+               RaceHandler.ToggleRerunsOffOn(2);
+            else if (iLastActiveBit == 0 && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)) //Mode button - side switch
+               RaceHandler.ToggleRunDirection();
+         }
+      }
+   }
+   //Laser deativation
+   if ((bLaserActive) && ((GET_MICROS / 1000 - llReleasedTime[7] > iLaserOnTime * 1000) || RaceHandler.RaceState == RaceHandler.STARTING || RaceHandler.RaceState == RaceHandler.RUNNING))
+   {
+      digitalWrite(iLaserOutputPin, LOW);
+      bLaserActive = false;
+      ESP_LOGI(__FILE__, "Turn Laser OFF.");
+   }
+   /*
    //Race start/stop button (remote D0 output)
-   if (bitRead(bDataIn, 1) == HIGH && (GET_MICROS / 1000 - llLastRCPress[1]) > 2500)
+   if (bitRead(byDataIn, 1) == HIGH && (GET_MICROS / 1000 - llLastRCPress[1]) > 2500)
    {
       StartStopRace();
    }
    //Race reset button (remote D1 output)
-   if (bitRead(bDataIn, 2) == HIGH && (GET_MICROS / 1000 - llLastRCPress[2] > 2000))
+   if (bitRead(byDataIn, 2) == HIGH && (GET_MICROS / 1000 - llLastRCPress[2] > 2000))
    {
       ResetRace();
    }
@@ -730,13 +824,10 @@ void HandleRemoteAndButtons()
    if (bitRead(bDataIn, 3) == HIGH && (GET_MICROS / 1000 - llLastRCPress[3] > 2000))
    {
       llLastRCPress[3] = GET_MICROS / 1000;
-      if (RaceHandler.RaceState == RaceHandler.RESET)
-         RaceHandler.SetNumberOfDogs(1);
-      else
-         RaceHandler.SetDogFault(0);
+
    }
    //Dog 2 fault RC button
-   if (bitRead(bDataIn, 6) == HIGH && (GET_MICROS / 1000 - llLastRCPress[6] > 2000))
+   if (bitRead(byDataIn, 6) == HIGH && (GET_MICROS / 1000 - llLastRCPress[6] > 2000))
    {
       llLastRCPress[6] = GET_MICROS / 1000;
       if (RaceHandler.RaceState == RaceHandler.RESET)
@@ -745,7 +836,7 @@ void HandleRemoteAndButtons()
          RaceHandler.SetDogFault(1);
    }
    //Dog 3 fault RC button
-   if (bitRead(bDataIn, 5) == HIGH && (GET_MICROS / 1000 - llLastRCPress[5] > 2000))
+   if (bitRead(byDataIn, 5) == HIGH && (GET_MICROS / 1000 - llLastRCPress[5] > 2000))
    {
       llLastRCPress[5] = GET_MICROS / 1000;
       if (RaceHandler.RaceState == RaceHandler.RESET)
@@ -754,7 +845,7 @@ void HandleRemoteAndButtons()
          RaceHandler.SetDogFault(2);
    }
    //Dog 4 fault RC button
-   if (bitRead(bDataIn, 4) == HIGH && (GET_MICROS / 1000 - llLastRCPress[4] > 2000))
+   if (bitRead(byDataIn, 4) == HIGH && (GET_MICROS / 1000 - llLastRCPress[4] > 2000))
    {
       llLastRCPress[4] = GET_MICROS / 1000;
       if (RaceHandler.RaceState == RaceHandler.RESET)
@@ -763,7 +854,7 @@ void HandleRemoteAndButtons()
          RaceHandler.SetDogFault(3);
    }
    //Laser activation
-   if (bitRead(bDataIn, 7) == HIGH && ((GET_MICROS / 1000 - llLastRCPress[7] > iLaserOnTime * 1000) || llLastRCPress[7] == 0) //
+   if (bitRead(byDataIn, 7) == HIGH && ((GET_MICROS / 1000 - llLastRCPress[7] > iLaserOnTime * 1000) || llLastRCPress[7] == 0) //
       && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
    {
       llLastRCPress[7] = GET_MICROS / 1000;
@@ -779,7 +870,7 @@ void HandleRemoteAndButtons()
       ESP_LOGI(__FILE__, "Turn Laser OFF.");
    }
    //Handle mode button
-   if (((bitRead(bDataIn, 0) == HIGH) && (GET_MICROS / 1000 - llLastRCPress[0] > SideSwitchCoolDownTime))
+   if (((bitRead(byDataIn, 0) == HIGH) && (GET_MICROS / 1000 - llLastRCPress[0] > SideSwitchCoolDownTime))
          && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
    {
       if ((GET_MICROS / 1000 - llLastRCPress[0] < 1000) && bSideSwitchPressedOnce)
@@ -798,38 +889,39 @@ void HandleRemoteAndButtons()
       LightsController.ToggleStartingSequence();
       bSideSwitchPressedOnce = false;
    }
+   */
 }
 
 /// <summary>
 ///   Gets pressed button string for consol printing.
 /// </summary>
-String GetButtonString()
+String GetButtonString(uint8_t _iActiveBit)
 {
    String strButton;
-   switch (bDataIn)
+   switch (_iActiveBit)
    {
-   case 1:
+   case 0:
       strButton = "Mode button";
       break;
-   case 2:
+   case 1:
       strButton = "Remote 1: start/stop";
       break;
-   case 4:
+   case 2:
       strButton = "Remote 2: reset";
       break;
-   case 8:
+   case 3:
       strButton = "Remote 3: dog 1 fault";
       break;
-   case 16:
+   case 6:
       strButton = "Remote 6: dog 4 fault";
       break;
-   case 32:
+   case 5:
       strButton = "Remote 5: dog 3 fault";
       break;
-   case 64:
+   case 4:
       strButton = "Remote 4: dog 2 fault";
       break;
-   case 128:
+   case 7:
       strButton = "Laser trigger";
       break;
    default:
