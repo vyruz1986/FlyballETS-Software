@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.2.1] - 2022-04-14
+
+### Added
+
+- Long press of laser button toggling Wifi state OFF and ON
+- Possibility to deactivate re-runs (race will stop without expecting dogs to correct/reruns their faults)
+- Simulated race 44 and deactivation of filtering time 350ms for sensors reading in case of first entering dog
+  This is not real case sceanrio, but without it human simulating dog enter could cause confusing OK enter time
+- Number of racign dogs and re-runs off indicator added to race data saved on SD card
+
+### Changed
+
+- Sensors prints to console and SD card now include also empty entries for easier simulation usage
+- Fixed problem with SD card sensors file tag and first race prints
+- WiFi related console prints cleanup
+
 ## [1.2.0] - 2022-03-10
 
 ### Added
@@ -66,7 +82,8 @@ All notable changes to this project will be documented in this file.
 
 
 
-[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.2.0...HEAD
+[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.1.2...v1.2.0
 [1.1.2]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.0.0...v1.1.2
 [1.0.0]: https://github.com/simonttp78/FlyballETS-Software/releases/tag/v1.0.0
