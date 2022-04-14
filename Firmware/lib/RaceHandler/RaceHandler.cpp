@@ -112,8 +112,8 @@ void RaceHandlerClass::Main()
    {
       //Get next record from queue
       STriggerRecord STriggerRecord = _QueuePop();
-      //If the transition string is not empty and it wasn't updated for 350ms then it was noise and we have to clear it.
-      if (_strTransition.length() != 0 && (GET_MICROS - _llLastTransitionStringUpdate) > 350000)
+      //If the transition string is not empty and it wasn't updated for 350ms then it was noise and we have to clear it. First entering dog excluded.
+      if (_strTransition.length() != 0 && (GET_MICROS - _llLastTransitionStringUpdate) > 350000 && (iCurrentDog != 0 || (iCurrentDog == 0 && _bRerunBusy)))
       {
          if (_byDogState == GOINGIN)
          {
@@ -817,6 +817,11 @@ void RaceHandlerClass::PrintRaceTriggerRecords()
       printf("{%i, %lld, %i},\n", RecordToPrint.iSensorNumber, RecordToPrint.llTriggerTime - llRaceStartTime, RecordToPrint.iSensorState);
       iRecordToPrintIndex++;
    }
+   while (iRecordToPrintIndex < TRIGGER_QUEUE_LENGTH)
+   {
+      printf("{0, 0, 0},\n");
+      iRecordToPrintIndex++;
+   }
 }
 
 /// <summary>
@@ -829,7 +834,7 @@ void RaceHandlerClass::PrintRaceTriggerRecordsToFile()
    if (iCurrentRaceId == 0)
    {
       SDcardController.writeFile(SD_MMC, rawSensorsReadingFileName.c_str(),
-      "Sensor ID; Time [us]; Sensor state\n");
+      "ID; Time [us]; state\n");
    }
    rawSensorsReadingFile = SD_MMC.open(rawSensorsReadingFileName.c_str(), FILE_APPEND);
    if(rawSensorsReadingFile)
@@ -847,6 +852,11 @@ void RaceHandlerClass::PrintRaceTriggerRecordsToFile()
          rawSensorsReadingFile.print(", ");
          rawSensorsReadingFile.print(RecordToPrint.iSensorState);
          rawSensorsReadingFile.println("},");                        
+         iRecordToPrintIndex++;
+      }
+      while (iRecordToPrintIndex < TRIGGER_QUEUE_LENGTH)
+      {
+         rawSensorsReadingFile.println("{0, 0, 0},");                        
          iRecordToPrintIndex++;
       }
       rawSensorsReadingFile.close();
@@ -902,7 +912,7 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
 /// </summary>
 void RaceHandlerClass::TriggerSensor1()
 {
-   if (RaceState == STOPPED && GET_MICROS > (_llRaceEndTime + 1500000))
+   if (RaceState == STOPPED && GET_MICROS > (_llRaceEndTime + 500000))
    {
       return;
    }
@@ -927,7 +937,7 @@ void RaceHandlerClass::TriggerSensor1()
 /// </summary>
 void RaceHandlerClass::TriggerSensor2()
 {
-   if (RaceState == STOPPED && GET_MICROS > (_llRaceEndTime + 1500000))
+   if (RaceState == STOPPED && GET_MICROS > (_llRaceEndTime + 500000))
    {
       return;
    }
