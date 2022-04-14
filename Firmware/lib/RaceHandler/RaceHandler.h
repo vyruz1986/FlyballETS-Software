@@ -96,7 +96,6 @@ private:
       volatile int iSensorState;
    };
    
-   #define TRIGGER_QUEUE_LENGTH 60
    STriggerRecord _InputTriggerQueue[TRIGGER_QUEUE_LENGTH];
    STriggerRecord _OutputTriggerQueue[TRIGGER_QUEUE_LENGTH];
 

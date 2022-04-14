@@ -80,7 +80,7 @@ void SDcardControllerClass::init()
          {
             uint16_t oldTagValue = tagfile.parseInt();
             tagfile.close();
-            ESP_LOGI(__FILE__, "Old tag.txt file value: %i.", oldTagValue);
+            ESP_LOGI(__FILE__, "Previous tag.txt file value: %i.", oldTagValue);
          }   
       }
    }
@@ -98,7 +98,7 @@ void SDcardControllerClass::SaveRaceDataToFile()
       UpdateTagFile();
       raceDataFileName = "/" + sTagValue + "_ETS_" + sDate + ".csv";
       writeFile(SD_MMC, raceDataFileName.c_str(),
-      "sep=;\nTag;Race ID;Date;Race timestamp;Dog 1 time;Dog 1 starting;Dog 1 re-run time;Dog 1 re-run crossing;Dog 1 2nd re-run time;Dog 1 2nd re-run crossing;Dog 2 time;Dog 2 crossing;Dog 2 re-run time;Dog 2 re-run crossing;Dog 2 2nd re-run time;Dog 2 2nd re-run crossing;Dog 3 time;Dog 3 crossing;Dog 3 re-run time;Dog 3 re-run crossing;Dog 3 2nd re-run time;Dog 3 2nd re-run crossing;Dog 4 time;Dog 4 crossing;Dog 4 re-run time;Dog 4 re-run crossing;Dog 4 2nd re-run time;Dog 4 2nd re-run crossing;Team time; Net time;Comments\n");
+      "sep=;\nTag;Race ID;Date;Race timestamp;Number of racing dogs;Re-runs off?;Dog 1 time;Dog 1 starting;Dog 1 re-run time;Dog 1 re-run crossing;Dog 1 2nd re-run time;Dog 1 2nd re-run crossing;Dog 2 time;Dog 2 crossing;Dog 2 re-run time;Dog 2 re-run crossing;Dog 2 2nd re-run time;Dog 2 2nd re-run crossing;Dog 3 time;Dog 3 crossing;Dog 3 re-run time;Dog 3 re-run crossing;Dog 3 2nd re-run time;Dog 3 2nd re-run crossing;Dog 4 time;Dog 4 crossing;Dog 4 re-run time;Dog 4 re-run crossing;Dog 4 2nd re-run time;Dog 4 2nd re-run crossing;Team time; Net time;Comments\n");
    }
    raceDataFile = SD_MMC.open(raceDataFileName.c_str(), FILE_APPEND);
    if(raceDataFile)
@@ -110,6 +110,10 @@ void SDcardControllerClass::SaveRaceDataToFile()
       raceDataFile.print(sDate);
       raceDataFile.print(";");
       raceDataFile.print(RaceHandler.cRaceStartTimestamp);
+      raceDataFile.print(";");
+      raceDataFile.print(RaceHandler.iNumberOfRacingDogs);
+      raceDataFile.print(";");
+      raceDataFile.print(RaceHandler.bRerunsOff);
       raceDataFile.print(";");
       for (uint8_t i = 0; i < 4; i++)
       {
