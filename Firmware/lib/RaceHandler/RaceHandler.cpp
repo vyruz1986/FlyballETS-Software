@@ -158,6 +158,8 @@ void RaceHandlerClass::Main()
       if (_bPotentialNegativeCrossDetected && (GET_MICROS - _llS2CrossedUnsafeGetMicrosTime) > 100000)
       {
          _bPotentialNegativeCrossDetected = false;
+         _strTransition = "";
+         _bGatesClear = true;
          ESP_LOGD(__FILE__, "Potential negative cross flag reset as S1 not crossed for 100ms");
       }
 
@@ -427,9 +429,9 @@ void RaceHandlerClass::Main()
          }        
          else if (_byDogState == COMINGBACK)
          {
-            //TODO: The current dog could also have a fault which is not caused by being too early (manually triggered fault).
-            //S2 is triggered less than 1.5s after current dog's enter time what means we have early (negative) cross
-            if ((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) < 1500000)
+            //S2 is triggered less than 1.5s after current dog's enter time what means we have potential early (negative) cross
+            //unless this is first dog
+            if (iCurrentDog == 0 && !_bRerunBusy && ((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) < 1500000))
             {
                _bPotentialNegativeCrossDetected = true;
                _llS2CrossedUnsafeTriggerTime = STriggerRecord.llTriggerTime;
