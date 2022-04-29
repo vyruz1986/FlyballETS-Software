@@ -104,7 +104,7 @@ private:
    bool _bRunDirectionInverted = false;
    bool _bNextDogFound = false;
    bool _bSensorNoise = false;
-   bool _bLastStringABab = false;
+   bool _bLastStringBAba = false;
    bool _bFault;
    bool _bDogFaults[5];
    bool _bDogManualFaults[4];
