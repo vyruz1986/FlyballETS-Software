@@ -29,7 +29,7 @@ class SDcardControllerClass
 protected:
 
 public:
-    boolean bSDCardDetected = false;
+    bool bSDCardDetected = false;
     String sTagValue;
     uint16_t iTagValue;
     void listDir(fs::FS &fs, const char * dirname, uint8_t levels);

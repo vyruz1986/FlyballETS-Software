@@ -11,7 +11,7 @@
 ///   Program the interrupt triggers which should be simulated here. See end of file for a collection of records from actual races.
 /// </summary>
 const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSimulatedRaces] PROGMEM = {
-    // TestCase 0 --> Race3 (GT Team 4):
+   // TestCase 0 --> Race3 (GT Team 4):
    {1, -102316, 1},
    {2, -87824, 1},
    {2, -80456, 0},
@@ -1353,7 +1353,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
-    // TestCase 22 --> Race3 (GT Team 4) with false start changed to -9ms
+   // TestCase 22 --> Race3 (GT Team 4) with false start changed to -9ms
    {1, -9316, 1},
    {2, 5176, 1},
    {2, 12544, 0},
@@ -1597,7 +1597,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
-   //Race ID: 2 - 26
+   // Race ID: 2 - 26
    {1, -23324, 1},
    {2, -8593, 1},
    {1, 84204, 0},
@@ -1658,7 +1658,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
-   //Race ID: 3-27
+   // Race ID: 3-27
    {1, 264714, 1},
    {2, 278991, 1},
    {1, 370936, 0},
@@ -1719,7 +1719,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
-   //Race ID: 4-28
+   // Race ID: 4-28
    {1, -141819, 1},
    {2, -128276, 1},
    {1, -37919, 0},
@@ -1780,7 +1780,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
-   //Race ID: 5-29
+   // Race ID: 5-29
    {1, -13616, 1},
    {2, 1334, 1},
    {1, 96547, 0},
@@ -1841,7 +1841,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
-   //Race ID: 6-30
+   // Race ID: 6-30
    {1, -117275, 1},
    {2, -96668, 1},
    {1, -13323, 0},
@@ -1902,7 +1902,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
-   //Race ID: 7-31
+   // Race ID: 7-31
    {1, -24110, 1},
    {2, -7756, 1},
    {1, 76066, 0},
@@ -1963,7 +1963,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
-   //Race ID: 8-32
+   // Race ID: 8-32
    {1, 161544, 1},
    {2, 184776, 1},
    {1, 272291, 0},
@@ -2024,7 +2024,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
-   //Race ID: 9-33
+   // Race ID: 9-33
    {1, 67149, 1},
    {2, 88385, 1},
    {1, 178667, 0},
@@ -2085,7 +2085,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
-   //Race ID: 10-34
+   // Race ID: 10-34
    {1, 151159, 1},
    {2, 170763, 1},
    {1, 260789, 0},
@@ -2146,7 +2146,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
-   //Race ID: 11-35
+   // Race ID: 11-35
    {1, -155799, 1},
    {2, -138812, 1},
    {1, -46615, 0},
@@ -2207,29 +2207,29 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
-   //Race ID: 12-36
-   {1, -1222   , 1},
-   {2, 12510   , 1},
-   {1, 106174  , 0},
-   {2, 118148  , 0},
-   {2, 3916954 , 1},
-   {1, 3929469 , 1},
-   {1, 4061704 , 0},
-   {2, 4069385 , 0},
-   {2, 4070515 , 1},
-   {2, 4077842 , 0},
-   {2, 4080282 , 1},
-   {2, 4084151 , 0},
-   {1, 7906751 , 1},
-   {2, 7917992 , 1},
-   {1, 8017443 , 0},
-   {2, 8032727 , 0},
-   {2, 8042977 , 1},
-   {1, 8059172 , 1},
-   {2, 8130307 , 0},
-   {2, 8131807 , 1},
-   {2, 8133750 , 0},
-   {1, 8148123 , 0},
+   // Race ID: 12-36
+   {1, -1222, 1},
+   {2, 12510, 1},
+   {1, 106174, 0},
+   {2, 118148, 0},
+   {2, 3916954, 1},
+   {1, 3929469, 1},
+   {1, 4061704, 0},
+   {2, 4069385, 0},
+   {2, 4070515, 1},
+   {2, 4077842, 0},
+   {2, 4080282, 1},
+   {2, 4084151, 0},
+   {1, 7906751, 1},
+   {2, 7917992, 1},
+   {1, 8017443, 0},
+   {2, 8032727, 0},
+   {2, 8042977, 1},
+   {1, 8059172, 1},
+   {2, 8130307, 0},
+   {2, 8131807, 1},
+   {2, 8133750, 0},
+   {1, 8148123, 0},
    {2, 11949828, 1},
    {1, 11963718, 1},
    {2, 12052575, 0},
@@ -2268,7 +2268,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
-   //Race ID: 13-37
+   // Race ID: 13-37
    {1, 151258, 1},
    {2, 164040, 1},
    {1, 260483, 0},
@@ -2329,7 +2329,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
-   //Race ID: 14-38
+   // Race ID: 14-38
    {1, 32459, 1},
    {2, 47583, 1},
    {1, 139325, 0},
@@ -2390,7 +2390,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
-   //Race ID: 15-39
+   // Race ID: 15-39
    {1, 56908, 1},
    {2, 72240, 1},
    {1, 168993, 0},
@@ -2451,7 +2451,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
-   //Race ID: 17-40
+   // Race ID: 17-40
    {1, 74419, 1},
    {2, 93710, 1},
    {1, 175708, 0},
@@ -2512,7 +2512,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
-   //Race ID: 18-41
+   // Race ID: 18-41
    {1, 118757, 1},
    {2, 136368, 1},
    {1, 220885, 0},
@@ -2573,7 +2573,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
-   //Race ID: 19-42
+   // Race ID: 19-42
    {1, 117899, 1},
    {2, 136612, 1},
    {1, 220570, 0},
@@ -2634,7 +2634,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
-   //Race ID: 20-43
+   // Race ID: 20-43
    {1, 148048, 1},
    {2, 168775, 1},
    {1, 259239, 0},
@@ -2756,7 +2756,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
-   // Testcase 45 Race ID: 15
+   // Testcase 45: Race ID 74-15 Invisible dog 3 entry and dog 4 entering with fault
    {1, 189567, 1},
    {2, 206845, 1},
    {1, 300036, 0},
@@ -2817,7 +2817,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
-   // Race ID: 75-5
+   // Testcase 46: Race ID 75-5 First entering dog S2 noise
    {1, 91067, 1},
    {2, 106840, 1},
    {1, 167596, 0},
@@ -2877,8 +2877,68 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
-   {0, 0, 0}   
-};
+   {0, 0, 0},
+   // Testcase 47: temporary
+   {1, 326577, 1},
+   {2, 335922, 1},
+   {2, 339520, 0},
+   {2, 341388, 1},
+   {1, 424427, 0},
+   {2, 432848, 0},
+   {2, 444378, 1},
+   {2, 448042, 0},
+   {2, 4509983, 1},
+   {1, 4523997, 1},
+   {2, 4580636, 0},
+   {2, 4584152, 1},
+   {2, 4597530, 0},
+   {1, 4620403, 0},
+   {1, 5095739, 1},
+   {2, 5112793, 1},
+   {2, 5202636, 0},
+   {2, 5214009, 1},
+   {1, 5222014, 0},
+   {2, 5238227, 0},
+   {2, 9623346, 1},
+   {1, 9641348, 1},
+   {1, 9649980, 0},
+   {1, 9650422, 1},
+   {2, 9750885, 0},
+   {1, 9768248, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0}};
 /// <summary>
 ///   Initialises this object.
 /// </summary>
@@ -2888,11 +2948,11 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
 void SimulatorClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
 {
    _iS1Pin = iS1Pin;
-   //pinMode(_iS1Pin, OUTPUT);
-   //digitalWrite(_iS1Pin, LOW);
+   // pinMode(_iS1Pin, OUTPUT);
+   // digitalWrite(_iS1Pin, LOW);
    _iS2Pin = iS2Pin;
-   //pinMode(_iS2Pin, OUTPUT);
-   //digitalWrite(_iS2Pin, LOW);
+   // pinMode(_iS2Pin, OUTPUT);
+   // digitalWrite(_iS2Pin, LOW);
    _iDataPos = 0;
    _iDataStartPos = 0;
    PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
@@ -2908,7 +2968,7 @@ void SimulatorClass::Main()
    {
       if (_iDataPos != _iDataStartPos)
       {
-         //We've reset a race, reset data position to 0
+         // We've reset a race, reset data position to 0
          _iDataPos = _iDataStartPos;
          PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
       }
@@ -2916,19 +2976,18 @@ void SimulatorClass::Main()
    }
    if (PendingRecord.llTriggerTime == 0)
    {
-      //Pending record doesn't contain valid data, this means we've reched the end of our queue
+      // Pending record doesn't contain valid data, this means we've reched the end of our queue
       return;
    }
 
-   //Simulate sensors  
-   if ((PendingRecord.llTriggerTime < 0 && RaceHandler.RaceState == RaceHandler.STARTING) || (PendingRecord.llTriggerTime > 0 && RaceHandler.RaceState == RaceHandler.RUNNING)
-      || (RaceHandler.RaceState == RaceHandler.STOPPED && GET_MICROS <= RaceHandler._llRaceEndTime + 2000000))
+   // Simulate sensors
+   if ((PendingRecord.llTriggerTime < 0 && RaceHandler.RaceState == RaceHandler.STARTING) || (PendingRecord.llTriggerTime > 0 && RaceHandler.RaceState == RaceHandler.RUNNING) || (RaceHandler.RaceState == RaceHandler.STOPPED && GET_MICROS <= RaceHandler._llRaceEndTime + 2000000))
    {
-      while (PendingRecord.llTriggerTime != 0 && PendingRecord.llTriggerTime <= (long long)(GET_MICROS - (RaceHandler.llRaceStartTime - 8000))) //8ms advance added
+      while (PendingRecord.llTriggerTime != 0 && PendingRecord.llTriggerTime <= (long long)(GET_MICROS - (RaceHandler.llRaceStartTime - 8000))) // 8ms advance added
       {
          ESP_LOGD(__FILE__, "%lld Pending record S%d TriggerTime %lld | %lld", GET_MICROS, PendingRecord.iSensorNumber, RaceHandler.llRaceStartTime + PendingRecord.llTriggerTime, PendingRecord.llTriggerTime);
          RaceHandler._QueuePush({PendingRecord.iSensorNumber, (RaceHandler.llRaceStartTime + PendingRecord.llTriggerTime), PendingRecord.iState});
-         //And increase pending record
+         // And increase pending record
          _iDataPos++;
          PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
       }
@@ -2950,4 +3009,3 @@ void SimulatorClass::ChangeSimulatedRaceID(uint iSimulatedRaceID)
 ///   The simulator class object.
 /// </summary>
 SimulatorClass Simulator;
-

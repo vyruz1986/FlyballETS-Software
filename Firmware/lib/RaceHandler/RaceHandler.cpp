@@ -264,7 +264,7 @@ void RaceHandlerClass::Main()
          }        
          //Check if this is a next dog which is too early (we were expecting a dog to come back)
          else if (_byDogState == COMINGBACK && !_bS1StillSafe && (STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) > 2000000 //Filter out S1 HIGH signals that are < 2 seconds after dog enter time
-                  && (iCurrentDog != iNextDog))                                                                                           // Exclude scenario if next dog is equal current dog as this can't be comming back dog.
+                  && (iCurrentDog != iNextDog))                                                                                           //Exclude scenario if next dog is equal current dog as this can't be comming back dog.
          {
             //Set fault light for next dog.
             SetDogFault(iNextDog, ON);
@@ -431,7 +431,7 @@ void RaceHandlerClass::Main()
          {
             //S2 is triggered less than 1.5s after current dog's enter time what means we have potential early (negative) cross
             //unless this is first dog
-            if (iCurrentDog == 0 && !_bRerunBusy && ((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) < 1500000))
+            if ((iCurrentDog != 0 || (iCurrentDog == 0 && _bRerunBusy)) && ((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) < 1500000))
             {
                _bPotentialNegativeCrossDetected = true;
                _llS2CrossedUnsafeTriggerTime = STriggerRecord.llTriggerTime;
@@ -482,7 +482,7 @@ void RaceHandlerClass::Main()
       {
          //Print the transition string up til now for debugging purposes
          ESP_LOGI(__FILE__, "Tstring: %s", _strTransition.c_str());
-         //The gates are clear, set boolean
+         //The gates are clear, set flag
          _bGatesClear = true;
          ESP_LOGI(__FILE__, "Gate: CLEAR.");
 
@@ -490,6 +490,9 @@ void RaceHandlerClass::Main()
          //TODO: If transistion string is 3 or longer but actually more events are coming related to same transition, these are not considered.
          if (_strTransition.length() > 3) //And if transistion string is at least 4 characters long
          {
+            //Clear last string ABab flag if it was true
+            if (_bLastStringABab) // fix for simulated race 74-15
+               _bLastStringABab = false;
             //Transition string is 4 characters or longer
             //So we can check what happened
             if (_bSensorNoise) // fix for simulated race 15-39
@@ -502,6 +505,7 @@ void RaceHandlerClass::Main()
                //Change dog state to coming back
                _ChangeDogState(COMINGBACK);
                _strPreviousTransitionFirstLetter = "A";
+               _bLastStringABab = true;
                ESP_LOGI(__FILE__, "New dog state: COMINGBACK. ABab.");
                if (_bDogManualFaults[iPreviousDog]) // If previous dog has manual fault we assume it's because he missed gate while coming back
                                                     // If however this will be negative cross scenario flag will be deactivated in S2 sensor section
@@ -705,6 +709,7 @@ void RaceHandlerClass::ResetRace()
       _bNegativeCrossDetected = false;
       _bPotentialNegativeCrossDetected = false;
       _bSensorNoise = false;
+      _bLastStringABab = false;
 
       for (auto &bFault : _bDogFaults)
       {
@@ -1180,7 +1185,7 @@ String RaceHandlerClass::GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber)
 ///   * fault - un-measurable fault
 ///   * "empty" - if no crossing time available / possible
 /// </returns>
-String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNumber, boolean bToFile)
+String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNumber, bool bToFile)
 {
    double dCrossingTime;
    char cCrossingTime[8];
@@ -1515,7 +1520,7 @@ void RaceHandlerClass::ToggleRerunsOffOn(uint8_t _iState)
 ///   false means normal direction (box to right)
 ///   true means inverted direction (box to left)
 /// </returns>
-boolean RaceHandlerClass::GetRunDirection()
+bool RaceHandlerClass::GetRunDirection()
 {
    return _bRunDirectionInverted;
 }
