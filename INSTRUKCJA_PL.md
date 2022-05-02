@@ -8,7 +8,7 @@ ETS oznacza Electronic Training System (Elektroniczny System Treningowy) i jest 
 
 #### Sprawdzenie, pobranie nowej wersji firmware ETS
 
-1. Uruchomić ETSa i odczytać wyświetlaną w trakcie uruchamiania wersję firmware (np. "ver. 1.2.1)
+1. Uruchomić ETSa i odczytać wyświetlaną w trakcie uruchamiania wersję firmware (np. "ver. 1.2.1")
 2. Otworzyć stronę z aktualizacjami firmware, dostępną pod adresem [Releases](https://github.com/simonttp78/FlyballETS-Software/releases)
 3. Sprawdzić najnowszą dostępną wersję oprogramowania. Jeśli jest nowsza od zainstalowanej, to zalecania jest aktualizacja
 4. Pobrać plik z rozszerzeniem ".bin", który ma w nazwie wersję oprogramowania. Jeśli plik jest niewidoczny kliknąć najpierw w nagłówek "Assets"
