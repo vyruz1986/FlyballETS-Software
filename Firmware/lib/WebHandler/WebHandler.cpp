@@ -6,7 +6,7 @@
 
 void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
 {
-   boolean isAdmin = String("/wsa").equals(server->url());
+   bool isAdmin = String("/wsa").equals(server->url());
 
    if (type == WS_EVT_CONNECT)
    {
@@ -236,7 +236,7 @@ void WebHandlerClass::init(int webPort)
 
    _SystemData.PwrOnTag = SDcardController.iTagValue;
 
-   for (boolean &bIsConsumer : _bIsConsumerArray)
+   for (bool &bIsConsumer : _bIsConsumerArray)
    {
       bIsConsumer = false;
    }
@@ -307,7 +307,7 @@ void WebHandlerClass::_SendLightsData()
    }
 }
 
-boolean WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, AsyncWebSocketClient *Client)
+bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, AsyncWebSocketClient *Client)
 {
    String ActionType = ActionObj["actionType"];
    if (ActionType == "UpdateRace")
@@ -379,7 +379,7 @@ boolean WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, As
          return false;
       }
       uint8_t iDogNum = ActionObj["actionData"]["dogNumber"];
-      //boolean bFaultState = ActionObj["actionData"]["faultState"];
+      //bool bFaultState = ActionObj["actionData"]["faultState"];
       //RaceHandler.SetDogFault(iDogNum, (bFaultState ? RaceHandler.ON : RaceHandler.OFF));
       RaceHandler.SetDogFault(iDogNum);
       return true;
@@ -459,7 +459,7 @@ boolean WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, As
          //ReturnError = "No actionData found!";
          return false;
       }
-      boolean _bRerunsOff = ActionObj["actionData"]["rerunsOff"];
+      bool _bRerunsOff = ActionObj["actionData"]["rerunsOff"];
       //ESP_LOGD(__FILE__, "Received rerunsOff: %o", _bRerunsOff);
       if (_bRerunsOff)
          RaceHandler.ToggleRerunsOffOn(1);
@@ -554,7 +554,7 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
    }
 }
 
-boolean WebHandlerClass::_ProcessConfig(JsonArray newConfig, String *ReturnError)
+bool WebHandlerClass::_ProcessConfig(JsonArray newConfig, String *ReturnError)
 {
    bool save = false;
    ESP_LOGD(__FILE__, "Config has %i elements\r\n", newConfig.size());
@@ -581,7 +581,7 @@ boolean WebHandlerClass::_ProcessConfig(JsonArray newConfig, String *ReturnError
    return true;
 }
 
-boolean WebHandlerClass::_GetData(String dataType, JsonObject Data)
+bool WebHandlerClass::_GetData(String dataType, JsonObject Data)
 {
    if (dataType == "config")
    {
@@ -710,7 +710,7 @@ bool WebHandlerClass::_authenticate(AsyncWebServerRequest *request)
    String password = SettingsManager.getSetting("AdminPass");
    char httpPassword[password.length() + 1];
    password.toCharArray(httpPassword, password.length() + 1);
-   boolean bAuthResult = request->authenticate("Admin", httpPassword);
+   bool bAuthResult = request->authenticate("Admin", httpPassword);
    if (!bAuthResult)
    {
       ESP_LOGE(__FILE__, "[WEBHANDLER] Admin user failed to login!");

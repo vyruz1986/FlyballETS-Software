@@ -43,9 +43,7 @@ void RaceHandlerClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
       ESP_LOGD(__FILE__, "Run direction from settings: inverted");
    }
    else
-   {
       ESP_LOGD(__FILE__, "Run direction from settings: normal");
-   }
 }
 
 /// <summary>
@@ -71,10 +69,8 @@ void RaceHandlerClass::_ChangeRaceState(RaceStates byNewRaceState)
 void RaceHandlerClass::_ChangeDogState(_byDogStates byNewDogState)
 {
    if (_byDogState != byNewDogState)
-   {
       _byDogState = byNewDogState;
       //ESP_LOGD(__FILE__, "DogState: %i", byNewDogState);
-   }
 }
 
 /// <summary>
@@ -103,10 +99,8 @@ void RaceHandlerClass::Main()
 {
    //Trigger filterring of sensors interrupts if new records available
    while (_iInputQueueReadIndex != _iInputQueueWriteIndex)
-   {
       //ESP_LOGD(__FILE__, "%lld | IQRI:%d | IQWI:%d", GET_MICROS, _iInputQueueReadIndex, _iInputQueueWriteIndex);
       _QueueFilter();
-   }
 
    if (!_QueueEmpty()) //If queue is not empty, we have work to do
    {
@@ -171,9 +165,7 @@ void RaceHandlerClass::Main()
       {
          // If reruns are turned off set next do to dummy value 5
          if (bRerunsOff)
-         {
             iNextDog = 5;
-         }
          else
          {
             //In case last dog before reruns is running and fault flag is active we have to check which the next offending dog starting from dog 1
@@ -217,18 +209,12 @@ void RaceHandlerClass::Main()
          _bNextDogFound = false;
       }
       else if ((!_bFault && iCurrentDog == (iNumberOfRacingDogs - 1)) || (!_bFault && _bRerunBusy))
-      {
          iNextDog = iCurrentDog;
-      }
       else
-      {
          //First runs of every dog, just increase number
          iNextDog = iCurrentDog + 1;
-      }
       if (iNextDogChanged != iNextDog)
-      {
          ESP_LOGD(__FILE__, "Next Dog is %i.", iNextDog + 1);
-      }
 
       //Handle sensor 1 events (handlers side) with gates CLEAR
       if (STriggerRecord.iSensorNumber == 1 && STriggerRecord.iSensorState == 1 && _bGatesClear) //Only if gates are clear and S1 sensor is HIGH (A)
@@ -251,20 +237,40 @@ void RaceHandlerClass::Main()
          // Normal race handling (positive cross)
          else if (_byDogState == GOINGIN && (iCurrentDog != 0 || (iCurrentDog == 0 && _bRerunBusy)) && _bS1StillSafe)
          {
+            // If this is not re-run and last string was BAba and next dog didn't enter yet, we assume invisibly entering dog is already running
+            // and next dog entered gate to early (fault). Fix for 74-15
+            if (!_bRerunBusy && _bLastStringBAba && (STriggerRecord.llTriggerTime - _llLastDogExitTime) > 3000000)
+            {
+               //Calculte times for running invisible dog
+               SetDogFault(iNextDog, ON);
+               _llDogEnterTimes[iCurrentDog] = _llLastDogExitTime;
+               _llDogExitTimes[iCurrentDog] = STriggerRecord.llTriggerTime;
+               _llLastDogExitTime = _llDogExitTimes[iCurrentDog];
+               _llDogTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = _llDogExitTimes[iCurrentDog] - _llDogEnterTimes[iCurrentDog];
+               //Set crossing time to zero (ok)
+               _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = 0;
+               if (_bDogManualFaults[iCurrentDog]) // If dog has manual fault we assume it's due to he missed gate while entering
+                  _bDogMissedGateGoingin[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+               else // This is true invisible dog case so treated as big OK cross
+                  _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+               _ChangeDogNumber(iNextDog);
+               ESP_LOGI(__FILE__, "S1 crossed after 3s and last Tstring was BAba. Invisible dog %i is running and next dog enter with fault.", iPreviousDog + 1);
+            }
+            else
+            {
+               //If this dog is doing a rerun we have to turn the error light for this dog off
+               if (_bRerunBusy)
+                  SetDogFault(iCurrentDog, OFF);
+               ESP_LOGI(__FILE__, "Dog %i going in crossed S1 safely. Clear fault if rerun.", iCurrentDog + 1);
+            }
             _llDogEnterTimes[iCurrentDog] = STriggerRecord.llTriggerTime;
             _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = _llDogEnterTimes[iCurrentDog] - _llLastDogExitTime;
             _bS1StillSafe = false;
             //_ChangeDogState(COMINGBACK); //Moved to Tstring section
-            //If this dog is doing a rerun we have to turn the error light for this dog off
-            if (_bRerunBusy)
-            {
-               SetDogFault(iCurrentDog, OFF);
-            }
-            ESP_LOGI(__FILE__, "Dog %i going in crossed S1 safely. Clear fault if rerun.", iCurrentDog + 1);
          }        
          //Check if this is a next dog which is too early (we were expecting a dog to come back)
          else if (_byDogState == COMINGBACK && !_bS1StillSafe && (STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) > 2000000 //Filter out S1 HIGH signals that are < 2 seconds after dog enter time
-                  && (iCurrentDog != iNextDog))                                                                                           // Exclude scenario if next dog is equal current dog as this can't be comming back dog.
+                  && (iCurrentDog != iNextDog))                                                                                           //Exclude scenario if next dog is equal current dog as this can't be comming back dog.
          {
             //Set fault light for next dog.
             SetDogFault(iNextDog, ON);
@@ -318,9 +324,7 @@ void RaceHandlerClass::Main()
             _bPotentialNegativeCrossDetected = false;
             _bNegativeCrossDetected = true;
             if (_bDogMissedGateComingback[iPreviousDog][iDogRunCounters[iPreviousDog]]) // Clear flag if set as previous dog is comming back so he didn't missed the gate
-            {
-               _bDogMissedGateComingback[iPreviousDog][iDogRunCounters[iPreviousDog]] = false;
-            }           
+               _bDogMissedGateComingback[iPreviousDog][iDogRunCounters[iPreviousDog]] = false;        
             //If current dog has no fault it has to be invisible dog coming back and it's next dog who did negative cross
             if (!_bDogFaults[iCurrentDog])
             {
@@ -329,17 +333,11 @@ void RaceHandlerClass::Main()
                _llDogEnterTimes[iCurrentDog] = _llLastDogExitTime;
                _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = 0;
                if (_bDogManualFaults[iCurrentDog]) // If dog has manual fault we assume it's due to he missed gate while entering
-               {
                   _bDogMissedGateGoingin[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
-               }
                else // This is true invisible dog case so treated as big OK cross
-               {
                   _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
-               }
                if (_bRerunBusy)
-               {
                   iDogRunCounters[iNextDog]++; //Increase run counter for next dog
-               }
                ESP_LOGI(__FILE__, "Invisible dog %i came back! Dog times updated. OK or Perfect crossing.", iNextDog + 1);
                _ChangeDogNumber(iNextDog);
             }
@@ -351,7 +349,6 @@ void RaceHandlerClass::Main()
             _llRaceElapsedTime = STriggerRecord.llTriggerTime - llRaceStartTime;
             //_bNegativeCrossDetected = false; // moved to Tstring section and used as "if" condition in BAba scenario
             //
-            
             ESP_LOGI(__FILE__, "Calculate negative cross time for dog %i and update times for previous dog %i.", iCurrentDog + 1, iPreviousDog + 1);
             ESP_LOGI(__FILE__, "Dod %i updated crossing time [ms]: %lld", iCurrentDog + 1, (_llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] +500) / 1000);
             ESP_LOGI(__FILE__, "Dog %i updated time [ms]: %lld", iPreviousDog + 1, ((_llDogTimes[iPreviousDog][iDogRunCounters[iPreviousDog]] + 500) / 1000));
@@ -369,7 +366,6 @@ void RaceHandlerClass::Main()
             _llDogExitTimes[iCurrentDog] = STriggerRecord.llTriggerTime;
             _llLastDogExitTime = _llDogExitTimes[iCurrentDog];
             _llDogTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = _llDogExitTimes[iCurrentDog] - _llDogEnterTimes[iCurrentDog];
-            _llRaceElapsedTime = STriggerRecord.llTriggerTime - llRaceStartTime;
             _bS1isSafe = false;
             ESP_LOGI(__FILE__, "S1 line crossed while being safe. Calculate dog %i time.", iCurrentDog + 1);
             if (_llDogExitTimes[iCurrentDog] - _llS2CrossedSafeTime < 5000) // If S1 (safe) crossing time is below 5ms after S2 crossing means S1 was crossed
@@ -381,9 +377,7 @@ void RaceHandlerClass::Main()
             if ((iCurrentDog == (iNumberOfRacingDogs - 1) && !_bFault && !_bRerunBusy) //If this is the last dog and there are no faults (reruns) we have to stop the race
                 || (_bRerunBusy && !_bFault)                                           //or if the rerun sequence was started but no faults exist anymore
                 || iNextDog == 5)                                                      //or reruns are turned off and this is last dog
-            {
                StopRace(STriggerRecord.llTriggerTime);
-            }
             else if ((iCurrentDog == (iNumberOfRacingDogs - 1) && _bFault && !_bRerunBusy) //If current dog is last dog and a fault(s) exists, we have to initiate rerun sequence
                      || _bRerunBusy)                               //Or if rerun is busy (and faults still exist)
             {
@@ -403,7 +397,7 @@ void RaceHandlerClass::Main()
       //Handle sensor 2 (box side)
       if (STriggerRecord.iSensorNumber == 2 && STriggerRecord.iSensorState == 1 && _bGatesClear) //Only if gates are clear S2 sensor is HIGH (B)
       {
-         if (_byDogState == GOINGIN && (STriggerRecord.llTriggerTime - _llLastDogExitTime) > 2000000)
+         if (_byDogState == GOINGIN && (STriggerRecord.llTriggerTime - _llLastDogExitTime) > 3000000)
          {
             /* Gates were clear, we weren't expecting a dog back, but one came back.
             This means we missed the dog going in,
@@ -414,13 +408,9 @@ void RaceHandlerClass::Main()
             //Set crossing time to zero (ok)
             _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = 0;
             if (_bDogManualFaults[iCurrentDog]) // If dog has manual fault we assume it's due to he missed gate while entering
-            {
                _bDogMissedGateGoingin[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
-            }
             else // This is true invisible dog case so treated as big OK cross
-            {
                _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
-            }
             _bS1isSafe = true;
             _bS1StillSafe = true;
             _llS2CrossedSafeTime = STriggerRecord.llTriggerTime;
@@ -431,7 +421,7 @@ void RaceHandlerClass::Main()
          {
             //S2 is triggered less than 1.5s after current dog's enter time what means we have potential early (negative) cross
             //unless this is first dog
-            if (iCurrentDog == 0 && !_bRerunBusy && ((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) < 1500000))
+            if ((iCurrentDog != 0 || (iCurrentDog == 0 && _bRerunBusy)) && ((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) < 1500000))
             {
                _bPotentialNegativeCrossDetected = true;
                _llS2CrossedUnsafeTriggerTime = STriggerRecord.llTriggerTime;
@@ -482,7 +472,7 @@ void RaceHandlerClass::Main()
       {
          //Print the transition string up til now for debugging purposes
          ESP_LOGI(__FILE__, "Tstring: %s", _strTransition.c_str());
-         //The gates are clear, set boolean
+         //The gates are clear, set flag
          _bGatesClear = true;
          ESP_LOGI(__FILE__, "Gate: CLEAR.");
 
@@ -490,6 +480,9 @@ void RaceHandlerClass::Main()
          //TODO: If transistion string is 3 or longer but actually more events are coming related to same transition, these are not considered.
          if (_strTransition.length() > 3) //And if transistion string is at least 4 characters long
          {
+            //Clear last string ABab flag if it was true
+            if (_bLastStringBAba) // fix for simulated race 74-15
+               _bLastStringBAba = false;
             //Transition string is 4 characters or longer
             //So we can check what happened
             if (_bSensorNoise) // fix for simulated race 15-39
@@ -514,12 +507,11 @@ void RaceHandlerClass::Main()
                //Normal handling, change dog state to GOING IN
                _ChangeDogState(GOINGIN);
                _strPreviousTransitionFirstLetter = "B";
+               _bLastStringBAba = true;
                ESP_LOGI(__FILE__, "New dog state: GOINGING.");
             }
             else if (_strTransition == "BAba" && RaceState == STOPPED) //Last returning dog
-            {
                ESP_LOGI(__FILE__, "Last dog came back.");
-            }
             else //So called "uncertain Tstring"
             {
                //If Transition string indicated something else and we expect returning dog, it means 2 dogs must have passed
@@ -538,9 +530,7 @@ void RaceHandlerClass::Main()
                   else
                   {
                      if ((_bRerunBusy && _bFault))
-                     {
                         SetDogFault(iCurrentDog, OFF);
-                     }
                      _bS1StillSafe = false;
                      _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = 0;
                      _llDogEnterTimes[iCurrentDog] = _llDogExitTimes[iPreviousDog];
@@ -590,9 +580,7 @@ void RaceHandlerClass::Main()
    if (RaceState == RUNNING)
    {
       if (GET_MICROS > llRaceStartTime)
-      {
          _llRaceTime = GET_MICROS - llRaceStartTime;
-      }
    }
 
    //Check for faults, loop through array of dogs checking for faults
@@ -705,100 +693,67 @@ void RaceHandlerClass::ResetRace()
       _bNegativeCrossDetected = false;
       _bPotentialNegativeCrossDetected = false;
       _bSensorNoise = false;
+      _bLastStringBAba = false;
 
       for (auto &bFault : _bDogFaults)
-      {
          bFault = false;
-      }
       for (auto &bManualFault : _bDogManualFaults)
-      {
          bManualFault = false;
-      }
       for (auto &Dog : _bDogPerfectCross)
       {
          for (auto &bDogPerfectCross : Dog)
-         {
             bDogPerfectCross = false;
-         }
       }
       for (auto &Dog : _bDogBigOK)
       {
          for (auto &bDogBigOK : Dog)
-         {
             bDogBigOK = false;
-         }
       }
       for (auto &Dog : _bDogSmallok)
       {
          for (auto &bDogSmallok : Dog)
-         {
             bDogSmallok = false;
-         }
       }
       for (auto &Dog : _bDogMissedGateGoingin)
       {
          for (auto &bDogMissedGateGoingin : Dog)
-         {
             bDogMissedGateGoingin = false;
-         }
       }
       for (auto &Dog : _bDogMissedGateComingback)
       {
          for (auto &bDogMissedGateComingback : Dog)
-         {
             bDogMissedGateComingback = false;
-         }
       }
       for (auto &llTime : _llDogEnterTimes)
-      {
          llTime = 0;
-      }
       for (auto &llTime : _llDogExitTimes)
-      {
          llTime = 0;
-      }
       for (auto &Dog : _llDogTimes)
       {
          for (auto &llTime : Dog)
-         {
             llTime = 0;
-         }
       }
       for (auto &Dog : _llCrossingTimes)
       {
          for (auto &llTime : Dog)
-         {
             llTime = 0;
-         }
       }
       for (auto &iCounter : iDogRunCounters)
-      {
          iCounter = 0;
-      }
       for (auto &llTime : _llLastDogTimeReturnTimeStamp)
-      {
          llTime = 0;
-      }
       for (auto &iCounter : _iLastReturnedRunNumber)
-      {
          iCounter = 0;
-      }
       _ChangeRaceState(RESET);
    }
 
    if (iCurrentRaceId == NUM_HISTORIC_RACE_RECORDS)
-   {
       iCurrentRaceId = 0;
-   }
    else
-   {
       iCurrentRaceId++;
-   }
    String _sCurrentRaceId = String(iCurrentRaceId + 1);
    while (_sCurrentRaceId.length() < 2)
-   {
       _sCurrentRaceId = " " + _sCurrentRaceId;
-   }
    LCDController.UpdateField(LCDController.RaceID, _sCurrentRaceId);
    ESP_LOGI(__FILE__, "Reset Race: DONE");
 #ifdef WiFiON
@@ -875,9 +830,7 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
 {
    //Don't process any faults when race is not running
    if (RaceState == STOPPED || RaceState == RESET)
-   {
       return;
-   }
    bool bFault;
    //Check if we have to toggle. Assumed only manual faults use TOGGLE option
    if (State == TOGGLE)
@@ -915,19 +868,13 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
 void RaceHandlerClass::TriggerSensor1()
 {
    if (RaceState == STOPPED && GET_MICROS > (_llRaceEndTime + 500000))
-   {
       return;
-   }
    else if (RaceState == RESET)
    {
       if (digitalRead(_iS1Pin) == 1)
-      {
          LightsController.ReaceReadyFault(LightsController.ON);
-      }
       else
-      {
          LightsController.ReaceReadyFault(LightsController.OFF);
-      }
    }
    else
       _QueuePush({_bRunDirectionInverted ? 2 : 1, GET_MICROS, digitalRead(_iS1Pin)});
@@ -940,19 +887,13 @@ void RaceHandlerClass::TriggerSensor1()
 void RaceHandlerClass::TriggerSensor2()
 {
    if (RaceState == STOPPED && GET_MICROS > (_llRaceEndTime + 500000))
-   {
       return;
-   }
    else if (RaceState == RESET)
    {
       if (digitalRead(_iS2Pin) == 1)
-      {
          LightsController.ReaceReadyFault(LightsController.ON);
-      }
       else
-      {
          LightsController.ReaceReadyFault(LightsController.OFF);
-      }
    }
    else
       _QueuePush({_bRunDirectionInverted ? 1 : 2, GET_MICROS, digitalRead(_iS2Pin)});
@@ -1004,27 +945,19 @@ int8_t RaceHandlerClass::SelectRunNumber(uint8_t iDogNumber, int8_t iRunNumber)
          if ((GET_MICROS / 1000 - llLastReturnedTimeStamp) > 2000)
          {
             if (iRunNumber == iDogRunCounters[iDogNumber])
-            {
                iRunNumber = 0;
-            }
             else
-            {
                iRunNumber++;
-            }
             llLastReturnedTimeStamp = GET_MICROS / 1000;
          }
          _iLastReturnedRunNumber[iDogNumber] = iRunNumber;
       }
       else if (iRunNumber == -2)
-      {
          //if RunNumber is -2 it means we should return the last one
          iRunNumber = iDogRunCounters[iDogNumber];
-      }
    }
    else if (iRunNumber < 0)
-   {
       iRunNumber = 0;
-   }
    return iRunNumber;
 }
 
@@ -1057,21 +990,15 @@ String RaceHandlerClass::GetDogTime(uint8_t iDogNumber, int8_t iRunNumber)
    iRunNumber = SelectRunNumber(iDogNumber, iRunNumber);
    //First check if we have final time for the requested dog number
    if (_llDogTimes[iDogNumber][iRunNumber] > 0)
-   {
       ulDogTimeMillis = (_llDogTimes[iDogNumber][iRunNumber] + 500) / 1000;
-   }
    //Then check if the requested dog is perhaps running (and coming back) so we can return the time so far
    //and if requested run number is lower then number of times dog has run
    else if ((RaceState == RUNNING && iCurrentDog == iDogNumber && _byDogState == COMINGBACK) && iRunNumber <= iDogRunCounters[iDogNumber] //
             && _llDogEnterTimes[iDogNumber] != 0)
-   {
       ulDogTimeMillis = (GET_MICROS - _llDogEnterTimes[iDogNumber]) / 1000;
-   }
    //If next dog didn't enter yet (e.g. positive cross) just show zero
    else if (_llDogTimes[iDogNumber][iRunNumber] == 0)
-   {
       ulDogTimeMillis = 0;
-   }
    if (!LightsController.bModeNAFA)
    {
       dDogTime = ((unsigned long)(ulDogTimeMillis + 5) / 10) / 100.0;
@@ -1083,17 +1010,11 @@ String RaceHandlerClass::GetDogTime(uint8_t iDogNumber, int8_t iRunNumber)
       dtostrf(dDogTime, 7, 3, cDogTime);
    }
    if (_bDogMissedGateGoingin[iDogNumber][iRunNumber])
-   {
       strDogTime = " run in";
-   }
    else if (_bDogMissedGateComingback[iDogNumber][iRunNumber])
-   {
       strDogTime = "outside";
-   }
    else
-   {
       strDogTime = cDogTime;
-   }
    return strDogTime;
 }
 
@@ -1123,21 +1044,13 @@ String RaceHandlerClass::GetStoredDogTimes(uint8_t iDogNumber, int8_t iRunNumber
       dtostrf(dDogTime, 7, 3, cDogTime);
    }
    if (dDogTime == 0)
-   {
       strDogTime = "";
-   }
    else
-   {
       strDogTime = cDogTime;
-   }
    if (_bDogMissedGateGoingin[iDogNumber][iRunNumber])
-   {
       strDogTime = " run in";
-   }
    else if (_bDogMissedGateComingback[iDogNumber][iRunNumber])
-   {
       strDogTime = "outside";
-   }
    return strDogTime;
 }
 
@@ -1180,7 +1093,7 @@ String RaceHandlerClass::GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber)
 ///   * fault - un-measurable fault
 ///   * "empty" - if no crossing time available / possible
 /// </returns>
-String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNumber, boolean bToFile)
+String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNumber, bool bToFile)
 {
    double dCrossingTime;
    char cCrossingTime[8];
@@ -1241,9 +1154,7 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
       }
    }
    else if (_bDogMissedGateGoingin[iDogNumber][iRunNumber])
-   {
       strCrossingTime = " ";
-   }
    else if (_bDogPerfectCross[iDogNumber][iRunNumber])
    {
       if (LightsController.bModeNAFA)
@@ -1296,9 +1207,7 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
       }
    }
    else
-   {
       strCrossingTime = " ";
-   }
    return strCrossingTime;
 }
 
@@ -1320,9 +1229,7 @@ String RaceHandlerClass::GetRerunInfo(uint8_t iDogNumber)
 
    uint8_t iRunNumber = _iLastReturnedRunNumber[iDogNumber];
    if (bRerunsOff)
-   {
       strRerunInfo = "*X";
-   }
    else if (iDogRunCounters[iDogNumber] > 0)
    {
       strRerunInfo = "*";
@@ -1345,20 +1252,14 @@ double RaceHandlerClass::GetNetTime()
       for (auto &llNetTime : Dog)
       {
          if (llNetTime > 0)
-         {
             llTotalNetTime += llNetTime;
-         }
       }
    }
    double dNetTime;
    if (!LightsController.bModeNAFA)
-   {
       dNetTime = ((long long)(llTotalNetTime + 5000) / 10000) / 100.0;
-   }
    else
-   {
       dNetTime = ((long long)(llTotalNetTime + 500) / 1000) / 1000.0;
-   }
    return dNetTime;
 }
 
@@ -1515,7 +1416,7 @@ void RaceHandlerClass::ToggleRerunsOffOn(uint8_t _iState)
 ///   false means normal direction (box to right)
 ///   true means inverted direction (box to left)
 /// </returns>
-boolean RaceHandlerClass::GetRunDirection()
+bool RaceHandlerClass::GetRunDirection()
 {
    return _bRunDirectionInverted;
 }
@@ -1545,15 +1446,11 @@ void RaceHandlerClass::_QueuePush(RaceHandlerClass::STriggerRecord _InterruptTri
 
    //Write index has to be increased, check it we should wrap-around
    if (_iInputQueueWriteIndex == TRIGGER_QUEUE_LENGTH - 1) //(sizeof(_OutputTriggerQueue) / sizeof(*_OutputTriggerQueue) - 1))
-   {
       //Write index has reached end of array, start at 0 again
       _iInputQueueWriteIndex = 0;
-   }
    else
-   {
       //End of array not yet reached, increase index by 1
       _iInputQueueWriteIndex++;
-   }
 }
 
 /// <summary>
@@ -1579,15 +1476,11 @@ void RaceHandlerClass::_QueueFilter()
 
          //Input Read index has to be increased, check it we should wrap-around
          if (_iInputQueueReadIndex == TRIGGER_QUEUE_LENGTH - 2)
-         {
             //Input Read index has reached end of array, start at 0 again
             _iInputQueueReadIndex = 0;
-         }
          else
-         {
             //End of array not yet reached, increase index by 2
             _iInputQueueReadIndex = _iInputQueueReadIndex + 2;
-         }
       }
       else
       {
@@ -1598,27 +1491,19 @@ void RaceHandlerClass::_QueueFilter()
 
          //Input Read index has to be increased, check it we should wrap-around
          if (_iInputQueueReadIndex == TRIGGER_QUEUE_LENGTH - 1)
-         {
             //Input Read index has reached end of array, start at 0 again
             _iInputQueueReadIndex = 0;
-         }
          else
-         {
             //End of array not yet reached, increase index by 1
             _iInputQueueReadIndex++;
-         }
 
          //Output Write index has to be increased, check it we should wrap-around
          if (_iOutputQueueWriteIndex == TRIGGER_QUEUE_LENGTH - 1)
-         {
             //Output Write index has reached end of array, start at 0 again
             _iOutputQueueWriteIndex = 0;
-         }
          else
-         {
             //End of array not yet reached, increase index by 1
             _iOutputQueueWriteIndex++;
-         }
       }
    }
    else
@@ -1630,27 +1515,19 @@ void RaceHandlerClass::_QueueFilter()
 
       //Input Read index has to be increased, check it we should wrap-around
       if (_iInputQueueReadIndex == TRIGGER_QUEUE_LENGTH - 1)
-      {
          //Input Read index has reached end of array, start at 0 again
          _iInputQueueReadIndex = 0;
-      }
       else
-      {
          //End of array not yet reached, increase index by 1
          _iInputQueueReadIndex++;
-      }
 
       //Output Write index has to be increased, check it we should wrap-around
       if (_iOutputQueueWriteIndex == TRIGGER_QUEUE_LENGTH - 1)
-      {
          //Output Write index has reached end of array, start at 0 again
          _iOutputQueueWriteIndex = 0;
-      }
       else
-      {
          //End of array not yet reached, increase index by 1
          _iOutputQueueWriteIndex++;
-      }
    }
 }
 
@@ -1668,15 +1545,12 @@ RaceHandlerClass::STriggerRecord RaceHandlerClass::_QueuePop()
 
    //Read index has to be increased, check it we should wrap-around
    if (_iOutputQueueReadIndex == TRIGGER_QUEUE_LENGTH - 1) //(sizeof(_OutputTriggerQueue) / sizeof(*_OutputTriggerQueue) - 1))
-   {
+
       //Read index has reached end of array, start at 0 again
       _iOutputQueueReadIndex = 0;
-   }
    else
-   {
       //End of array not yet reached, increase index by 1
       _iOutputQueueReadIndex++;
-   }
    return NextRecord;
 }
 
@@ -1693,13 +1567,9 @@ bool RaceHandlerClass::_QueueEmpty()
    //This is determined by comparing the read and write index.
    //If they are equal, it means we have cought up reading and the queue is 'empty' (the array is not really emmpty...)
    if (_iOutputQueueReadIndex == _iOutputQueueWriteIndex)
-   {
       return true;
-   }
    else
-   {
       return false;
-   }
 }
 
 /// <summary>
@@ -1734,9 +1604,7 @@ void RaceHandlerClass::_AddToTransitionString(STriggerRecord _InterruptTrigger)
 
    //We assumged the signal was high, if it is not we should make the character lowercase
    if (_InterruptTrigger.iSensorState == LOW)
-   {
       cTemp = tolower(cTemp);
-   }
    //Add the character to the transition string
    _strTransition += cTemp;
 

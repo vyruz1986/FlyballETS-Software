@@ -34,7 +34,7 @@ public:
    long long llRaceStartTime;
    int iCurrentRaceId = -1;
    char* cRaceStartTimestamp;
-   boolean bRerunsOff = false;
+   bool bRerunsOff = false;
    
    void Main();
    void ChangeRaceStateToRunning();
@@ -59,7 +59,7 @@ public:
    String GetStoredDogTimes(uint8_t iDogNumber, int8_t iRunNumber = -1);
    int8_t SelectRunNumber(uint8_t iDogNumber, int8_t iRunNumber = -1);
    String GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber = -1);
-   String TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNumber, boolean bToFile = false);
+   String TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNumber, bool bToFile = false);
    String GetRerunInfo(uint8_t iDogNumber);
    double GetNetTime();
 
@@ -67,7 +67,7 @@ public:
 
    stRaceData GetRaceData();
    stRaceData GetRaceData(int iRaceId);
-   boolean GetRunDirection();
+   bool GetRunDirection();
    void ToggleRunDirection();
    void ToggleRerunsOffOn(uint8_t _iState);
    void SetNumberOfDogs(uint8_t _iNumberOfRacingDogs);
@@ -85,9 +85,6 @@ private:
 
    uint8_t  _iS1Pin;
    uint8_t  _iS2Pin;
-   boolean _bRunDirectionInverted = false;
-   boolean _bNextDogFound = false;
-   boolean _bSensorNoise = false;
 
    struct STriggerRecord
    {
@@ -104,6 +101,10 @@ private:
    volatile uint8_t _iOutputQueueWriteIndex = 0;
    volatile uint8_t _iInputQueueWriteIndex = 0;
 
+   bool _bRunDirectionInverted = false;
+   bool _bNextDogFound = false;
+   bool _bSensorNoise = false;
+   bool _bLastStringBAba = false;
    bool _bFault;
    bool _bDogFaults[5];
    bool _bDogManualFaults[4];

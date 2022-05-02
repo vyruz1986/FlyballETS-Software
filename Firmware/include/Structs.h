@@ -12,8 +12,8 @@ struct stDogData
    uint8_t DogNumber;
    //String DogName;
    stDogTimeData Timing[4];
-   boolean Running;
-   boolean Fault;
+   bool Running;
+   bool Fault;
 };
 
 struct stRaceData
@@ -26,7 +26,7 @@ struct stRaceData
    stDogData DogData[4];
    String NetTime;
    uint8_t RacingDogs;
-   boolean RerunsOff;
+   bool RerunsOff;
 };
 
 struct stSystemData

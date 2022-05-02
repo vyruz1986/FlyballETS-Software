@@ -95,7 +95,7 @@ uint16_t iBatteryVoltage = 0;
 // Other IO's
 uint8_t iLaserOutputPin = 12;
 uint8_t iLaserOnTime = 60;
-boolean bLaserActive = false;
+bool bLaserActive = false;
 uint16_t SideSwitchCoolDownTime = 300;
 bool bSideSwitchPressedOnce = false;
 
@@ -148,8 +148,8 @@ LiquidCrystal lcd2(iLCDRSPin, iLCDE2Pin, iLCDData4Pin, iLCDData5Pin, iLCDData6Pi
 // String for serial comms storage
 String strSerialData;
 byte bySerialIndex = 0;
-boolean bSerialStringComplete = false;
-boolean bRaceSummaryPrinted = false;
+bool bSerialStringComplete = false;
+bool bRaceSummaryPrinted = false;
 
 // Wifi stuff
 // WiFiMulti wm;

@@ -9,7 +9,7 @@
 class SettingsManagerClass
 {
 protected:
-   boolean _settings_save;
+   bool _settings_save;
 
 public:
    void loop();
