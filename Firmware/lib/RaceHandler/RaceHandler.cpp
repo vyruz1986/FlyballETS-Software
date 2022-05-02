@@ -39,7 +39,7 @@ void RaceHandlerClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
    if (SettingsManager.getSetting("RunDirectionInverted").equals("1"))
    {
       _bRunDirectionInverted = true;
-      LCDController.UpdateField(LCDController.BoxDirection, "<");
+      LCDController.UpdateField(LCDController.BoxDirection, "←");
       ESP_LOGD(__FILE__, "Run direction from settings: inverted");
    }
    else
@@ -1376,12 +1376,12 @@ void RaceHandlerClass::ToggleRunDirection()
    SettingsManager.setSetting("RunDirectionInverted", String(_bRunDirectionInverted));
    if (_bRunDirectionInverted)
    {
-      LCDController.UpdateField(LCDController.BoxDirection, "<");
+      LCDController.UpdateField(LCDController.BoxDirection, "←");
       ESP_LOGD(__FILE__, "Run direction changed to: inverted");
    }
    else
    {
-      LCDController.UpdateField(LCDController.BoxDirection, ">");
+      LCDController.UpdateField(LCDController.BoxDirection, "→");
       ESP_LOGD(__FILE__, "Run direction changed to: normal");
    }
 }
