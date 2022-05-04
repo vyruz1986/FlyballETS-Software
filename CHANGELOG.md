@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+
+### Changed
+
+- polish instruction update
+- migration to faster LiquidCrystal library
+
+## [1.3.0] - 2022-05-03
+
+### Added
+
+- 2 new simulated races
+- polish instruction of use
+
+### Changed
+
+- Refactoring ("if" and "boolean")
+- 2 racing algorithm fixes (fault after invisible dog)
+- SD card column "reruns off" update
+- Crypto library updated to version 0.4.0
+
 ## [1.2.1] - 2022-04-14
 
 ### Added
@@ -82,7 +104,8 @@ All notable changes to this project will be documented in this file.
 
 
 
-[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.2.1...HEAD
+[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.1.2...v1.2.0
 [1.1.2]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.0.0...v1.1.2

@@ -83,6 +83,8 @@ Aby zapewnić żywotność baterii:
 
 
 ## Interfejs www (WiFi)
+Maksymalnie można podłączyć 8 klientów Wifi jednocześnie, jednakże ze względów wydajnościowych lepiej nie przekraczać ilości 4 klientów jednocześnie szczególnie, że w praktyce jedna osoba steruje ETSem i prezentuje wyniki handlerom.
+
 Uwaga użytkownicy iOSa!!!
 Bez poniższej zmiany, próba połączenia z ETSem będzie powodowała ciągłe restarty systemu.
 
