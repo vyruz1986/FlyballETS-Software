@@ -11,7 +11,6 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - polish instruction update
-- migration to faster LiquidCrystal library
 
 ## [1.3.0] - 2022-05-03
 
