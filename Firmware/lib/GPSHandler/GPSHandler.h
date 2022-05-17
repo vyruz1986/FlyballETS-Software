@@ -11,6 +11,7 @@
 class GPSHandlerClass
 {
 private:
+   bool _bGSPconnected = false;
 
 protected:
    HardwareSerial* _SerialPort;

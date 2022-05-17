@@ -52,6 +52,7 @@ void serialEvent();
 void HandleSerialCommands();
 void HandleRemoteAndButtons();
 void HandleLCDUpdates();
+void ToggleWifi();
 String GetButtonString(uint8_t _iActiveBit);
 #ifdef WiFiON
 void WiFiEvent(WiFiEvent_t event);

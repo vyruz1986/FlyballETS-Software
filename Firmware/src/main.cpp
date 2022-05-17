@@ -1,12 +1,12 @@
-// file:	FlyballETS-Software.ino summary: FlyballETS-Software v1, by Alex Goris
+// file:	main.cpp summary: FlyballETS-Software by simonttp78 forked from Alex Goris
 //
 // Flyball ETS (Electronic Training System) is an open source project which is designed to help
-// teams who practice flyball (a dog sport). Read all about the project, including extensive
-// information on how to build your own copy of Flyball ETS, on the following link: https://
+// teams who practice flyball (a dog sport). Read about original project, including extensive
+// information on first prototype version of Flyball ETS, on the following link: https://
 // sparkydevices.wordpress.com/tag/flyball-ets/
 //
-// This part of the project (FlyballETS-Software) contains the Arduino source code for the Arduino
-// Pro Mini which controls all components in the Flyball ETS These sources are originally
+// This part of the project (FlyballETS-Software) contains the ESP32 source code for the ESP32
+// LoLin32 which controls all components in the Flyball ETS These sources are originally
 // distributed from: https://github.com/vyruz1986/FlyballETS-Software.
 //
 // Copyright (C) 2019 Alex Goris
@@ -118,9 +118,10 @@ uint8_t iSDcmdPin = 15;
 uint8_t iSDdetectPin = 5;
 
 // GPS module pins
-uint8_t iGPStxPin = 36;
-uint8_t iGPSrxPin = 39;
-uint8_t iGPSppsPin = 22;
+uint8_t iGPStxPin = 22;  // RXD pin in GPS module
+uint8_t iGPSrxPin = 39;  // TXD pin in GPS module
+uint8_t iGPSppsPin = 36; // PPS pin in GPS module
+HardwareSerial GPSSerial(1);
 
 // Buttons handling variables and constans
 unsigned long long llLastDebounceTime = 0;
@@ -156,9 +157,6 @@ bool bRaceSummaryPrinted = false;
 IPAddress IPGateway(192, 168, 20, 1);
 IPAddress IPNetwork(192, 168, 20, 0);
 IPAddress IPSubnet(255, 255, 255, 0);
-
-// Define serial pins for GPS module
-HardwareSerial GPSSerial(1);
 
 // Keep last reported OTA progress so we can send message for every % increment
 unsigned int uiLastProgress = 0;
@@ -219,6 +217,7 @@ void setup()
    strSerialData[0] = 0;
 
    // Initialize GPS Serial port and class
+   pinMode(iGPSppsPin, INPUT_PULLDOWN);
    GPSSerial.begin(9600, SERIAL_8N1, iGPSrxPin, iGPStxPin);
    GPSHandler.init(&GPSSerial);
 
@@ -263,7 +262,7 @@ void setup()
 
 #ifdef WiFiON
    // Ota setup
-   ArduinoOTA.setPassword("FlyballETS.1234");
+   ArduinoOTA.setPassword(strAPPass.c_str());
    ArduinoOTA.setPort(3232);
    ArduinoOTA.onStart([](){
       String type;
@@ -505,6 +504,20 @@ void WiFiEvent(WiFiEvent_t event)
    }
 }
 
+void ToggleWifi()
+{
+   if (WiFi.getMode() == WIFI_MODE_AP)
+   {
+      WiFi.mode(WIFI_OFF);
+      ESP_LOGI(__FILE__, "WiFi OFF");
+   }
+   else
+   {
+      WiFi.mode(WIFI_AP);
+      ESP_LOGI(__FILE__, "WiFi ON");
+   }
+}
+
 void mdnsServerSetup()
 {
    MDNS.addService("http", "tcp", 80);
@@ -590,6 +603,9 @@ void HandleSerialCommands()
    // Reruns on
    if (strSerialData == "reruns on")
       RaceHandler.ToggleRerunsOffOn(0);
+   // Toggle wifi on/off
+   if (strSerialData == "wifi")
+      ToggleWifi();
 
    // Make sure this stays last in the function!
    if (strSerialData.length() > 0)
@@ -792,12 +808,7 @@ void HandleRemoteAndButtons()
             else if (iLastActiveBit == 0 && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)) // Mode button - side switch
                RaceHandler.ToggleRunDirection();
             else if (iLastActiveBit == 7 && RaceHandler.RaceState == RaceHandler.RESET) // Laster button - Wifi Off
-            {
-               if (WiFi.getMode() == WIFI_MODE_AP)
-                  WiFi.mode(WIFI_OFF);
-               else
-                  WiFi.mode(WIFI_AP);
-            }
+               ToggleWifi();
          }
       }
    }

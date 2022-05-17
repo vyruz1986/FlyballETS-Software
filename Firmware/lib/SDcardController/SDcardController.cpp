@@ -24,7 +24,7 @@
 /// </summary>
 void SDcardControllerClass::init()
 {
-   if (!SD_MMC.begin("/SDCARD", true))
+   if (!SD_MMC.begin("/SDCARD", true, false, SDMMC_FREQ_DEFAULT))
    {
       Serial.println("Card Mount Failed");
       return;
