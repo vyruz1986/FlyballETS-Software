@@ -80,7 +80,7 @@ void LightsControllerClass::Main()
 
    if (_byCurrentLightsState != _byNewLightsState)
    {
-      //ESP_LOGD(__FILE__, " %llu: New light states: %i", GET_MICROS / 1000, _byNewLightsState);
+      //ESP_LOGD(__FILE__, "New light states: %i", _byNewLightsState);
       _byCurrentLightsState = _byNewLightsState;
 #ifdef WiFiON
       //Send data to websocket clients
@@ -227,11 +227,11 @@ void LightsControllerClass::ToggleLightState(Lights byLight, LightStates byLight
       // If start warning sequence is initiated and we're going to turn off RED0 light we need to initiate start sequence
       if (byOverallState == WARNING && LightConfig.iPixelNumber == 0)
          InitiateStartSequence();
-      //ESP_LOGD(__FILE__, "%llu: Light %d is OFF", GET_MICROS / 1000, LightConfig.iPixelNumber);
+      //ESP_LOGD(__FILE__, "Light %d is OFF", LightConfig.iPixelNumber);
    }
    else
    {
-      //ESP_LOGD(__FILE__, "%llu: Light %d is ON", GET_MICROS / 1000, LightConfig.iPixelNumber);
+      //ESP_LOGD(__FILE__, "Light %d is ON", LightConfig.iPixelNumber);
       // If start sequence is initiated and we're going to turn on RED light we need to start race timer
       if (byOverallState == INITIATED && LightConfig.iPixelNumber == 1)
       {
@@ -250,7 +250,7 @@ void LightsControllerClass::ToggleLightState(Lights byLight, LightStates byLight
    for (int lightschain = 0; lightschain < LIGHTSCHAINS; lightschain++)
    {
       _LightsStrip->SetPixelColor(LightConfig.iPixelNumber + 5 * lightschain, LightConfig.iColor);
-      ESP_LOGD(__FILE__, "%llu: Light %d is now %d", GET_MICROS / 1000, LightConfig.iPixelNumber, byLightState);
+      ESP_LOGD(__FILE__, "Light %d is now %d", LightConfig.iPixelNumber, byLightState);
    }
 
    if (byCurrentLightState != byLightState)

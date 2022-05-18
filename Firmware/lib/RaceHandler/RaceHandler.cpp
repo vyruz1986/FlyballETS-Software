@@ -99,7 +99,7 @@ void RaceHandlerClass::Main()
 {
    //Trigger filterring of sensors interrupts if new records available
    while (_iInputQueueReadIndex != _iInputQueueWriteIndex)
-      //ESP_LOGD(__FILE__, "%lld | IQRI:%d | IQWI:%d", GET_MICROS, _iInputQueueReadIndex, _iInputQueueWriteIndex);
+      //ESP_LOGD(__FILE__, "IQRI:%d | IQWI:%d", _iInputQueueReadIndex, _iInputQueueWriteIndex);
       _QueueFilter();
 
    if (_bRaceReadyFaultON)
@@ -585,7 +585,7 @@ void RaceHandlerClass::Main()
    if (RaceState == STARTING && GET_MICROS >= llRaceStartTime)
    {
       _ChangeRaceState(RUNNING);
-      ESP_LOGD(__FILE__, "%llu: GREEN light is ON!", GET_MICROS / 1000);
+      ESP_LOGD(__FILE__, "GREEN light is ON!");
    }*/
 
    //Update racetime
