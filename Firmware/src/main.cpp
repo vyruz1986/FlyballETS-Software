@@ -231,6 +231,14 @@ void setup()
       Serial.println("\nSD Card not inserted!\n");
    }
 
+   // Initialize RaceHandler class with S1 and S2 pins
+   RaceHandler.init(iS1Pin, iS2Pin);
+
+   // Initialize simulatorclass pins if applicable
+#if Simulate
+   Simulator.init(iS1Pin, iS2Pin);
+#endif
+
 #ifdef WiFiON
    // Setup AP
    WiFi.onEvent(WiFiEvent);
@@ -250,17 +258,7 @@ void setup()
 
    // configure webserver
    WebHandler.init(80);
-#endif
 
-   // Initialize RaceHandler class with S1 and S2 pins
-   RaceHandler.init(iS1Pin, iS2Pin);
-
-   // Initialize simulatorclass pins if applicable
-#if Simulate
-   Simulator.init(iS1Pin, iS2Pin);
-#endif
-
-#ifdef WiFiON
    // Ota setup
    ArduinoOTA.setPassword(strAPPass.c_str());
    ArduinoOTA.setPort(3232);

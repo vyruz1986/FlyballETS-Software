@@ -80,6 +80,7 @@ void SDcardControllerClass::init()
          {
             uint16_t oldTagValue = tagfile.parseInt();
             tagfile.close();
+            iTagValue = oldTagValue + 1;
             ESP_LOGI(__FILE__, "Previous tag.txt file value: %i.", oldTagValue);
          }   
       }
@@ -114,9 +115,9 @@ void SDcardControllerClass::SaveRaceDataToFile()
       raceDataFile.print(RaceHandler.iNumberOfRacingDogs);
       raceDataFile.print(";");
       if(RaceHandler.bRerunsOff)
-         raceDataFile.print("no");
-      else
          raceDataFile.print("yes");
+      else
+         raceDataFile.print("no");
       raceDataFile.print(";");
       for (uint8_t i = 0; i < 4; i++)
       {
