@@ -480,7 +480,7 @@ void RaceHandlerClass::Main()
       //Check if the transition string up till now tells us the gates are clear
       String strLast2TransitionChars = _strTransition.substring(_strTransition.length() - 2);
       if (_strTransition.length() == 0                                             //String might still be empty, in which case the gates were clear
-          || (strLast2TransitionChars == "ab" || strLast2TransitionChars == "ba")) //Sensors going low in either direction indicate gates are clear
+         || strLast2TransitionChars == "ab" || strLast2TransitionChars == "ba")    //Sensors going low in either direction indicate gates are clear
       {
          //Print the transition string up til now for debugging purposes
          ESP_LOGI(__FILE__, "Tstring: %s", _strTransition.c_str());
@@ -633,7 +633,7 @@ void RaceHandlerClass::StartRaceTimer()
 {
    llRaceStartTime = GET_MICROS + 3000000;
    _ChangeRaceState(STARTING);
-   ESP_LOGD(__FILE__, "%llu: STARTING! Tag: %i, Race ID: %i.", (llRaceStartTime - 3000000) / 1000, SDcardController.iTagValue, iCurrentRaceId + 1);
+   ESP_LOGD(__FILE__, "STARTING! Tag: %i, Race ID: %i.", SDcardController.iTagValue, iCurrentRaceId + 1);
    cRaceStartTimestamp = GPSHandler.GetLocalTimestamp();
    ESP_LOGI(__FILE__, "Timestamp: %s", cRaceStartTimestamp);
    #ifdef WiFiON
