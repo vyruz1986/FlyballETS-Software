@@ -75,6 +75,8 @@ void SDcardControllerClass::init()
             delay(50);
             writeFile(SD_MMC, "/tag.txt", "1\r\n");
             tagfile.close();
+            iTagValue = 1;
+            ESP_LOGI(__FILE__, "New tag.txt file created.");
          }
          else
          {
