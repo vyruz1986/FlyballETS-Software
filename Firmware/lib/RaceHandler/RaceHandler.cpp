@@ -102,6 +102,18 @@ void RaceHandlerClass::Main()
       //ESP_LOGD(__FILE__, "%lld | IQRI:%d | IQWI:%d", GET_MICROS, _iInputQueueReadIndex, _iInputQueueWriteIndex);
       _QueueFilter();
 
+   if (_bRaceReadyFaultON)
+   {
+      LightsController.ReaceReadyFault(LightsController.ON);
+      _bRaceReadyFaultON = false;
+   }
+
+   if (_bRaceReadyFaultOFF)
+   {
+      LightsController.ReaceReadyFault(LightsController.OFF);
+      _bRaceReadyFaultOFF = false;
+   }
+   
    if (!_QueueEmpty()) //If queue is not empty, we have work to do
    {
       //Get next record from queue
@@ -872,9 +884,11 @@ void RaceHandlerClass::TriggerSensor1()
    else if (RaceState == RESET)
    {
       if (digitalRead(_iS1Pin) == 1)
-         LightsController.ReaceReadyFault(LightsController.ON);
+         _bRaceReadyFaultON = true;
+         //LightsController.ReaceReadyFault(LightsController.ON);
       else
-         LightsController.ReaceReadyFault(LightsController.OFF);
+         _bRaceReadyFaultOFF = true;
+         //LightsController.ReaceReadyFault(LightsController.OFF);
    }
    else
       _QueuePush({_bRunDirectionInverted ? 2 : 1, GET_MICROS, digitalRead(_iS1Pin)});
@@ -891,9 +905,11 @@ void RaceHandlerClass::TriggerSensor2()
    else if (RaceState == RESET)
    {
       if (digitalRead(_iS2Pin) == 1)
-         LightsController.ReaceReadyFault(LightsController.ON);
+         _bRaceReadyFaultON = true;
+         //LightsController.ReaceReadyFault(LightsController.ON);
       else
-         LightsController.ReaceReadyFault(LightsController.OFF);
+         _bRaceReadyFaultOFF = true;
+         //LightsController.ReaceReadyFault(LightsController.OFF);
    }
    else
       _QueuePush({_bRunDirectionInverted ? 1 : 2, GET_MICROS, digitalRead(_iS2Pin)});
@@ -1484,7 +1500,7 @@ void RaceHandlerClass::_QueueFilter()
       }
       else
       {
-         //Next record is for different sensor line or delta time is higher than 4ms. Push Current record Output Queue.
+         //Next record is for different sensor line or delta time is higher than 6ms. Push Current record Output Queue.
          //ESP_LOGD(__FILE__, "Next record > 4ms or for different sensors line. Push Current S%i record %lld to Output Queue.", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime);
          //This function copy current record to common interrupt queue
          _OutputTriggerQueue[_iOutputQueueWriteIndex] = _InputTriggerQueue[_iInputQueueReadIndex];
