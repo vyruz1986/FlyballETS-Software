@@ -3,6 +3,21 @@
 Ten projekt bazuje na systemie treningowym Flyball ETS wykonanym przez vyruz1986.
 ETS oznacza Electronic Training System (Elektroniczny System Treningowy) i jest to adaptacja EJSa (Electronic Judging System - Elektroniczny System Sędziowski) do celów treningowych sportu Flyball.
 
+## Przygotowanie ETS do pracy
+
+Zalecane jest rozstawienie części aktywnej i pasywnej na odległość ok. 1.4 - 1.5m. Większa odległość może powodować "szum sensorów", podczas przebiegania psa.
+Max. rozstawienie nie powinno przekraczać 1.8m.
+- Po wstępnym rozstawieniu stóp nałożyć część aktywną i wstępnie dokręcić zachowując poziom przy użyciu "poziomicy / oczka"
+- Skorygować ustawienie stopy tak, aby linia startu/mety pokrywała się z linią czujników od strony handlerów. Docisnąć stopę
+- Skorygować ustawienie poziomu części aktywnej oraz jej kąt względem toru, tak aby wiązka była prostopadła do toru
+- Zamocować wstępnie część pasywną do stopy
+- Włączyć diody laserowe służące do pozycjonowania i skorygować ustawienie części pasywnej, tak aby diody celowały w stosowne punkty na części pasywnej
+- Wskazania poziomicy na części pasywnej powinny być podobne do tych na części aktywne, ale nie muszą być IDEALNIE w poziomie. Co więcej w przypadku nierównego terenu, gdy część aktywna jest wyżej niż pasywna, to aktywną należy pochylić lekko w kierunku pasywne, a pasywną odchylić lekko do tyłu. Analogicznie, jeśli część aktywna jest niżej niż część pasywna, to część aktywną należy pochylić lekko w tym, a część pasywną w przód (w kierunku części aktywnej). Dzięki temu pomimo nierównego terenu górne/dolne wiązki nie będą celowały nad lub pod "lusterka" części pasywnej.
+
+Jeśli w stanie gotowości (READY, po resecie) pojawiają górne białe światło błędu świeci się lub mruga to znaczy, że system czujniki nie trafiają w lusterka części pasywnej i należy skorygować ustawienie.
+Podobna sytuacja może mieć w trakcie deszczu / mżawki, wówczas należy przetrzeć lusterka oraz same czujniki miękką chłonną szmatką.
+Czujniki mogą też być zakłócone w przypadku bezpośredniego jasnego oświetlenia (słońce), ale prawdopodobieństwo jest niewielkie.
+Im lepsza dokładność ustawienia czujników, tym bardziej niezawodne jest działanie systemu. Doświadczenie pokazało, że jeśli w trakcie treningu często pojawiają się "dziwne/nienaturalne" wyniki, to w większości przypadków jest to spowodowane problemami z pozycjonowaniem systemu.
 
 ## Aktualizacja Firmware'u ETS
 
