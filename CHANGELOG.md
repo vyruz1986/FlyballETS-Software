@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file.
 
 - 2 new simulated races
 - polish instruction of use
+- added wifi on/off via console command
 
 ### Changed
 
@@ -29,6 +30,8 @@ All notable changes to this project will be documented in this file.
 - small logs cleanup due to SDK update
 - 2 racing algorithm fixes (fault after invisible dog)
 - SD card column "reruns off" update
+- frequency of GPS time update changed from 5s to 10s
+- OTA update password now same as Admin password
 - SDK and libraries update
 
 ## [1.2.1] - 2022-04-14
