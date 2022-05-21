@@ -286,7 +286,7 @@ void WebHandlerClass::_SendLightsData()
    if (wsBuffer)
    {
       serializeJson(jsonLightsDoc, (char *)wsBuffer->get(), len + 1);
-      //ESP_LOGD(__FILE__, "%llu LightsData wsBuffer to send: %s. No of ws clients is: %i", GET_MICROS / 1000, (char *)wsBuffer->get(), _ws->count());
+      //ESP_LOGD(__FILE__, "LightsData wsBuffer to send: %s. No of ws clients is: %i", (char *)wsBuffer->get(), _ws->count());
       _ws->textAll(wsBuffer);
       _lLastBroadcast = GET_MICROS / 1000;
       _bUpdateLights = false;

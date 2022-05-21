@@ -10,22 +10,29 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-- polish instruction update
-- migration to faster LiquidCrystal library
 
-## [1.3.0] - 2022-05-03
+
+## [1.4.1] - 2022-05-21
 
 ### Added
 
 - 2 new simulated races
 - polish instruction of use
+- added wifi on/off via console command
 
 ### Changed
 
+- Changed GPS module pinout (TX pin 36 swapped with PPS pin 22). HW patch needed, but not critical
 - Refactoring ("if" and "boolean")
+- ISR function update to avoid watchdog timeouts (ETS could reset while in "READY" state and sensors triggered)
+- fix for PowerOnTag always 0 in WebUI
+- fix for reverted logic of Re-runs OFF columnt in csv (SD card)
+- small logs cleanup due to SDK update
 - 2 racing algorithm fixes (fault after invisible dog)
 - SD card column "reruns off" update
-- Crypto library updated to version 0.4.0
+- frequency of GPS time update changed from 5s to 10s
+- OTA update password now same as Admin password
+- SDK and libraries update
 
 ## [1.2.1] - 2022-04-14
 
@@ -104,8 +111,8 @@ All notable changes to this project will be documented in this file.
 
 
 
-[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.3.0...HEAD
-[1.3.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.2.1...v1.3.0
+[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.4.1...HEAD
+[1.4.1]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.2.1...v1.4.1
 [1.2.1]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.1.2...v1.2.0
 [1.1.2]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.0.0...v1.1.2

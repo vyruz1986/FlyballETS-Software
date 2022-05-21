@@ -118,6 +118,8 @@ private:
    bool _bS1StillSafe;
    bool _bNegativeCrossDetected;
    bool _bPotentialNegativeCrossDetected;
+   bool _bRaceReadyFaultON;
+   bool _bRaceReadyFaultOFF;
    long long _llLastDogTimeReturnTimeStamp[4];
    uint8_t _iLastReturnedRunNumber[4];
    long long _llDogEnterTimes[5];

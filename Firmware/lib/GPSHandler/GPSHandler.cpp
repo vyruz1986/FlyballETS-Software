@@ -12,13 +12,14 @@ void GPSHandlerClass::_HandleSerialPort()
    {
       char cInChar = _SerialPort->read(); // Read a character
       _Tgps.encode(cInChar);
+      //Serial.write(cInChar);
    }
 }
 
 void GPSHandlerClass::init(HardwareSerial *SerialPort)
 {
    _SerialPort = SerialPort;
-   delay(200);
+   //delay(200);
    _HandleSerialPort();
    _FormatTime();
    ESP_LOGI(__FILE__, "Initial UTC time:  %s", _cUTCTime);
@@ -27,15 +28,19 @@ void GPSHandlerClass::init(HardwareSerial *SerialPort)
 
 void GPSHandlerClass::loop()
 {
-   if ((GET_MICROS / 1000 - llLastGPSRead) > 5000)
+   if ((GET_MICROS / 1000 - llLastGPSRead) > 10000)
    {
       _HandleSerialPort();
+      llLastGPSRead = GET_MICROS / 1000;
       if (_Tgps.time.isUpdated() && (_Tgps.date.year() != 2000))
       {
          _FormatTime();
-         llLastGPSRead = GET_MICROS / 1000;
          LCDController.UpdateField(LCDController.GpsState, "gps");
-         //ESP_LOGD(__FILE__, "GPS updated UTC time: %s. Updated local time: %s", _cUTCTime, _cLocalDateAndTime);
+         if (!_bGSPconnected)
+         {
+            ESP_LOGI(__FILE__, "GPS connected. Updated UTC time: %s. Updated local time: %s", _cUTCTime, _cLocalDateAndTime);
+            _bGSPconnected = true;
+         }
       }
    }
 }

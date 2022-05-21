@@ -99,9 +99,21 @@ void RaceHandlerClass::Main()
 {
    //Trigger filterring of sensors interrupts if new records available
    while (_iInputQueueReadIndex != _iInputQueueWriteIndex)
-      //ESP_LOGD(__FILE__, "%lld | IQRI:%d | IQWI:%d", GET_MICROS, _iInputQueueReadIndex, _iInputQueueWriteIndex);
+      //ESP_LOGD(__FILE__, "IQRI:%d | IQWI:%d", _iInputQueueReadIndex, _iInputQueueWriteIndex);
       _QueueFilter();
 
+   if (_bRaceReadyFaultON)
+   {
+      LightsController.ReaceReadyFault(LightsController.ON);
+      _bRaceReadyFaultON = false;
+   }
+
+   if (_bRaceReadyFaultOFF)
+   {
+      LightsController.ReaceReadyFault(LightsController.OFF);
+      _bRaceReadyFaultOFF = false;
+   }
+   
    if (!_QueueEmpty()) //If queue is not empty, we have work to do
    {
       //Get next record from queue
@@ -468,7 +480,7 @@ void RaceHandlerClass::Main()
       //Check if the transition string up till now tells us the gates are clear
       String strLast2TransitionChars = _strTransition.substring(_strTransition.length() - 2);
       if (_strTransition.length() == 0                                             //String might still be empty, in which case the gates were clear
-          || (strLast2TransitionChars == "ab" || strLast2TransitionChars == "ba")) //Sensors going low in either direction indicate gates are clear
+         || strLast2TransitionChars == "ab" || strLast2TransitionChars == "ba")    //Sensors going low in either direction indicate gates are clear
       {
          //Print the transition string up til now for debugging purposes
          ESP_LOGI(__FILE__, "Tstring: %s", _strTransition.c_str());
@@ -573,7 +585,7 @@ void RaceHandlerClass::Main()
    if (RaceState == STARTING && GET_MICROS >= llRaceStartTime)
    {
       _ChangeRaceState(RUNNING);
-      ESP_LOGD(__FILE__, "%llu: GREEN light is ON!", GET_MICROS / 1000);
+      ESP_LOGD(__FILE__, "GREEN light is ON!");
    }*/
 
    //Update racetime
@@ -621,7 +633,7 @@ void RaceHandlerClass::StartRaceTimer()
 {
    llRaceStartTime = GET_MICROS + 3000000;
    _ChangeRaceState(STARTING);
-   ESP_LOGD(__FILE__, "%llu: STARTING! Tag: %i, Race ID: %i.", (llRaceStartTime - 3000000) / 1000, SDcardController.iTagValue, iCurrentRaceId + 1);
+   ESP_LOGD(__FILE__, "STARTING! Tag: %i, Race ID: %i.", SDcardController.iTagValue, iCurrentRaceId + 1);
    cRaceStartTimestamp = GPSHandler.GetLocalTimestamp();
    ESP_LOGI(__FILE__, "Timestamp: %s", cRaceStartTimestamp);
    #ifdef WiFiON
@@ -872,9 +884,11 @@ void RaceHandlerClass::TriggerSensor1()
    else if (RaceState == RESET)
    {
       if (digitalRead(_iS1Pin) == 1)
-         LightsController.ReaceReadyFault(LightsController.ON);
+         _bRaceReadyFaultON = true;
+         //LightsController.ReaceReadyFault(LightsController.ON);
       else
-         LightsController.ReaceReadyFault(LightsController.OFF);
+         _bRaceReadyFaultOFF = true;
+         //LightsController.ReaceReadyFault(LightsController.OFF);
    }
    else
       _QueuePush({_bRunDirectionInverted ? 2 : 1, GET_MICROS, digitalRead(_iS1Pin)});
@@ -891,9 +905,11 @@ void RaceHandlerClass::TriggerSensor2()
    else if (RaceState == RESET)
    {
       if (digitalRead(_iS2Pin) == 1)
-         LightsController.ReaceReadyFault(LightsController.ON);
+         _bRaceReadyFaultON = true;
+         //LightsController.ReaceReadyFault(LightsController.ON);
       else
-         LightsController.ReaceReadyFault(LightsController.OFF);
+         _bRaceReadyFaultOFF = true;
+         //LightsController.ReaceReadyFault(LightsController.OFF);
    }
    else
       _QueuePush({_bRunDirectionInverted ? 1 : 2, GET_MICROS, digitalRead(_iS2Pin)});
@@ -1484,7 +1500,7 @@ void RaceHandlerClass::_QueueFilter()
       }
       else
       {
-         //Next record is for different sensor line or delta time is higher than 4ms. Push Current record Output Queue.
+         //Next record is for different sensor line or delta time is higher than 6ms. Push Current record Output Queue.
          //ESP_LOGD(__FILE__, "Next record > 4ms or for different sensors line. Push Current S%i record %lld to Output Queue.", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime);
          //This function copy current record to common interrupt queue
          _OutputTriggerQueue[_iOutputQueueWriteIndex] = _InputTriggerQueue[_iInputQueueReadIndex];
