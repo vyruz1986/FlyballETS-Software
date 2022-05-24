@@ -25,7 +25,7 @@ protected:
    unsigned long long llLastGPSRead = 0;
 
 public:
-   void init(HardwareSerial* SerialPort);
+   void init(uint8_t _iGPSrxPin, uint8_t _iGPStxPin);
    void loop();
    char* GetLocalDateAndTime();
    char* GetUtcDateAndTime();

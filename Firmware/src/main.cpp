@@ -72,8 +72,8 @@ SD card in MMC mode (require HW 5.0.0 rev.S or higher)
       - D7: Laser trigger button
 */
 
-uint8_t iS1Pin = 34;
-uint8_t iS2Pin = 33;
+const uint8_t iS1Pin = 34;
+const uint8_t iS2Pin = 33;
 uint8_t iCurrentDog;
 uint8_t iCurrentRaceState;
 
@@ -85,15 +85,15 @@ long long llHeapInterval = 5000;
 bool error = false;
 
 // Initialise Lights stuff
-uint8_t iLightsDataPin = 21;
+const uint8_t iLightsDataPin = 21;
 NeoPixelBus<NeoRgbFeature, WS_METHOD> LightsStrip(5 * LIGHTSCHAINS, iLightsDataPin);
 
 // Battery variables
-uint8_t iBatterySensorPin = 35;
+const uint8_t iBatterySensorPin = 35;
 uint16_t iBatteryVoltage = 0;
 
 // Other IO's
-uint8_t iLaserOutputPin = 12;
+const uint8_t iLaserOutputPin = 12;
 uint8_t iLaserOnTime = 60;
 bool bLaserActive = false;
 uint16_t SideSwitchCoolDownTime = 300;
@@ -106,22 +106,21 @@ unsigned long lLastSerialOutput = 0;
 long long llLastBatteryLCDupdate = -25000;
 
 // control pins for 74HC166 (remote + side switch)
-uint8_t iLatchPin = 23;
-uint8_t iClockPin = 18;
-uint8_t iDataInPin = 19;
+const uint8_t iLatchPin = 23;
+const uint8_t iClockPin = 18;
+const uint8_t iDataInPin = 19;
 
 // control pins for SD card
-uint8_t iSDdata0Pin = 2;
-uint8_t iSDdata1Pin = 4;
-uint8_t iSDclockPin = 14;
-uint8_t iSDcmdPin = 15;
-uint8_t iSDdetectPin = 5;
+const uint8_t iSDdata0Pin = 2;
+const uint8_t iSDdata1Pin = 4;
+const uint8_t iSDclockPin = 14;
+const uint8_t iSDcmdPin = 15;
+const uint8_t iSDdetectPin = 5;
 
 // GPS module pins
-uint8_t iGPStxPin = 22;  // RXD pin in GPS module
-uint8_t iGPSrxPin = 39;  // TXD pin in GPS module
-uint8_t iGPSppsPin = 36; // PPS pin in GPS module
-HardwareSerial GPSSerial(1);
+const uint8_t iGPStxPin = 22;  // RXD pin in GPS module
+const uint8_t iGPSrxPin = 39;  // TXD pin in GPS module
+const uint8_t iGPSppsPin = 36; // PPS pin in GPS module
 
 // Buttons handling variables and constans
 unsigned long long llLastDebounceTime = 0;
@@ -135,13 +134,13 @@ const uint16_t DEBOUNCE_DELAY = 30;    // in ms
 const uint16_t SHORT_PRESS_TIME = 700; // in ms
 
 // control pins for LCD
-uint8_t iLCDE1Pin = 16;
-uint8_t iLCDE2Pin = 17;
-uint8_t iLCDData4Pin = 13;
-uint8_t iLCDData5Pin = 26;
-uint8_t iLCDData6Pin = 32;
-uint8_t iLCDData7Pin = 27;
-uint8_t iLCDRSPin = 25;
+const uint8_t iLCDE1Pin = 16;
+const uint8_t iLCDE2Pin = 17;
+const uint8_t iLCDData4Pin = 13;
+const uint8_t iLCDData5Pin = 26;
+const uint8_t iLCDData6Pin = 32;
+const uint8_t iLCDData7Pin = 27;
+const uint8_t iLCDRSPin = 25;
 
 LiquidCrystal lcd(iLCDRSPin, iLCDE1Pin, iLCDData4Pin, iLCDData5Pin, iLCDData6Pin, iLCDData7Pin);  // declare two LCD's, this will be line 1&2
 LiquidCrystal lcd2(iLCDRSPin, iLCDE2Pin, iLCDData4Pin, iLCDData5Pin, iLCDData6Pin, iLCDData7Pin); // declare two LCD's, this will be line 1&2
@@ -218,8 +217,7 @@ void setup()
 
    // Initialize GPS Serial port and class
    pinMode(iGPSppsPin, INPUT_PULLDOWN);
-   GPSSerial.begin(9600, SERIAL_8N1, iGPSrxPin, iGPStxPin);
-   GPSHandler.init(&GPSSerial);
+   GPSHandler.init(iGPSrxPin, iGPStxPin);
 
    // SD card init
    if (digitalRead(iSDdetectPin) == LOW || SDcardForcedDetect)

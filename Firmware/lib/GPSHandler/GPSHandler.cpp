@@ -2,23 +2,25 @@
 #include "GPSHandler.h"
 #include "LCDController.h"
 
+HardwareSerial GPSSerial(1);
+
 TimeChangeRule CEST = {"CEST", Last, Sun, Mar, 2, 120}; //UTC + 2 hours
 TimeChangeRule CET = {"CET", Last, Sun, Oct, 3, 60};    //UTC + 1 hour
 Timezone euCentral (CEST, CET);
 
 void GPSHandlerClass::_HandleSerialPort()
 {
-   while (_SerialPort->available() > 0)
+   while (GPSSerial.available() > 0)
    {
-      char cInChar = _SerialPort->read(); // Read a character
+      char cInChar = GPSSerial.read(); // Read a character
       _Tgps.encode(cInChar);
       //Serial.write(cInChar);
    }
 }
 
-void GPSHandlerClass::init(HardwareSerial *SerialPort)
+void GPSHandlerClass::init(uint8_t _iGPSrxPin, uint8_t _iGPStxPin)
 {
-   _SerialPort = SerialPort;
+   GPSSerial.begin(9600, SERIAL_8N1, _iGPSrxPin, _iGPStxPin);
    //delay(200);
    _HandleSerialPort();
    _FormatTime();

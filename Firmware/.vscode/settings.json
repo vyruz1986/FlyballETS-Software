@@ -4,6 +4,7 @@
       "PLATFORMIO_CALLER": "vscode"
    },
    "files.associations": {
+      "*.json": "jsonc",
       "functional": "cpp",
       "*.tcc": "cpp",
       "fstream": "cpp",
@@ -23,7 +24,13 @@
       "string": "cpp",
       "vector": "cpp",
       "limits": "cpp",
-      "cmath": "cpp"
+      "cmath": "cpp",
+      "deque": "cpp",
+      "list": "cpp",
+      "unordered_map": "cpp",
+      "unordered_set": "cpp",
+      "string_view": "cpp",
+      "initializer_list": "cpp"
    },
    "C_Cpp.dimInactiveRegions": true
 }
