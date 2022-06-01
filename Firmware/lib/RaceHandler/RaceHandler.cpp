@@ -316,13 +316,16 @@ void RaceHandlerClass::Main()
          }
          // Special case after false detection of "ok crossing" --> S1 activated above 100ms after "ok crossing" detection or re-run with next dog = current dog
          else if (_byDogState == COMINGBACK && _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] && !_bS1StillSafe &&
-                  (((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) > 100000 && (STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) < 1000000) || (_bRerunBusy && iCurrentDog == iNextDog)))
+                  (((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) > 100000 && (STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) < 2000000) // filtering changed to < 2s fix for 79-7
+                  || (_bRerunBusy && iCurrentDog == iNextDog)))
          {
             _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] = false;
             _llDogEnterTimes[iCurrentDog] = STriggerRecord.llTriggerTime;
             _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = _llDogEnterTimes[iCurrentDog] - _llLastDogExitTime;
             ESP_LOGI(__FILE__, "False 'ok crossing' detected. Recalculate dog %i times.", iCurrentDog + 1);
          }
+         //else
+         //   ESP_LOGE(__FILE__, "Unexpected S1 crossing while gate CLEAR. CurrentDog: %i, NextDog: %i, S1StillSafe: %i, RerunBusy: %i", iCurrentDog + 1, iNextDog + 1, _bS1StillSafe, _bRerunBusy);
       }
 
       ////Handle sensor 1 events (handlers side) with gates state DOG IN
@@ -403,8 +406,8 @@ void RaceHandlerClass::Main()
             }
             _ChangeDogNumber(iNextDog);
          }
-         else
-            ESP_LOGE(__FILE__, "Unexpected S1 crossing!!!");
+         //else
+         //   ESP_LOGE(__FILE__, "Unexpected S1 crossing while gate DOG(s). CurrentDog: %i, NextDog: %i, S1StillSafe: %i, RerunBusy: %i", iCurrentDog + 1, iNextDog + 1, _bS1StillSafe, _bRerunBusy);
       }
 
       // Handle sensor 2 (box side)

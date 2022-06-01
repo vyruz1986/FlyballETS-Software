@@ -2878,7 +2878,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
-   // Testcase 47: temporary 79-7
+   // Testcase 47: Race ID 79-7 False ok crossing with true cross 1.07s
    {1, 170537, 1},
    {2, 189414, 1},
    {1, 272686, 0},
