@@ -6,10 +6,11 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
-
+- Polish user manual updated with chapter "Światła" and information about remote battery
 
 ### Changed
-
+- improved detection of false "ok" crossing to cover true cross up to 2s
+- minor code refactoring (GPS and pins)
 
 
 ## [1.4.1] - 2022-05-21

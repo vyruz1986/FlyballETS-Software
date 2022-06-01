@@ -52,6 +52,8 @@ Im lepsza dokładność ustawienia czujników, tym bardziej niezawodne jest dzia
 
 
 ## Pilot
+Zalecane jest, aby bateria pilota była włożona tylko na czas treningu. To zdecydowanie wydłuża jej żywotność.
+Funkcje przycisków pilota:
 - 1 START / STOP
 - 2 RESET
 - 3, 4, 5, 6 w trakcie biegu -> ręczne oznaczenie błędu psa (odpowiednio 1, 2, 3, 4) np. gdy zostanie upuszczona piłka
@@ -97,6 +99,15 @@ Aby zapewnić żywotność baterii:
 - Włożenie lub wyjęcie karty SD powoduje restart ETSa, oczywiście o ile był włączony
 
 
+## Światła
+5 świateł jest wykorzystywanych zarówno do sekwencji startowej jak i oznaczania błędów psów. Możliwe jest ustawienie sekwencji startowej stosowanej przez NAFA (USA) używając przycisku "Tryb / Mode".
+Krótkie mrugnięcie górnego białego światła może oznaczać:
+- ręczne zatrzymanie biegu przyciskiem STOP
+- reset biegu przyciskiem RESET
+- w stanie GOTOWOŚCI / READY problem w wypozycjonowaniu ETSa lub wilgość / krople na czujnikach lub lusterkach.
+Przy źle wypozycjonowanym ETSie w stanie GOTOWOŚĆ / READY górne biało światło może cały czas być zapalone, co sygnalizuje potrzebę korekty ustawienia.
+
+
 ## Interfejs www (WiFi)
 Maksymalnie można podłączyć 8 klientów Wifi jednocześnie, jednakże ze względów wydajnościowych lepiej nie przekraczać ilości 4 klientów jednocześnie szczególnie, że w praktyce jedna osoba steruje ETSem i prezentuje wyniki handlerom.
 
@@ -134,7 +145,7 @@ Ponieważ konstrukcja systemu bazuje na zasadzie działania EJSa, to dziedziczy 
 - Podobnie jak w EJSie błąd psa powoduje, że czas psa poprzedniego jest zakłamany i nie należy go uwzględniać w statystykach
 - Czas netto ma sens wyłącznie dla bezbłędnych przebiegów
 
-Pomimo tych wad, które można częściowo obejść, ale to już wykracza poza zakres tej instrukcji dalej, mamy kila cech pozytywnych wliczając takie, które Czeski EJS nie ma:
+Pomimo tych wad, które można częściowo obejść, ale to już wykracza poza zakres tej instrukcji, ciągle mamy wiele pozytywnych funkcji czasami niedostępnych w systemach EJS, np.:
 - kompaktowość, łatwość instalacji
 - sterowanie przez WiFi
 - łatwa aktualizacja firmware'u
