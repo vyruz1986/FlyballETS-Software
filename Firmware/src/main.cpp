@@ -505,11 +505,13 @@ void ToggleWifi()
    if (WiFi.getMode() == WIFI_MODE_AP)
    {
       WiFi.mode(WIFI_OFF);
+      LCDController.UpdateField(LCDController.WifiState, " ");
       ESP_LOGI(__FILE__, "WiFi OFF");
    }
    else
    {
       WiFi.mode(WIFI_AP);
+      LCDController.UpdateField(LCDController.WifiState, "W");
       ESP_LOGI(__FILE__, "WiFi ON");
    }
 }

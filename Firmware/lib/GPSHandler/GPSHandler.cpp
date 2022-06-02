@@ -37,7 +37,7 @@ void GPSHandlerClass::loop()
       if (_Tgps.time.isUpdated() && (_Tgps.date.year() != 2000))
       {
          _FormatTime();
-         LCDController.UpdateField(LCDController.GpsState, "gps");
+         LCDController.UpdateField(LCDController.GpsState, "G");
          if (!_bGSPconnected)
          {
             ESP_LOGI(__FILE__, "GPS connected. Updated UTC time: %s. Updated local time: %s", _cUTCTime, _cLocalDateAndTime);

@@ -50,6 +50,7 @@ public:
       RaceID,
       TeamTime,
       NetTime,
+      WifiState,
       GpsState,
       SDcardState,
       BoxDirection
@@ -71,7 +72,7 @@ private:
       int iFieldLength;
       String strText;
    };
-   struct SLCDField _SlcdfieldFields[20];
+   struct SLCDField _SlcdfieldFields[21];
 };
 
 extern LCDControllerClass LCDController;

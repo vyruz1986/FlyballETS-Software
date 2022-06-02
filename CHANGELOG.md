@@ -7,10 +7,12 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - Polish user manual updated with chapter "Światła" and information about remote battery
+- LCD screen indicator for active WiFi (letter "W")
 
 ### Changed
 - improved detection of false "ok" crossing to cover true cross up to 2s
 - minor code refactoring (GPS and pins)
+- LCD screen indicator for active GPS connection changed from "gps" to "G"
 
 
 ## [1.4.1] - 2022-05-21

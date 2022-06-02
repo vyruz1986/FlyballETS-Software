@@ -47,7 +47,7 @@ Im lepsza dokładność ustawienia czujników, tym bardziej niezawodne jest dzia
 - Symbol ">" lub "<" w prawym dolnym rogu oznacza kierunek nabiegania psa. Zalecane jest ustawianie aktywnej części ETSa po prawej stronie patrząc w kierunku boksu.
 - Jeśli pies miał błąd, który został poprawiony, czyli pies będzie miał więcej niż jeden czas w danym biegu, wówczas na wyświetlaczu czasy te będą się wyświetlały naprzemiennie z oznaczeniem na końcu, który czas jest wyświetlany (*1 - pierwszy dostępny czas, *2 - drugi czas z poprawiania błędu)
 - Jeżeli funkcja "Bez powtórek / Re-runs OFF" jest aktywna, to na wyświetlaczu pojawiają się sufixy "*X"
-- W prawej dolnej części dostępne są znaczniki informujące o detekcji sygnału GPS czy włożeniu karty SD
+- W prawej dolnej części dostępne są znaczniki informujące o detekcji sygnału GPS ("G"), aktywnym WiFi ("W") oraz włożeniu karty SD ("sd")
 - przełączanie trybu pracy (mode: FCI lub NAFA) powoduje chwilowe wyświetlenie na ekranie, który tryb został wybrany. Tryb pracy jest zapisywany w pamięci.
 
 
