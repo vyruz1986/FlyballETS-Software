@@ -13,6 +13,8 @@ All notable changes to this project will be documented in this file.
 - improved detection of false "ok" crossing to cover true cross up to 2s
 - minor code refactoring (GPS and pins)
 - LCD screen indicator for active GPS connection changed from "gps" to "G"
+- improved noise filtering function
+- fix for false "ok" crossing of last dog in case of sensors noise
 
 
 ## [1.4.1] - 2022-05-21
