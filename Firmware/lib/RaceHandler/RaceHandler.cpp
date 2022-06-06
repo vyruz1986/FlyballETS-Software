@@ -97,10 +97,12 @@ void RaceHandlerClass::_ChangeDogNumber(uint8_t iNewDogNumber)
 /// </summary>
 void RaceHandlerClass::Main()
 {
-   // Trigger filterring of sensors interrupts if new records available
-   while (_iInputQueueReadIndex != _iInputQueueWriteIndex)
-      // ESP_LOGD(__FILE__, "IQRI:%d | IQWI:%d", _iInputQueueReadIndex, _iInputQueueWriteIndex);
+   // Trigger filterring of sensors interrupts if new records available and 15ms waiting time passed
+   while ((_iInputQueueReadIndex != _iInputQueueWriteIndex) && (GET_MICROS - _InputTriggerQueue[_iInputQueueWriteIndex-1].llTriggerTime > 15000))
+   {
+      //ESP_LOGD(__FILE__, "IQRI:%d | IQWI:%d | Delta:%lld", _iInputQueueReadIndex, _iInputQueueWriteIndex, GET_MICROS - _InputTriggerQueue[_iInputQueueWriteIndex-1].llTriggerTime);
       _QueueFilter();
+   }
 
    if (_bRaceReadyFaultON)
    {
@@ -526,7 +528,7 @@ void RaceHandlerClass::Main()
                _bLastStringBAba = true;
                ESP_LOGI(__FILE__, "New dog state: GOINGING.");
             }
-            else if (_strTransition == "BAba" && RaceState == STOPPED) // Last returning dog
+            else if (RaceState == STOPPED) // Last returning dog
                ESP_LOGI(__FILE__, "Last dog came back.");
             else // So called "uncertain Tstring"
             {
@@ -1504,7 +1506,7 @@ void RaceHandlerClass::_QueueFilter()
       else
       {
          // Next record is for different sensor line or delta time is higher than 6ms. Push Current record Output Queue.
-         // ESP_LOGD(__FILE__, "Next record > 4ms or for different sensors line. Push Current S%i record %lld to Output Queue.", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime);
+         // ESP_LOGD(__FILE__, "Next record > 6ms or for different sensors line. Push Current S%i record %lld to Output Queue.", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime);
          // This function copy current record to common interrupt queue
          _OutputTriggerQueue[_iOutputQueueWriteIndex] = _InputTriggerQueue[_iInputQueueReadIndex];
 
