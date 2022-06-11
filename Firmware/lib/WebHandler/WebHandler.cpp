@@ -35,7 +35,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
    }
    else if (type == WS_EVT_ERROR)
    {
-      ESP_LOGI(__FILE__, "ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t *)arg), (char *)data);
+      ESP_LOGE(__FILE__, "ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t *)arg), (char *)data);
    }
    else if (type == WS_EVT_PONG)
    {
@@ -48,7 +48,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
       if (info->final && info->index == 0 && info->len == len)
       {
          //the whole message is in a single frame and we got all of it's data
-         //ESP_LOGI(__FILE__, "ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT) ? "text" : "binary", info->len);
+         //ESP_LOGD(__FILE__, "ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT) ? "text" : "binary", info->len);
 
          if (info->opcode == WS_TEXT)
          {
@@ -64,7 +64,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
                msg += buff;
             }
          }
-         ESP_LOGI(__FILE__, "%s\n", msg.c_str());
+         ESP_LOGD(__FILE__, "%s\n", msg.c_str());
       }
       else
       {
@@ -72,11 +72,11 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
          if (info->index == 0)
          {
             if (info->num == 0)
-               ESP_LOGI(__FILE__, "ws[%s][%u] %s-message start\n", server->url(), client->id(), (info->message_opcode == WS_TEXT) ? "text" : "binary");
-            ESP_LOGI(__FILE__, "ws[%s][%u] frame[%u] start[%llu]\n", server->url(), client->id(), info->num, info->len);
+               ESP_LOGD(__FILE__, "ws[%s][%u] %s-message start\n", server->url(), client->id(), (info->message_opcode == WS_TEXT) ? "text" : "binary");
+            ESP_LOGD(__FILE__, "ws[%s][%u] frame[%u] start[%llu]\n", server->url(), client->id(), info->num, info->len);
          }
 
-         ESP_LOGI(__FILE__, "ws[%s][%u] frame[%u] %s[%llu - %llu]: ", server->url(), client->id(), info->num, (info->message_opcode == WS_TEXT) ? "text" : "binary", info->index, info->index + len);
+         ESP_LOGD(__FILE__, "ws[%s][%u] frame[%u] %s[%llu - %llu]: ", server->url(), client->id(), info->num, (info->message_opcode == WS_TEXT) ? "text" : "binary", info->index, info->index + len);
 
          if (info->opcode == WS_TEXT)
          {
@@ -92,13 +92,13 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
                msg += buff;
             }
          }
-         ESP_LOGI(__FILE__, "%s\n", msg.c_str());
+         ESP_LOGD(__FILE__, "%s\n", msg.c_str());
 
          if ((info->index + len) == info->len)
          {
-            ESP_LOGI(__FILE__, "ws[%s][%u] frame[%u] end[%llu]\n", server->url(), client->id(), info->num, info->len);
+            ESP_LOGD(__FILE__, "ws[%s][%u] frame[%u] end[%llu]\n", server->url(), client->id(), info->num, info->len);
             if (info->final)
-               ESP_LOGI(__FILE__, "ws[%s][%u] %s-message end\n", server->url(), client->id(), (info->message_opcode == WS_TEXT) ? "text" : "binary");
+               ESP_LOGD(__FILE__, "ws[%s][%u] %s-message end\n", server->url(), client->id(), (info->message_opcode == WS_TEXT) ? "text" : "binary");
          }
       }
 
@@ -165,7 +165,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
       }
       else
       {
-         ESP_LOGI(__FILE__, "Got valid JSON but unknown message!");
+         ESP_LOGW(__FILE__, "Got valid JSON but unknown message!");
          JsonResponseRoot["error"] = "Got valid JSON but unknown message!";
       }
 
@@ -386,7 +386,7 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
    }
    else if (ActionType == "AnnounceConsumer")
    {
-      ESP_LOGI(__FILE__, "We have a consumer with ID %i and IP %s", Client->id(), Client->remoteIP().toString().c_str());
+      ESP_LOGD(__FILE__, "We have a consumer with ID %i and IP %s", Client->id(), Client->remoteIP().toString().c_str());
       if (!_bIsConsumerArray[Client->id()])
       {
          _iNumOfConsumers++;
@@ -730,14 +730,14 @@ bool WebHandlerClass::_wsAuth(AsyncWebSocketClient *client)
 
    for (index = 0; index < WS_TICKET_BUFFER_SIZE; index++)
    {
-      ESP_LOGI(__FILE__, "Checking ticket: %i, ip: %s, time: %ul", index, _ticket[index].ip.toString().c_str(), _ticket[index].timestamp);
+      ESP_LOGD(__FILE__, "Checking ticket: %i, ip: %s, time: %ul", index, _ticket[index].ip.toString().c_str(), _ticket[index].timestamp);
       if ((_ticket[index].ip == ip) && (GET_MICROS / 1000 - _ticket[index].timestamp < WS_TIMEOUT))
          break;
    }
 
    if (index == WS_TICKET_BUFFER_SIZE)
    {
-      ESP_LOGI(__FILE__, "[WEBSOCKET] Validation check failed\n");
+      ESP_LOGE(__FILE__, "[WEBSOCKET] Validation check failed\n");
       client->text("{\"success\": false, \"error\": \"You shall not pass!!!! Please authenticate first :-)\", \"authenticated\": false}");
       _lLastBroadcast = GET_MICROS / 1000;
       return false;

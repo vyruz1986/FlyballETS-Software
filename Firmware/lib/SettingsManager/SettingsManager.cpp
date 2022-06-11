@@ -9,7 +9,7 @@ void SettingsManagerClass::loop()
    // do we really need to check in loop if there is something to write???
    if (_settings_save)
    {
-      ESP_LOGD(__FILE__, "[SETTINGS] Saving to EEPROM");
+      ESP_LOGI(__FILE__, "[SETTINGS] Saving to EEPROM");
       EEPROM.commit();
       _settings_save = false;
    }

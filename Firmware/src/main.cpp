@@ -246,7 +246,7 @@ void setup()
 
    if (!WiFi.softAP(strAPName.c_str(), strAPPass.c_str()))
    {
-      ESP_LOGW(__FILE__, "Error initializing softAP!");
+      ESP_LOGE(__FILE__, "Error initializing softAP!");
    }
    else
    {
@@ -281,7 +281,7 @@ void setup()
    ArduinoOTA.begin();
    mdnsServerSetup();
 #endif
-   ESP_LOGI(__FILE__, "Setup running on core %d", xPortGetCoreID());
+   //ESP_LOGI(__FILE__, "Setup running on core %d", xPortGetCoreID());
 
    iLaserOnTime = atoi(SettingsManager.getSetting("LaserOnTimer").c_str());
    ESP_LOGI(__FILE__, "Configured laser ON time: %is", iLaserOnTime);
@@ -379,7 +379,7 @@ void loop()
    if (RaceHandler.iCurrentDog != iCurrentDog && RaceHandler.RaceState == RaceHandler.RUNNING)
    {
       ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", RaceHandler.iPreviousDog + 1, RaceHandler.GetDogTime(RaceHandler.iPreviousDog, -2), RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
-      ESP_LOGI(__FILE__, "Running dog: %i.", RaceHandler.iCurrentDog + 1);
+      ESP_LOGD(__FILE__, "Running dog: %i.", RaceHandler.iCurrentDog + 1);
    }
 
    // Cleanup variables used for checking if something changed
@@ -767,7 +767,7 @@ void HandleRemoteAndButtons()
          // Actions for SHORT button press
          if (llPressDuration <= SHORT_PRESS_TIME)
          {
-            ESP_LOGI(__FILE__, "%s SHORT press detected: %lldms", GetButtonString(iLastActiveBit).c_str(), llPressDuration);
+            ESP_LOGD(__FILE__, "%s SHORT press detected: %lldms", GetButtonString(iLastActiveBit).c_str(), llPressDuration);
             if (iLastActiveBit == 3) // Dog 1 fault RC button
                if (RaceHandler.RaceState == RaceHandler.RESET)
                   RaceHandler.SetNumberOfDogs(1);
@@ -800,7 +800,7 @@ void HandleRemoteAndButtons()
          // Actions for LONG button press
          else if (llPressDuration > SHORT_PRESS_TIME)
          {
-            ESP_LOGI(__FILE__, "%s LONG press detected: %lldms", GetButtonString(iLastActiveBit).c_str(), llPressDuration);
+            ESP_LOGD(__FILE__, "%s LONG press detected: %lldms", GetButtonString(iLastActiveBit).c_str(), llPressDuration);
             if (iLastActiveBit == 3 && RaceHandler.RaceState == RaceHandler.RESET) // Dog 1 fault RC button - toggling reruns off/on
                RaceHandler.ToggleRerunsOffOn(2);
             else if (iLastActiveBit == 0 && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)) // Mode button - side switch

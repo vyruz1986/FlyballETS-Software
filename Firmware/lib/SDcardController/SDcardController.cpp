@@ -151,7 +151,7 @@ void SDcardControllerClass::UpdateTagFile()
    {
       iTagValue = oldTagValue + 1;
       sTagValue = String(iTagValue);
-      //ESP_LOGI(__FILE__, "Previous Tag value: %i. Updating tag.txt file...", oldTagValue);
+      //ESP_LOGD(__FILE__, "Previous Tag value: %i. Updating tag.txt file...", oldTagValue);
       deleteFile(SD_MMC, "/tag.txt");
       String writeTagValue = sTagValue + "\r\n";
       writeFile(SD_MMC, "/tag.txt", writeTagValue.c_str());

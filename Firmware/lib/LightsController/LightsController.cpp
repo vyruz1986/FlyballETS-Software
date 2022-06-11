@@ -36,11 +36,11 @@ void LightsControllerClass::init(NeoPixelBus<NeoRgbFeature, WS_METHOD> *LightsSt
    if (SettingsManager.getSetting("StartingSequenceNAFA").equals("1"))
    {
       bModeNAFA = true;
-      ESP_LOGD(__FILE__, "Starting sequence from settings: NAFA");
+      ESP_LOGI(__FILE__, "Starting sequence from settings: NAFA");
    }
    else
    {
-      ESP_LOGD(__FILE__, "Starting sequence from settings: FCI");
+      ESP_LOGI(__FILE__, "Starting sequence from settings: FCI");
    }
    //pinMode(iLightsPin, OUTPUT);
    _LightsStrip = LightsStrip;
@@ -250,7 +250,7 @@ void LightsControllerClass::ToggleLightState(Lights byLight, LightStates byLight
    for (int lightschain = 0; lightschain < LIGHTSCHAINS; lightschain++)
    {
       _LightsStrip->SetPixelColor(LightConfig.iPixelNumber + 5 * lightschain, LightConfig.iColor);
-      ESP_LOGD(__FILE__, "Light %d is now %d", LightConfig.iPixelNumber, byLightState);
+      ESP_LOGI(__FILE__, "Light %d is now %d", LightConfig.iPixelNumber, byLightState);
    }
 
    if (byCurrentLightState != byLightState)
@@ -388,11 +388,11 @@ void LightsControllerClass::ToggleStartingSequence()
    SettingsManager.setSetting("StartingSequenceNAFA", String(bModeNAFA));
    if (bModeNAFA)
    {
-      ESP_LOGD(__FILE__, "Starting sequence: NAFA");
+      ESP_LOGI(__FILE__, "Starting sequence: NAFA");
    }
    else
    {
-      ESP_LOGD(__FILE__, "Starting sequence: FCI");
+      ESP_LOGI(__FILE__, "Starting sequence: FCI");
    }
    LCDController.reInit();
    #ifdef WiFiON
