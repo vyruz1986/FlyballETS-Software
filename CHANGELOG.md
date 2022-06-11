@@ -2,12 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
-
 ## [Unreleased]
 
 ### Added
 - Polish user manual updated with chapter "Światła" and information about remote battery
 - LCD screen indicator for active WiFi (letter "W")
+- fix for invisible dog with perfect crossing (TC 31)
+- fix for face dog 1 time due to sensors noise (TC 37 and TC 41)
 
 ### Changed
 - improved detection of false "ok" crossing to cover true cross up to 2s
@@ -15,6 +16,23 @@ All notable changes to this project will be documented in this file.
 - LCD screen indicator for active GPS connection changed from "gps" to "G"
 - improved noise filtering function
 - fix for false "ok" crossing of last dog in case of sensors noise
+- simulated testcases
+
+## [1.5.2] - 2022-06-12
+
+### Added
+- Polish user manual updated with chapter "Światła" and information about remote battery
+- LCD screen indicator for active WiFi (letter "W")
+- fix for invisible dog with perfect crossing (TC 31)
+- fix for face dog 1 time due to sensors noise (TC 37 and TC 41)
+
+### Changed
+- improved detection of false "ok" crossing to cover true cross up to 2s
+- minor code refactoring (GPS and pins)
+- LCD screen indicator for active GPS connection changed from "gps" to "G"
+- improved noise filtering function
+- fix for false "ok" crossing of last dog in case of sensors noise
+- simulated testcases
 
 
 ## [1.4.1] - 2022-05-21
@@ -116,7 +134,8 @@ All notable changes to this project will be documented in this file.
 
 
 
-[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.4.1...HEAD
+[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.5.2...HEAD
+[1.5.2]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.4.1...v1.5.2
 [1.4.1]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.2.1...v1.4.1
 [1.2.1]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.1.2...v1.2.0
