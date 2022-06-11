@@ -285,6 +285,8 @@ void setup()
 
    iLaserOnTime = atoi(SettingsManager.getSetting("LaserOnTimer").c_str());
    ESP_LOGI(__FILE__, "Configured laser ON time: %is", iLaserOnTime);
+
+   ESP_LOGI(__FILE__, "ESP log level %i", CORE_DEBUG_LEVEL);
 }
 
 void loop()
@@ -356,22 +358,17 @@ void loop()
       {
          // ESP_LOGD(__FILE__, "Dog %i -> %i run(s).", i + 1, RaceHandler.iDogRunCounters[i] + 1);
          for (uint8_t i2 = 0; i2 < (RaceHandler.iDogRunCounters[i] + 1); i2++)
-         {
             ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", i + 1, RaceHandler.GetStoredDogTimes(i, i2), RaceHandler.TransformCrossingTime(i, i2));
-         }
       }
       ESP_LOGI(__FILE__, " Team: %s", cElapsedRaceTime);
       ESP_LOGI(__FILE__, "  Net: %s\n", cTeamNetTime);
       if (SDcardController.bSDCardDetected)
-      {
          SDcardController.SaveRaceDataToFile();
-      }
 #if !Simulate
-      RaceHandler.PrintRaceTriggerRecords();
+      if (CORE_DEBUG_LEVEL >= ESP_LOG_DEBUG)
+         RaceHandler.PrintRaceTriggerRecords();
       if (SDcardController.bSDCardDetected)
-      {
          RaceHandler.PrintRaceTriggerRecordsToFile();
-      }
 #endif
       bRaceSummaryPrinted = true;
    }

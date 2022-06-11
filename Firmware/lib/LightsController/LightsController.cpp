@@ -250,7 +250,7 @@ void LightsControllerClass::ToggleLightState(Lights byLight, LightStates byLight
    for (int lightschain = 0; lightschain < LIGHTSCHAINS; lightschain++)
    {
       _LightsStrip->SetPixelColor(LightConfig.iPixelNumber + 5 * lightschain, LightConfig.iColor);
-      ESP_LOGI(__FILE__, "Light %d is now %d", LightConfig.iPixelNumber, byLightState);
+      ESP_LOGD(__FILE__, "Light %d is now %d", LightConfig.iPixelNumber, byLightState);
    }
 
    if (byCurrentLightState != byLightState)
