@@ -253,9 +253,11 @@ void RaceHandlerClass::Main()
          // Normal race handling (positive cross)
          else if (_byDogState == GOINGIN && (iCurrentDog != 0 || (iCurrentDog == 0 && _bRerunBusy)) && _bS1StillSafe)
          {
-            // If this is not re-run and last string was BAba and next dog didn't enter yet, we assume invisibly entering dog is already running
-            // and next dog entered gate to early (fault). Fix for 74-15
-            if (!_bRerunBusy && _bLastStringBAba && (STriggerRecord.llTriggerTime - _llLastDogExitTime) > 3000000)
+            // If this is not re-run and last string was BAba and next dog didn't enter yet, we might have fast next dog that is already running
+            // and next dog entered gate to early (fault). This is fix for simulated race 40 (74-15).
+            // Period between 3.5s and 4.5s is covered and scenario when last dog is running excluded. Fix for simulated race 45 (83-30).
+            if (!_bRerunBusy && _bLastStringBAba && (STriggerRecord.llTriggerTime - _llLastDogExitTime) > 3500000
+               && (STriggerRecord.llTriggerTime - _llLastDogExitTime) < 4500000 && iCurrentDog != iNextDog)
             {
                // Calculte times for running invisible dog
                SetDogFault(iNextDog, ON);
@@ -270,7 +272,7 @@ void RaceHandlerClass::Main()
                else // This is true invisible dog case so treated as big OK cross
                   _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
                _ChangeDogNumber(iNextDog);
-               ESP_LOGD(__FILE__, "S1 crossed after 3s and last Tstring was BAba. Invisible dog %i is running and next dog enter with fault.", iPreviousDog + 1);
+               ESP_LOGD(__FILE__, "S1 crossed after 3.5s to 4.5s and last Tstring was BAba. Invisible dog %i is running and next dog enter with fault.", iPreviousDog + 1);
             }
             else
             {
