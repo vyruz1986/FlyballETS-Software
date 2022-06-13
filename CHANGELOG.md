@@ -14,7 +14,7 @@ All notable changes to this project will be documented in this file.
 - Polish user manual updated with chapter "Światła" and information about remote battery
 - LCD screen indicator for active WiFi (letter "W")
 - fix for invisible dog with perfect crossing (TC 31)
-- fix for face dog 1 time due to sensors noise (TC 37 and TC 41)
+- fix for fake dog 1 time due to sensors noise (TC 37 and TC 41)
 - fix for big cross treated as sceanrio TC 40 (TC 46)
 
 ### Changed
