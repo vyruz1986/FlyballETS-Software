@@ -35,7 +35,7 @@ Im lepsza dokładność ustawienia czujników, tym bardziej niezawodne jest dzia
 4. Kliknąć w zakładkę "Firmware update"
 5. Zalogować się używając loginu "Admin" oraz hasła (domyślne to "FlyballETS.1234)
 6. Po zalogowaniu domyślnie będzie zaznaczona opcja "Firmware", tak zostawić. Kliknąć "Wybierz plik" i wskazać pobrany plik firmware z rozszerzeniem ".bin"
-7. Aktualizacja rozpocznie się automatycznie. Poprawnie wykonana zakończy się napisem "OTA Success". ETS zrestartuje się automatycznie.
+7. Aktualizacja rozpocznie się automatycznie. Postęp widać także na ekranie LCD. Poprawnie wykonana zakończy się napisem "OTA Success". ETS zrestartuje się automatycznie.
 
 
 ## Wyświetlacz LCD

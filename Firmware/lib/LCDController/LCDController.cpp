@@ -48,17 +48,17 @@ void LCDControllerClass::init(LiquidCrystal *Clcd1, LiquidCrystal *Clcd2)
    _UpdateLCD(4, 0, String("4:   0.000  +  0.000    |  100% W G sd >"), 40);
 
    _SlcdfieldFields[D1Time] = {1, 3, 7, String("  0.000")};
-   _SlcdfieldFields[D1RerunInfo] = {1, 22, 2, String("  ")};
    _SlcdfieldFields[D2Time] = {2, 3, 7, String("  0.000")};
-   _SlcdfieldFields[D2RerunInfo] = {2, 22, 2, String("  ")};
    _SlcdfieldFields[D3Time] = {3, 3, 7, String("  0.000")};
-   _SlcdfieldFields[D3RerunInfo] = {3, 22, 2, String("  ")};
    _SlcdfieldFields[D4Time] = {4, 3, 7, String("  0.000")};
-   _SlcdfieldFields[D4RerunInfo] = {4, 22, 2, String("  ")};
    _SlcdfieldFields[D1CrossTime] = {1, 12, 8, String("        ")};
    _SlcdfieldFields[D2CrossTime] = {2, 12, 8, String("        ")};
    _SlcdfieldFields[D3CrossTime] = {3, 12, 8, String("        ")};
    _SlcdfieldFields[D4CrossTime] = {4, 12, 8, String("        ")};
+   _SlcdfieldFields[D1RerunInfo] = {1, 22, 2, String("  ")};
+   _SlcdfieldFields[D2RerunInfo] = {2, 22, 2, String("  ")};
+   _SlcdfieldFields[D3RerunInfo] = {3, 22, 2, String("  ")};
+   _SlcdfieldFields[D4RerunInfo] = {4, 22, 2, String("  ")};
    _SlcdfieldFields[RaceState] = {1, 28, 7, String(" READY ")};
    _SlcdfieldFields[RaceID] = {1, 38, 2, String(" 1")};
 #if BatteryCalibration
@@ -117,6 +117,7 @@ void LCDControllerClass::UpdateNumberOfDogsOnLCD(uint8_t iNumberOfDogs)
       _UpdateLCD(3, 0, String("3:                      |  Net:         "), 40);
       _UpdateLCD(4, 0, String("                        |     %         "), 40);
       _SlcdfieldFields[D4Time].strText = "       ";
+      _SlcdfieldFields[D4RerunInfo].strText = "  ";
    }
    else if (iNumberOfDogs == 2)
    {
@@ -126,6 +127,8 @@ void LCDControllerClass::UpdateNumberOfDogsOnLCD(uint8_t iNumberOfDogs)
       _UpdateLCD(4, 0, String("                        |     %         "), 40);
       _SlcdfieldFields[D3Time].strText = "       ";
       _SlcdfieldFields[D4Time].strText = "       ";
+      _SlcdfieldFields[D3RerunInfo].strText = "  ";
+      _SlcdfieldFields[D4RerunInfo].strText = "  ";
    }
    else if (iNumberOfDogs == 1)
    {
@@ -136,6 +139,9 @@ void LCDControllerClass::UpdateNumberOfDogsOnLCD(uint8_t iNumberOfDogs)
       _SlcdfieldFields[D2Time].strText = "       ";
       _SlcdfieldFields[D3Time].strText = "       ";
       _SlcdfieldFields[D4Time].strText = "       ";
+      _SlcdfieldFields[D2RerunInfo].strText = "  ";
+      _SlcdfieldFields[D3RerunInfo].strText = "  ";
+      _SlcdfieldFields[D4RerunInfo].strText = "  ";
    }
    else
    {
@@ -144,6 +150,30 @@ void LCDControllerClass::UpdateNumberOfDogsOnLCD(uint8_t iNumberOfDogs)
       _UpdateLCD(3, 0, String("3:                      |  Net:         "), 40);
       _UpdateLCD(4, 0, String("4:                      |     %         "), 40);
    }
+}
+
+void LCDControllerClass::FirmwareUpdateInit()
+{
+   _UpdateLCD(1, 0, String("                                        "), 40);
+   _UpdateLCD(2, 0, String("            Firmware update             "), 40);
+   _UpdateLCD(3, 0, String("                                        "), 40);
+   _UpdateLCD(4, 0, String("               Progress:     0%         "), 40);
+}
+
+void LCDControllerClass::FirmwareUpdateProgress(String strNewValue)
+{
+   _SlcdfieldFields[BattLevel].strText = strNewValue;
+   _UpdateLCD(_SlcdfieldFields[BattLevel].iLine, _SlcdfieldFields[BattLevel].iStartingPosition, _SlcdfieldFields[BattLevel].strText, _SlcdfieldFields[BattLevel].iFieldLength);
+}
+
+void LCDControllerClass::FirmwareUpdateSuccess()
+{
+   _UpdateLCD(4, 0, String("              OTA Success               "), 40);
+}
+
+void LCDControllerClass::FirmwareUpdateError()
+{
+   _UpdateLCD(4, 0, String("              OTA Error                 "), 40);
 }
 
 /// <summary>

@@ -5,8 +5,10 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- OTA Firmware update progress on LCD
 
 ### Changed
+- corrected dogs re-runs off state on LCD after number of running dogs change
 
 ## [1.5.3] - 2022-06-13
 

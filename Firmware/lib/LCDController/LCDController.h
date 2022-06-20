@@ -29,25 +29,29 @@ protected:
 public:
    void init(LiquidCrystal *Clcd1, LiquidCrystal *Clcd2);
    void reInit();
+   void FirmwareUpdateInit();
+   void FirmwareUpdateProgress(String strNewValue);
+   void FirmwareUpdateSuccess();
+   void FirmwareUpdateError();
    void UpdateNumberOfDogsOnLCD(uint8_t iNumberOfDogs);
    void Main();
    enum LCDFields
    {
       D1Time,
-      D1RerunInfo,
       D2Time,
-      D2RerunInfo,
       D3Time,
-      D3RerunInfo,
       D4Time,
-      D4RerunInfo,
       D1CrossTime,
       D2CrossTime,
       D3CrossTime,
       D4CrossTime,
+      D1RerunInfo,
+      D2RerunInfo,
+      D3RerunInfo,
+      D4RerunInfo,
       RaceState,
-      BattLevel,
       RaceID,
+      BattLevel,
       TeamTime,
       NetTime,
       WifiState,

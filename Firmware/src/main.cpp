@@ -257,27 +257,43 @@ void setup()
    // configure webserver
    WebHandler.init(80);
 
-   // Ota setup
+   // OTA setup
    ArduinoOTA.setPassword(strAPPass.c_str());
    ArduinoOTA.setPort(3232);
    ArduinoOTA.onStart([](){
       String type;
-      if (ArduinoOTA.getCommand() == 0) //VSCode constantly can't read properly value of U_FLASH, therefore replacing with "0"
-         type = "sketch";
+      if (ArduinoOTA.getCommand() == U_FLASH)
+         type = "Firmware";
       else // U_SPIFFS
-         type = "filesystem";
-      ESP_LOGI(__FILE__, "Start updating %s", type); });
-   ArduinoOTA.onEnd([](){ ESP_LOGI(__FILE__, "[OTA]: End"); });
+         type = "Filesystem";
+      Serial.println("\n" + type + " update initiated.");
+      LCDController.FirmwareUpdateInit();
+   });
+   ArduinoOTA.onEnd([](){ 
+      Serial.println("\nUpdate completed.\n");
+      LCDController.FirmwareUpdateSuccess();
+   });
    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total){
-      unsigned int progressPercentage = (progress / (total / 100));
-      if (uiLastProgress != progressPercentage)
+      uint16_t iProgressPercentage = (progress / (total / 100));
+      if (uiLastProgress != iProgressPercentage)
       {
-         ESP_LOGI(__FILE__, "[OTA]: Progress: %u%%", progressPercentage);
-         uiLastProgress = progressPercentage;
-      } });
-   ArduinoOTA.onError([](ota_error_t error){
-      ESP_LOGE(__FILE__, "");
-      ESP_LOGE(__FILE__, "[OTA]: Error[%u]: ", error); });
+         Serial.printf("Progress: %u%%\r", iProgressPercentage);
+         String sProgressPercentage = String(iProgressPercentage);
+         while (sProgressPercentage.length() < 3)
+            sProgressPercentage = " " + sProgressPercentage;
+         LCDController.FirmwareUpdateProgress(sProgressPercentage);
+         uiLastProgress = iProgressPercentage;
+      }
+   });
+   ArduinoOTA.onError([](ota_error_t error) {
+      Serial.printf("Error[%u]: ", error);
+      LCDController.FirmwareUpdateError();
+      if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+      else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+      else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+      else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+      else if (error == OTA_END_ERROR) Serial.println("End Failed");
+   });
    ArduinoOTA.begin();
    mdnsServerSetup();
 #endif
@@ -286,7 +302,7 @@ void setup()
    iLaserOnTime = atoi(SettingsManager.getSetting("LaserOnTimer").c_str());
    ESP_LOGI(__FILE__, "Configured laser ON time: %is", iLaserOnTime);
 
-   ESP_LOGI(__FILE__, "ESP log level %i", CORE_DEBUG_LEVEL);
+   ESP_LOGW(__FILE__, "ESP log level %i", CORE_DEBUG_LEVEL);
 }
 
 void loop()
@@ -652,9 +668,7 @@ void HandleLCDUpdates()
       }
 
       while (sBatteryPercentage.length() < 3)
-      {
          sBatteryPercentage = " " + sBatteryPercentage;
-      }
       LCDController.UpdateField(LCDController.BattLevel, sBatteryPercentage);
       // ESP_LOGD(__FILE__, "Battery: analog: %i ,voltage: %i, level: %i%%", BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
       llLastBatteryLCDupdate = GET_MICROS / 1000;
