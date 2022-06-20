@@ -24,6 +24,7 @@ All notable changes to this project will be documented in this file.
 - improved noise filtering function
 - fix for false "ok" crossing of last dog in case of sensors noise
 - simulated testcases
+- debug log level changed to "info"
 
 
 ## [1.4.1] - 2022-05-21
