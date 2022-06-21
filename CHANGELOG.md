@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - corrected dogs re-runs off state on LCD after number of running dogs change
+- code refactoring in main.h/cpp
 
 ## [1.5.3] - 2022-06-13
 

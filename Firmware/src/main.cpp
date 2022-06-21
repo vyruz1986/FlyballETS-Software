@@ -23,142 +23,17 @@
 // see <http://www.gnu.org/licenses/>
 #include "main.h"
 
-/*List of pins and the ones used (Lolin32 board):
-   - 34: S1 (handler side) photoelectric sensor. ESP32 has no pull-down resistor on 34 pin, but pull-down anyway by 1kohm resistor on sensor board
-   - 33: S2 (box side) photoelectric sensor
-
-   - 27: LCD Data7
-   - 32: LCD Data6
-   - 26: LCD Data5
-   - 13: LCD Data4
-   - 16: LCD1 (line 1&2) enable pin
-   - 17: LCD2 (line 3&4) enable pin
-   - 25: LCD RS Pin
-
-   - 21: WS2811B lights data pin
-
-   - 35: battery sensor pin
-
-   - 12: Laser output
-
-   -  1: free/TX
-   -  3: free/RX
-
-GPS module
-   - 22:    GPS PPS signal
-   - 36/VP: GPS rx (ESP tx)
-   - 39/VN: GPS tx (ESP rx)
-
-SD card in MMC mode (require HW 5.0.0 rev.S or higher)
-   -  2: SD card Data0
-   -  4: SD card Data1
-   - 14: SD card Clock
-   - 15: SD card Command
-   -  5: SD card Detect (state low when card inserted)
-
-74HC166 lines
-   - 19: dataOutPin (Q7) for 74HC166
-   - 23: latchPin (CE)   for 74HC166
-   - 18: clockPin (CP)   for 74HC166
-
-   74HC166 pinouts
-      - D0: Side switch button
-      - D1: remote D0 start/stop
-      - D2: remote D1 reset
-      - D3: remote D2 dog 1 fault
-      - D4: remote D5 dog 4 fault
-      - D5: remote D4 dog 3 fault
-      - D6: remote D3 dog 2 fault
-      - D7: Laser trigger button
-*/
-
-const uint8_t iS1Pin = 34;
-const uint8_t iS2Pin = 33;
-uint8_t iCurrentDog;
-uint8_t iCurrentRaceState;
-
-char cDogCrossingTime[8];
-char cElapsedRaceTime[8];
-char cTeamNetTime[8];
-long long llHeapPreviousMillis = 0;
-long long llHeapInterval = 5000;
-bool error = false;
-
-// Initialise Lights stuff
-const uint8_t iLightsDataPin = 21;
+// Declare WS2811B compatibile lights strip
 NeoPixelBus<NeoRgbFeature, WS_METHOD> LightsStrip(5 * LIGHTSCHAINS, iLightsDataPin);
 
-// Battery variables
-const uint8_t iBatterySensorPin = 35;
-uint16_t iBatteryVoltage = 0;
+// Declare 40x4 LCD by 2 virtual LCDes
+LiquidCrystal lcd(iLCDRSPin, iLCDE1Pin, iLCDData4Pin, iLCDData5Pin, iLCDData6Pin, iLCDData7Pin);  // this will be line 1&2 of 40x4 LCD
+LiquidCrystal lcd2(iLCDRSPin, iLCDE2Pin, iLCDData4Pin, iLCDData5Pin, iLCDData6Pin, iLCDData7Pin); // this will be line 3&4 of 40x4 LCD
 
-// Other IO's
-const uint8_t iLaserOutputPin = 12;
-uint8_t iLaserOnTime = 60;
-bool bLaserActive = false;
-uint16_t SideSwitchCoolDownTime = 300;
-bool bSideSwitchPressedOnce = false;
-
-// Set last serial output variable
-unsigned long lLastSerialOutput = 0;
-
-// Battery % update on LCD timer variable
-long long llLastBatteryLCDupdate = -25000;
-
-// control pins for 74HC166 (remote + side switch)
-const uint8_t iLatchPin = 23;
-const uint8_t iClockPin = 18;
-const uint8_t iDataInPin = 19;
-
-// control pins for SD card
-const uint8_t iSDdata0Pin = 2;
-const uint8_t iSDdata1Pin = 4;
-const uint8_t iSDclockPin = 14;
-const uint8_t iSDcmdPin = 15;
-const uint8_t iSDdetectPin = 5;
-
-// GPS module pins
-const uint8_t iGPStxPin = 22;  // RXD pin in GPS module
-const uint8_t iGPSrxPin = 39;  // TXD pin in GPS module
-const uint8_t iGPSppsPin = 36; // PPS pin in GPS module
-
-// Buttons handling variables and constans
-unsigned long long llLastDebounceTime = 0;
-unsigned long long llPressedTime[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-unsigned long long llReleasedTime[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-uint8_t iLastActiveBit = 0;
-byte byDataIn = 0;
-byte byLastStadyState = 0;
-byte byLastFlickerableState = 0;
-const uint16_t DEBOUNCE_DELAY = 30;    // in ms
-const uint16_t SHORT_PRESS_TIME = 700; // in ms
-
-// control pins for LCD
-const uint8_t iLCDE1Pin = 16;
-const uint8_t iLCDE2Pin = 17;
-const uint8_t iLCDData4Pin = 13;
-const uint8_t iLCDData5Pin = 26;
-const uint8_t iLCDData6Pin = 32;
-const uint8_t iLCDData7Pin = 27;
-const uint8_t iLCDRSPin = 25;
-
-LiquidCrystal lcd(iLCDRSPin, iLCDE1Pin, iLCDData4Pin, iLCDData5Pin, iLCDData6Pin, iLCDData7Pin);  // declare two LCD's, this will be line 1&2
-LiquidCrystal lcd2(iLCDRSPin, iLCDE2Pin, iLCDData4Pin, iLCDData5Pin, iLCDData6Pin, iLCDData7Pin); // declare two LCD's, this will be line 1&2
-
-// String for serial comms storage
-String strSerialData;
-byte bySerialIndex = 0;
-bool bSerialStringComplete = false;
-bool bRaceSummaryPrinted = false;
-
-// Wifi stuff
-// WiFiMulti wm;
+// IP addresses declaration
 IPAddress IPGateway(192, 168, 20, 1);
 IPAddress IPNetwork(192, 168, 20, 0);
 IPAddress IPSubnet(255, 255, 255, 0);
-
-// Keep last reported OTA progress so we can send message for every % increment
-unsigned int uiLastProgress = 0;
 
 void setup()
 {
@@ -166,24 +41,25 @@ void setup()
    Serial.begin(115200);
    SettingsManager.init();
 
-   pinMode(iS1Pin, INPUT_PULLDOWN);
+   // Configure sensors pins
+   pinMode(iS1Pin, INPUT_PULLDOWN); // ESP32 has no pull-down resistor on pin 34, but it's pulled-down anyway by 1kohm resistor in voltage leveler circuit
    pinMode(iS2Pin, INPUT_PULLDOWN);
 
-   // Set light data pin as output
+   // Initialize lights
    pinMode(iLightsDataPin, OUTPUT);
 
-   // initialize pins for 74HC166
+   // Configure pins for 74HC166
    pinMode(iLatchPin, OUTPUT);
    pinMode(iClockPin, OUTPUT);
    pinMode(iDataInPin, INPUT_PULLDOWN);
 
-   // initialize pins for SD Card
+   // Configure pins for SD Card
    pinMode(iSDdata0Pin, INPUT_PULLUP);
    pinMode(iSDdata1Pin, INPUT_PULLUP);
    pinMode(iSDcmdPin, INPUT_PULLUP);
    pinMode(iSDdetectPin, INPUT_PULLUP);
 
-   // LCD pins as output
+   // Configure LCD pins
    pinMode(iLCDData4Pin, OUTPUT);
    pinMode(iLCDData5Pin, OUTPUT);
    pinMode(iLCDData6Pin, OUTPUT);
@@ -198,8 +74,11 @@ void setup()
    attachInterrupt(digitalPinToInterrupt(iS1Pin), Sensor1Wrapper, CHANGE);
 #endif
 
-   // Initialize other I/O's
+   // Configure Laser output pin
    pinMode(iLaserOutputPin, OUTPUT);
+
+   // Configure GPS PPS pin
+   pinMode(iGPSppsPin, INPUT_PULLDOWN);
 
    // Print SW version
    ESP_LOGI(__FILE__, "Firmware version %s", FW_VER);
@@ -215,19 +94,14 @@ void setup()
 
    strSerialData[0] = 0;
 
-   // Initialize GPS Serial port and class
-   pinMode(iGPSppsPin, INPUT_PULLDOWN);
+   // Initialize GPS
    GPSHandler.init(iGPSrxPin, iGPStxPin);
 
    // SD card init
    if (digitalRead(iSDdetectPin) == LOW || SDcardForcedDetect)
-   {
       SDcardController.init();
-   }
    else
-   {
       Serial.println("\nSD Card not inserted!\n");
-   }
 
    // Initialize RaceHandler class with S1 and S2 pins
    RaceHandler.init(iS1Pin, iS2Pin);
@@ -245,13 +119,9 @@ void setup()
    String strAPPass = SettingsManager.getSetting("APPass");
 
    if (!WiFi.softAP(strAPName.c_str(), strAPPass.c_str()))
-   {
       ESP_LOGE(__FILE__, "Error initializing softAP!");
-   }
    else
-   {
       ESP_LOGI(__FILE__, "Wifi started successfully, AP name: %s, pass: %s", strAPName.c_str(), strAPPass.c_str());
-   }
    WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
 
    // configure webserver
@@ -459,15 +329,10 @@ void StopRaceMain()
 /// </summary>
 void StartStopRace()
 {
-   if (RaceHandler.RaceState == RaceHandler.RESET) // If race is reset
-   {
-      // Then start the race
+   if (RaceHandler.RaceState == RaceHandler.RESET)
       StartRaceMain();
-   }
    else // If race state is running or starting, we should stop it
-   {
       StopRaceMain();
-   }
 }
 
 /// <summary>
@@ -476,9 +341,7 @@ void StartStopRace()
 void ResetRace()
 {
    if (RaceHandler.RaceState != RaceHandler.STOPPED) // Only allow reset when race is stopped first
-   {
       return;
-   }
    RaceHandler.ResetRace();
    LightsController.ResetLights();
 }
@@ -630,13 +493,9 @@ void HandleLCDUpdates()
 {
    // Update team time to display
    if (!LightsController.bModeNAFA)
-   {
       dtostrf(RaceHandler.GetRaceTime(), 6, 2, cElapsedRaceTime);
-   }
    else
-   {
       dtostrf(RaceHandler.GetRaceTime(), 7, 3, cElapsedRaceTime);
-   }
    LCDController.UpdateField(LCDController.TeamTime, cElapsedRaceTime);
 
    // Update battery percentage to display
@@ -655,17 +514,11 @@ void HandleLCDUpdates()
          esp_deep_sleep_start();
       }
       else if (iBatteryPercentage == 9911)
-      {
          sBatteryPercentage = "USB";
-      }
       else if (iBatteryPercentage == 0)
-      {
          sBatteryPercentage = "LOW";
-      }
       else
-      {
          sBatteryPercentage = String(iBatteryPercentage);
-      }
 
       while (sBatteryPercentage.length() < 3)
          sBatteryPercentage = " " + sBatteryPercentage;
@@ -676,13 +529,9 @@ void HandleLCDUpdates()
 
    // Update team netto time
    if (!LightsController.bModeNAFA)
-   {
       dtostrf(RaceHandler.GetNetTime(), 6, 2, cTeamNetTime);
-   }
    else
-   {
       dtostrf(RaceHandler.GetNetTime(), 7, 3, cTeamNetTime);
-   }
    LCDController.UpdateField(LCDController.NetTime, cTeamNetTime);
 
    if (iCurrentRaceState != RaceHandler.RaceState)
@@ -828,87 +677,6 @@ void HandleRemoteAndButtons()
       bLaserActive = false;
       ESP_LOGI(__FILE__, "Turn Laser OFF.");
    }
-   /*
-   //Race start/stop button (remote D0 output)
-   if (bitRead(byDataIn, 1) == HIGH && (GET_MICROS / 1000 - llLastRCPress[1]) > 2500)
-   {
-      StartStopRace();
-   }
-   //Race reset button (remote D1 output)
-   if (bitRead(byDataIn, 2) == HIGH && (GET_MICROS / 1000 - llLastRCPress[2] > 2000))
-   {
-      ResetRace();
-   }
-   //Dog 1 fault RC button
-   if (bitRead(bDataIn, 3) == HIGH && (GET_MICROS / 1000 - llLastRCPress[3] > 2000))
-   {
-      llLastRCPress[3] = GET_MICROS / 1000;
-
-   }
-   //Dog 2 fault RC button
-   if (bitRead(byDataIn, 6) == HIGH && (GET_MICROS / 1000 - llLastRCPress[6] > 2000))
-   {
-      llLastRCPress[6] = GET_MICROS / 1000;
-      if (RaceHandler.RaceState == RaceHandler.RESET)
-         RaceHandler.SetNumberOfDogs(2);
-      else
-         RaceHandler.SetDogFault(1);
-   }
-   //Dog 3 fault RC button
-   if (bitRead(byDataIn, 5) == HIGH && (GET_MICROS / 1000 - llLastRCPress[5] > 2000))
-   {
-      llLastRCPress[5] = GET_MICROS / 1000;
-      if (RaceHandler.RaceState == RaceHandler.RESET)
-         RaceHandler.SetNumberOfDogs(3);
-      else
-         RaceHandler.SetDogFault(2);
-   }
-   //Dog 4 fault RC button
-   if (bitRead(byDataIn, 4) == HIGH && (GET_MICROS / 1000 - llLastRCPress[4] > 2000))
-   {
-      llLastRCPress[4] = GET_MICROS / 1000;
-      if (RaceHandler.RaceState == RaceHandler.RESET)
-         RaceHandler.SetNumberOfDogs(4);
-      else
-         RaceHandler.SetDogFault(3);
-   }
-   //Laser activation
-   if (bitRead(byDataIn, 7) == HIGH && ((GET_MICROS / 1000 - llLastRCPress[7] > iLaserOnTime * 1000) || llLastRCPress[7] == 0) //
-      && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
-   {
-      llLastRCPress[7] = GET_MICROS / 1000;
-      digitalWrite(iLaserOutputPin, HIGH);
-      bLaserActive = true;
-      ESP_LOGI(__FILE__, "Turn Laser ON.");
-   }
-   //Laser deativation
-   if ((bLaserActive) && ((GET_MICROS / 1000 - llLastRCPress[7] > iLaserOnTime * 1000) || RaceHandler.RaceState == RaceHandler.STARTING || RaceHandler.RaceState == RaceHandler.RUNNING))
-   {
-      digitalWrite(iLaserOutputPin, LOW);
-      bLaserActive = false;
-      ESP_LOGI(__FILE__, "Turn Laser OFF.");
-   }
-   //Handle mode button
-   if (((bitRead(byDataIn, 0) == HIGH) && (GET_MICROS / 1000 - llLastRCPress[0] > SideSwitchCoolDownTime))
-         && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
-   {
-      if ((GET_MICROS / 1000 - llLastRCPress[0] < 1000) && bSideSwitchPressedOnce)
-      {
-         //ESP_LOGI(__FILE__, "Mode button double pressed!");
-         RaceHandler.ToggleRunDirection();
-         bSideSwitchPressedOnce = false;
-      }
-      else
-      { bSideSwitchPressedOnce = true; }
-      llLastRCPress[0] = GET_MICROS / 1000;
-   }
-   if (bSideSwitchPressedOnce && (GET_MICROS / 1000 - llLastRCPress[0] > 1000))
-   {
-      //ESP_LOGI(__FILE__, "Mode button pressed once!");
-      LightsController.ToggleStartingSequence();
-      bSideSwitchPressedOnce = false;
-   }
-   */
 }
 
 /// <summary>

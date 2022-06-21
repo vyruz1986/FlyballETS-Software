@@ -30,7 +30,11 @@
       "unordered_map": "cpp",
       "unordered_set": "cpp",
       "string_view": "cpp",
-      "initializer_list": "cpp"
+      "initializer_list": "cpp",
+      "iostream": "cpp",
+      "new": "cpp",
+      "stdexcept": "cpp",
+      "streambuf": "cpp"
    },
    "C_Cpp.dimInactiveRegions": true
 }

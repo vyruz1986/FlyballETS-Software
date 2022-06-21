@@ -57,3 +57,88 @@ String GetButtonString(uint8_t _iActiveBit);
 #ifdef WiFiON
 void WiFiEvent(WiFiEvent_t event);
 #endif
+
+// Photoelectric sensors
+const uint8_t iS1Pin = 34;        // S1 (handler side) photoelectric sensors
+const uint8_t iS2Pin = 33;        // S2 (box side) photoelectric sensors
+
+// 40x4 LCD
+const uint8_t iLCDE1Pin = 16;     // E1 pin of virtual LCD1 (raw 1 & 2 of 40x4 LCD)
+const uint8_t iLCDE2Pin = 17;     // E1 pin of virtual LCD2 (raw 3 & 4 of 40x4 LCD)
+const uint8_t iLCDData4Pin = 13;  // Data4
+const uint8_t iLCDData5Pin = 26;  // Data5
+const uint8_t iLCDData6Pin = 32;  // Data6
+const uint8_t iLCDData7Pin = 27;  // Data7
+const uint8_t iLCDRSPin = 25;     // RS pin
+
+// GPS module pins
+const uint8_t iGPStxPin = 22;     // RXD pin of GPS module (ESP32 TX)
+const uint8_t iGPSrxPin = 39;     // TXD pin of GPS module (ESP32 RX)
+const uint8_t iGPSppsPin = 36;    // PPS pin of GPS module
+
+// control pins for SD card (require HW 5.0.0 rev.S or higher)
+const uint8_t iSDdata0Pin = 2;    // Data0
+const uint8_t iSDdata1Pin = 4;    // Data1
+const uint8_t iSDclockPin = 14;   // Clock
+const uint8_t iSDcmdPin = 15;     // Command
+const uint8_t iSDdetectPin = 5;   // Detect (state low when card inserted)
+
+// control pins for 74HC166 (remote + side switch)
+const uint8_t iLatchPin = 23;     // latchPin (CE)   of 74HC166
+const uint8_t iClockPin = 18;     // clockPin (CP)   of 74HC166
+const uint8_t iDataInPin = 19;    // dataOutPin (Q7) of 74HC166
+
+// 74HC166 pinouts
+//    - D0: Mode (former Side switch) button
+//    - D1: remote D0 start/stop
+//    - D2: remote D1 reset
+//    - D3: remote D2 dog 1 fault
+//    - D4: remote D5 dog 4 fault
+//    - D5: remote D4 dog 3 fault
+//    - D6: remote D3 dog 2 fault
+//    - D7: Laser trigger button
+
+// Other
+const uint8_t iBatterySensorPin = 35; // Battery sensor (voltage divider)
+const uint8_t iLaserOutputPin = 12;   // Laser diodes enable signal
+const uint8_t iLightsDataPin = 21;    // WS2811B lights data
+
+// Not in use
+// 1: free/TX
+// 3: free/RX
+
+// Global variables
+uint8_t iCurrentDog;                 // currently running dog
+uint8_t iCurrentRaceState;           // current race state
+char cElapsedRaceTime[8];            // team time
+char cTeamNetTime[8];                // team net time
+
+bool bRaceSummaryPrinted = false;    // race summary printed indicator
+
+unsigned int uiLastProgress = 0;     // last % OTA progress value
+
+long long llHeapPreviousMillis = 0;  // last Heap check timestamp
+long long llHeapInterval = 5000;     // Heap check interval
+
+uint16_t iBatteryVoltage = 0;        // Battery voltage
+long long llLastBatteryLCDupdate = -25000; // Initial offset for battery value upate on LCD
+
+uint8_t iLaserOnTime = 60;           // initial value of laser diode on time
+bool bLaserActive = false;           // laser diode state
+
+// variables for handling 74HC166
+unsigned long long llLastDebounceTime = 0;
+unsigned long long llPressedTime[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+unsigned long long llReleasedTime[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+uint8_t iLastActiveBit = 0;
+byte byDataIn = 0;
+byte byLastStadyState = 0;
+byte byLastFlickerableState = 0;
+const uint16_t DEBOUNCE_DELAY = 30;    // in ms
+const uint16_t SHORT_PRESS_TIME = 700; // in ms
+
+// String for serial comms storage
+unsigned long lLastSerialOutput = 0;
+String strSerialData;
+byte bySerialIndex = 0;
+bool bSerialStringComplete = false;
