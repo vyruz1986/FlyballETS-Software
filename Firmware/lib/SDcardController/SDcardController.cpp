@@ -73,17 +73,23 @@ void SDcardControllerClass::init()
          File tagfile = SD_MMC.open("/tag.txt");
          if(!tagfile) {
             delay(50);
-            writeFile(SD_MMC, "/tag.txt", "1\r\n");
+            writeFile(SD_MMC, "/tag.txt", "0\r\n");
             tagfile.close();
             iTagValue = 1;
+            sTagValue = "0001";
             ESP_LOGI(__FILE__, "New tag.txt file created.");
          }
          else
          {
-            uint16_t oldTagValue = tagfile.parseInt();
+            uint16_t iOldTagValue = tagfile.parseInt();
             tagfile.close();
-            iTagValue = oldTagValue + 1;
-            ESP_LOGI(__FILE__, "Previous tag.txt file value: %i.", oldTagValue);
+            iTagValue = iOldTagValue + 1;
+            sTagValue = String(iTagValue);
+            while (sTagValue.length() < 4)
+            {
+               sTagValue = "0" + sTagValue;
+            }
+            ESP_LOGI(__FILE__, "New tag value: %i. Tag string: %s", iTagValue, sTagValue);
          }   
       }
    }
@@ -121,19 +127,47 @@ void SDcardControllerClass::SaveRaceDataToFile()
       else
          raceDataFile.print("no");
       raceDataFile.print(";");
-      for (uint8_t i = 0; i < 4; i++)
+      if (!bUseCommaInCsv)
       {
-         for (uint8_t i2 = 0; i2 < 3; i2++)
+         for (uint8_t i = 0; i < 4; i++)
          {
-            raceDataFile.print(RaceHandler.GetStoredDogTimes(i, i2));
-            raceDataFile.print(";");
-            raceDataFile.print(RaceHandler.TransformCrossingTime(i, i2, true));
-            raceDataFile.print(";");
+            for (uint8_t i2 = 0; i2 < 3; i2++)
+            {
+               raceDataFile.print(RaceHandler.GetStoredDogTimes(i, i2));
+               raceDataFile.print(";");
+               raceDataFile.print(RaceHandler.TransformCrossingTime(i, i2, true));
+               raceDataFile.print(";");
+            }
          }
+         raceDataFile.print(RaceHandler.GetRaceTime());
+         raceDataFile.print(";");
+         raceDataFile.print(RaceHandler.GetNetTime());
       }
-      raceDataFile.print(RaceHandler.GetRaceTime());
-      raceDataFile.print(";");
-      raceDataFile.print(RaceHandler.GetNetTime());
+      else
+      {
+         String sConvert;
+         for (uint8_t i = 0; i < 4; i++)
+         {
+            for (uint8_t i2 = 0; i2 < 3; i2++)
+            {
+               sConvert = RaceHandler.GetStoredDogTimes(i, i2);
+               sConvert.replace(".",",");
+               raceDataFile.print(sConvert);
+               raceDataFile.print(";");
+               sConvert = RaceHandler.TransformCrossingTime(i, i2, true);
+               sConvert.replace(".",",");
+               raceDataFile.print(sConvert);
+               raceDataFile.print(";");
+            }
+         }
+         sConvert = RaceHandler.GetRaceTime();
+         sConvert.replace(".",",");
+         raceDataFile.print(sConvert);
+         sConvert = RaceHandler.GetNetTime();
+         sConvert.replace(".",",");
+         raceDataFile.print(";");
+         raceDataFile.print(sConvert);
+      }
       raceDataFile.println(";");
       raceDataFile.close();    
    }    
@@ -144,23 +178,10 @@ void SDcardControllerClass::SaveRaceDataToFile()
 /// </summary>
 void SDcardControllerClass::UpdateTagFile()
 {
-   File tagfile = SD_MMC.open("/tag.txt");
-   uint16_t oldTagValue = tagfile.parseInt();
-   tagfile.close();
-   if (oldTagValue != 1)
-   {
-      iTagValue = oldTagValue + 1;
-      sTagValue = String(iTagValue);
-      //ESP_LOGD(__FILE__, "Previous Tag value: %i. Updating tag.txt file...", oldTagValue);
-      deleteFile(SD_MMC, "/tag.txt");
-      String writeTagValue = sTagValue + "\r\n";
-      writeFile(SD_MMC, "/tag.txt", writeTagValue.c_str());
-      while (sTagValue.length() < 4)
-      {
-         sTagValue = "0" + sTagValue;
-      }
-      ESP_LOGI(__FILE__, "New tag.txt file value: %i. Tag string: %s", iTagValue, sTagValue);
-   }
+   deleteFile(SD_MMC, "/tag.txt");
+   String writeTagValue = String(iTagValue) + "\r\n";
+   writeFile(SD_MMC, "/tag.txt", writeTagValue.c_str());
+   ESP_LOGI(__FILE__, "Tag.txt file updated with value %i.", iTagValue);
 }
 
 /// <summary>

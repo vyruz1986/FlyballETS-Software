@@ -5,19 +5,18 @@
 #include "Structs.h"
 #include "Arduino.h"
 
-
 #define NUM_HISTORIC_RACE_RECORDS 100
 
 class RaceHandlerClass
 {
    friend class SimulatorClass;
    friend class WebHandlerClass;
+
 protected:
-
-
 public:
-	void init(uint8_t iS1Pin, uint8_t iS2Pin);
-   enum RaceStates {
+   void init(uint8_t iS1Pin, uint8_t iS2Pin);
+   enum RaceStates
+   {
       RESET,
       STARTING,
       RUNNING,
@@ -30,12 +29,13 @@ public:
    uint8_t iPreviousDog;
    uint8_t iNextDog;
    uint8_t iNumberOfRacingDogs = 4;
-   uint8_t iDogRunCounters[4];  //Number of (re-)runs for each dog
+   uint8_t iDogRunCounters[4]; // Number of (re-)runs for each dog
    long long llRaceStartTime;
+   long long llRaceTime;
    int iCurrentRaceId = -1;
-   char* cRaceStartTimestamp;
+   char *cRaceStartTimestamp;
    bool bRerunsOff = false;
-   
+
    void Main();
    void ChangeRaceStateToRunning();
    void StartRaceTimer();
@@ -47,21 +47,22 @@ public:
    void TriggerSensor1();
    void TriggerSensor2();
 
-   enum DogFaults {
+   enum DogFaults
+   {
       OFF,
       ON,
       TOGGLE
    };
    void SetDogFault(uint8_t iDogNumber, DogFaults State = TOGGLE);
 
-   double GetRaceTime();
+   String GetRaceTime();
    String GetDogTime(uint8_t iDogNumber, int8_t iRunNumber = -1);
    String GetStoredDogTimes(uint8_t iDogNumber, int8_t iRunNumber = -1);
    int8_t SelectRunNumber(uint8_t iDogNumber, int8_t iRunNumber = -1);
    String GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber = -1);
    String TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNumber, bool bToFile = false);
    String GetRerunInfo(uint8_t iDogNumber);
-   double GetNetTime();
+   String GetNetTime();
 
    String GetRaceStateString();
 
@@ -72,10 +73,8 @@ public:
    void ToggleRerunsOffOn(uint8_t _iState);
    void SetNumberOfDogs(uint8_t _iNumberOfRacingDogs);
 
-
 private:
    long long _llRaceEndTime;
-   long long _llRaceTime;
    long long _llLastDogExitTime;
    long long _llS2CrossedSafeTime;
    long long _llS2CrossedUnsafeTriggerTime;
@@ -83,8 +82,8 @@ private:
    long long _llLastTransitionStringUpdate;
    long long _llRaceElapsedTime;
 
-   uint8_t  _iS1Pin;
-   uint8_t  _iS2Pin;
+   uint8_t _iS1Pin;
+   uint8_t _iS2Pin;
 
    struct STriggerRecord
    {
@@ -92,7 +91,7 @@ private:
       volatile long long llTriggerTime;
       volatile int iSensorState;
    };
-   
+
    STriggerRecord _InputTriggerQueue[TRIGGER_QUEUE_LENGTH];
    STriggerRecord _OutputTriggerQueue[TRIGGER_QUEUE_LENGTH];
 
@@ -128,9 +127,10 @@ private:
    long long _llCrossingTimes[5][4];
 
    String _strTransition;
-   String _strPreviousTransitionFirstLetter=""; // fix for simulated race 18-41
-   
-   enum _byDogStates {
+   String _strPreviousTransitionFirstLetter = ""; // fix for simulated race 18-41
+
+   enum _byDogStates
+   {
       GOINGIN,
       COMINGBACK
    };

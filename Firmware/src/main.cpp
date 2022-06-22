@@ -237,7 +237,7 @@ void loop()
       bRaceSummaryPrinted = false;
    }
 
-   if (RaceHandler.RaceState == RaceHandler.STOPPED && ((GET_MICROS / 1000 - (RaceHandler.llRaceStartTime / 1000 + RaceHandler.GetRaceTime() * 1000)) > 500) && !bRaceSummaryPrinted)
+   if (RaceHandler.RaceState == RaceHandler.STOPPED && ((GET_MICROS - RaceHandler.llRaceStartTime + RaceHandler.llRaceTime) / 1000 > 500) && !bRaceSummaryPrinted)
    {
       // Race has been stopped 0.5 second ago: print race summary to console
       for (uint8_t i = 0; i < RaceHandler.iNumberOfRacingDogs; i++)
@@ -491,14 +491,45 @@ void HandleSerialCommands()
 
 void HandleLCDUpdates()
 {
-   // Update team time to display
-   if (!LightsController.bModeNAFA)
-      dtostrf(RaceHandler.GetRaceTime(), 6, 2, cElapsedRaceTime);
-   else
-      dtostrf(RaceHandler.GetRaceTime(), 7, 3, cElapsedRaceTime);
-   LCDController.UpdateField(LCDController.TeamTime, cElapsedRaceTime);
+   if (iCurrentRaceState != RaceHandler.RaceState)
+   {
+      iCurrentRaceState = RaceHandler.RaceState;
+      String sRaceStateMain = RaceHandler.GetRaceStateString();
+      ESP_LOGI(__FILE__, "RS: %s", sRaceStateMain);
+      // Update race status to display
+      LCDController.UpdateField(LCDController.RaceState, sRaceStateMain);
+   }
+   
+   // Update team time
+   LCDController.UpdateField(LCDController.TeamTime, RaceHandler.GetRaceTime());
 
-   // Update battery percentage to display
+   // Update team netto time
+   LCDController.UpdateField(LCDController.NetTime, RaceHandler.GetNetTime());
+
+   // Handle individual dog info
+   LCDController.UpdateField(LCDController.D1Time, RaceHandler.GetDogTime(0));
+   LCDController.UpdateField(LCDController.D1CrossTime, RaceHandler.GetCrossingTime(0));
+   LCDController.UpdateField(LCDController.D1RerunInfo, RaceHandler.GetRerunInfo(0));
+   if (RaceHandler.iNumberOfRacingDogs > 1)
+   {
+      LCDController.UpdateField(LCDController.D2Time, RaceHandler.GetDogTime(1));
+      LCDController.UpdateField(LCDController.D2CrossTime, RaceHandler.GetCrossingTime(1));
+      LCDController.UpdateField(LCDController.D2RerunInfo, RaceHandler.GetRerunInfo(1));
+   }
+   if (RaceHandler.iNumberOfRacingDogs > 2)
+   {
+      LCDController.UpdateField(LCDController.D3Time, RaceHandler.GetDogTime(2));
+      LCDController.UpdateField(LCDController.D3CrossTime, RaceHandler.GetCrossingTime(2));
+      LCDController.UpdateField(LCDController.D3RerunInfo, RaceHandler.GetRerunInfo(2));
+   }
+   if (RaceHandler.iNumberOfRacingDogs > 3)
+   {
+      LCDController.UpdateField(LCDController.D4Time, RaceHandler.GetDogTime(3));
+      LCDController.UpdateField(LCDController.D4CrossTime, RaceHandler.GetCrossingTime(3));
+      LCDController.UpdateField(LCDController.D4RerunInfo, RaceHandler.GetRerunInfo(3));
+   }
+   
+   // Update battery percentage
    if ((GET_MICROS / 1000 < 2000 || ((GET_MICROS / 1000 - llLastBatteryLCDupdate) > 30000)) //
       && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
    {
@@ -525,45 +556,6 @@ void HandleLCDUpdates()
       LCDController.UpdateField(LCDController.BattLevel, sBatteryPercentage);
       // ESP_LOGD(__FILE__, "Battery: analog: %i ,voltage: %i, level: %i%%", BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
       llLastBatteryLCDupdate = GET_MICROS / 1000;
-   }
-
-   // Update team netto time
-   if (!LightsController.bModeNAFA)
-      dtostrf(RaceHandler.GetNetTime(), 6, 2, cTeamNetTime);
-   else
-      dtostrf(RaceHandler.GetNetTime(), 7, 3, cTeamNetTime);
-   LCDController.UpdateField(LCDController.NetTime, cTeamNetTime);
-
-   if (iCurrentRaceState != RaceHandler.RaceState)
-   {
-      iCurrentRaceState = RaceHandler.RaceState;
-      String sRaceStateMain = RaceHandler.GetRaceStateString();
-      ESP_LOGI(__FILE__, "RS: %s", sRaceStateMain);
-      // Update race status to display
-      LCDController.UpdateField(LCDController.RaceState, sRaceStateMain);
-   }
-
-   // Handle individual dog info
-   LCDController.UpdateField(LCDController.D1Time, RaceHandler.GetDogTime(0));
-   LCDController.UpdateField(LCDController.D1CrossTime, RaceHandler.GetCrossingTime(0));
-   LCDController.UpdateField(LCDController.D1RerunInfo, RaceHandler.GetRerunInfo(0));
-   if (RaceHandler.iNumberOfRacingDogs > 1)
-   {
-      LCDController.UpdateField(LCDController.D2Time, RaceHandler.GetDogTime(1));
-      LCDController.UpdateField(LCDController.D2CrossTime, RaceHandler.GetCrossingTime(1));
-      LCDController.UpdateField(LCDController.D2RerunInfo, RaceHandler.GetRerunInfo(1));
-   }
-   if (RaceHandler.iNumberOfRacingDogs > 2)
-   {
-      LCDController.UpdateField(LCDController.D3Time, RaceHandler.GetDogTime(2));
-      LCDController.UpdateField(LCDController.D3CrossTime, RaceHandler.GetCrossingTime(2));
-      LCDController.UpdateField(LCDController.D3RerunInfo, RaceHandler.GetRerunInfo(2));
-   }
-   if (RaceHandler.iNumberOfRacingDogs > 3)
-   {
-      LCDController.UpdateField(LCDController.D4Time, RaceHandler.GetDogTime(3));
-      LCDController.UpdateField(LCDController.D4CrossTime, RaceHandler.GetCrossingTime(3));
-      LCDController.UpdateField(LCDController.D4RerunInfo, RaceHandler.GetRerunInfo(3));
    }
 }
 

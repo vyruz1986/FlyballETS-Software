@@ -6,10 +6,12 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - OTA Firmware update progress on LCD
+- step 1 for using comma as decimal separator
 
 ### Changed
 - corrected dogs re-runs off state on LCD after number of running dogs change
-- code refactoring in main.h/cpp
+- code refactoring in main.h/cpp, RaceTime and NetTime
+- fix for proper handling of csv with tag 1
 
 ## [1.5.3] - 2022-06-13
 

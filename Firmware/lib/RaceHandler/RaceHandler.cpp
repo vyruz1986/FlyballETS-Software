@@ -98,9 +98,9 @@ void RaceHandlerClass::_ChangeDogNumber(uint8_t iNewDogNumber)
 void RaceHandlerClass::Main()
 {
    // Trigger filterring of sensors interrupts if new records available and 15ms waiting time passed
-   while ((_iInputQueueReadIndex != _iInputQueueWriteIndex) && (GET_MICROS - _InputTriggerQueue[_iInputQueueWriteIndex-1].llTriggerTime > 15000))
+   while ((_iInputQueueReadIndex != _iInputQueueWriteIndex) && (GET_MICROS - _InputTriggerQueue[_iInputQueueWriteIndex - 1].llTriggerTime > 15000))
    {
-      ESP_LOGV(__FILE__, "IQRI:%d | IQWI:%d | Delta:%lld", _iInputQueueReadIndex, _iInputQueueWriteIndex, GET_MICROS - _InputTriggerQueue[_iInputQueueWriteIndex-1].llTriggerTime);
+      ESP_LOGV(__FILE__, "IQRI:%d | IQWI:%d | Delta:%lld", _iInputQueueReadIndex, _iInputQueueWriteIndex, GET_MICROS - _InputTriggerQueue[_iInputQueueWriteIndex - 1].llTriggerTime);
       _QueueFilter();
    }
 
@@ -122,7 +122,7 @@ void RaceHandlerClass::Main()
       STriggerRecord STriggerRecord = _QueuePop();
       // If the transition string is not empty and it wasn't updated for 350ms then it was noise and we have to clear it.
       // Forst first entering dog filtering is 750ms to cover scenario from simulated race 39.
-      if (_strTransition.length() != 0 && ((GET_MICROS - _llLastTransitionStringUpdate) > 350000 && (iCurrentDog != 0 || (iCurrentDog == 0 && _bRerunBusy))
+      if (_strTransition.length() != 0 && ((GET_MICROS - _llLastTransitionStringUpdate) > 350000 && (iCurrentDog != 0 || (iCurrentDog == 0 && _bRerunBusy)) //
          || (GET_MICROS - _llLastTransitionStringUpdate) > 750000 && iCurrentDog == 0 && !_bRerunBusy))
       {
          if (_byDogState == GOINGIN)
@@ -256,7 +256,7 @@ void RaceHandlerClass::Main()
             // If this is not re-run and last string was BAba and next dog didn't enter yet, we might have fast next dog that is already running
             // and next dog entered gate to early (fault). This is fix for simulated race 40 (74-15).
             // Period between 3.5s and 4.5s is covered and scenario when last dog is running excluded. Fix for simulated race 45 (83-30).
-            if (!_bRerunBusy && _bLastStringBAba && (STriggerRecord.llTriggerTime - _llLastDogExitTime) > 3500000
+            if (!_bRerunBusy && _bLastStringBAba && (STriggerRecord.llTriggerTime - _llLastDogExitTime) > 3500000 //
                && (STriggerRecord.llTriggerTime - _llLastDogExitTime) < 4500000 && iCurrentDog != iNextDog)
             {
                // Calculte times for running invisible dog
@@ -323,15 +323,15 @@ void RaceHandlerClass::Main()
          // Special case after false detection of "ok crossing" --> S1 activated above 100ms after "ok crossing" detection or re-run with next dog = current dog
          else if (_byDogState == COMINGBACK && _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] && !_bS1StillSafe &&
                   (((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) > 100000 && (STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) < 2000000) // filtering changed to < 2s fix for 79-7
-                  || (_bRerunBusy && iCurrentDog == iNextDog)))
+                   || (_bRerunBusy && iCurrentDog == iNextDog)))
          {
             _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] = false;
             _llDogEnterTimes[iCurrentDog] = STriggerRecord.llTriggerTime;
             _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = _llDogEnterTimes[iCurrentDog] - _llLastDogExitTime;
             ESP_LOGD(__FILE__, "False 'ok crossing' detected. Recalculate dog %i times.", iCurrentDog + 1);
          }
-         //else
-         //   ESP_LOGD(__FILE__, "Unexpected S1 crossing while gate CLEAR. CurrentDog: %i, NextDog: %i, S1StillSafe: %i, RerunBusy: %i", iCurrentDog + 1, iNextDog + 1, _bS1StillSafe, _bRerunBusy);
+         // else
+         //    ESP_LOGD(__FILE__, "Unexpected S1 crossing while gate CLEAR. CurrentDog: %i, NextDog: %i, S1StillSafe: %i, RerunBusy: %i", iCurrentDog + 1, iNextDog + 1, _bS1StillSafe, _bRerunBusy);
       }
 
       ////Handle sensor 1 events (handlers side) with gates state DOG IN
@@ -412,8 +412,8 @@ void RaceHandlerClass::Main()
             }
             _ChangeDogNumber(iNextDog);
          }
-         //else
-         //   ESP_LOGD(__FILE__, "Unexpected S1 crossing while gate DOG(s). CurrentDog: %i, NextDog: %i, S1StillSafe: %i, RerunBusy: %i", iCurrentDog + 1, iNextDog + 1, _bS1StillSafe, _bRerunBusy);
+         // else
+         //    ESP_LOGD(__FILE__, "Unexpected S1 crossing while gate DOG(s). CurrentDog: %i, NextDog: %i, S1StillSafe: %i, RerunBusy: %i", iCurrentDog + 1, iNextDog + 1, _bS1StillSafe, _bRerunBusy);
       }
 
       // Handle sensor 2 (box side)
@@ -457,7 +457,6 @@ void RaceHandlerClass::Main()
                   _bSensorNoise = true;
                   ESP_LOGD(__FILE__, "Entering first dog caused S2 sensor noise.");
                }
-               
             }
             else // S2 was triggered after 2s since current dog entry time
             {
@@ -611,7 +610,7 @@ void RaceHandlerClass::Main()
    if (RaceState == RUNNING)
    {
       if (GET_MICROS > llRaceStartTime)
-         _llRaceTime = GET_MICROS - llRaceStartTime;
+         llRaceTime = GET_MICROS - llRaceStartTime;
    }
 
    // Check for faults, loop through array of dogs checking for faults
@@ -679,12 +678,12 @@ void RaceHandlerClass::StopRace(long long llStopTime)
    {
       // Race is running, so we have to record the EndTime
       _llRaceEndTime = llStopTime;
-      _llRaceTime = _llRaceEndTime - llRaceStartTime;
+      llRaceTime = _llRaceEndTime - llRaceStartTime;
    }
    else // RaceState is RUNNING
    {
       _llRaceEndTime = llStopTime;
-      _llRaceTime = 0;
+      llRaceTime = 0;
    }
    _ChangeRaceState(STOPPED);
    _HistoricRaceData[iCurrentRaceId] = GetRaceData(iCurrentRaceId);
@@ -702,7 +701,7 @@ void RaceHandlerClass::ResetRace()
       iPreviousDog = 0;
       llRaceStartTime = 0;
       _llRaceEndTime = 0;
-      _llRaceTime = 0;
+      llRaceTime = 0;
       _llRaceElapsedTime = 0;
       _llLastDogExitTime = 0;
       _llS2CrossedUnsafeTriggerTime = 0;
@@ -941,17 +940,23 @@ void RaceHandlerClass::TriggerSensor2()
 /// <returns>
 ///   The race time in seconds with milisecond accuracy rounded up or down.
 /// </returns>
-double RaceHandlerClass::GetRaceTime()
+String RaceHandlerClass::GetRaceTime()
 {
-   double dRaceTimeSeconds = 0;
-   if (RaceState != STARTING)
+   char cRaceTimeSeconds[8];
+   String strRaceTimeSeconds;
+   double dRaceTimeSeconds;
+   if (!LightsController.bModeNAFA)
    {
-      if (!LightsController.bModeNAFA)
-         dRaceTimeSeconds = ((long long)(_llRaceTime + 5000) / 10000) / 100.0;
-      else
-         dRaceTimeSeconds = ((long long)(_llRaceTime + 500) / 1000) / 1000.0;
+      dRaceTimeSeconds = ((long long)(llRaceTime + 5000) / 10000) / 100.0;
+      dtostrf(dRaceTimeSeconds, 7, 2, cRaceTimeSeconds);
    }
-   return dRaceTimeSeconds;
+   else
+   {
+      dRaceTimeSeconds = ((long long)(llRaceTime + 500) / 1000) / 1000.0;
+      dtostrf(dRaceTimeSeconds, 7, 3, cRaceTimeSeconds);
+   }
+   strRaceTimeSeconds = cRaceTimeSeconds;
+   return strRaceTimeSeconds;
 }
 
 /// <summary>
@@ -1279,7 +1284,7 @@ String RaceHandlerClass::GetRerunInfo(uint8_t iDogNumber)
 ///   Please mark that "Cleat Time" term is often use in the meaning of Clean Time Breakout.
 ///   Please refer to FCI Regulations for Flyball Competition section 1.03 point (h).
 /// </summary>
-double RaceHandlerClass::GetNetTime()
+String RaceHandlerClass::GetNetTime()
 {
    long long llTotalNetTime = 0;
    for (auto &Dog : _llDogTimes)
@@ -1290,12 +1295,21 @@ double RaceHandlerClass::GetNetTime()
             llTotalNetTime += llNetTime;
       }
    }
+   char cNetTime[8];
+   String strNetTime;
    double dNetTime;
    if (!LightsController.bModeNAFA)
+   {
       dNetTime = ((long long)(llTotalNetTime + 5000) / 10000) / 100.0;
+      dtostrf(dNetTime, 7, 2, cNetTime);
+   }
    else
+   {
       dNetTime = ((long long)(llTotalNetTime + 500) / 1000) / 1000.0;
-   return dNetTime;
+      dtostrf(dNetTime, 7, 3, cNetTime);
+   }
+   strNetTime = cNetTime;
+   return strNetTime;
 }
 
 /// <summary>
@@ -1362,21 +1376,8 @@ stRaceData RaceHandlerClass::GetRaceData(int iRaceId)
       RequestedRaceData.Id = iCurrentRaceId + 1;
       RequestedRaceData.StartTime = llRaceStartTime / 1000;
       RequestedRaceData.EndTime = _llRaceEndTime / 1000;
-
-      char cElapsedTime[8];
-      char cNetTime[8];
-      if (!LightsController.bModeNAFA)
-      {
-         dtostrf(GetRaceTime(), 7, 2, cElapsedTime);
-         dtostrf(GetNetTime(), 7, 2, cNetTime);
-      }
-      else
-      {
-         dtostrf(GetRaceTime(), 7, 3, cElapsedTime);
-         dtostrf(GetNetTime(), 7, 3, cNetTime);
-      }
-      RequestedRaceData.ElapsedTime = cElapsedTime;
-      RequestedRaceData.NetTime = cNetTime;
+      RequestedRaceData.ElapsedTime = GetRaceTime();
+      RequestedRaceData.NetTime = GetNetTime();
       RequestedRaceData.RaceState = RaceState;
       RequestedRaceData.RacingDogs = iNumberOfRacingDogs;
       RequestedRaceData.RerunsOff = bRerunsOff;
