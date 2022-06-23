@@ -21,36 +21,37 @@
 #include "GPSHandler.h"
 #include "RaceHandler.h"
 #include "LCDController.h"
+#include "SettingsManager.h"
+#include "WebHandler.h"
 #include <FS.h>
 #include <SD_MMC.h>
 
 class SDcardControllerClass
 {
 protected:
-
 public:
     bool bSDCardDetected = false;
-    bool bUseCommaInCsv = false;
     String sTagValue;
     uint16_t iTagValue;
-    void listDir(fs::FS &fs, const char * dirname, uint8_t levels);
-    void createDir(fs::FS &fs, const char * path);
-    void removeDir(fs::FS &fs, const char * path);
-    void readFile(fs::FS &fs, const char * path);
-    void writeFile(fs::FS &fs, const char * path, const char * message);
-    void appendFile(fs::FS &fs, const char * path, const char * message);
-    void renameFile(fs::FS &fs, const char * path1, const char * path2);
-    void deleteFile(fs::FS &fs, const char * path);
+    void listDir(fs::FS &fs, const char *dirname, uint8_t levels);
+    void createDir(fs::FS &fs, const char *path);
+    void removeDir(fs::FS &fs, const char *path);
+    void readFile(fs::FS &fs, const char *path);
+    void writeFile(fs::FS &fs, const char *path, const char *message);
+    void appendFile(fs::FS &fs, const char *path, const char *message);
+    void renameFile(fs::FS &fs, const char *path1, const char *path2);
+    void deleteFile(fs::FS &fs, const char *path);
     void init();
     void UpdateTagFile();
     void CheckSDcardSlot(uint8_t iSDdetectPin);
     void SaveRaceDataToFile();
+    void ToggleDecimalSeparator();
 
 private:
     uint8_t _iSDdetectPinStatus;
     String raceDataFileName;
-    void testFileIO(fs::FS &fs, const char * path);
-
+    bool _bCommaInCsv = false;
+    void testFileIO(fs::FS &fs, const char *path);
 };
 
 extern SDcardControllerClass SDcardController;

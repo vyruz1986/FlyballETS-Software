@@ -44,6 +44,14 @@ void RaceHandlerClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
    }
    else
       ESP_LOGI(__FILE__, "Run direction from settings: normal");
+
+   if (SettingsManager.getSetting("Accuracy3digits").equals("1"))
+   {
+      _bAccuracy3digits = true;
+      ESP_LOGI(__FILE__, "Accuracy from settings: 3 digits");
+   }
+   else
+      ESP_LOGI(__FILE__, "Accuracy from settings: 2 digits");
 }
 
 /// <summary>
@@ -945,7 +953,7 @@ String RaceHandlerClass::GetRaceTime()
    char cRaceTimeSeconds[8];
    String strRaceTimeSeconds;
    double dRaceTimeSeconds;
-   if (!LightsController.bModeNAFA)
+   if (!_bAccuracy3digits)
    {
       dRaceTimeSeconds = ((long long)(llRaceTime + 5000) / 10000) / 100.0;
       dtostrf(dRaceTimeSeconds, 7, 2, cRaceTimeSeconds);
@@ -1039,7 +1047,7 @@ String RaceHandlerClass::GetDogTime(uint8_t iDogNumber, int8_t iRunNumber)
    // If next dog didn't enter yet (e.g. positive cross) just show zero
    else if (_llDogTimes[iDogNumber][iRunNumber] == 0)
       ulDogTimeMillis = 0;
-   if (!LightsController.bModeNAFA)
+   if (!_bAccuracy3digits)
    {
       dDogTime = ((unsigned long)(ulDogTimeMillis + 5) / 10) / 100.0;
       dtostrf(dDogTime, 7, 2, cDogTime);
@@ -1073,7 +1081,7 @@ String RaceHandlerClass::GetStoredDogTimes(uint8_t iDogNumber, int8_t iRunNumber
    char cDogTime[8];
    String strDogTime;
    double dDogTime = 0;
-   if (!LightsController.bModeNAFA)
+   if (!_bAccuracy3digits)
    {
       dDogTime = ((long long)(_llDogTimes[iDogNumber][iRunNumber] + 5000) / 10000) / 100.0;
       dtostrf(dDogTime, 7, 2, cDogTime);
@@ -1140,8 +1148,8 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
    String strCrossingTime;
    if (((GET_MICROS - _llDogEnterTimes[iDogNumber] > 300000) || (iRunNumber < iDogRunCounters[iDogNumber])) && _llCrossingTimes[iDogNumber][iRunNumber] < 0 && _llDogEnterTimes[iDogNumber] != 0)
    {
-      if ((iDogNumber == 0 && iRunNumber == 0 && _llCrossingTimes[0][0] > -9500) && !LightsController.bModeNAFA && !bToFile) // If this is first dog false start below 9.5ms
-                                                                                                                             // use "ms" accuracy even if 2digits accuracy has been set
+      if ((iDogNumber == 0 && iRunNumber == 0 && _llCrossingTimes[0][0] > -9500) && !_bAccuracy3digits && !bToFile) // If this is first dog false start below 9.5ms
+                                                                                                                    // use "ms" accuracy even if 2digits accuracy has been set
       {
          dCrossingTime = ((long long)(_llCrossingTimes[iDogNumber][iRunNumber] - 500) / 1000);
          dCrossingTime = fabs(dCrossingTime);
@@ -1150,7 +1158,7 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
          strCrossingTime += cCrossingTime;
          strCrossingTime += " ms";
       }
-      else if (LightsController.bModeNAFA || ((iDogNumber == 0 && iRunNumber == 0 && _llCrossingTimes[0][0] > -9500) && !LightsController.bModeNAFA && bToFile))
+      else if (_bAccuracy3digits || ((iDogNumber == 0 && iRunNumber == 0 && _llCrossingTimes[0][0] > -9500) && !_bAccuracy3digits && bToFile))
       {
          dCrossingTime = ((long long)(_llCrossingTimes[iDogNumber][iRunNumber] - 500) / 1000) / 1000.0;
          dCrossingTime = fabs(dCrossingTime);
@@ -1169,8 +1177,8 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
    }
    else if (((GET_MICROS - _llDogEnterTimes[iDogNumber] > 300000) || (iRunNumber < iDogRunCounters[iDogNumber])) && _llCrossingTimes[iDogNumber][iRunNumber] > 0 && _llDogEnterTimes[iDogNumber] != 0)
    {
-      if ((iDogNumber == 0 && iRunNumber == 0 && _llCrossingTimes[0][0] < 9500) && !LightsController.bModeNAFA && !bToFile) // If this is first dog entry time (start) below 9.5ms
-                                                                                                                            // use "ms" accuracy even if 2digits accuracy has been set
+      if ((iDogNumber == 0 && iRunNumber == 0 && _llCrossingTimes[0][0] < 9500) && !_bAccuracy3digits && !bToFile) // If this is first dog entry time (start) below 9.5ms
+                                                                                                                   // use "ms" accuracy even if 2digits accuracy has been set
       {
          dCrossingTime = ((long long)(_llCrossingTimes[iDogNumber][iRunNumber] + 500) / 1000);
          dtostrf(dCrossingTime, 3, 0, cCrossingTime);
@@ -1178,7 +1186,7 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
          strCrossingTime += cCrossingTime;
          strCrossingTime += " ms";
       }
-      else if (LightsController.bModeNAFA || ((iDogNumber == 0 && iRunNumber == 0 && _llCrossingTimes[0][0] < 9500) && !LightsController.bModeNAFA && bToFile))
+      else if (_bAccuracy3digits || ((iDogNumber == 0 && iRunNumber == 0 && _llCrossingTimes[0][0] < 9500) && !_bAccuracy3digits && bToFile))
       {
          dCrossingTime = ((long long)(_llCrossingTimes[iDogNumber][iRunNumber] + 500) / 1000) / 1000.0;
          dtostrf(dCrossingTime, 7, 3, cCrossingTime);
@@ -1197,14 +1205,14 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
       strCrossingTime = " ";
    else if (_bDogPerfectCross[iDogNumber][iRunNumber])
    {
-      if (LightsController.bModeNAFA)
+      if (_bAccuracy3digits)
          strCrossingTime = " Perfect";
       else
          strCrossingTime = "Perfect";
    }
    else if (_bDogBigOK[iDogNumber][iRunNumber])
    {
-      if (LightsController.bModeNAFA)
+      if (_bAccuracy3digits)
          strCrossingTime = "      OK";
       else
          strCrossingTime = "     OK";
@@ -1214,14 +1222,14 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
    {
       if ((iDogRunCounters[iDogNumber] > 0 && iDogRunCounters[iDogNumber] != iRunNumber) || (iDogRunCounters[iDogNumber] == 0 && (_bDogFaults[iDogNumber] || _bDogManualFaults[iDogNumber])))
       {
-         if (LightsController.bModeNAFA)
+         if (_bAccuracy3digits)
             strCrossingTime = "   fault";
          else
             strCrossingTime = "  fault";
       }
       else
       {
-         if (LightsController.bModeNAFA)
+         if (_bAccuracy3digits)
             strCrossingTime = "      ok";
          else
             strCrossingTime = "     ok";
@@ -1233,14 +1241,14 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
    {
       if (_bDogFaults[iDogNumber] || _bDogManualFaults[iDogNumber])
       {
-         if (LightsController.bModeNAFA)
+         if (_bAccuracy3digits)
             strCrossingTime = "   fault";
          else
             strCrossingTime = "  fault";
       }
       else
       {
-         if (LightsController.bModeNAFA)
+         if (_bAccuracy3digits)
             strCrossingTime = "      ok";
          else
             strCrossingTime = "     ok";
@@ -1298,7 +1306,7 @@ String RaceHandlerClass::GetNetTime()
    char cNetTime[8];
    String strNetTime;
    double dNetTime;
-   if (!LightsController.bModeNAFA)
+   if (!_bAccuracy3digits)
    {
       dNetTime = ((long long)(llTotalNetTime + 5000) / 10000) / 100.0;
       dtostrf(dNetTime, 7, 2, cNetTime);
@@ -1420,6 +1428,22 @@ void RaceHandlerClass::ToggleRunDirection()
       LCDController.UpdateField(LCDController.BoxDirection, ">");
       ESP_LOGI(__FILE__, "Run direction changed to: normal");
    }
+}
+
+/// <summary>
+///   Toggles displayed results accuracy between 2 and 3 digits
+/// </summary>
+void RaceHandlerClass::ToggleAccuracy()
+{
+   _bAccuracy3digits = !_bAccuracy3digits;
+   SettingsManager.setSetting("Accuracy3digits", String(_bAccuracy3digits));
+   if (_bAccuracy3digits)
+      ESP_LOGI(__FILE__, "Accuracy switched to 3 digits");
+   else
+      ESP_LOGI(__FILE__, "Accuracy switched to 2 digits");
+#ifdef WiFiON
+   WebHandler._bSendRaceData = true;
+#endif
 }
 
 /// <summary>

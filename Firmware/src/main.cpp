@@ -237,7 +237,7 @@ void loop()
       bRaceSummaryPrinted = false;
    }
 
-   if (RaceHandler.RaceState == RaceHandler.STOPPED && ((GET_MICROS - RaceHandler.llRaceStartTime + RaceHandler.llRaceTime) / 1000 > 500) && !bRaceSummaryPrinted)
+   if (RaceHandler.RaceState == RaceHandler.STOPPED && ((GET_MICROS - (RaceHandler.llRaceStartTime + RaceHandler.llRaceTime)) / 1000 > 500) && !bRaceSummaryPrinted)
    {
       // Race has been stopped 0.5 second ago: print race summary to console
       for (uint8_t i = 0; i < RaceHandler.iNumberOfRacingDogs; i++)
@@ -246,8 +246,8 @@ void loop()
          for (uint8_t i2 = 0; i2 < (RaceHandler.iDogRunCounters[i] + 1); i2++)
             ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", i + 1, RaceHandler.GetStoredDogTimes(i, i2), RaceHandler.TransformCrossingTime(i, i2));
       }
-      ESP_LOGI(__FILE__, " Team: %s", cElapsedRaceTime);
-      ESP_LOGI(__FILE__, "  Net: %s\n", cTeamNetTime);
+      ESP_LOGI(__FILE__, " Team: %s", RaceHandler.GetRaceTime());
+      ESP_LOGI(__FILE__, "  Net: %s\n", RaceHandler.GetNetTime());
       if (SDcardController.bSDCardDetected)
          SDcardController.SaveRaceDataToFile();
 #if !Simulate
@@ -465,6 +465,12 @@ void HandleSerialCommands()
       }
       RaceHandler.SetNumberOfDogs(iNumberofRacingDogs);
    }
+   // Toggle accuracy
+   if (strSerialData == "accuracy")
+      RaceHandler.ToggleAccuracy();
+   // Toggle decimal separator in CSV
+   if (strSerialData == "separator")
+      SDcardController.ToggleDecimalSeparator();
    // Toggle between modes
    if (strSerialData == "mode")
    {
@@ -491,15 +497,6 @@ void HandleSerialCommands()
 
 void HandleLCDUpdates()
 {
-   if (iCurrentRaceState != RaceHandler.RaceState)
-   {
-      iCurrentRaceState = RaceHandler.RaceState;
-      String sRaceStateMain = RaceHandler.GetRaceStateString();
-      ESP_LOGI(__FILE__, "RS: %s", sRaceStateMain);
-      // Update race status to display
-      LCDController.UpdateField(LCDController.RaceState, sRaceStateMain);
-   }
-   
    // Update team time
    LCDController.UpdateField(LCDController.TeamTime, RaceHandler.GetRaceTime());
 
@@ -556,6 +553,15 @@ void HandleLCDUpdates()
       LCDController.UpdateField(LCDController.BattLevel, sBatteryPercentage);
       // ESP_LOGD(__FILE__, "Battery: analog: %i ,voltage: %i, level: %i%%", BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
       llLastBatteryLCDupdate = GET_MICROS / 1000;
+   }
+
+   if (iCurrentRaceState != RaceHandler.RaceState)
+   {
+      iCurrentRaceState = RaceHandler.RaceState;
+      String sRaceStateMain = RaceHandler.GetRaceStateString();
+      ESP_LOGI(__FILE__, "RS: %s", sRaceStateMain);
+      // Update race status to display
+      LCDController.UpdateField(LCDController.RaceState, sRaceStateMain);
    }
 }
 

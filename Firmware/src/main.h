@@ -110,8 +110,6 @@ const uint8_t iLightsDataPin = 21;    // WS2811B lights data
 // Global variables
 uint8_t iCurrentDog;                 // currently running dog
 uint8_t iCurrentRaceState;           // current race state
-char cElapsedRaceTime[8];            // team time
-char cTeamNetTime[8];                // team net time
 
 bool bRaceSummaryPrinted = false;    // race summary printed indicator
 

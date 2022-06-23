@@ -91,13 +91,25 @@ void SettingsManagerClass::setDefaultSettings()
    {
       setSetting("StartingSequenceNAFA", String("0"));
       saveSettings();
-   }   
+   }
 
    if (!hasSetting("LaserOnTimer"))
    {
       setSetting("LaserOnTimer", String("60"));
       saveSettings();
-   }   
+   }
+
+   if (!hasSetting("Accuracy3digits"))
+   {
+      setSetting("Accuracy3digits", String("0"));
+      saveSettings();
+   }
+
+   if (!hasSetting("CommaInCsv"))
+   {
+      setSetting("CommaInCsv", String("0"));
+      saveSettings();
+   }
 }
 
 SettingsManagerClass SettingsManager;

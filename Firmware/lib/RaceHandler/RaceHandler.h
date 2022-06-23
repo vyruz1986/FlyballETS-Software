@@ -70,6 +70,7 @@ public:
    stRaceData GetRaceData(int iRaceId);
    bool GetRunDirection();
    void ToggleRunDirection();
+   void ToggleAccuracy();
    void ToggleRerunsOffOn(uint8_t _iState);
    void SetNumberOfDogs(uint8_t _iNumberOfRacingDogs);
 
@@ -101,6 +102,7 @@ private:
    volatile uint8_t _iInputQueueWriteIndex = 0;
 
    bool _bRunDirectionInverted = false;
+   bool _bAccuracy3digits = false;
    bool _bNextDogFound = false;
    bool _bSensorNoise = false;
    bool _bLastStringBAba = false;

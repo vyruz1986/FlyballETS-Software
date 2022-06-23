@@ -387,13 +387,9 @@ void LightsControllerClass::ToggleStartingSequence()
    bModeNAFA = !bModeNAFA;
    SettingsManager.setSetting("StartingSequenceNAFA", String(bModeNAFA));
    if (bModeNAFA)
-   {
       ESP_LOGI(__FILE__, "Starting sequence: NAFA");
-   }
    else
-   {
       ESP_LOGI(__FILE__, "Starting sequence: FCI");
-   }
    LCDController.reInit();
    #ifdef WiFiON
    WebHandler._bSendRaceData = true;
