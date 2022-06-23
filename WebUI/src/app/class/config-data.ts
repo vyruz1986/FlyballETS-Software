@@ -5,6 +5,8 @@ export class ConfigData {
       public AdminPass: string,
       public RunDirectionInverted: string,
       public StartingSequenceNAFA: string,
-      public LaserOnTimer: string
+      public LaserOnTimer: string,
+      public Accuracy3digits: string,
+      public CommaInCsv: string
    ) { }
 }
