@@ -59,6 +59,7 @@ Funkcje przycisków pilota:
 - 3, 4, 5, 6 w trakcie biegu -> ręczne oznaczenie błędu psa (odpowiednio 1, 2, 3, 4) np. gdy zostanie upuszczona piłka
 - 3, 4, 5, 6 w trybie gotowości (READY, po resecie) -> wybór, ile psów będzie brało udział w danym biegu
 - długie naciśnięcie (puścić przycisk po ok. 1s) 3 w trybie gotowości (READY) -> włączenie/wyłączenie funkcji "Bez powtórek / Re-runs OFF"
+- długie naciśnięcie (puścić przycisk po ok. 1s) 4 w trybie gotowości (READY) -> przełączenie między sekwencją startową NAFA i FCI (funkcja przycisku "Tryb / Mode" na obudowie przed wersją oprogramowania v1.6.0)
 
 
 ## Przyciski obudowy
@@ -70,7 +71,7 @@ Funkcje przycisków pilota:
   Krótkie przyciśnięcie aktywuje diody służące to pozycjonowania systemu. Domyślny czas działania to 60s. Modyfikowany w menu "Configuration" (WiFi)
   Długie przyciśnięcie włącza/wyłącza funkcję WiFi
 - Wypukły przycisk "Tryb / Mode"
-  Krótkie przyciśnięcie przełącza pomiędzy trybami pracy. Aktualnie FCI z dokładnością do dziesiętnych części sekundy oraz NAFA (inna sekwencja świateł) z dokładnością do tysięcznych części sekundy.
+  Krótkie przyciśnięcie zmienia dokładność wyświeltanych wyników między setnymi lub tysięcznymi częściami sekundy.
   Długie przyciśnięcie przełącza kierunek biegu ("side switch"): normalny (aktywna jednostka po prawej), lub odwrócony/inverted jeśli aktywna jednostka jest po lewej
 
 
@@ -96,6 +97,7 @@ Aby zapewnić żywotność baterii:
 - Można wyzerować tag przez usunięcie pliku tag.txt z folderu głównego. Należy wówczas usunąć także wszystkie pliki z danymi z wcześniejszych treningów
 - Karta SD powinno być sformatowana w FAT32. Pliki z danymi z wyścigu zapisywane są w głównym katalogu.
 - W katalogu SENSORS_DATA zapisywane są odczyty z czujników. Służą one do analizy ewentualnych błędów / dziwnych zachować systemu i są bezcenne do odtwarzania problemów i robienia korekcji.
+- Domyślnym separatorem dziesiętnym jest kropka '.' tak jak to widać na wyświetlaczu LCD czy przez interfejs WiFi. Może to być jednak kłopotliwe w przypadku pliku CSV na karcie SD, bo odczytując plik w arkuszu kalkulacyjnym w krajach, gdzie separatorem dziesiętnym jest przecinek ',' wartości liczbowe nie zostaną automatycznie przekonwertowane. Z tego powodu w menu Configuration interfejsu www (WiFi) jest możliwość aktywowania funkcji "Używaj przecinka ',' jako separatora dziesiętnego w pliku CSV"
 - Włożenie lub wyjęcie karty SD powoduje restart ETSa, oczywiście o ile był włączony
 
 
@@ -122,7 +124,7 @@ Na tej stronie dostępne te same funkcje sterowania, co przy pomocy pilota z tą
 Ręczne włączanie błędów można wykonać przy użyciu suwaka opisanego przy każdym z psów, opisanego jako "Błąd / Fault"
 
 #### Strona konfiguracji (Configuration)
-Po zalogowaniu przy użyciu loginu "Admin" i hasła (domyślnie "FlyballETS.1234) i wciśnięciu przycisku Login pojawia się menu z rzadziej zmienianymi parametrami systemu, takimi jak nazwa sieci WiFi, hasło do sieci, hasło administratora, czas załączenia diod laserowych (wyłączą się automatycznie, jeśli zostanie wystartowany bieg), kierunek biegu i tryb pracy.
+Po zalogowaniu przy użyciu loginu "Admin" i hasła (domyślnie "FlyballETS.1234) i wciśnięciu przycisku Login pojawia się menu z rzadziej zmienianymi parametrami systemu, takimi jak nazwa sieci WiFi, hasło do sieci, hasło administratora, czas załączenia diod laserowych (wyłączą się automatycznie, jeśli zostanie wystartowany bieg), kierunek biegu, typ sekwencji startowej (FCI lub NAFA), dokładność wników (2 lub 3 cyfry po przecinku) oraz separator dziesiętny w pliku CSV (kropka lub przecinek).
 
 #### Strona Firmware update
 Została opisane na początku instrukcji w punkcie dotyczącym aktualizacji oprogramowania systemowego.

@@ -5,13 +5,23 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+
+## [1.6.0] - 2022-06-23
+
+### Added
 - OTA Firmware update progress on LCD
-- step 1 for using comma as decimal separator
+- Option to use comma ',' as decimal separator in CSV file (SD card) via WebUI Congifuration menu
 
 ### Changed
 - corrected dogs re-runs off state on LCD after number of running dogs change
 - code refactoring in main.h/cpp, RaceTime and NetTime
 - fix for proper handling of csv with tag 1
+- FCI / NAFA staring sequence separated from 2 / 3 digits accuracy
+- Short press of mode button now changes accuracy, without chaging starting sequence
+- FCI / NAFA starting sequence can be changed by long press of button 4 on remote control or via WebUI Configuration menu
 
 ## [1.5.3] - 2022-06-13
 
@@ -131,7 +141,8 @@ All notable changes to this project will be documented in this file.
 
 
 
-[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.5.3...HEAD
+[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.5.3...v1.6.0
 [1.5.3]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.4.1...v1.5.3
 [1.4.1]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.2.1...v1.4.1
 [1.2.1]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.2.0...v1.2.1

@@ -103,7 +103,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
       }
 
       // Parse JSON input
-      StaticJsonDocument<512> jsonRequestDoc;
+      StaticJsonDocument<768> jsonRequestDoc;
       DeserializationError error = deserializeJson(jsonRequestDoc, msg);
       JsonObject request = jsonRequestDoc.as<JsonObject>();
       if (error)

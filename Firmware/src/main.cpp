@@ -646,8 +646,8 @@ void HandleRemoteAndButtons()
                   RaceHandler.SetNumberOfDogs(4);
                else
                   RaceHandler.SetDogFault(3);
-            else if (iLastActiveBit == 0 && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)) // Mode button - mode change
-               LightsController.ToggleStartingSequence();
+            else if (iLastActiveBit == 0 && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)) // Mode button - accuracy change
+               RaceHandler.ToggleAccuracy();
             else if (iLastActiveBit == 7 && !bLaserActive && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)) // Laser activation
             {
                digitalWrite(iLaserOutputPin, HIGH);
@@ -661,6 +661,8 @@ void HandleRemoteAndButtons()
             ESP_LOGD(__FILE__, "%s LONG press detected: %lldms", GetButtonString(iLastActiveBit).c_str(), llPressDuration);
             if (iLastActiveBit == 3 && RaceHandler.RaceState == RaceHandler.RESET) // Dog 1 fault RC button - toggling reruns off/on
                RaceHandler.ToggleRerunsOffOn(2);
+            if (iLastActiveBit == 6 && RaceHandler.RaceState == RaceHandler.RESET) // Dog 2 fault RC button - toggling starting sequence NAFA / FCI
+               LightsController.ToggleStartingSequence();
             else if (iLastActiveBit == 0 && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)) // Mode button - side switch
                RaceHandler.ToggleRunDirection();
             else if (iLastActiveBit == 7 && RaceHandler.RaceState == RaceHandler.RESET) // Laster button - Wifi Off
