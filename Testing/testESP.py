@@ -1,13 +1,13 @@
 #test ESP32
-import sys
+import os
 import serial
 import time
 import string
 from termcolor import colored
 from colorama import init, Fore
 
-exitfile = open("D:\\Users\\konri\\!repositories\\FlyballETS-Software\\Testing\\dataESP.txt", "wb")
-outputfile = open("D:\\Users\\konri\\!repositories\\FlyballETS-Software\\Testing\\stabilityLOG.txt", "wb")
+exitfile = open(os.getcwd() + "\\dataESP.txt", "wb")
+outputfile = open(os.getcwd() + "\\stabilityLOG.txt", "wb")
 
 ser = serial.Serial('COM7', 115200)
 time.sleep(2)
@@ -19,7 +19,7 @@ else:
 ser.write(b"reboot" + b"\n")
 #ser.write(b"stop" + b"\n")
 #ser.write(b"reset" + b"\n")
-time.sleep(5)
+time.sleep(3)
 readline_reboot = ser.readline()[:-2]
 while b"ESP log level 4" not in readline_reboot:
     readline_reboot = ser.readline()[:-2]
@@ -33,7 +33,7 @@ selectedrace = input("Select race: ") # 0 or 1 or 2
 if selectedrace.isdigit() == True:
     bselectedrace = selectedrace.encode('utf-8')
     ser.write(b"race " + bselectedrace + b"\n")
-    racefile = open("D:\\Users\\konri\\!repositories\\FlyballETS-Software\\Testing\\RACE" + selectedrace + ".txt", "r")
+    racefile = open(os.getcwd() + "\\RACE" + selectedrace + ".txt", "r")
 elif selectedrace == "-all":
     ser.write(b"race 0" + b"\n")
     for a in range(2):
@@ -42,7 +42,7 @@ elif selectedrace == "-all":
     splitnumofraces = numofraces.split(b"races: ")
     ammountofraces = int(splitnumofraces[1])
     exitfile.write(b"//race 0" + b'\n')
-    racefile = open("D:\\Users\\konri\\!repositories\\FlyballETS-Software\\Testing\\RACE0.txt", "r")
+    racefile = open(os.getcwd() + "\\RACE0.txt", "r")
 elif selectedrace == "-stab":
     endless = True
     ser.write(b"race 0" + b"\n")
@@ -52,7 +52,7 @@ elif selectedrace == "-stab":
     #print(splitnumofraces)
     ammountofraces = int(splitnumofraces[1])
     exitfile.write(b"//race 0" + b'\n')
-    racefile = open("D:\\Users\\konri\\!repositories\\FlyballETS-Software\\Testing\\RACE0.txt", "r")
+    racefile = open(os.getcwd() + "\\RACE0.txt", "r")
 else:
     print("Error: Invalid input")
     racenumber = ammountofraces
@@ -71,7 +71,7 @@ while racenumber < ammountofraces:
             bracenumber = b'%i' % racenumber
             #print(bracenumber)
             strracenumber = str(racenumber)
-            racefile = open("D:\\Users\\konri\\!repositories\\FlyballETS-Software\\Testing" + strracenumber + ".txt", "r")
+            racefile = open(os.getcwd() + "\\RACE" + selectedrace + ".txt", "r")
             ser.write(b"race " + bracenumber + b'\n')
             for x in range(3):
                 ser.readline()
