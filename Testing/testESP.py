@@ -20,6 +20,9 @@ ser.write(b"reboot" + b"\n")
 #ser.write(b"stop" + b"\n")
 #ser.write(b"reset" + b"\n")
 time.sleep(5)
+readline_reboot = ser.readline()[:-2]
+while b"ESP log level 4" not in readline_reboot:
+    readline_reboot = ser.readline()[:-2]
 ammountofraces = 1
 racenumber = 0
 endless = False
@@ -60,7 +63,7 @@ bytetime = b'0'
 raceEND = False
 
 while racenumber < ammountofraces:
-    ser.write(b"reset" + b"\n") #\x52\x45\x53\x45\x54\x0a (utf-8)
+    #ser.write(b"reset" + b"\n") #\x52\x45\x53\x45\x54\x0a (utf-8)
     if raceEND == True:
         raceEND = False
         racefile.close()
@@ -77,6 +80,7 @@ while racenumber < ammountofraces:
 
     while raceEND != True:
         readline = ser.readline()[:-2]
+        #print(readline)
         decodeline = readline.decode('utf-8')
         splitdecodeline = decodeline.split("(): ")
         print(splitdecodeline[1])
