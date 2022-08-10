@@ -1,0 +1,20 @@
+przchowywanie ilości testów
+przchowywanie portu
+parametr 'number of stability runs'
+wifi ON/OFF
+czy mają być printy debugowe czy nie
+
+program test
+sprawdzenie odpowiedzi po reboot'cie
+log level 4 sprawdzanie - jeśli nie, nie kontynuować
+czy dokladność 3 cyfrowa - jeśli nie przełączyc na nią
+reboot tylko za pierwszym razem, test czeka w nieskończoność na podanie który test przeprowadzić, kończy komenda end
+parametry jak np. 7 -finnish - wykonuje test 7 i kończy działanie
+możliwość odpalenia kolejki testów
+2 pliki wynikowe 1 tylko test pass/not drugi dataESP
+ograniczenie wypisywania do pliku (wielkości pliku)
+
+
+$numberofrunningdogs 1-4, default 4
+$rerunsoff on,off, default on
+$commands 6.250 d2f, 12.350 d3f

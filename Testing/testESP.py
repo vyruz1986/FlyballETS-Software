@@ -3,6 +3,7 @@ import os
 import serial
 import time
 import string
+import sys
 from termcolor import colored
 from colorama import init, Fore
 
