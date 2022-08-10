@@ -6,48 +6,50 @@ import string
 from termcolor import colored
 from colorama import init, Fore
 
-exitfile = open("D:\\Users\\konri\\Kurs\\ESP32\\dataESP.txt", "wb")
-outputfile = open("D:\\Users\\konri\\Kurs\\ESP32\\stabilityLOG.txt", "wb")
+exitfile = open("D:\\Users\\konri\\!repositories\\FlyballETS-Software\\Testing\\dataESP.txt", "wb")
+outputfile = open("D:\\Users\\konri\\!repositories\\FlyballETS-Software\\Testing\\stabilityLOG.txt", "wb")
 
-ser = serial.Serial('COM9', 115200)
+ser = serial.Serial('COM7', 115200)
 time.sleep(2)
 if ser.isOpen():
     print("COM port is available")
 else:
     print("COM port is not available")
 
-#ser.write(b"STOP" + b"\n")
-#ser.write(b"RESET" + b"\n")
+ser.write(b"reboot" + b"\n")
+#ser.write(b"stop" + b"\n")
+#ser.write(b"reset" + b"\n")
 time.sleep(5)
 ammountofraces = 1
 racenumber = 0
 endless = False
-#selectedrace = input("Select race: ") # 0 or 1 or 2
-selectedrace = str(sys.argv[1])
+selectedrace = input("Select race: ") # 0 or 1 or 2
+#selectedrace = str(sys.argv[1])
+#selectedrace = '0'
 #print(type(selectedrace))
 if selectedrace.isdigit() == True:
     bselectedrace = selectedrace.encode('utf-8')
-    ser.write(b"RACE " + bselectedrace + b"\n")
-    racefile = open("D:\\Users\\konri\\Kurs\\ESP32\\RACE" + selectedrace + ".txt", "r")
+    ser.write(b"race " + bselectedrace + b"\n")
+    racefile = open("D:\\Users\\konri\\!repositories\\FlyballETS-Software\\Testing\\RACE" + selectedrace + ".txt", "r")
 elif selectedrace == "-all":
-    ser.write(b"RACE 0" + b"\n")
+    ser.write(b"race 0" + b"\n")
     for a in range(2):
         numofraces = ser.readline()[:-2]
         #print(numofraces)
     splitnumofraces = numofraces.split(b"races: ")
     ammountofraces = int(splitnumofraces[1])
-    exitfile.write(b"//RACE 0" + b'\n')
-    racefile = open("D:\\Users\\konri\\Kurs\\ESP32\\RACE0.txt", "r")
+    exitfile.write(b"//race 0" + b'\n')
+    racefile = open("D:\\Users\\konri\\!repositories\\FlyballETS-Software\\Testing\\RACE0.txt", "r")
 elif selectedrace == "-stab":
     endless = True
-    ser.write(b"RACE 0" + b"\n")
+    ser.write(b"race 0" + b"\n")
     for a in range(2):
         numofraces = ser.readline()[:-2]
     splitnumofraces = numofraces.split(b"races: ")
     #print(splitnumofraces)
     ammountofraces = int(splitnumofraces[1])
-    exitfile.write(b"//RACE 0" + b'\n')
-    racefile = open("D:\\Users\\konri\\Kurs\\ESP32\\RACE0.txt", "r")
+    exitfile.write(b"//race 0" + b'\n')
+    racefile = open("D:\\Users\\konri\\!repositories\\FlyballETS-Software\\Testing\\RACE0.txt", "r")
 else:
     print("Error: Invalid input")
     racenumber = ammountofraces
@@ -56,8 +58,9 @@ readline = ser.readline()
 
 bytetime = b'0'
 raceEND = False
+
 while racenumber < ammountofraces:
-    ser.write(b"RESET" + b"\n") #\x52\x45\x53\x45\x54\x0a (utf-8)
+    ser.write(b"reset" + b"\n") #\x52\x45\x53\x45\x54\x0a (utf-8)
     if raceEND == True:
         raceEND = False
         racefile.close()
@@ -65,18 +68,18 @@ while racenumber < ammountofraces:
             bracenumber = b'%i' % racenumber
             #print(bracenumber)
             strracenumber = str(racenumber)
-            racefile = open("D:\\Users\\konri\\Kurs\\ESP32\\RACE" + strracenumber + ".txt", "r")
-            ser.write(b"RACE " + bracenumber + b'\n')
+            racefile = open("D:\\Users\\konri\\!repositories\\FlyballETS-Software\\Testing" + strracenumber + ".txt", "r")
+            ser.write(b"race " + bracenumber + b'\n')
             for x in range(3):
                 ser.readline()
-            exitfile.write(b"//RACE " + bracenumber + b'\n')
-    ser.write(b"START" + b"\n") #\x53\x54\x41\x52\x54\x0a (utf-8)
+            exitfile.write(b"//Race " + bracenumber + b'\n')
+    ser.write(b"start" + b"\n") #\x53\x54\x41\x52\x54\x0a (utf-8)
 
     while raceEND != True:
         readline = ser.readline()[:-2]
         decodeline = readline.decode('utf-8')
         splitdecodeline = decodeline.split("(): ")
-        #print(splitdecodeline[1])
+        print(splitdecodeline[1])
         if endless == True:
             outputfile.write(readline + b'\n')
             if splitdecodeline[1] == "RS:  STOP  ":
@@ -86,7 +89,7 @@ while racenumber < ammountofraces:
         or splitdecodeline[1].startswith("RT") or splitdecodeline[1].startswith("RS") 
         or splitdecodeline[1].startswith("Dog "))
         and splitdecodeline[1] != "Dog 0:   0.000|CR:  " and splitdecodeline[1] != "RT:  0.000"):
-            #exitfile.write(splitdecodeline[1].encode('utf-8') + b'\n')
+            exitfile.write(splitdecodeline[1].encode('utf-8') + b'\n')
             lengthofline = len(splitdecodeline[1])
             normdecodeline = splitdecodeline[1]
             for x in range(30-lengthofline):
@@ -109,16 +112,16 @@ while racenumber < ammountofraces:
                 racenumber = 0
         del splitdecodeline
     if endless == True:
-        ser.write(b"TIME" + b'\n')
+        ser.write(b"time" + b'\n')
         timecheck = ser.readline()[:-2]
         timecheck = ser.readline()[:-2]
-        #print(timecheck)
+        print(timecheck)
         #if timecheck.startswith(b"[I]"):
         splittimecheck = timecheck.split(b" ")
         splittimecheck = splittimecheck[5].split(b".")
         time = int(splittimecheck[0])
         bytetime = bytes(splittimecheck[0])
-        #exitfile.write(bytetime + b'\n')
+        exitfile.write(bytetime + b'\n')
         print(time)
         if time > 21600000:
             racenumber = ammountofraces
