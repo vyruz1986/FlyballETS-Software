@@ -1,13 +1,6 @@
-RS:  START 
-RS: RUNNING
-Dog 0:   4.467|CR: +  0.002
-RT:  4.659
-Dog 1:   4.980|CR:      NOK
-RT:  9.696
-Dog 2:   6.133|CR:       OK
-RT: 15.729
-Dog 3:   4.765|CR: +  0.432
-RT: 21.038
-D1:   5.770|CR:       OK
-RT: 26.549
-RS:  STOP  
+Dog 1:   4.224 | CR: +  0.049
+Dog 2:   4.324 | CR:       ok
+Dog 3:   4.017 | CR:       ok
+Dog 4:   3.864 | CR:       ok
+ Team:  16.479
+  Net:  16.430
