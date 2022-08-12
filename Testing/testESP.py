@@ -27,58 +27,63 @@ while b"ESP log level 4" not in readline_reboot:
 ammountofraces = 1
 racenumber = 0
 endless = False
+
+
 selectedrace = input("Select race: ") # 0 or 1 or 2
 #selectedrace = str(sys.argv[1])
 #selectedrace = '0'
 #print(type(selectedrace))
-if selectedrace.isdigit() == True:
-    bselectedrace = selectedrace.encode('utf-8')
-    ser.write(b"race " + bselectedrace + b"\n")
-    racefile = open(os.getcwd() + "\\RACE" + selectedrace + ".txt", "r")
-elif selectedrace == "-all":
-    ser.write(b"race 0" + b"\n")
-    for a in range(2):
-        numofraces = ser.readline()[:-2]
-        #print(numofraces)
-    splitnumofraces = numofraces.split(b"races: ")
-    ammountofraces = int(splitnumofraces[1])
-    exitfile.write(b"//race 0" + b'\n')
-    racefile = open(os.getcwd() + "\\RACE0.txt", "r")
-elif selectedrace == "-stab":
-    endless = True
-    ser.write(b"race 0" + b"\n")
-    for a in range(2):
-        numofraces = ser.readline()[:-2]
-    splitnumofraces = numofraces.split(b"races: ")
-    #print(splitnumofraces)
-    ammountofraces = int(splitnumofraces[1])
-    exitfile.write(b"//race 0" + b'\n')
-    racefile = open(os.getcwd() + "\\RACE0.txt", "r")
-else:
-    print("Error: Invalid input")
-    racenumber = ammountofraces
-#print(ammountofraces)
-readline = ser.readline()
+while selectedrace != "end":
+    if selectedrace.isdigit() == True:
+        bselectedrace = selectedrace.encode('utf-8')
+        print("############race selected#############")
+        ser.write(b"race " + bselectedrace + b"\n")
+        racefile = open(os.getcwd() + "\\RACE" + selectedrace + ".txt", "r")
+    elif selectedrace == "-all":
+        ser.write(b"race 0" + b"\n")
+        for a in range(2):
+            numofraces = ser.readline()[:-2]
+            #print(numofraces)
+        splitnumofraces = numofraces.split(b"races: ")
+        ammountofraces = int(splitnumofraces[1])
+        exitfile.write(b"//race 0" + b'\n')
+        racefile = open(os.getcwd() + "\\RACE0.txt", "r")
+    elif selectedrace == "-stab":
+        endless = True
+        ser.write(b"race 0" + b"\n")
+        for a in range(2):
+            numofraces = ser.readline()[:-2]
+        splitnumofraces = numofraces.split(b"races: ")
+        #print(splitnumofraces)
+        ammountofraces = int(splitnumofraces[1])
+        exitfile.write(b"//race 0" + b'\n')
+        racefile = open(os.getcwd() + "\\RACE0.txt", "r")
+    else:
+        print("Error: Invalid input")
+        racenumber = ammountofraces
+    #print(ammountofraces)
+    readline = ser.readline()
 
-bytetime = b'0'
-raceEND = False
-
-while racenumber < ammountofraces:
-    #ser.write(b"reset" + b"\n") #\x52\x45\x53\x45\x54\x0a (utf-8)
-    if raceEND == True:
-        raceEND = False
-        racefile.close()
-        if racenumber <= ammountofraces:
-            bracenumber = b'%i' % racenumber
-            #print(bracenumber)
-            strracenumber = str(racenumber)
-            racefile = open(os.getcwd() + "\\RACE" + selectedrace + ".txt", "r")
-            ser.write(b"race " + bracenumber + b'\n')
-            for x in range(3):
-                ser.readline()
-            exitfile.write(b"//Race " + bracenumber + b'\n')
+    bytetime = b'0'
+    raceEND = False
+    print("#############STARTING############")
     ser.write(b"start" + b"\n") #\x53\x54\x41\x52\x54\x0a (utf-8)
-
+    '''
+    while racenumber < ammountofraces:
+        #ser.write(b"reset" + b"\n") #\x52\x45\x53\x45\x54\x0a (utf-8)
+        if raceEND == True:
+            raceEND = False
+            racefile.close()
+            if racenumber <= ammountofraces:
+                bracenumber = b'%i' % racenumber
+                #print(bracenumber)
+                strracenumber = str(racenumber)
+                racefile = open(os.getcwd() + "\\RACE" + selectedrace + ".txt", "r")
+                ser.write(b"race " + bracenumber + b'\n')
+                for x in range(3):
+                    ser.readline()
+                exitfile.write(b"//Race " + bracenumber + b'\n')
+    '''
     stopline = ""
     while raceEND != True:
         readline = ser.readline()[:-2]
@@ -119,24 +124,27 @@ while racenumber < ammountofraces:
             else:
                 print(normdecodeline, colored("NOK", 'red'), " Exp: ", Fore.YELLOW + expectedline, Fore.RESET)
                 exitfile.write(normdecodeline.encode('utf-8')+ b'  NOK' + b'   Exp: ' + expectedline.encode('utf-8') + b'\n')             
-            
+                
+        if endless == True:
+            ser.write(b"time" + b'\n')
+            timecheck = ser.readline()[:-2]
+            timecheck = ser.readline()[:-2]
+            print(timecheck)
+            #if timecheck.startswith(b"[I]"):
+            splittimecheck = timecheck.split(b" ")
+            splittimecheck = splittimecheck[5].split(b".")
+            time = int(splittimecheck[0])
+            bytetime = bytes(splittimecheck[0])
+            exitfile.write(bytetime + b'\n')
+            print(time)
+            if time > 21600000:
+                racenumber = ammountofraces
+            #print(racenumber)
     if endless == True:
-        ser.write(b"time" + b'\n')
-        timecheck = ser.readline()[:-2]
-        timecheck = ser.readline()[:-2]
-        print(timecheck)
-        #if timecheck.startswith(b"[I]"):
-        splittimecheck = timecheck.split(b" ")
-        splittimecheck = splittimecheck[5].split(b".")
-        time = int(splittimecheck[0])
-        bytetime = bytes(splittimecheck[0])
-        exitfile.write(bytetime + b'\n')
         print(time)
-        if time > 21600000:
-            racenumber = ammountofraces
-        #print(racenumber)
-if endless == True:
-    print(time)
+    ser.write(b"reset" + b"\n")
+    time.sleep(3)
+    selectedrace = input("Select race: ") # 0 or 1 or 2 or end
 racefile.close()
 exitfile.close()
 outputfile.close()
