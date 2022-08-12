@@ -36,7 +36,6 @@ selectedrace = input("Select race: ") # 0 or 1 or 2
 while selectedrace != "end":
     if selectedrace.isdigit() == True:
         bselectedrace = selectedrace.encode('utf-8')
-        print("############race selected#############")
         ser.write(b"race " + bselectedrace + b"\n")
         racefile = open(os.getcwd() + "\\RACE" + selectedrace + ".txt", "r")
     elif selectedrace == "-all":
@@ -66,7 +65,6 @@ while selectedrace != "end":
 
     bytetime = b'0'
     raceEND = False
-    print("#############STARTING############")
     ser.write(b"start" + b"\n") #\x53\x54\x41\x52\x54\x0a (utf-8)
     '''
     while racenumber < ammountofraces:
@@ -103,7 +101,7 @@ while selectedrace != "end":
                 racefile.seek(0)
                 racenumber = 0
         #del splitdecodeline
-
+    exitfile.write(b'### RACE ' + selectedrace.encode('utf-8') + b' ###\n')
     while b"Net" not in stopline:
         readline = ser.readline()[:-2]
         stopline = readline
