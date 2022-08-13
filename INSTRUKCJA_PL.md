@@ -6,7 +6,7 @@ ETS oznacza Electronic Training System (Elektroniczny System Treningowy) i jest 
 ## Przygotowanie ETS do pracy
 
 Zalecane jest rozstawienie części aktywnej i pasywnej na odległość ok. 1.4 - 1.5m. Większa odległość może powodować "szum sensorów", podczas przebiegania psa.
-Max. rozstawienie nie powinno przekraczać 1.8m.
+Max. rozstawienie nie powinno przekraczać 1.7m.
 - Po wstępnym rozstawieniu stóp nałożyć część aktywną i wstępnie dokręcić zachowując poziom przy użyciu "poziomicy / oczka"
 - Skorygować ustawienie stopy tak, aby linia startu/mety pokrywała się z linią czujników od strony handlerów. Docisnąć stopę
 - Skorygować ustawienie poziomu części aktywnej oraz jej kąt względem toru, tak aby wiązka była prostopadła do toru
@@ -16,7 +16,7 @@ Max. rozstawienie nie powinno przekraczać 1.8m.
 
 Jeśli w stanie gotowości (READY, po resecie) pojawiają górne białe światło błędu świeci się lub mruga to znaczy, że system czujniki nie trafiają w lusterka części pasywnej i należy skorygować ustawienie.
 Podobna sytuacja może mieć w trakcie deszczu / mżawki, wówczas należy przetrzeć lusterka oraz same czujniki miękką chłonną szmatką.
-Czujniki mogą też być zakłócone w przypadku bezpośredniego jasnego oświetlenia (słońce), ale prawdopodobieństwo jest niewielkie.
+Czujniki mogą też być zakłócone w przypadku bezpośredniego jasnego oświetlenia (słońce), dlatego należy ustawiać część aktywną tyłem do słońca (szczególnie rano oraz wieczorem, gdy słońce jest nisko na horyzoncie). Oczywiście należy także stosownie ustawić kierunek biegu ("side switch").
 Im lepsza dokładność ustawienia czujników, tym bardziej niezawodne jest działanie systemu. Doświadczenie pokazało, że jeśli w trakcie treningu często pojawiają się "dziwne/nienaturalne" wyniki, to w większości przypadków jest to spowodowane problemami z pozycjonowaniem systemu.
 
 ## Aktualizacja Firmware'u ETS

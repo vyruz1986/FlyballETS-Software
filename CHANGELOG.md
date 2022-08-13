@@ -5,9 +5,10 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- INSTRUKCJA_PL.md updated with recommendation in relation to sunlight
 
 ### Changed
-
+- Filtering time of early dog while invisible dog is running changed from 4.5s to 5.5s (fix for 89-13)
 
 ## [1.6.0] - 2022-06-23
 

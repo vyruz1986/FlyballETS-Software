@@ -22,7 +22,7 @@
 #ifndef GLOBALVAR_H
 #define GLOBALVAR_H
 
-#define FW_VER "1.6.0"          // Flyball ETS firmware version
+#define FW_VER "1.6.1"          // Flyball ETS firmware version
 
 #define Simulate false          // Set to true to enable race simulation (see Simulator.h/.cpp)
 #define NumSimulatedRaces 47    // Number of prepeared simulated races. Sererial interface command to change interface: e.g. "race 1"

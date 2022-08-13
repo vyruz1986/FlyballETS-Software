@@ -16,6 +16,7 @@ export class SecureEtsDataService {
    sessionEnded: boolean;
 
    private _isAuthenticated = new BehaviorSubject<boolean>(false);
+   //private _isAuthenticated = new BehaviorSubject<boolean>(true);
    public isAuthenticated: Observable<boolean> = this._isAuthenticated.asObservable();
 
    private _isConnected = new BehaviorSubject<boolean>(false);
