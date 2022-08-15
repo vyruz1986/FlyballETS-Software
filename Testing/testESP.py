@@ -8,8 +8,8 @@ from threading import Timer
 from termcolor import colored
 from colorama import init, Fore
 
-def command_send_midprogramm():
-    ser.write(b'd2f' + b'\n')
+def command_send_midprogramm(command):
+    ser.write(command.encode('utf-8') + b'\n')
 
 exitfile = open(os.getcwd() + "\\dataESP.txt", "wb")
 outputfile = open(os.getcwd() + "\\stabilityLOG.txt", "wb")
@@ -64,14 +64,21 @@ while selectedrace != "end":
         print("Error: Invalid input")
         racenumber = ammountofraces
     #print(ammountofraces)
-    readline = ser.readline()
-    command_sendtime = 8.5
     bytetime = b'0'
     raceEND = False
+    readline = ser.readline()
     ser.write(b"start" + b"\n") #\x53\x54\x41\x52\x54\x0a (utf-8)
-    if selectedrace == "20":
-        timer = Timer(command_sendtime, command_send_midprogramm)
-        timer.start()
+
+    additionalargs = racefile.readline()
+    if additionalargs.startswith("$"):
+        splitadditionalargs = additionalargs.split(" ")
+        print(splitadditionalargs)
+        if splitadditionalargs[0] == "$commands":
+            command_sendtime = float(splitadditionalargs[1])
+            command_name = (splitadditionalargs[2],)
+            timer = Timer(command_sendtime, command_send_midprogramm, args=command_name)
+            timer.start()
+                
     '''
     while racenumber < ammountofraces:
         #ser.write(b"reset" + b"\n") #\x52\x45\x53\x45\x54\x0a (utf-8)
@@ -121,7 +128,7 @@ while selectedrace != "end":
             for x in range(30-lengthofline):
                 normdecodeline = normdecodeline + " "
             expectedline = racefile.readline()[:-1]
-            if expectedline.startswith("//RACE") == True:
+            if expectedline.startswith("//RACE") or expectedline.startswith("$") == True:
                 expectedline = racefile.readline()[:-1]
             if splitdecodeline[1] == expectedline:
                 print(normdecodeline, colored("OK", 'green'))                    
