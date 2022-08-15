@@ -17,4 +17,4 @@ ograniczenie wypisywania do pliku (wielkości pliku)
 
 $numberofrunningdogs 1-4, default 4
 $rerunsoff on,off, default on
-$commands 6.250 d2f, 12.350 d3f
+$commands 6.250 d2f, 12.350 d3f ***

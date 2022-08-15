@@ -1,0 +1,7 @@
+Dog 1:   4.224 | CR: +  0.049
+Dog 2:  run in | CR:  
+Dog 2:   4.696 | CR: +  0.178
+Dog 3:   4.017 | CR:       ok
+Dog 4:   6.044 | CR:       ok
+ Team:  23.532
+  Net:  23.305

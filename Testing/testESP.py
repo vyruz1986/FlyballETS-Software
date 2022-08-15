@@ -4,8 +4,13 @@ import serial
 import time
 import string
 import sys
+from threading import Timer
 from termcolor import colored
 from colorama import init, Fore
+
+def command_send_midprogramm():
+    ser.write(b'd2f' + b'\n')
+    print("########### d2f ###########")
 
 exitfile = open(os.getcwd() + "\\dataESP.txt", "wb")
 outputfile = open(os.getcwd() + "\\stabilityLOG.txt", "wb")
@@ -27,7 +32,6 @@ while b"ESP log level 4" not in readline_reboot:
 ammountofraces = 1
 racenumber = 0
 endless = False
-
 
 selectedrace = input("Select race: ") # 0 or 1 or 2
 #selectedrace = str(sys.argv[1])
@@ -62,10 +66,13 @@ while selectedrace != "end":
         racenumber = ammountofraces
     #print(ammountofraces)
     readline = ser.readline()
-
+    command_sendtime = 6.250
     bytetime = b'0'
     raceEND = False
     ser.write(b"start" + b"\n") #\x53\x54\x41\x52\x54\x0a (utf-8)
+    #if selectedrace == "20":
+    timer = Timer(8.5, command_send_midprogramm)
+    timer.start()
     '''
     while racenumber < ammountofraces:
         #ser.write(b"reset" + b"\n") #\x52\x45\x53\x45\x54\x0a (utf-8)
@@ -101,6 +108,7 @@ while selectedrace != "end":
                 racefile.seek(0)
                 racenumber = 0
         #del splitdecodeline
+
     exitfile.write(b'### RACE ' + selectedrace.encode('utf-8') + b' ###\n')
     while b"Net" not in stopline:
         readline = ser.readline()[:-2]
@@ -141,7 +149,7 @@ while selectedrace != "end":
     if endless == True:
         print(time)
     ser.write(b"reset" + b"\n")
-    time.sleep(3)
+    #time.sleep(3)
     selectedrace = input("Select race: ") # 0 or 1 or 2 or end
 racefile.close()
 exitfile.close()
