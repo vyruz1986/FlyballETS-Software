@@ -33,10 +33,10 @@ racenumber = 0
 endless = False
 invalidinput = False
 
-selectedrace = input("Select race: ") # 0/1/2/20 or end
-#selectedrace = str(sys.argv[1])
-#selectedrace = '0'
-#print(type(selectedrace))
+#selectedrace = input("Select race: ") # 0/1/2/20 or end
+argument_number = 1
+selectedrace = str(sys.argv[argument_number])
+
 while selectedrace != "end":
     if selectedrace.isdigit() == True:
         bselectedrace = selectedrace.encode('utf-8')
@@ -66,7 +66,9 @@ while selectedrace != "end":
         invalidinput = True
         racenumber = ammountofraces
     #print(ammountofraces)
-    if invalidinput != True:
+    if invalidinput == True:
+        selectedrace = "end"
+    else:
         bytetime = b'0'
         raceEND = False
         readline = ser.readline()
@@ -167,9 +169,9 @@ while selectedrace != "end":
         for i in range(4):
             readline = ser.readline()
         time.sleep(3)
-        selectedrace = input("Select race: ") # 0 or 1 or 2 or end
+        argument_number += 1
+        selectedrace = str(sys.argv[argument_number])
+        #selectedrace = input("Select race: ") # 0 or 1 or 2 or end
         racefile.close()
-    else:
-        selectedrace = "end"
 exitfile.close()
 outputfile.close()
