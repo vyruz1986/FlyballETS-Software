@@ -9,8 +9,8 @@ program test
 []log level 4 sprawdzanie - jeśli nie, nie kontynuować
 []czy dokladność 3 cyfrowa - jeśli nie przełączyc na nią
 [X]reboot tylko za pierwszym razem, test czeka w nieskończoność na podanie który test przeprowadzić, kończy komenda end
-[]parametry jak np. 7 -finnish - wykonuje test 7 i kończy działanie
-[]możliwość odpalenia kolejki testów
+[X]parametry jak np. 7 -finnish - wykonuje test 7 i kończy działanie
+[X]możliwość odpalenia kolejki testów
 []2 pliki wynikowe 1 tylko test pass/not drugi dataESP
 []ograniczenie wypisywania do pliku (wielkości pliku)
 
