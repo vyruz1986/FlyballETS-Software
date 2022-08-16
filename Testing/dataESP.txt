@@ -1,3 +1,10 @@
+### RACE 1 ###
+Dog 1:   3.782 | CR: +  0.030   OK
+Dog 2:   4.285 | CR: +  0.199   OK
+Dog 3:   4.396 | CR: +  0.127   OK
+Dog 4:   3.752 | CR: +  0.113   OK
+ Team:  16.683                  OK
+  Net:  16.214                  OK
 ### RACE 20 ###
 Dog 1:   4.224 | CR: +  0.049   OK
 Dog 2:  run in | CR:            OK
@@ -6,10 +13,3 @@ Dog 3:   4.017 | CR:       ok   OK
 Dog 4:   6.044 | CR:       ok   OK
  Team:  23.532                  OK
   Net:  23.305                  OK
-### RACE 1 ###
-Dog 1:   3.782 | CR: +  0.030   OK
-Dog 2:   4.285 | CR: +  0.199   OK
-Dog 3:   4.396 | CR: +  0.127   OK
-Dog 4:   3.752 | CR: +  0.113   OK
- Team:  16.683                  OK
-  Net:  16.214                  OK

@@ -31,6 +31,7 @@ while b"ESP log level 4" not in readline_reboot:
 ammountofraces = 1
 racenumber = 0
 endless = False
+invalidinput = False
 
 selectedrace = input("Select race: ") # 0/1/2/20 or end
 #selectedrace = str(sys.argv[1])
@@ -62,103 +63,113 @@ while selectedrace != "end":
         racefile = open(os.getcwd() + "\\RACE0.txt", "r")
     else:
         print("Error: Invalid input")
+        invalidinput = True
         racenumber = ammountofraces
     #print(ammountofraces)
-    bytetime = b'0'
-    raceEND = False
-    readline = ser.readline()
-    ser.write(b"start" + b"\n") #\x53\x54\x41\x52\x54\x0a (utf-8)
-
-    additionalargs = racefile.readline()
-    if additionalargs.startswith("$"):
-        splitadditionalargs = additionalargs.split(" ")
-        print(splitadditionalargs)
-        if splitadditionalargs[0] == "$commands":
-            command_sendtime = float(splitadditionalargs[1])
-            command_name = (splitadditionalargs[2],)
-            timer = Timer(command_sendtime, command_send_midprogramm, args=command_name)
-            timer.start()
-                
-    '''
-    while racenumber < ammountofraces:
-        #ser.write(b"reset" + b"\n") #\x52\x45\x53\x45\x54\x0a (utf-8)
-        if raceEND == True:
-            raceEND = False
-            racefile.close()
-            if racenumber <= ammountofraces:
-                bracenumber = b'%i' % racenumber
-                #print(bracenumber)
-                strracenumber = str(racenumber)
-                racefile = open(os.getcwd() + "\\RACE" + selectedrace + ".txt", "r")
-                ser.write(b"race " + bracenumber + b'\n')
-                for x in range(3):
-                    ser.readline()
-                exitfile.write(b"//Race " + bracenumber + b'\n')
-    '''
-    stopline = ""
-    while raceEND != True:
-        readline = ser.readline()[:-2]
-        #print(readline)
-        decodeline = readline.decode('utf-8')
-        splitdecodeline = decodeline.split("(): ")
-        print(splitdecodeline[1])
-        if endless == True:
-            outputfile.write(readline + b'\n')
-            if splitdecodeline[1] == "RS:  STOP  ":
-                outputfile.write(bytetime + b'\n')
-        if splitdecodeline[1] == "RS:  STOP  ":
-            raceEND = True
-            stopline = readline
-            racenumber += 1
-            if racenumber == ammountofraces and endless == True:
-                racefile.seek(0)
-                racenumber = 0
-        #del splitdecodeline
-
-    exitfile.write(b'### RACE ' + selectedrace.encode('utf-8') + b' ###\n')
-    while b"Net" not in stopline:
-        readline = ser.readline()[:-2]
-        stopline = readline
-        decodeline = readline.decode('utf-8')
-        splitdecodeline = decodeline.split("(): ")
-        if((splitdecodeline[1].startswith("Dog ") or splitdecodeline[1].startswith(" Team") or splitdecodeline[1].startswith("  Net")) and raceEND == True):
-            #exitfile.write(splitdecodeline[1].encode('utf-8') + b'\n')
-            lengthofline = len(splitdecodeline[1])
-            normdecodeline = splitdecodeline[1]
-            for x in range(30-lengthofline):
-                normdecodeline = normdecodeline + " "
-            expectedline = racefile.readline()[:-1]
-            if expectedline.startswith("//RACE") or expectedline.startswith("$") == True:
-                expectedline = racefile.readline()[:-1]
-            if splitdecodeline[1] == expectedline:
-                print(normdecodeline, colored("OK", 'green'))                    
-                exitfile.write(normdecodeline.encode('utf-8')+ b'  OK' + b'\n')
-            else:
-                print(normdecodeline, colored("NOK", 'red'), " Exp: ", Fore.YELLOW + expectedline, Fore.RESET)
-                exitfile.write(normdecodeline.encode('utf-8')+ b'  NOK' + b'   Exp: ' + expectedline.encode('utf-8') + b'\n')             
-                
-        if endless == True:
-            ser.write(b"time" + b'\n')
-            timecheck = ser.readline()[:-2]
-            timecheck = ser.readline()[:-2]
-            print(timecheck)
-            #if timecheck.startswith(b"[I]"):
-            splittimecheck = timecheck.split(b" ")
-            splittimecheck = splittimecheck[5].split(b".")
-            time = int(splittimecheck[0])
-            bytetime = bytes(splittimecheck[0])
-            exitfile.write(bytetime + b'\n')
-            print(time)
-            if time > 21600000:
-                racenumber = ammountofraces
-            #print(racenumber)
-    if endless == True:
-        print(time)
-    ser.write(b"reset" + b"\n")
-    for i in range(4):
+    if invalidinput != True:
+        bytetime = b'0'
+        raceEND = False
         readline = ser.readline()
-    time.sleep(3)
-    selectedrace = input("Select race: ") # 0 or 1 or 2 or end
-racefile.close()
+        ser.write(b"start" + b"\n") #\x53\x54\x41\x52\x54\x0a (utf-8)
+
+        additionalargs = racefile.readline()
+        if additionalargs.startswith("$"):
+            splitadditionalargs = additionalargs.split(" ")
+            print(splitadditionalargs)
+            splitargs_len = len(splitadditionalargs)
+            if splitadditionalargs[0] == "$commands":
+                i = 1
+                while i < splitargs_len:
+                    #print("############# " + splitadditionalargs[i])
+                    #print("############# " + splitadditionalargs[i+1])
+                    command_sendtime = float(splitadditionalargs[i])
+                    command_name = (splitadditionalargs[i+1],)
+                    i += 2
+                    timer = Timer(command_sendtime, command_send_midprogramm, args=command_name)
+                    timer.start()
+                
+        '''
+        while racenumber < ammountofraces:
+            #ser.write(b"reset" + b"\n") #\x52\x45\x53\x45\x54\x0a (utf-8)
+            if raceEND == True:
+                raceEND = False
+                racefile.close()
+                if racenumber <= ammountofraces:
+                    bracenumber = b'%i' % racenumber
+                    #print(bracenumber)
+                    strracenumber = str(racenumber)
+                    racefile = open(os.getcwd() + "\\RACE" + selectedrace + ".txt", "r")
+                    ser.write(b"race " + bracenumber + b'\n')
+                    for x in range(3):
+                        ser.readline()
+                    exitfile.write(b"//Race " + bracenumber + b'\n')
+        '''
+        stopline = ""
+        while raceEND != True:
+            readline = ser.readline()[:-2]
+            #print(readline)
+            decodeline = readline.decode('utf-8')
+            splitdecodeline = decodeline.split("(): ")
+            print(splitdecodeline[1])
+            if endless == True:
+                outputfile.write(readline + b'\n')
+                if splitdecodeline[1] == "RS:  STOP  ":
+                    outputfile.write(bytetime + b'\n')
+            if splitdecodeline[1] == "RS:  STOP  ":
+                raceEND = True
+                stopline = readline
+                racenumber += 1
+                if racenumber == ammountofraces and endless == True:
+                    racefile.seek(0)
+                    racenumber = 0
+            #del splitdecodeline
+
+        exitfile.write(b'### RACE ' + selectedrace.encode('utf-8') + b' ###\n')
+        while b"Net" not in stopline:  
+            readline = ser.readline()[:-2]
+            stopline = readline
+            decodeline = readline.decode('utf-8')
+            splitdecodeline = decodeline.split("(): ")
+            if((splitdecodeline[1].startswith("Dog ") or splitdecodeline[1].startswith(" Team") or splitdecodeline[1].startswith("  Net")) and raceEND == True):
+                #exitfile.write(splitdecodeline[1].encode('utf-8') + b'\n')
+                lengthofline = len(splitdecodeline[1])
+                normdecodeline = splitdecodeline[1]
+                for x in range(30-lengthofline):
+                    normdecodeline = normdecodeline + " "
+                expectedline = racefile.readline()[:-1]
+                if expectedline.startswith("//RACE") or expectedline.startswith("$") == True:
+                    expectedline = racefile.readline()[:-1]
+                if splitdecodeline[1] == expectedline:
+                    print(normdecodeline, colored("OK", 'green'))                    
+                    exitfile.write(normdecodeline.encode('utf-8')+ b'  OK' + b'\n')
+                else:
+                    print(normdecodeline, colored("NOK", 'red'), " Exp: ", Fore.YELLOW + expectedline, Fore.RESET)
+                    exitfile.write(normdecodeline.encode('utf-8')+ b'  NOK' + b'   Exp: ' + expectedline.encode('utf-8') + b'\n')             
+                    
+            if endless == True:
+                ser.write(b"time" + b'\n')
+                timecheck = ser.readline()[:-2]
+                timecheck = ser.readline()[:-2]
+                print(timecheck)
+                #if timecheck.startswith(b"[I]"):
+                splittimecheck = timecheck.split(b" ")
+                splittimecheck = splittimecheck[5].split(b".")
+                time = int(splittimecheck[0])
+                bytetime = bytes(splittimecheck[0])
+                exitfile.write(bytetime + b'\n')
+                print(time)
+                if time > 21600000:
+                    racenumber = ammountofraces
+                #print(racenumber)
+        if endless == True:
+            print(time)
+        ser.write(b"reset" + b"\n")
+        for i in range(4):
+            readline = ser.readline()
+        time.sleep(3)
+        selectedrace = input("Select race: ") # 0 or 1 or 2 or end
+        racefile.close()
+    else:
+        selectedrace = "end"
 exitfile.close()
 outputfile.close()
