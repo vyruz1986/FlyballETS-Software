@@ -76,14 +76,14 @@ while selectedrace != "end":
 
         additionalargs = racefile.readline()
         if additionalargs.startswith("$"):
-            splitadditionalargs = additionalargs.split(" ")
+            splitadditionalargs = additionalargs.split(";")
             print(splitadditionalargs)
             splitargs_len = len(splitadditionalargs)
             if splitadditionalargs[0] == "$commands":
                 i = 1
-                while i < splitargs_len:
-                    #print("############# " + splitadditionalargs[i])
-                    #print("############# " + splitadditionalargs[i+1])
+                while i < splitargs_len and splitadditionalargs[i] != "\n":
+                    print("############# " + splitadditionalargs[i])
+                    print("############# " + splitadditionalargs[i+1])
                     command_sendtime = float(splitadditionalargs[i])
                     command_name = (splitadditionalargs[i+1],)
                     i += 2

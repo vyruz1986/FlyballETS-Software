@@ -1,4 +1,4 @@
-$commands 8.5 d2f
+$commands;8.5;d2f;
 Dog 1:   4.224 | CR: +  0.049
 Dog 2:  run in | CR:  
 Dog 2:   4.696 | CR: +  0.178
