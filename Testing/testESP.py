@@ -9,7 +9,7 @@ from termcolor import colored
 from colorama import init, Fore
 
 def command_send_midprogramm(command):
-    ser.write(command.encode('utf-8') + b'\n')
+    ser.write(command.encode('utf-8') + b"\n")
 
 exitfile = open(os.getcwd() + "\\dataESP.txt", "wb")
 outputfile = open(os.getcwd() + "\\stabilityLOG.txt", "wb")
@@ -28,6 +28,7 @@ time.sleep(3)
 readline_reboot = ser.readline()[:-2]
 while b"ESP log level 4" not in readline_reboot:
     readline_reboot = ser.readline()[:-2]
+
 ammountofraces = 1
 racenumber = 0
 endless = False
@@ -66,6 +67,32 @@ while selectedrace != "end":
         invalidinput = True
         racenumber = ammountofraces
     #print(ammountofraces)
+    time.sleep(1)
+    additionalargs = racefile.readline()
+    if additionalargs.startswith("$"):
+        splitadditionalargs = additionalargs.split(";")
+        print(splitadditionalargs)
+        splitargs_len = len(splitadditionalargs)
+        i = 1
+        while i < splitargs_len and splitadditionalargs[i] != "\n":
+            if splitadditionalargs[0] == "$commands":
+                command_sendtime = float(splitadditionalargs[i])
+                command_name = (splitadditionalargs[i+1],)
+                i += 2
+                timer = Timer(command_sendtime, command_send_midprogramm, args=command_name)
+                timer.start()
+            elif splitadditionalargs[0] == "$innit":
+                innitcommands = splitadditionalargs[i]
+                readline = ser.readline()[:-2]
+                decodeline = readline.decode('utf-8')
+                splitdecodeline = decodeline.split("(): ")
+                print(splitdecodeline[1])
+                command_send_midprogramm(innitcommands)
+                i += 1
+                time.sleep(1)
+    else:
+        racefile.seek(0)
+
     if invalidinput == True:
         selectedrace = "end"
     else:
@@ -73,22 +100,6 @@ while selectedrace != "end":
         raceEND = False
         readline = ser.readline()
         ser.write(b"start" + b"\n") #\x53\x54\x41\x52\x54\x0a (utf-8)
-
-        additionalargs = racefile.readline()
-        if additionalargs.startswith("$"):
-            splitadditionalargs = additionalargs.split(";")
-            print(splitadditionalargs)
-            splitargs_len = len(splitadditionalargs)
-            if splitadditionalargs[0] == "$commands":
-                i = 1
-                while i < splitargs_len and splitadditionalargs[i] != "\n":
-                    print("############# " + splitadditionalargs[i])
-                    print("############# " + splitadditionalargs[i+1])
-                    command_sendtime = float(splitadditionalargs[i])
-                    command_name = (splitadditionalargs[i+1],)
-                    i += 2
-                    timer = Timer(command_sendtime, command_send_midprogramm, args=command_name)
-                    timer.start()
                 
         '''
         while racenumber < ammountofraces:
