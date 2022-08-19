@@ -139,7 +139,7 @@ while selectedrace != "end":
                     racenumber = 0
             #del splitdecodeline
 
-        while b"Net" not in stopline:  
+        while b"Net" not in stopline: 
             readline = ser.readline()[:-2]
             stopline = readline
             decodeline = readline.decode('utf-8')
