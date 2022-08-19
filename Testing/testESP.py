@@ -117,12 +117,14 @@ while selectedrace != "end":
                         ser.readline()
                     exitfile.write(b"//Race " + bracenumber + b'\n')
         '''
+        exitfile.write(b'### RACE ' + selectedrace.encode('utf-8') + b' ###\n')
         stopline = ""
         while raceEND != True:
             readline = ser.readline()[:-2]
             #print(readline)
             decodeline = readline.decode('utf-8')
             splitdecodeline = decodeline.split("(): ")
+            exitfile.write(splitdecodeline[1].encode('utf-8') + b'\n')
             print(splitdecodeline[1])
             if endless == True:
                 outputfile.write(readline + b'\n')
@@ -137,12 +139,12 @@ while selectedrace != "end":
                     racenumber = 0
             #del splitdecodeline
 
-        exitfile.write(b'### RACE ' + selectedrace.encode('utf-8') + b' ###\n')
         while b"Net" not in stopline:  
             readline = ser.readline()[:-2]
             stopline = readline
             decodeline = readline.decode('utf-8')
             splitdecodeline = decodeline.split("(): ")
+            exitfile.write(splitdecodeline[1].encode('utf-8'))
             if((splitdecodeline[1].startswith("Dog ") or splitdecodeline[1].startswith(" Team") or splitdecodeline[1].startswith("  Net")) and raceEND == True):
                 #exitfile.write(splitdecodeline[1].encode('utf-8') + b'\n')
                 lengthofline = len(splitdecodeline[1])
