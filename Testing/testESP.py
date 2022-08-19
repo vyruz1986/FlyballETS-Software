@@ -42,7 +42,7 @@ while selectedrace != "end":
     if selectedrace.isdigit() == True:
         bselectedrace = selectedrace.encode('utf-8')
         ser.write(b"race " + bselectedrace + b"\n")
-        racefile = open(os.getcwd() + "\\RACE" + selectedrace + ".txt", "r")
+        racefile = open(os.getcwd() + "\\testcases" + "\\RACE" + selectedrace + ".txt", "r")
     elif selectedrace == "-all":
         ser.write(b"race 0" + b"\n")
         for a in range(2):
