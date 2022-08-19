@@ -1,5 +1,7 @@
 #test ESP32
 import os
+import queue
+from re import T
 import serial
 import time
 import string
@@ -29,6 +31,7 @@ readline_reboot = ser.readline()[:-2]
 while b"ESP log level 4" not in readline_reboot:
     readline_reboot = ser.readline()[:-2]
 
+testqueue = False
 ammountofraces = 1
 racenumber = 0
 endless = False
@@ -37,6 +40,12 @@ invalidinput = False
 #selectedrace = input("Select race: ") # 0/1/2/20 or end
 argument_number = 1
 selectedrace = str(sys.argv[argument_number])
+if '-' in selectedrace:
+    racerange = selectedrace.split("-")
+    firstrace = int(racerange[0])
+    lastrace = int(racerange[1])
+    selectedrace = racerange[0]
+    testqueue = True
 
 while selectedrace != "end":
     if selectedrace.isdigit() == True:
@@ -181,10 +190,16 @@ while selectedrace != "end":
         ser.write(b"reset" + b"\n")
         for i in range(4):
             readline = ser.readline()
-        time.sleep(3)
-        argument_number += 1
-        selectedrace = str(sys.argv[argument_number])
-        #selectedrace = input("Select race: ") # 0 or 1 or 2 or end
-        racefile.close()
+        time.sleep(2)
+        if testqueue == True:
+            firstrace += 1
+            selectedrace = str(firstrace)
+            if firstrace == lastrace:
+                testqueue = False
+        else:
+            argument_number += 1
+            selectedrace = str(sys.argv[argument_number])
+            #selectedrace = input("Select race: ") # 0 or 1 or 2 or end
+            racefile.close()
 exitfile.close()
 outputfile.close()

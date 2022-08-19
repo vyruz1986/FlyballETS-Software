@@ -1,26 +1,539 @@
-### RACE 8 ###
+### RACE 0 ###
+Number of dogs set to: 4.
 SERIAL received: 'reruns on'
 Reruns turned on.
-SERIAL received: ''
 SERIAL received: 'start'
 STARTING! Tag: 0, Race ID: 1.
-Timestamp: 13:00:05
+Timestamp: 13:00:04
 Light 1 is now 1
 RS:  START 
 Light 1 is now 0
 Light 2 is now 1
 Light 2 is now 0
 Light 3 is now 1
-S1 | TT:9871970 | T:-183571 | St:1
+S2 | TT:8888654 | T:-80456 | St:0 | IGNORED
+S2 | TT:8890310 | T:-78800 | St:1 | IGNORED < 6ms
+S1 | TT:8866794 | T:-102316 | St:1
 Next Dog is 2.
 Light 1 is now 1
 Dog 1 fault ON
 Dog 1 FALSE START!
 Gate: DOG(s)
 Light 0 is now 1
-S2 | TT:9915900 | T:-139641 | St:1
-S1 | TT:9954741 | T:-100800 | St:0
-S2 | TT:9997602 | T:-57939 | St:0
+S2 | TT:8881286 | T:-87824 | St:1
+Light 3 is now 0
+Light 4 is now 1
+RS: RUNNING
+S1 | TT:8998062 | T:28952 | St:0
+S2 | TT:9013706 | T:44596 | St:0
+Tstring: ABab
+Gate: CLEAR.
+New dog state: COMINGBACK. ABab.
+Light 0 is now 0
+Light 4 is now 0
+S2 | TT:13333858 | T:4364748 | St:1 | IGNORED
+S2 | TT:13335710 | T:4366600 | St:0 | IGNORED < 6ms
+S1 | TT:13349514 | T:4380404 | St:1 | IGNORED
+S1 | TT:13351406 | T:4382296 | St:0 | IGNORED < 6ms
+S2 | TT:13337546 | T:4368436 | St:1
+Coming back dog 1 crossed S2 line. S1 is safe.
+Gate: DOG(s)
+S1 | TT:13353274 | T:4384164 | St:1
+S1 line crossed while being safe. Calculate dog 1 time.
+Dog:1|ENT:8866794|EXIT:13353274|TOT:4486480
+Dog 1:   4.486 | CR: -  0.102
+Running dog: 2.
+S2 | TT:13458454 | T:4489344 | St:0
+Next Dog is 3.
+S1 | TT:13474714 | T:4505604 | St:0
+Tstring: BAba
+Gate: CLEAR.
+New dog state: GOINGING.
+S1 | TT:13699146 | T:4730036 | St:1
+Dog 2 going in crossed S1 safely. Clear fault if rerun.
+Gate: DOG(s)
+S2 | TT:13713842 | T:4744732 | St:1
+S1 | TT:13826406 | T:4857296 | St:0
+S2 | TT:13841130 | T:4872020 | St:0
+Tstring: ABab
+Gate: CLEAR.
+New dog state: COMINGBACK. ABab.
+S2 | TT:18313242 | T:9344132 | St:1
+Coming back dog 2 crossed S2 line. S1 is safe.
+Gate: DOG(s)
+S1 | TT:18330386 | T:9361276 | St:1
+S1 line crossed while being safe. Calculate dog 2 time.
+Dog:2|ENT:13699146|EXIT:18330386|TOT:4631240
+Dog 2:   4.631 | CR: +  0.346
+Running dog: 3.
+S1 | TT:18521258 | T:9552148 | St:0
+Next Dog is 4.
+S2 | TT:18545098 | T:9575988 | St:0
+Tstring: BAab
+Gate: CLEAR.
+Unmeasurable OK crossing for dog 3. BAab or BAba
+S2 | TT:24446178 | T:15477068 | St:1
+Coming back dog 3 crossed S2 line. S1 is safe.
+Gate: DOG(s)
+S1 | TT:24463914 | T:15494804 | St:1
+S1 line crossed while being safe. Calculate dog 3 time.
+Dog:3|ENT:18330386|EXIT:24463914|TOT:6133528
+Dog 3:   6.134 | CR:       OK
+Running dog: 4.
+S1 | TT:24518718 | T:15549608 | St:0
+Next Dog is 1.
+S1 | TT:24532146 | T:15563036 | St:1
+Tstring AaA replaced with A
+S2 | TT:24549922 | T:15580812 | St:0
+S1 | TT:24563694 | T:15594584 | St:0
+Tstring: BAba
+Gate: CLEAR.
+New dog state: GOINGING.
+S1 | TT:24579330 | T:15610220 | St:1 | IGNORED
+S1 | TT:24583014 | T:15613904 | St:0 | IGNORED < 6ms
+S1 | TT:24879030 | T:15909920 | St:1
+Dog 4 going in crossed S1 safely. Clear fault if rerun.
+Gate: DOG(s)
+S2 | TT:24894886 | T:15925776 | St:1
+S1 | TT:25011466 | T:16042356 | St:0
+S2 | TT:25029146 | T:16060036 | St:0
+Tstring: ABab
+Gate: CLEAR.
+New dog state: COMINGBACK. ABab.
+S2 | TT:29643110 | T:20674000 | St:1
+Coming back dog 4 crossed S2 line. S1 is safe.
+Gate: DOG(s)
+S1 | TT:29659914 | T:20690804 | St:1
+S1 line crossed while being safe. Calculate dog 4 time.
+Re-run for dog 1
+Dog:4|ENT:24879030|EXIT:29659914|TOT:4780884
+Dog 4:   4.781 | CR: +  0.415
+Running dog: 1.
+S2 | TT:29764110 | T:20795000 | St:0
+S1 | TT:29772502 | T:20803392 | St:0
+Tstring: BAba
+Gate: CLEAR.
+New dog state: GOINGING.
+S1 | TT:30304730 | T:21335620 | St:1
+Light 1 is now 0
+Dog 1 fault OFF
+Dog 1 going in crossed S1 safely. Clear fault if rerun.
+Gate: DOG(s)
+S2 | TT:30324262 | T:21355152 | St:1
+S2 | TT:30438638 | T:21469528 | St:0 | IGNORED
+S2 | TT:30443066 | T:21473956 | St:1 | IGNORED < 6ms
+S1 | TT:30466398 | T:21497288 | St:0
+S2 | TT:30490286 | T:21521176 | St:0
+Tstring: ABab
+Gate: CLEAR.
+New dog state: COMINGBACK. ABab.
+S2 | TT:35413466 | T:26444356 | St:1
+Coming back dog 1 crossed S2 line. S1 is safe.
+Gate: DOG(s)
+S1 | TT:35430386 | T:26461276 | St:1
+S1 line crossed while being safe. Calculate dog 1 time.
+RS:  STOP  
+S2 | TT:35551778 | T:26582668 | St:0S1 | TT:35569414 | T:26600304 | St:0Tstring: BAbaGate: CLEAR.Last dog came back.Dog 1:   4.486 | CR: -  0.102Dog 1:   4.486 | CR: -  0.102   OK
+Dog 1:   5.126 | CR: +  0.645Dog 1:   5.126 | CR: +  0.645   OK
+Dog 2:   4.631 | CR: +  0.346Dog 2:   4.631 | CR: +  0.346   OK
+Dog 3:   6.134 | CR:       OKDog 3:   6.134 | CR:       OK   OK
+Dog 4:   4.781 | CR: +  0.415Dog 4:   4.781 | CR: +  0.415   OK
+ Team:  26.461 Team:  26.461                  OK
+  Net:  25.158  Net:  25.158                  OK
+### RACE 1 ###
+Simulated Race 1 selected!
+SERIAL received: 'setdogs 4'
+Number of dogs set to: 4.
+SERIAL received: 'reruns on'
+Reruns turned on.
+SERIAL received: 'start'
+STARTING! Tag: 0, Race ID: 2.
+Timestamp: 13:00:39
+Light 1 is now 1
+RS:  START 
+Light 1 is now 0
+Light 2 is now 1
+Light 2 is now 0
+Light 3 is now 1
+Light 3 is now 0
+Light 4 is now 1
+RS: RUNNING
+S1 | TT:44262778 | T:30249 | St:1
+Next Dog is 2.
+Gate: DOG(s)
+S2 | TT:44309868 | T:77339 | St:1
+S1 | TT:44354490 | T:121961 | St:0
+S2 | TT:44405354 | T:172825 | St:0
+Tstring: ABab
+Gate: CLEAR.
+New dog state: COMINGBACK. ABab.
+Light 4 is now 0
+S2 | TT:48006185 | T:3773656 | St:1
+Coming back dog 1 crossed S2 line. S1 is safe.
+Gate: DOG(s)
+S1 | TT:48044652 | T:3812123 | St:1
+S1 line crossed while being safe. Calculate dog 1 time.
+Dog:1|ENT:44262778|EXIT:48044652|TOT:3781874
+Dog 1:   3.782 | CR: +  0.030
+Running dog: 2.
+S2 | TT:48074959 | T:3842430 | St:0
+Next Dog is 3.
+S1 | TT:48115222 | T:3882693 | St:0
+Tstring: BAba
+Gate: CLEAR.
+New dog state: GOINGING.
+S1 | TT:48243974 | T:4011445 | St:1
+Dog 2 going in crossed S1 safely. Clear fault if rerun.
+Gate: DOG(s)
+S2 | TT:48294315 | T:4061786 | St:1
+S1 | TT:48337479 | T:4104950 | St:0
+S2 | TT:48382987 | T:4150458 | St:0
+Tstring: ABab
+Gate: CLEAR.
+New dog state: COMINGBACK. ABab.
+S2 | TT:52491829 | T:8259300 | St:1
+Coming back dog 2 crossed S2 line. S1 is safe.
+Gate: DOG(s)
+S1 | TT:52528548 | T:8296019 | St:1
+S1 line crossed while being safe. Calculate dog 2 time.
+Dog:2|ENT:48243974|EXIT:52528548|TOT:4284574
+Dog 2:   4.285 | CR: +  0.199
+Running dog: 3.
+S2 | TT:52553220 | T:8320691 | St:0 | IGNORED
+S2 | TT:52553280 | T:8320751 | St:1 | IGNORED < 6ms
+S2 | TT:52555120 | T:8322591 | St:0
+Next Dog is 4.
+S1 | TT:52593828 | T:8361299 | St:0
+Tstring: BAba
+Gate: CLEAR.
+New dog state: GOINGING.
+S1 | TT:52655548 | T:8423019 | St:1
+Dog 3 going in crossed S1 safely. Clear fault if rerun.
+Gate: DOG(s)
+S2 | TT:52701528 | T:8468999 | St:1
+S1 | TT:52741996 | T:8509467 | St:0
+S2 | TT:52785085 | T:8552556 | St:0
+Tstring: ABab
+Gate: CLEAR.
+New dog state: COMINGBACK. ABab.
+S2 | TT:57020012 | T:12787483 | St:1
+Coming back dog 3 crossed S2 line. S1 is safe.
+Gate: DOG(s)
+S1 | TT:57051180 | T:12818651 | St:1
+S1 line crossed while being safe. Calculate dog 3 time.
+Dog:3|ENT:52655548|EXIT:57051180|TOT:4395632
+Dog 3:   4.396 | CR: +  0.127
+Running dog: 4.
+S2 | TT:57074584 | T:12842055 | St:0
+S1 | TT:57106226 | T:12873697 | St:0
+Tstring: BAba
+Gate: CLEAR.
+New dog state: GOINGING.
+S1 | TT:57164069 | T:12931540 | St:1
+Dog 4 going in crossed S1 safely. Clear fault if rerun.
+Gate: DOG(s)
+S2 | TT:57209253 | T:12976724 | St:1
+S1 | TT:57250514 | T:13017985 | St:0
+S2 | TT:57297920 | T:13065391 | St:0
+Tstring: ABab
+Gate: CLEAR.
+New dog state: COMINGBACK. ABab.
+S2 | TT:60867900 | T:16635371 | St:1
+Coming back dog 4 crossed S2 line. S1 is safe.
+Gate: DOG(s)
+S1 | TT:60915808 | T:16683279 | St:1
+S1 line crossed while being safe. Calculate dog 4 time.
+RS:  STOP  
+S2 | TT:60956194 | T:16723665 | St:0S1 | TT:60999193 | T:16766664 | St:0Tstring: BAbaGate: CLEAR.Last dog came back.Dog 1:   3.782 | CR: +  0.030Dog 1:   3.782 | CR: +  0.030   OK
+Dog 2:   4.285 | CR: +  0.199Dog 2:   4.285 | CR: +  0.199   OK
+Dog 3:   4.396 | CR: +  0.127Dog 3:   4.396 | CR: +  0.127   OK
+Dog 4:   3.752 | CR: +  0.113Dog 4:   3.752 | CR: +  0.113   OK
+ Team:  16.683 Team:  16.683                  OK
+  Net:  16.214  Net:  16.214                  OK
+### RACE 2 ###
+Simulated Race 2 selected!
+SERIAL received: 'setdogs 4'
+Number of dogs set to: 4.
+SERIAL received: 'reruns on'
+Reruns turned on.
+SERIAL received: 'start'
+STARTING! Tag: 0, Race ID: 3.
+Timestamp: 13:01:04
+Light 1 is now 1
+RS:  START 
+Light 1 is now 0
+Light 2 is now 1
+Light 2 is now 0
+Light 3 is now 1
+Light 3 is now 0
+Light 4 is now 1
+RS: RUNNING
+S1 | TT:69772319 | T:49140 | St:1
+Next Dog is 2.
+Gate: DOG(s)
+S2 | TT:69814057 | T:90878 | St:1
+S1 | TT:69851656 | T:128477 | St:0
+S2 | TT:69895855 | T:172676 | St:0
+Tstring: ABab
+Gate: CLEAR.
+New dog state: COMINGBACK. ABab.
+Light 4 is now 0
+S2 | TT:73954542 | T:4231363 | St:1
+Coming back dog 1 crossed S2 line. S1 is safe.
+Gate: DOG(s)
+S1 | TT:73996120 | T:4272941 | St:1
+S1 line crossed while being safe. Calculate dog 1 time.
+Dog:1|ENT:69772319|EXIT:73996120|TOT:4223801
+Dog 1:   4.224 | CR: +  0.049
+Running dog: 2.
+S2 | TT:74031230 | T:4308051 | St:0
+Next Dog is 3.
+S2 | TT:74111297 | T:4388118 | St:1
+S1 | TT:74174187 | T:4451008 | St:0
+S2 | TT:74242515 | T:4519336 | St:0
+Tstring: BAbBab
+Gate: CLEAR.
+Unmeasurable ok crossing for dog 2.
+S2 | TT:78270494 | T:8547315 | St:1
+Coming back dog 2 crossed S2 line. S1 is safe.
+Gate: DOG(s)
+S1 | TT:78320355 | T:8597176 | St:1
+S1 line crossed while being safe. Calculate dog 2 time.
+Dog:2|ENT:73996120|EXIT:78320355|TOT:4324235
+Dog 2:   4.324 | CR:       ok
+Running dog: 3.
+S2 | TT:78376081 | T:8652902 | St:0
+Next Dog is 4.
+S2 | TT:78401690 | T:8678511 | St:1
+S1 | TT:78446204 | T:8723025 | St:0
+S2 | TT:78497124 | T:8773945 | St:0
+Tstring: BAbBab
+Gate: CLEAR.
+Unmeasurable ok crossing for dog 3.
+S2 | TT:82293322 | T:12570143 | St:1
+Coming back dog 3 crossed S2 line. S1 is safe.
+Gate: DOG(s)
+S1 | TT:82337796 | T:12614617 | St:1
+S1 line crossed while being safe. Calculate dog 3 time.
+Dog:3|ENT:78320355|EXIT:82337796|TOT:4017441
+Dog 3:   4.017 | CR:       ok
+Running dog: 4.
+S2 | TT:82378285 | T:12655106 | St:0
+S2 | TT:82441557 | T:12718378 | St:1
+S1 | TT:82503516 | T:12780337 | St:0
+S2 | TT:82574477 | T:12851298 | St:0
+Tstring: BAbBab
+Gate: CLEAR.
+Unmeasurable ok crossing for dog 4.
+S2 | TT:86144024 | T:16420845 | St:1
+Coming back dog 4 crossed S2 line. S1 is safe.
+Gate: DOG(s)
+S1 | TT:86202164 | T:16478985 | St:1
+S1 line crossed while being safe. Calculate dog 4 time.
+RS:  STOP  
+S2 | TT:86253069 | T:16529890 | St:0S1 | TT:86296438 | T:16573259 | St:0Tstring: BAbaGate: CLEAR.Last dog came back.Dog 1:   4.224 | CR: +  0.049Dog 1:   4.224 | CR: +  0.049   OK
+Dog 2:   4.324 | CR:       okDog 2:   4.324 | CR:       ok   OK
+Dog 3:   4.017 | CR:       okDog 3:   4.017 | CR:       ok   OK
+Dog 4:   3.864 | CR:       okDog 4:   3.864 | CR:       ok   OK
+ Team:  16.479 Team:  16.479                  OK
+  Net:  16.430  Net:  16.430                  OK
+### RACE 3 ###
+Simulated Race 3 selected!
+SERIAL received: 'setdogs 4'
+Number of dogs set to: 4.
+SERIAL received: 'reruns on'
+Reruns turned on.
+SERIAL received: 'start'
+STARTING! Tag: 0, Race ID: 4.
+Timestamp: 13:01:30
+Light 1 is now 1
+RS:  START 
+Light 1 is now 0
+Light 2 is now 1
+Light 2 is now 0
+Light 3 is now 1
+Light 3 is now 0
+Light 4 is now 1
+RS: RUNNING
+S1 | TT:95061642 | T:49140 | St:1
+Next Dog is 2.
+Gate: DOG(s)
+S2 | TT:95103380 | T:90878 | St:1
+S1 | TT:95140979 | T:128477 | St:0
+S2 | TT:95185178 | T:172676 | St:0
+Tstring: ABab
+Gate: CLEAR.
+New dog state: COMINGBACK. ABab.
+Light 4 is now 0
+S2 | TT:99243865 | T:4231363 | St:1
+Coming back dog 1 crossed S2 line. S1 is safe.
+Gate: DOG(s)
+S1 | TT:99285443 | T:4272941 | St:1
+S1 line crossed while being safe. Calculate dog 1 time.
+Dog:1|ENT:95061642|EXIT:99285443|TOT:4223801
+Dog 1:   4.224 | CR: +  0.049
+Running dog: 2.
+S2 | TT:99320553 | T:4308051 | St:0
+Next Dog is 3.
+S2 | TT:99400620 | T:4388118 | St:1
+S1 | TT:99463510 | T:4451008 | St:0
+S2 | TT:99531838 | T:4519336 | St:0
+Tstring: BAbBab
+Gate: CLEAR.
+Unmeasurable ok crossing for dog 2.
+S2 | TT:103559817 | T:8547315 | St:1
+Coming back dog 2 crossed S2 line. S1 is safe.
+Gate: DOG(s)
+S1 | TT:103564317 | T:8551815 | St:1
+S1 line crossed while being safe. Calculate dog 2 time.
+PERFECT cross below 5ms detected for dog 3.
+Dog:2|ENT:99285443|EXIT:103564317|TOT:4278874
+Dog 2:   4.279 | CR:       ok
+Running dog: 3.
+S1 | TT:103735527 | T:8723025 | St:0
+Next Dog is 4.
+S2 | TT:103786447 | T:8773945 | St:0
+Tstring: BAab
+Gate: CLEAR.
+Unmeasurable OK crossing for dog 3. BAab or BAba
+S2 | TT:107582645 | T:12570143 | St:1
+Coming back dog 3 crossed S2 line. S1 is safe.
+Gate: DOG(s)
+S1 | TT:107627119 | T:12614617 | St:1
+S1 line crossed while being safe. Calculate dog 3 time.
+Dog:3|ENT:103564317|EXIT:107627119|TOT:4062802
+Dog 3:   4.063 | CR:  Perfect
+Running dog: 4.
+S2 | TT:107667608 | T:12655106 | St:0
+S2 | TT:107730880 | T:12718378 | St:1
+S1 | TT:107792839 | T:12780337 | St:0
+S2 | TT:107863800 | T:12851298 | St:0
+Tstring: BAbBab
+Gate: CLEAR.
+Unmeasurable ok crossing for dog 4.
+S2 | TT:111433347 | T:16420845 | St:1
+Coming back dog 4 crossed S2 line. S1 is safe.
+Gate: DOG(s)
+S1 | TT:111491487 | T:16478985 | St:1
+S1 line crossed while being safe. Calculate dog 4 time.
+RS:  STOP  
+S2 | TT:111542392 | T:16529890 | St:0S1 | TT:111585761 | T:16573259 | St:0Tstring: BAbaGate: CLEAR.Last dog came back.Dog 1:   4.224 | CR: +  0.049Dog 1:   4.224 | CR: +  0.049   OK
+Dog 2:   4.279 | CR:       okDog 2:   4.279 | CR:       ok   OK
+Dog 3:   4.063 | CR:  PerfectDog 3:   4.063 | CR:  Perfect   OK
+Dog 4:   3.864 | CR:       okDog 4:   3.864 | CR:       ok   OK
+ Team:  16.479 Team:  16.479                  OK
+  Net:  16.430  Net:  16.430                  NOK   Exp:   Net:  16.43
+### RACE 4 ###
+Simulated Race 4 selected!
+SERIAL received: 'setdogs 4'
+Number of dogs set to: 4.
+SERIAL received: 'reruns on'
+Reruns turned on.
+SERIAL received: 'start'
+STARTING! Tag: 0, Race ID: 5.
+Timestamp: 13:01:55
+Light 1 is now 1
+RS:  START 
+Light 1 is now 0
+Light 2 is now 1
+Light 2 is now 0
+Light 3 is now 1
+Light 3 is now 0
+Light 4 is now 1
+RS: RUNNING
+S1 | TT:120361475 | T:49140 | St:1
+Next Dog is 2.
+Gate: DOG(s)
+S2 | TT:120403213 | T:90878 | St:1
+S1 | TT:120440812 | T:128477 | St:0
+S2 | TT:120485011 | T:172676 | St:0
+Tstring: ABab
+Gate: CLEAR.
+New dog state: COMINGBACK. ABab.
+Light 4 is now 0
+S2 | TT:124543698 | T:4231363 | St:1
+Coming back dog 1 crossed S2 line. S1 is safe.
+Gate: DOG(s)
+S1 | TT:124585276 | T:4272941 | St:1
+S1 line crossed while being safe. Calculate dog 1 time.
+Dog:1|ENT:120361475|EXIT:124585276|TOT:4223801
+Dog 1:   4.224 | CR: +  0.049
+Running dog: 2.
+S2 | TT:124620386 | T:4308051 | St:0
+Next Dog is 3.
+S2 | TT:124700453 | T:4388118 | St:1
+S1 | TT:124763343 | T:4451008 | St:0
+S2 | TT:124831671 | T:4519336 | St:0
+Tstring: BAbBab
+Gate: CLEAR.
+Unmeasurable ok crossing for dog 2.
+S2 | TT:128859650 | T:8547315 | St:1
+Coming back dog 2 crossed S2 line. S1 is safe.
+Gate: DOG(s)
+S1 | TT:128909511 | T:8597176 | St:1
+S1 line crossed while being safe. Calculate dog 2 time.
+Dog:2|ENT:124585276|EXIT:128909511|TOT:4324235
+Dog 2:   4.324 | CR:       ok
+Running dog: 3.
+S2 | TT:128965237 | T:8652902 | St:0
+Next Dog is 4.
+S2 | TT:128990846 | T:8678511 | St:1
+S1 | TT:129035360 | T:8723025 | St:0
+S2 | TT:129086280 | T:8773945 | St:0
+Tstring: BAbBab
+Gate: CLEAR.
+Unmeasurable ok crossing for dog 3.
+S2 | TT:132882478 | T:12570143 | St:1
+Coming back dog 3 crossed S2 line. S1 is safe.
+Gate: DOG(s)
+S1 | TT:132885478 | T:12573143 | St:1
+S1 line crossed while being safe. Calculate dog 3 time.
+PERFECT cross below 5ms detected for dog 4.
+Dog:3|ENT:128909511|EXIT:132885478|TOT:3975967
+Dog 3:   3.976 | CR:       ok
+Running dog: 4.
+S1 | TT:133092672 | T:12780337 | St:0
+S2 | TT:133163633 | T:12851298 | St:0
+Tstring: BAab
+Gate: CLEAR.
+Unmeasurable OK crossing for dog 4. BAab or BAba
+S2 | TT:136733180 | T:16420845 | St:1
+Coming back dog 4 crossed S2 line. S1 is safe.
+Gate: DOG(s)
+S1 | TT:136791320 | T:16478985 | St:1
+S1 line crossed while being safe. Calculate dog 4 time.
+RS:  STOP  
+S2 | TT:136842225 | T:16529890 | St:0S1 | TT:136885594 | T:16573259 | St:0Tstring: BAbaGate: CLEAR.Last dog came back.Dog 1:   4.224 | CR: +  0.049Dog 1:   4.224 | CR: +  0.049   OK
+Dog 2:   4.324 | CR:       okDog 2:   4.324 | CR:       ok   OK
+Dog 3:   3.976 | CR:       okDog 3:   3.976 | CR:       ok   OK
+Dog 4:   3.906 | CR:  PerfectDog 4:   3.906 | CR:  Perfect   OK
+ Team:  16.479 Team:  16.479                  OK
+  Net:  16.430  Net:  16.430                  OK
+### RACE 5 ###
+Simulated Race 5 selected!
+SERIAL received: 'setdogs 4'
+Number of dogs set to: 4.
+SERIAL received: 'reruns on'
+Reruns turned on.
+SERIAL received: 'start'
+STARTING! Tag: 0, Race ID: 6.
+Timestamp: 13:02:20
+Light 1 is now 1
+RS:  START 
+Light 1 is now 0
+Light 2 is now 1
+Light 2 is now 0
+Light 3 is now 1
+S1 | TT:144902273 | T:-708022 | St:1
+Next Dog is 2.
+Light 1 is now 1
+Dog 1 fault ON
+Dog 1 FALSE START!
+Gate: DOG(s)
+Light 0 is now 1
+S2 | TT:144941668 | T:-668627 | St:1
+S1 | TT:144974512 | T:-635783 | St:0
+S2 | TT:145014897 | T:-595398 | St:0
 Tstring: ABab
 Gate: CLEAR.
 New dog state: COMINGBACK. ABab.
@@ -29,131 +542,110 @@ Light 4 is now 1
 RS: RUNNING
 Light 0 is now 0
 Light 4 is now 0
-S2 | TT:14432799 | T:4377258 | St:1
+S2 | TT:149666863 | T:4056568 | St:1
 Coming back dog 1 crossed S2 line. S1 is safe.
 Gate: DOG(s)
-S1 | TT:14474894 | T:4419353 | St:1
+S1 | TT:149706476 | T:4096181 | St:1
 S1 line crossed while being safe. Calculate dog 1 time.
-Dog:1|ENT:9871970|EXIT:14474894|TOT:4602924
-Dog 1:   4.603 | CR: -  0.184
+Dog:1|ENT:144902273|EXIT:149706476|TOT:4804203
+Dog 1:   4.804 | CR: -  0.708
 Running dog: 2.
-S2 | TT:14511206 | T:4455665 | St:0
+S2 | TT:149737387 | T:4127092 | St:0
 Next Dog is 3.
-S1 | TT:14554150 | T:4498609 | St:0
+S1 | TT:149773437 | T:4163142 | St:0
 Tstring: BAba
 Gate: CLEAR.
 New dog state: GOINGING.
-S1 | TT:14666834 | T:4611293 | St:1
+S1 | TT:149891456 | T:4281161 | St:1
 Dog 2 going in crossed S1 safely. Clear fault if rerun.
 Gate: DOG(s)
-S2 | TT:14722121 | T:4666580 | St:1
-S1 | TT:14770738 | T:4715197 | St:0
-S2 | TT:14820849 | T:4765308 | St:0
+S2 | TT:149946114 | T:4335819 | St:1
+S1 | TT:149989399 | T:4379104 | St:0
+S2 | TT:150034674 | T:4424379 | St:0
 Tstring: ABab
 Gate: CLEAR.
 New dog state: COMINGBACK. ABab.
-S2 | TT:19213463 | T:9157922 | St:1
+S2 | TT:154344311 | T:8734016 | St:1
 Coming back dog 2 crossed S2 line. S1 is safe.
 Gate: DOG(s)
-S1 | TT:19264438 | T:9208897 | St:1
+S1 | TT:154389053 | T:8778758 | St:1
 S1 line crossed while being safe. Calculate dog 2 time.
-Dog:2|ENT:14666834|EXIT:19264438|TOT:4597604
-Dog 2:   4.598 | CR: +  0.192
+Dog:2|ENT:149891456|EXIT:154389053|TOT:4497597
+Dog 2:   4.498 | CR: +  0.185
 Running dog: 3.
-S2 | TT:19321780 | T:9266239 | St:0
+S2 | TT:154435362 | T:8825067 | St:0
 Next Dog is 4.
-S1 | TT:19365893 | T:9310352 | St:0
+S1 | TT:154478915 | T:8868620 | St:0
 Tstring: BAba
 Gate: CLEAR.
 New dog state: GOINGING.
-S1 | TT:19400025 | T:9344484 | St:1
+S1 | TT:154521181 | T:8910886 | St:1
 Dog 3 going in crossed S1 safely. Clear fault if rerun.
 Gate: DOG(s)
-S2 | TT:19456834 | T:9401293 | St:1
-S1 | TT:19503931 | T:9448390 | St:0
-S2 | TT:19557263 | T:9501722 | St:0
+S2 | TT:154570773 | T:8960478 | St:1
+S1 | TT:154617398 | T:9007103 | St:0
+S2 | TT:154666147 | T:9055852 | St:0
 Tstring: ABab
 Gate: CLEAR.
 New dog state: COMINGBACK. ABab.
-S1 | TT:23441152 | T:13385611 | St:1
-Light 4 is now 1
-Dog 4 fault ON
-Dog 4 FAULT as coming back dog was expected.
-Dog:3|ENT:19400025|EXIT:23441152|TOT:4041127
+S2 | TT:159185185 | T:13574890 | St:1
+Coming back dog 3 crossed S2 line. S1 is safe.
 Gate: DOG(s)
-Dog 3:   4.041 | CR: +  0.136
+S1 | TT:159230136 | T:13619841 | St:1
+S1 line crossed while being safe. Calculate dog 3 time.
+Dog:3|ENT:154521181|EXIT:159230136|TOT:4708955
+Dog 3:   4.709 | CR: +  0.132
 Running dog: 4.
-Light 0 is now 1
-S2 | TT:23521377 | T:13465836 | St:1
+S2 | TT:159266524 | T:13656229 | St:0
 Next Dog is 1.
-S1 | TT:23684167 | T:13628626 | St:0
-S2 | TT:23697976 | T:13642435 | St:0
-Tstring: ABab
-Gate: CLEAR.
-New dog state: COMINGBACK. ABab.
-Light 0 is now 0
-S2 | TT:27925463 | T:17869922 | St:1
-Coming back dog 4 crossed S2 line. S1 is safe.
-Gate: DOG(s)
-S1 | TT:27983439 | T:17927898 | St:1
-S1 line crossed while being safe. Calculate dog 4 time.
-Re-run for dog 1
-Dog:4|ENT:23441152|EXIT:27983439|TOT:4542287
-Dog 4:   4.542 | CR:    fault
-Running dog: 1.
-S2 | TT:28035014 | T:17979473 | St:0
-Next Dog is 4.
-S1 | TT:28082682 | T:18027141 | St:0
+S1 | TT:159307667 | T:13697372 | St:0
 Tstring: BAba
 Gate: CLEAR.
 New dog state: GOINGING.
-S1 | TT:28093267 | T:18037726 | St:1
+S1 | TT:159386927 | T:13776632 | St:1
+Dog 4 going in crossed S1 safely. Clear fault if rerun.
+Gate: DOG(s)
+S2 | TT:159455917 | T:13845622 | St:1
+S1 | TT:159513018 | T:13902723 | St:0
+S2 | TT:159570021 | T:13959726 | St:0
+Tstring: ABab
+Gate: CLEAR.
+New dog state: COMINGBACK. ABab.
+S2 | TT:164114549 | T:18504254 | St:1
+Coming back dog 4 crossed S2 line. S1 is safe.
+Gate: DOG(s)
+S1 | TT:164161037 | T:18550742 | St:1
+S1 line crossed while being safe. Calculate dog 4 time.
+Re-run for dog 1
+Dog:4|ENT:159386927|EXIT:164161037|TOT:4774110
+Dog 4:   4.774 | CR: +  0.157
+Running dog: 1.
+S2 | TT:164210806 | T:18600511 | St:0
+S1 | TT:164256057 | T:18645762 | St:0
+Tstring: BAba
+Gate: CLEAR.
+New dog state: GOINGING.
+S1 | TT:164282594 | T:18672299 | St:1
 Light 1 is now 0
 Dog 1 fault OFF
 Dog 1 going in crossed S1 safely. Clear fault if rerun.
 Gate: DOG(s)
-S2 | TT:28145003 | T:18089462 | St:1
-S1 | TT:28188373 | T:18132832 | St:0
-S2 | TT:28238624 | T:18183083 | St:0
+S2 | TT:164344413 | T:18734118 | St:1
+S1 | TT:164394778 | T:18784483 | St:0
+S2 | TT:164444893 | T:18834598 | St:0
 Tstring: ABab
 Gate: CLEAR.
 New dog state: COMINGBACK. ABab.
-S2 | TT:32745161 | T:22689620 | St:1
+S2 | TT:168536440 | T:22926145 | St:1
 Coming back dog 1 crossed S2 line. S1 is safe.
 Gate: DOG(s)
-S1 | TT:32787585 | T:22732044 | St:1
+S1 | TT:168584521 | T:22974226 | St:1
 S1 line crossed while being safe. Calculate dog 1 time.
-Re-run for dog 4
-Dog:1|ENT:28093267|EXIT:32787585|TOT:4694318
-Dog 1:   4.694 | CR: +  0.110
-Running dog: 4.
-S2 | TT:32826596 | T:22771055 | St:0
-S1 | TT:32868598 | T:22813057 | St:0
-Tstring: BAba
-Gate: CLEAR.
-New dog state: GOINGING.
-S1 | TT:32995361 | T:22939820 | St:1
-Light 4 is now 0
-Dog 4 fault OFF
-Dog 4 going in crossed S1 safely. Clear fault if rerun.
-Gate: DOG(s)
-S2 | TT:33051495 | T:22995954 | St:1
-S1 | TT:33101534 | T:23045993 | St:0
-S2 | TT:33153624 | T:23098083 | St:0
-Tstring: ABab
-Gate: CLEAR.
-New dog state: COMINGBACK. ABab.
-S2 | TT:37130833 | T:27075292 | St:1
-Coming back dog 4 crossed S2 line. S1 is safe.
-Gate: DOG(s)
-S1 | TT:37177232 | T:27121691 | St:1
-S1 line crossed while being safe. Calculate dog 4 time.
 RS:  STOP  
-S2 | TT:37217889 | T:27162348 | St:0S1 | TT:37256137 | T:27200596 | St:0Tstring: BAbaGate: CLEAR.Last dog came back.Dog 1:   4.603 | CR: -  0.184Dog 1:   4.603 | CR: -  0.184   NOK   Exp: 
-Dog 1:   4.694 | CR: +  0.110Dog 1:   4.694 | CR: +  0.110   NOK   Exp: 
-Dog 2:   4.598 | CR: +  0.192Dog 2:   4.598 | CR: +  0.192   NOK   Exp: 
-Dog 3:   4.041 | CR: +  0.136Dog 3:   4.041 | CR: +  0.136   NOK   Exp: 
-Dog 4:   4.542 | CR:    faultDog 4:   4.542 | CR:    fault   NOK   Exp: 
-Dog 4:   4.182 | CR: +  0.208Dog 4:   4.182 | CR: +  0.208   NOK   Exp: 
- Team:  27.122 Team:  27.122                  NOK   Exp: 
-  Net:  26.660  Net:  26.660                  NOK   Exp: 
+S2 | TT:168622111 | T:23011816 | St:0S1 | TT:168667338 | T:23057043 | St:0Tstring: BAbaGate: CLEAR.Last dog came back.Dog 1:   4.804 | CR: -  0.708Dog 1:   4.804 | CR: -  0.708   NOK   Exp: Dog 1:   4.804 | CR: -  0.708 
+Dog 1:   4.302 | CR: +  0.122Dog 1:   4.302 | CR: +  0.122   NOK   Exp: Dog 1:   4.302 | CR: +  0.122 
+Dog 2:   4.498 | CR: +  0.185Dog 2:   4.498 | CR: +  0.185   NOK   Exp: Dog 2:   4.498 | CR: +  0.185 
+Dog 3:   4.709 | CR: +  0.132Dog 3:   4.709 | CR: +  0.132   NOK   Exp: Dog 3:   4.709 | CR: +  0.132 
+Dog 4:   4.774 | CR: +  0.157Dog 4:   4.774 | CR: +  0.157   NOK   Exp: Dog 4:   4.774 | CR: +  0.157 
+ Team:  22.974 Team:  22.974                  NOK   Exp:  Team:  22.974                
+  Net:  23.087  Net:  23.087                  NOK   Exp:   Net:  23.087              
