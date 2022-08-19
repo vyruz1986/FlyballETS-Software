@@ -5,3 +5,4 @@ Dog 3:   4.063 | CR:  Perfect
 Dog 4:   3.864 | CR:       ok
  Team:  16.479
   Net:  16.430
+  
