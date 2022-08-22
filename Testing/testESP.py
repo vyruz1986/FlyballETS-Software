@@ -15,7 +15,8 @@ def command_send_midprogramm(command):
     ser.write(command.encode('utf-8') + b"\n")
 
 today = date.today()
-dir = os.path.join(os.getcwd(), str(today))
+todayv2 = today.strftime("%d-%m-%Y")
+dir = os.path.join(os.getcwd(), "results", str(todayv2))
 if not os.path.exists(dir):
     os.mkdir(dir)
 
