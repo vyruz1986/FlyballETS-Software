@@ -20,7 +20,6 @@ dir = os.path.join(os.getcwd(), "results", str(todayv2))
 if not os.path.exists(dir):
     os.mkdir(dir)
 
-exitfile = open(dir + "\\dataESP.txt", "wb")
 outputfile = open(dir + "\\stabilityLOG.txt", "wb")
 
 ser = serial.Serial('COM7', 115200)
@@ -66,7 +65,7 @@ while selectedrace != "end":
             #print(numofraces)
         splitnumofraces = numofraces.split(b"races: ")
         ammountofraces = int(splitnumofraces[1])
-        exitfile.write(b"//race 0" + b'\n')
+        #exitfile.write(b"//race 0" + b'\n')
         racefile = open(os.getcwd() + "\\RACE0.txt", "r")
     elif selectedrace == "-stab":
         endless = True
@@ -76,13 +75,14 @@ while selectedrace != "end":
         splitnumofraces = numofraces.split(b"races: ")
         #print(splitnumofraces)
         ammountofraces = int(splitnumofraces[1])
-        exitfile.write(b"//race 0" + b'\n')
+        #exitfile.write(b"//race 0" + b'\n')
         racefile = open(os.getcwd() + "\\RACE0.txt", "r")
     else:
         print("Error: Invalid input")
         invalidinput = True
         racenumber = ammountofraces
     #print(ammountofraces)
+    exitfile = open(dir + "\\race" + selectedrace + ".txt", "wb")
     time.sleep(1)
     linestoskip = 0
     additionalargs = racefile.readline()
@@ -211,6 +211,6 @@ while selectedrace != "end":
             argument_number += 1
             selectedrace = str(sys.argv[argument_number])
             #selectedrace = input("Select race: ") # 0 or 1 or 2 or end
-            racefile.close()
+        racefile.close()
 exitfile.close()
 outputfile.close()
