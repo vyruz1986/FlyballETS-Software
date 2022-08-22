@@ -77,20 +77,15 @@ while selectedrace != "end":
         racenumber = ammountofraces
     #print(ammountofraces)
     time.sleep(1)
+    linestoskip = 0
     additionalargs = racefile.readline()
-    if additionalargs.startswith("$"):
+    while additionalargs.startswith("$"):
         splitadditionalargs = additionalargs.split(";")
         print(splitadditionalargs)
         splitargs_len = len(splitadditionalargs)
         i = 1
         while i < splitargs_len and splitadditionalargs[i] != "\n":
-            if splitadditionalargs[0] == "$commands":
-                command_sendtime = float(splitadditionalargs[i])
-                command_name = (splitadditionalargs[i+1],)
-                i += 2
-                timer = Timer(command_sendtime, command_send_midprogramm, args=command_name)
-                timer.start()
-            elif splitadditionalargs[0] == "$innit":
+            if splitadditionalargs[0] == "$innit":
                 innitcommands = splitadditionalargs[i]
                 readline = ser.readline()[:-2]
                 decodeline = readline.decode('utf-8')
@@ -99,8 +94,17 @@ while selectedrace != "end":
                 command_send_midprogramm(innitcommands)
                 i += 1
                 time.sleep(1)
-    else:
-        racefile.seek(0)
+            elif splitadditionalargs[0] == "$commands":
+                command_sendtime = float(splitadditionalargs[i])
+                command_name = (splitadditionalargs[i+1],)
+                i += 2
+                timer = Timer(command_sendtime, command_send_midprogramm, args=command_name)
+                timer.start()
+                linestoskip += 1
+        additionalargs = racefile.readline()
+    racefile.seek(0)
+    for i in range(linestoskip):
+        racefile.readline()
 
     if invalidinput == True:
         selectedrace = "end"

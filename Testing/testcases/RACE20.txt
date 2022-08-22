@@ -1,3 +1,4 @@
+$innit;setdogs 4;reruns on;
 $commands;8.5;d2f;
 Dog 1:   4.224 | CR: +  0.049
 Dog 2:  run in | CR:  
