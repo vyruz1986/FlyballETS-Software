@@ -6,6 +6,7 @@ import serial
 import time
 import string
 import sys
+from datetime import date
 from threading import Timer
 from termcolor import colored
 from colorama import init, Fore
@@ -13,8 +14,13 @@ from colorama import init, Fore
 def command_send_midprogramm(command):
     ser.write(command.encode('utf-8') + b"\n")
 
-exitfile = open(os.getcwd() + "\\dataESP.txt", "wb")
-outputfile = open(os.getcwd() + "\\stabilityLOG.txt", "wb")
+today = date.today()
+dir = os.path.join(os.getcwd(), str(today))
+if not os.path.exists(dir):
+    os.mkdir(dir)
+
+exitfile = open(dir + "\\dataESP.txt", "wb")
+outputfile = open(dir + "\\stabilityLOG.txt", "wb")
 
 ser = serial.Serial('COM7', 115200)
 time.sleep(2)
