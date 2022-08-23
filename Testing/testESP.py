@@ -46,14 +46,14 @@ invalidinput = False
 #selectedrace = input("Select race: ") # 0/1/2/20 or end
 argument_number = 1
 selectedrace = str(sys.argv[argument_number])
-if '-' in selectedrace:
-    racerange = selectedrace.split("-")
-    firstrace = int(racerange[0])
-    lastrace = int(racerange[1])
-    selectedrace = racerange[0]
-    testqueue = True
 
 while selectedrace != "end":
+    if '-' in selectedrace:
+        racerange = selectedrace.split("-")
+        firstrace = int(racerange[0])
+        lastrace = int(racerange[1])
+        selectedrace = racerange[0]
+        testqueue = True
     if selectedrace.isdigit() == True:
         bselectedrace = selectedrace.encode('utf-8')
         ser.write(b"race " + bselectedrace + b"\n")
