@@ -28,17 +28,17 @@ ETS stands for Electronic Training System and it's kind of Electronig Judging Sy
 
 ## Source files
 
-The source files are divided into 2 subdirectories:
+The source files are divided into 3 subprojects:
 
 ### Firmware
 
-This folder contains the sources for compiling the firmware which is to be flashed onto the ESP32 MCU.
+Main folder contains the sources for compiling the firmware which is to be flashed onto the ESP32 MCU.
 It uses [PlatformIO](https://platformio.org/) to manage the board library, as well as other libraries needed.
 
 ### WebUI
 
 This folder contains the angular sources for building the web interface used to control the system.
-They need to be built first because they output a header file to the `Firmware` folder which is needed in order to compile the firmware.
+They need to be built first because they output a header file to the `include` folder which is needed in order to compile the firmware.
 Make sure you have [NodeJS](https://nodejs.org/en/download/) installed, then run the following commands in the `WebUI` folder:
 
 ```bash
@@ -50,6 +50,10 @@ IOS USERS!!!
 In iOS 15 Safari setting => Advanced => Experimental Features => NSURLSession WebSocket is default On. It has to be turned Off, otherwise WebUI will be crashing.
 
 Since HW 5.x.x. rev.S that is compatibile with project version 0.9.x and 1.x.x there is option to keep WebUI source files stored on SD card instead of ESP32 LoLin32 flash.
+
+### Test
+
+In folder "test" there are files that can be used for main algorithm testing when firmware is compiled with Simulate flag set to true.
 
 ## Thanks
 
