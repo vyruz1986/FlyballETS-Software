@@ -1,7 +1,6 @@
 #test ESP32
 import os
 import queue
-from re import T
 import serial
 import time
 import string
@@ -20,7 +19,7 @@ dir = os.path.join(os.getcwd(), "results", str(todayv2))
 if not os.path.exists(dir):
     os.mkdir(dir)
 
-outputfile = open(dir + "\\stabilityLOG.txt", "wb")
+outputfile = open(dir + "\\summary.txt", "wb")
 
 ser = serial.Serial('COM7', 115200)
 time.sleep(2)
@@ -88,7 +87,7 @@ while selectedrace != "end":
     additionalargs = racefile.readline()
     while additionalargs.startswith("$"):
         splitadditionalargs = additionalargs.split(";")
-        print(splitadditionalargs)
+        #print(splitadditionalargs)
         splitargs_len = len(splitadditionalargs)
         i = 1
         while i < splitargs_len and splitadditionalargs[i] != "\n":
@@ -97,7 +96,7 @@ while selectedrace != "end":
                 readline = ser.readline()[:-2]
                 decodeline = readline.decode('utf-8')
                 splitdecodeline = decodeline.split("(): ")
-                print(splitdecodeline[1])
+                #print(splitdecodeline[1])
                 command_send_midprogramm(innitcommands)
                 i += 1
                 time.sleep(1)
@@ -137,15 +136,15 @@ while selectedrace != "end":
                         ser.readline()
                     exitfile.write(b"//Race " + bracenumber + b'\n')
         '''
-        exitfile.write(b'### RACE ' + selectedrace.encode('utf-8') + b' ###\n')
         stopline = ""
         while raceEND != True:
+            print("Running race " + selectedrace + "...")
             readline = ser.readline()[:-2]
             #print(readline)
             decodeline = readline.decode('utf-8')
             splitdecodeline = decodeline.split("(): ")
             exitfile.write(splitdecodeline[1].encode('utf-8') + b'\n')
-            print(splitdecodeline[1])
+            #print(splitdecodeline[1])
             if endless == True:
                 outputfile.write(readline + b'\n')
                 if splitdecodeline[1] == "RS:  STOP  ":
@@ -158,7 +157,7 @@ while selectedrace != "end":
                     racefile.seek(0)
                     racenumber = 0
             #del splitdecodeline
-
+        notOKcount = 0
         while b"Net" not in stopline: 
             readline = ser.readline()[:-2]
             stopline = readline
@@ -175,10 +174,11 @@ while selectedrace != "end":
                 if expectedline.startswith("//RACE") or expectedline.startswith("$") == True:
                     expectedline = racefile.readline()[:-1]
                 if splitdecodeline[1] == expectedline:
-                    print(normdecodeline, colored("OK", 'green'))                    
+                    #print(normdecodeline, colored("OK", 'green'))                    
                     exitfile.write(normdecodeline.encode('utf-8')+ b'  OK' + b'\n')
                 else:
-                    print(normdecodeline, colored("NOK", 'red'), " Exp: ", Fore.YELLOW + expectedline, Fore.RESET)
+                    notOKcount += 1
+                    #print(normdecodeline, colored("NOK", 'red'), " Exp: ", Fore.YELLOW + expectedline, Fore.RESET)
                     exitfile.write(normdecodeline.encode('utf-8')+ b'  NOK' + b'   Exp: ' + expectedline.encode('utf-8') + b'\n')             
                     
             if endless == True:
@@ -196,8 +196,13 @@ while selectedrace != "end":
                 if time > 21600000:
                     racenumber = ammountofraces
                 #print(racenumber)
+        if notOKcount != 0:
+            outputfile.write(b"Race " + selectedrace.encode('utf-8') + b" FAIL\n")
+        else:
+            outputfile.write(b"Race " + selectedrace.encode('utf-8') + b" PASSED\n")
         if endless == True:
             print(time)
+        print("Race " + selectedrace + " complete")
         ser.write(b"reset" + b"\n")
         for i in range(4):
             readline = ser.readline()
