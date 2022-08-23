@@ -15,7 +15,7 @@
 
 #ifdef ESP32
 #define GET_MICROS esp_timer_get_time()
-#elif
+#else
 #define GET_MICROS micros()
 #endif
 
