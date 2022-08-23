@@ -19,7 +19,7 @@ dir = os.path.join(os.getcwd(), "results", str(todayv2))
 if not os.path.exists(dir):
     os.mkdir(dir)
 
-outputfile = open(dir + "\\summary.txt", "wb")
+outputfile = open(dir + "\\!summary.txt", "wb")
 
 ser = serial.Serial('COM7', 115200)
 time.sleep(2)
@@ -36,9 +36,10 @@ readline_reboot = ser.readline()[:-2]
 while b"ESP log level 4" not in readline_reboot:
     readline_reboot = ser.readline()[:-2]
 
-testqueue = False
 ammountofraces = 1
 racenumber = 0
+testqueue = False
+debugmode = False
 endless = False
 invalidinput = False
 
@@ -144,7 +145,8 @@ while selectedrace != "end":
             decodeline = readline.decode('utf-8')
             splitdecodeline = decodeline.split("(): ")
             exitfile.write(splitdecodeline[1].encode('utf-8') + b'\n')
-            #print(splitdecodeline[1])
+            if debugmode == True:
+                print(splitdecodeline[1])
             if endless == True:
                 outputfile.write(readline + b'\n')
                 if splitdecodeline[1] == "RS:  STOP  ":
