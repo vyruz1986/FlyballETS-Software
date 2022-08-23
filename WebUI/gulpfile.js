@@ -37,7 +37,7 @@ const gutil = require("gulp-util");
 
 const sourceFolder = "dist/";
 const staticFolder = sourceFolder;
-const outputFolder = "../Firmware/include/";
+const outputFolder = "../include/";
 
 String.prototype.replaceAll = function (search, replacement) {
    var target = this;
