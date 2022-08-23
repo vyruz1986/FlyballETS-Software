@@ -1,5 +1,10 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
-   <a class="navbar-brand" [routerLink]="['/']" (click)="navbarCollapsed = true">FlyballETS</a>  
+   <a class="navbar-brand font-weight-bolder d-flex align-items-center" [routerLink]="['/']" (click)="navbarCollapsed = true">
+      Flyb
+      <img src="assets/ball.svg" style="width: 0.7rem; margin-top:0.30rem" >
+      llETS
+   </a>  
+   
    <button class="navbar-toggler navbar-toggler-right" type="button" (click)="navbarCollapsed = !navbarCollapsed"  
             [attr.aria-expanded]="!navbarCollapsed" data-target="#navbarSupportedContent"
             aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">  
