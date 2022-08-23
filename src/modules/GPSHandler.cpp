@@ -4,9 +4,9 @@
 
 HardwareSerial GPSSerial(1);
 
-TimeChangeRule CEST = {"CEST", Last, Sun, Mar, 2, 120}; //UTC + 2 hours
-TimeChangeRule CET = {"CET", Last, Sun, Oct, 3, 60};    //UTC + 1 hour
-Timezone euCentral (CEST, CET);
+TimeChangeRule CEST = {"CEST", Last, Sun, Mar, 2, 120}; // UTC + 2 hours
+TimeChangeRule CET = {"CET", Last, Sun, Oct, 3, 60};    // UTC + 1 hour
+Timezone euCentral(CEST, CET);
 
 void GPSHandlerClass::_HandleSerialPort()
 {
@@ -14,18 +14,18 @@ void GPSHandlerClass::_HandleSerialPort()
    {
       char cInChar = GPSSerial.read(); // Read a character
       _Tgps.encode(cInChar);
-      //Serial.write(cInChar);
+      // Serial.write(cInChar);
    }
 }
 
 void GPSHandlerClass::init(uint8_t _iGPSrxPin, uint8_t _iGPStxPin)
 {
    GPSSerial.begin(9600, SERIAL_8N1, _iGPSrxPin, _iGPStxPin);
-   //delay(200);
+   // delay(200);
    _HandleSerialPort();
    _FormatTime();
-   ESP_LOGI(__FILE__, "Initial UTC time:  %s", _cUTCTime);
-   ESP_LOGI(__FILE__, "Local system time: %s", _cLocalDateAndTime);
+   log_i("Initial UTC time:  %s", _cUTCTime);
+   log_i("Local system time: %s", _cLocalDateAndTime);
 }
 
 void GPSHandlerClass::loop()
@@ -40,7 +40,7 @@ void GPSHandlerClass::loop()
          LCDController.UpdateField(LCDController.GpsState, "G");
          if (!_bGSPconnected)
          {
-            ESP_LOGI(__FILE__, "GPS connected. Updated UTC time: %s. Updated local time: %s", _cUTCTime, _cLocalDateAndTime);
+            log_i("GPS connected. Updated UTC time: %s. Updated local time: %s", _cUTCTime, _cLocalDateAndTime);
             _bGSPconnected = true;
          }
       }
@@ -49,7 +49,7 @@ void GPSHandlerClass::loop()
 
 char *GPSHandlerClass::GetLocalDateAndTime()
 {
-   //sprintf(_cLocalDateAndTime, "%i-%02i-%02iT%02i:%02i:%02iZ", year(), month(), day(), hour(), minute(), second());
+   // sprintf(_cLocalDateAndTime, "%i-%02i-%02iT%02i:%02i:%02iZ", year(), month(), day(), hour(), minute(), second());
    return _cLocalDateAndTime;
 }
 
@@ -73,7 +73,7 @@ char *GPSHandlerClass::GetDate()
 void GPSHandlerClass::_FormatTime()
 {
    tmElements_t tm;
-   if(_Tgps.date.year() == 2000)
+   if (_Tgps.date.year() == 2000)
    {
       tm.Year = (2021 - 1970);
       tm.Month = 1;

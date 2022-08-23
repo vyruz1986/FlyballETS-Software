@@ -81,7 +81,7 @@ void setup()
    pinMode(iGPSppsPin, INPUT_PULLDOWN);
 
    // Print SW version
-   ESP_LOGI(__FILE__, "Firmware version %s", FW_VER);
+   log_i("Firmware version %s", FW_VER);
 
    // Initialize BatterySensor class with correct pin
    BatterySensor.init(iBatterySensorPin);
@@ -119,9 +119,9 @@ void setup()
    String strAPPass = SettingsManager.getSetting("APPass");
 
    if (!WiFi.softAP(strAPName.c_str(), strAPPass.c_str()))
-      ESP_LOGE(__FILE__, "Error initializing softAP!");
+      log_e("Error initializing softAP!");
    else
-      ESP_LOGI(__FILE__, "Wifi started successfully, AP name: %s, pass: %s", strAPName.c_str(), strAPPass.c_str());
+      log_i("Wifi started successfully, AP name: %s, pass: %s", strAPName.c_str(), strAPPass.c_str());
    WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
 
    // configure webserver
@@ -130,20 +130,21 @@ void setup()
    // OTA setup
    ArduinoOTA.setPassword(strAPPass.c_str());
    ArduinoOTA.setPort(3232);
-   ArduinoOTA.onStart([](){
+   ArduinoOTA.onStart([]()
+                      {
       String type;
       if (ArduinoOTA.getCommand() == U_FLASH)
          type = "Firmware";
       else // U_SPIFFS
          type = "Filesystem";
       Serial.println("\n" + type + " update initiated.");
-      LCDController.FirmwareUpdateInit();
-   });
-   ArduinoOTA.onEnd([](){ 
+      LCDController.FirmwareUpdateInit(); });
+   ArduinoOTA.onEnd([]()
+                    { 
       Serial.println("\nUpdate completed.\n");
-      LCDController.FirmwareUpdateSuccess();
-   });
-   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total){
+      LCDController.FirmwareUpdateSuccess(); });
+   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total)
+                         {
       uint16_t iProgressPercentage = (progress / (total / 100));
       if (uiLastProgress != iProgressPercentage)
       {
@@ -153,26 +154,25 @@ void setup()
             sProgressPercentage = " " + sProgressPercentage;
          LCDController.FirmwareUpdateProgress(sProgressPercentage);
          uiLastProgress = iProgressPercentage;
-      }
-   });
-   ArduinoOTA.onError([](ota_error_t error) {
+      } });
+   ArduinoOTA.onError([](ota_error_t error)
+                      {
       Serial.printf("Error[%u]: ", error);
       LCDController.FirmwareUpdateError();
       if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
       else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
       else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
       else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-      else if (error == OTA_END_ERROR) Serial.println("End Failed");
-   });
+      else if (error == OTA_END_ERROR) Serial.println("End Failed"); });
    ArduinoOTA.begin();
    mdnsServerSetup();
 #endif
-   //ESP_LOGI(__FILE__, "Setup running on core %d", xPortGetCoreID());
+   // log_i("Setup running on core %d", xPortGetCoreID());
 
    iLaserOnTime = atoi(SettingsManager.getSetting("LaserOnTimer").c_str());
-   ESP_LOGI(__FILE__, "Configured laser ON time: %is", iLaserOnTime);
+   log_i("Configured laser ON time: %is", iLaserOnTime);
 
-   ESP_LOGW(__FILE__, "ESP log level %i", CORE_DEBUG_LEVEL);
+   log_w("ESP log level %i", CORE_DEBUG_LEVEL);
 }
 
 void loop()
@@ -242,12 +242,12 @@ void loop()
       // Race has been stopped 0.5 second ago: print race summary to console
       for (uint8_t i = 0; i < RaceHandler.iNumberOfRacingDogs; i++)
       {
-         // ESP_LOGD(__FILE__, "Dog %i -> %i run(s).", i + 1, RaceHandler.iDogRunCounters[i] + 1);
+         // log_d("Dog %i -> %i run(s).", i + 1, RaceHandler.iDogRunCounters[i] + 1);
          for (uint8_t i2 = 0; i2 < (RaceHandler.iDogRunCounters[i] + 1); i2++)
-            ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", i + 1, RaceHandler.GetStoredDogTimes(i, i2), RaceHandler.TransformCrossingTime(i, i2));
+            log_i("Dog %i: %s | CR: %s", i + 1, RaceHandler.GetStoredDogTimes(i, i2), RaceHandler.TransformCrossingTime(i, i2));
       }
-      ESP_LOGI(__FILE__, " Team: %s", RaceHandler.GetRaceTime());
-      ESP_LOGI(__FILE__, "  Net: %s\n", RaceHandler.GetNetTime());
+      log_i(" Team: %s", RaceHandler.GetRaceTime());
+      log_i("  Net: %s\n", RaceHandler.GetNetTime());
       if (SDcardController.bSDCardDetected)
          SDcardController.SaveRaceDataToFile();
 #if !Simulate
@@ -261,8 +261,8 @@ void loop()
 
    if (RaceHandler.iCurrentDog != iCurrentDog && RaceHandler.RaceState == RaceHandler.RUNNING)
    {
-      ESP_LOGI(__FILE__, "Dog %i: %s | CR: %s", RaceHandler.iPreviousDog + 1, RaceHandler.GetDogTime(RaceHandler.iPreviousDog, -2), RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
-      ESP_LOGD(__FILE__, "Running dog: %i.", RaceHandler.iCurrentDog + 1);
+      log_i("Dog %i: %s | CR: %s", RaceHandler.iPreviousDog + 1, RaceHandler.GetDogTime(RaceHandler.iPreviousDog, -2), RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
+      log_d("Running dog: %i.", RaceHandler.iCurrentDog + 1);
    }
 
    // Cleanup variables used for checking if something changed
@@ -280,7 +280,7 @@ void serialEvent()
       {
          // Serial message in buffer is complete, null terminate it and store it for further handling
          bSerialStringComplete = true;
-         ESP_LOGD(__FILE__, "SERIAL received: '%s'", strSerialData.c_str());
+         log_d("SERIAL received: '%s'", strSerialData.c_str());
          strSerialData += '\0'; // Null terminate the string
          break;
       }
@@ -353,22 +353,22 @@ void WiFiEvent(WiFiEvent_t event)
    switch (event)
    {
    case SYSTEM_EVENT_AP_START:
-      // ESP_LOGI(__FILE__, "AP Started");
+      // log_i("AP Started");
       WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
       if (WiFi.softAPIP() != IPGateway)
       {
-         ESP_LOGE(__FILE__, "I am not running on the correct IP (%s instead of %s), rebooting!", WiFi.softAPIP().toString().c_str(), IPGateway.toString().c_str());
+         log_e("I am not running on the correct IP (%s instead of %s), rebooting!", WiFi.softAPIP().toString().c_str(), IPGateway.toString().c_str());
          ESP.restart();
       }
-      ESP_LOGI(__FILE__, "Ready on IP: %s, v%s", WiFi.softAPIP().toString().c_str(), APP_VER);
+      log_i("Ready on IP: %s, v%s", WiFi.softAPIP().toString().c_str(), APP_VER);
       break;
 
    case SYSTEM_EVENT_AP_STOP:
-      // ESP_LOGI(__FILE__, "AP Stopped");
+      // log_i("AP Stopped");
       break;
 
    case SYSTEM_EVENT_AP_STAIPASSIGNED:
-      // ESP_LOGI(__FILE__, "IP assigned to new client");
+      // log_i("IP assigned to new client");
       break;
 
    default:
@@ -382,13 +382,13 @@ void ToggleWifi()
    {
       WiFi.mode(WIFI_OFF);
       LCDController.UpdateField(LCDController.WifiState, " ");
-      ESP_LOGI(__FILE__, "WiFi OFF");
+      log_i("WiFi OFF");
    }
    else
    {
       WiFi.mode(WIFI_AP);
       LCDController.UpdateField(LCDController.WifiState, "W");
-      ESP_LOGI(__FILE__, "WiFi ON");
+      log_i("WiFi ON");
    }
 }
 
@@ -413,7 +413,7 @@ void HandleSerialCommands()
       ResetRace();
    // Print time
    if (strSerialData == "time")
-      ESP_LOGI(__FILE__, "System time:  %s", GPSHandler.GetLocalTimestamp());
+      log_i("System time:  %s", GPSHandler.GetLocalTimestamp());
    // Delete tag file
    if (strSerialData == "deltagfile")
       SDcardController.deleteFile(SD_MMC, "/tag.txt");
@@ -525,10 +525,10 @@ void HandleLCDUpdates()
       LCDController.UpdateField(LCDController.D4CrossTime, RaceHandler.GetCrossingTime(3));
       LCDController.UpdateField(LCDController.D4RerunInfo, RaceHandler.GetRerunInfo(3));
    }
-   
+
    // Update battery percentage
    if ((GET_MICROS / 1000 < 2000 || ((GET_MICROS / 1000 - llLastBatteryLCDupdate) > 30000)) //
-      && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
+       && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
    {
       iBatteryVoltage = BatterySensor.GetBatteryVoltage();
       uint16_t iBatteryPercentage = BatterySensor.GetBatteryPercentage();
@@ -551,7 +551,7 @@ void HandleLCDUpdates()
       while (sBatteryPercentage.length() < 3)
          sBatteryPercentage = " " + sBatteryPercentage;
       LCDController.UpdateField(LCDController.BattLevel, sBatteryPercentage);
-      // ESP_LOGD(__FILE__, "Battery: analog: %i ,voltage: %i, level: %i%%", BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
+      // log_d("Battery: analog: %i ,voltage: %i, level: %i%%", BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
       llLastBatteryLCDupdate = GET_MICROS / 1000;
    }
 
@@ -559,7 +559,7 @@ void HandleLCDUpdates()
    {
       iCurrentRaceState = RaceHandler.RaceState;
       String sRaceStateMain = RaceHandler.GetRaceStateString();
-      ESP_LOGI(__FILE__, "RS: %s", sRaceStateMain);
+      log_i("RS: %s", sRaceStateMain);
       // Update race status to display
       LCDController.UpdateField(LCDController.RaceState, sRaceStateMain);
    }
@@ -581,7 +581,7 @@ void HandleRemoteAndButtons()
    // It's assumed that only one button can be pressed at the same time, therefore any multiple high states are treated as false read and ingored
    if (byDataIn != 0 && byDataIn != 1 && byDataIn != 2 && byDataIn != 4 && byDataIn != 8 && byDataIn != 16 && byDataIn != 32 && byDataIn != 64 && byDataIn != 128)
    {
-      // ESP_LOGD(__FILE__, "Unknown buttons data --> Ignored");
+      // log_d("Unknown buttons data --> Ignored");
       byDataIn = 0;
    }
    // Check if the switch/button changed, due to noise or pressing:
@@ -597,7 +597,7 @@ void HandleRemoteAndButtons()
       if (byDataIn != 0)
       {
          iLastActiveBit = log2(byDataIn & -byDataIn);
-         // ESP_LOGD(__FILE__, "byDataIn is: %i, iLastActiveBit is: %i", byDataIn, iLastActiveBit);
+         // log_d("byDataIn is: %i, iLastActiveBit is: %i", byDataIn, iLastActiveBit);
       }
       // whatever the reading is at, it's been there for longer than the debounce
       // delay, so take it as the actual current state:
@@ -605,12 +605,12 @@ void HandleRemoteAndButtons()
       if (bitRead(byLastStadyState, iLastActiveBit) == LOW && bitRead(byDataIn, iLastActiveBit) == HIGH)
       {
          llPressedTime[iLastActiveBit] = GET_MICROS / 1000;
-         // ESP_LOGD(__FILE__, "The button is pressed: %lld", llPressedTime[iLastActiveBit]);
+         // log_d("The button is pressed: %lld", llPressedTime[iLastActiveBit]);
       }
       else if (bitRead(byLastStadyState, iLastActiveBit) == HIGH && bitRead(byDataIn, iLastActiveBit) == LOW)
       {
          llReleasedTime[iLastActiveBit] = GET_MICROS / 1000;
-         // ESP_LOGD(__FILE__, "The button is released: %lld", llReleasedTime[iLastActiveBit]);
+         // log_d("The button is released: %lld", llReleasedTime[iLastActiveBit]);
       }
       // save the the last state
       byLastStadyState = byDataIn;
@@ -625,7 +625,7 @@ void HandleRemoteAndButtons()
          // Actions for SHORT button press
          if (llPressDuration <= SHORT_PRESS_TIME)
          {
-            ESP_LOGD(__FILE__, "%s SHORT press detected: %lldms", GetButtonString(iLastActiveBit).c_str(), llPressDuration);
+            log_d("%s SHORT press detected: %lldms", GetButtonString(iLastActiveBit).c_str(), llPressDuration);
             if (iLastActiveBit == 3) // Dog 1 fault RC button
                if (RaceHandler.RaceState == RaceHandler.RESET)
                   RaceHandler.SetNumberOfDogs(1);
@@ -652,13 +652,13 @@ void HandleRemoteAndButtons()
             {
                digitalWrite(iLaserOutputPin, HIGH);
                bLaserActive = true;
-               ESP_LOGI(__FILE__, "Turn Laser ON.");
+               log_i("Turn Laser ON.");
             }
          }
          // Actions for LONG button press
          else if (llPressDuration > SHORT_PRESS_TIME)
          {
-            ESP_LOGD(__FILE__, "%s LONG press detected: %lldms", GetButtonString(iLastActiveBit).c_str(), llPressDuration);
+            log_d("%s LONG press detected: %lldms", GetButtonString(iLastActiveBit).c_str(), llPressDuration);
             if (iLastActiveBit == 3 && RaceHandler.RaceState == RaceHandler.RESET) // Dog 1 fault RC button - toggling reruns off/on
                RaceHandler.ToggleRerunsOffOn(2);
             if (iLastActiveBit == 6 && RaceHandler.RaceState == RaceHandler.RESET) // Dog 2 fault RC button - toggling starting sequence NAFA / FCI
@@ -675,7 +675,7 @@ void HandleRemoteAndButtons()
    {
       digitalWrite(iLaserOutputPin, LOW);
       bLaserActive = false;
-      ESP_LOGI(__FILE__, "Turn Laser OFF.");
+      log_i("Turn Laser OFF.");
    }
 }
 
