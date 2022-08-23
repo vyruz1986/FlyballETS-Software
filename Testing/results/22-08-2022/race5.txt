@@ -1,0 +1,140 @@
+### RACE 5 ###
+Simulated Race 5 selected!
+SERIAL received: 'setdogs 4'
+Number of dogs set to: 4.
+SERIAL received: 'reruns on'
+Reruns turned on.
+SERIAL received: 'start'
+STARTING! Tag: 0, Race ID: 6.
+Timestamp: 13:02:20
+Light 1 is now 1
+RS:  START 
+Light 1 is now 0
+Light 2 is now 1
+Light 2 is now 0
+Light 3 is now 1
+S1 | TT:144759459 | T:-708022 | St:1
+Next Dog is 2.
+Light 1 is now 1
+Dog 1 fault ON
+Dog 1 FALSE START!
+Gate: DOG(s)
+Light 0 is now 1
+S2 | TT:144798854 | T:-668627 | St:1
+S1 | TT:144831698 | T:-635783 | St:0
+S2 | TT:144872083 | T:-595398 | St:0
+Tstring: ABab
+Gate: CLEAR.
+New dog state: COMINGBACK. ABab.
+Light 3 is now 0
+Light 4 is now 1
+RS: RUNNING
+Light 0 is now 0
+Light 4 is now 0
+S2 | TT:149524049 | T:4056568 | St:1
+Coming back dog 1 crossed S2 line. S1 is safe.
+Gate: DOG(s)
+S1 | TT:149563662 | T:4096181 | St:1
+S1 line crossed while being safe. Calculate dog 1 time.
+Dog:1|ENT:144759459|EXIT:149563662|TOT:4804203
+Dog 1:   4.804 | CR: -  0.708
+Running dog: 2.
+S2 | TT:149594573 | T:4127092 | St:0
+Next Dog is 3.
+S1 | TT:149630623 | T:4163142 | St:0
+Tstring: BAba
+Gate: CLEAR.
+New dog state: GOINGING.
+S1 | TT:149748642 | T:4281161 | St:1
+Dog 2 going in crossed S1 safely. Clear fault if rerun.
+Gate: DOG(s)
+S2 | TT:149803300 | T:4335819 | St:1
+S1 | TT:149846585 | T:4379104 | St:0
+S2 | TT:149891860 | T:4424379 | St:0
+Tstring: ABab
+Gate: CLEAR.
+New dog state: COMINGBACK. ABab.
+S2 | TT:154201497 | T:8734016 | St:1
+Coming back dog 2 crossed S2 line. S1 is safe.
+Gate: DOG(s)
+S1 | TT:154246239 | T:8778758 | St:1
+S1 line crossed while being safe. Calculate dog 2 time.
+Dog:2|ENT:149748642|EXIT:154246239|TOT:4497597
+Dog 2:   4.498 | CR: +  0.185
+Running dog: 3.
+S2 | TT:154292548 | T:8825067 | St:0
+Next Dog is 4.
+S1 | TT:154336101 | T:8868620 | St:0
+Tstring: BAba
+Gate: CLEAR.
+New dog state: GOINGING.
+S1 | TT:154378367 | T:8910886 | St:1
+Dog 3 going in crossed S1 safely. Clear fault if rerun.
+Gate: DOG(s)
+S2 | TT:154427959 | T:8960478 | St:1
+S1 | TT:154474584 | T:9007103 | St:0
+S2 | TT:154523333 | T:9055852 | St:0
+Tstring: ABab
+Gate: CLEAR.
+New dog state: COMINGBACK. ABab.
+S2 | TT:159042371 | T:13574890 | St:1
+Coming back dog 3 crossed S2 line. S1 is safe.
+Gate: DOG(s)
+S1 | TT:159087322 | T:13619841 | St:1
+S1 line crossed while being safe. Calculate dog 3 time.
+Dog:3|ENT:154378367|EXIT:159087322|TOT:4708955
+Dog 3:   4.709 | CR: +  0.132
+Running dog: 4.
+S2 | TT:159123710 | T:13656229 | St:0
+Next Dog is 1.
+S1 | TT:159164853 | T:13697372 | St:0
+Tstring: BAba
+Gate: CLEAR.
+New dog state: GOINGING.
+S1 | TT:159244113 | T:13776632 | St:1
+Dog 4 going in crossed S1 safely. Clear fault if rerun.
+Gate: DOG(s)
+S2 | TT:159313103 | T:13845622 | St:1
+S1 | TT:159370204 | T:13902723 | St:0
+S2 | TT:159427207 | T:13959726 | St:0
+Tstring: ABab
+Gate: CLEAR.
+New dog state: COMINGBACK. ABab.
+S2 | TT:163971735 | T:18504254 | St:1
+Coming back dog 4 crossed S2 line. S1 is safe.
+Gate: DOG(s)
+S1 | TT:164018223 | T:18550742 | St:1
+S1 line crossed while being safe. Calculate dog 4 time.
+Re-run for dog 1
+Dog:4|ENT:159244113|EXIT:164018223|TOT:4774110
+Dog 4:   4.774 | CR: +  0.157
+Running dog: 1.
+S2 | TT:164067992 | T:18600511 | St:0
+S1 | TT:164113243 | T:18645762 | St:0
+Tstring: BAba
+Gate: CLEAR.
+New dog state: GOINGING.
+S1 | TT:164139780 | T:18672299 | St:1
+Light 1 is now 0
+Dog 1 fault OFF
+Dog 1 going in crossed S1 safely. Clear fault if rerun.
+Gate: DOG(s)
+S2 | TT:164201599 | T:18734118 | St:1
+S1 | TT:164251964 | T:18784483 | St:0
+S2 | TT:164302079 | T:18834598 | St:0
+Tstring: ABab
+Gate: CLEAR.
+New dog state: COMINGBACK. ABab.
+S2 | TT:168393626 | T:22926145 | St:1
+Coming back dog 1 crossed S2 line. S1 is safe.
+Gate: DOG(s)
+S1 | TT:168441707 | T:22974226 | St:1
+S1 line crossed while being safe. Calculate dog 1 time.
+RS:  STOP  
+S2 | TT:168479297 | T:23011816 | St:0S1 | TT:168524524 | T:23057043 | St:0Tstring: BAbaGate: CLEAR.Last dog came back.Dog 1:   4.804 | CR: -  0.708Dog 1:   4.804 | CR: -  0.708   OK
+Dog 1:   4.302 | CR: +  0.122Dog 1:   4.302 | CR: +  0.122   OK
+Dog 2:   4.498 | CR: +  0.185Dog 2:   4.498 | CR: +  0.185   OK
+Dog 3:   4.709 | CR: +  0.132Dog 3:   4.709 | CR: +  0.132   OK
+Dog 4:   4.774 | CR: +  0.157Dog 4:   4.774 | CR: +  0.157   OK
+ Team:  22.974 Team:  22.974                  OK
+  Net:  23.087  Net:  23.087                  OK
