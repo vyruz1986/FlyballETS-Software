@@ -42,12 +42,17 @@ testqueue = False
 debugmode = False
 endless = False
 invalidinput = False
+racestart = False
 
 #selectedrace = input("Select race: ") # 0/1/2/20 or end
 argument_number = 1
 selectedrace = str(sys.argv[argument_number])
 
 while selectedrace != "end":
+    if selectedrace == "debug":
+        debugmode = True
+        argument_number += 1
+        selectedrace = str(sys.argv[argument_number])
     if '-' in selectedrace:
         racerange = selectedrace.split("-")
         firstrace = int(racerange[0])
@@ -77,11 +82,13 @@ while selectedrace != "end":
         ammountofraces = int(splitnumofraces[1])
         #exitfile.write(b"//race 0" + b'\n')
         racefile = open(os.getcwd() + "\\RACE0.txt", "r")
+    
     else:
         print("Error: Invalid input")
         invalidinput = True
         racenumber = ammountofraces
     #print(ammountofraces)
+
     exitfile = open(dir + "\\race" + selectedrace + ".txt", "wb")
     time.sleep(1)
     linestoskip = 0
@@ -139,7 +146,7 @@ while selectedrace != "end":
         '''
         stopline = ""
         while raceEND != True:
-            print("Running race " + selectedrace + "...")
+            
             readline = ser.readline()[:-2]
             #print(readline)
             decodeline = readline.decode('utf-8')
@@ -147,6 +154,8 @@ while selectedrace != "end":
             exitfile.write(splitdecodeline[1].encode('utf-8') + b'\n')
             if debugmode == True:
                 print(splitdecodeline[1])
+            else:
+                print("Running race " + selectedrace + "...")
             if endless == True:
                 outputfile.write(readline + b'\n')
                 if splitdecodeline[1] == "RS:  STOP  ":
