@@ -5,37 +5,51 @@ import serial
 import time
 import string
 import sys
-from datetime import date
+from datetime import datetime
 from threading import Timer
 from termcolor import colored
 from colorama import init, Fore
+from serial.tools import list_ports
 
 def command_send_midprogramm(command):
     ser.write(command.encode('utf-8') + b"\n")
 
-today = date.today()
-todayv2 = today.strftime("%d-%m-%Y")
-dir = os.path.join(os.getcwd(), "results", str(todayv2))
-if not os.path.exists(dir):
-    os.mkdir(dir)
+serialPorts = list(list_ports.comports())
+serialPortIndex = 0
+for p in serialPorts:
+    serialPortIndex += 1
+    print(serialPortIndex, ". ", end='')
+    print(p)
+numberOfSerialPorts = len(serialPorts)
+selectedPortNumber = int(input("Select port: "))
+print(serialPorts[selectedPortNumber - 1])
 
-outputfile = open(dir + "\\!summary.txt", "wb")
+OutputRootFolder = "results"
+pathOutputRootFolder = os.path.join(os.getcwd(), OutputRootFolder)
+if not os.path.exists(pathOutputRootFolder):
+    os.mkdir(pathOutputRootFolder)
 
-ser = serial.Serial('COM7', 115200)
+pathTestsOutputFolder = os.path.join(str(pathOutputRootFolder), str(datetime.now().strftime("%Y-%m-%d %H-%M-%S")))
+os.mkdir(pathTestsOutputFolder)
+
+fileTestsSummary = open(pathTestsOutputFolder + "\\!summary.txt", "wb")
+
+ser = serial.Serial(serialPorts[selectedPortNumber - 1].device, 115200)
 time.sleep(2)
 if ser.isOpen():
     print("COM port is available")
 else:
     print("COM port is not available")
 
-ser.write(b"reboot" + b"\n")
-#ser.write(b"stop" + b"\n")
-#ser.write(b"reset" + b"\n")
+#ser.write(b"reboot" + b"\n")
+ser.write(b"stop" + b"\n")
+ser.write(b"reset" + b"\n")
 time.sleep(3)
+'''
 readline_reboot = ser.readline()[:-2]
 while b"ESP log level 4" not in readline_reboot:
     readline_reboot = ser.readline()[:-2]
-
+'''
 ammountofraces = 1
 racenumber = 0
 testqueue = False
@@ -89,7 +103,7 @@ while selectedrace != "end":
         racenumber = ammountofraces
     #print(ammountofraces)
 
-    exitfile = open(dir + "\\race" + selectedrace + ".txt", "wb")
+    exitfile = open(pathTestsOutputFolder + "\\race" + selectedrace + ".txt", "wb")
     time.sleep(1)
     linestoskip = 0
     additionalargs = racefile.readline()
@@ -145,7 +159,10 @@ while selectedrace != "end":
                     exitfile.write(b"//Race " + bracenumber + b'\n')
         '''
         stopline = ""
-        while raceEND != True: 
+        consoleProgressPrint = "Running race " + selectedrace + "."
+        print(consoleProgressPrint, end='')
+        while raceEND != True:
+            print("\r", end='')
             readline = ser.readline()[:-2]
             #print(readline)
             decodeline = readline.decode('utf-8')
@@ -154,11 +171,12 @@ while selectedrace != "end":
             if debugmode == True:
                 print(splitdecodeline[1])
             else:
-                print("Running race " + selectedrace + "...")
+                consoleProgressPrint += "."
+                print(consoleProgressPrint, end='')
             if endless == True:
-                outputfile.write(readline + b'\n')
+                fileTestsSummary.write(readline + b'\n')
                 if splitdecodeline[1] == "RS:  STOP  ":
-                    outputfile.write(bytetime + b'\n')
+                    fileTestsSummary.write(bytetime + b'\n')
             if splitdecodeline[1] == "RS:  STOP  ":
                 raceEND = True
                 stopline = readline
@@ -207,12 +225,13 @@ while selectedrace != "end":
                     racenumber = ammountofraces
                 #print(racenumber)
         if notOKcount != 0:
-            outputfile.write(b"Race " + selectedrace.encode('utf-8') + b" FAIL\n")
+            fileTestsSummary.write(b"Race " + selectedrace.encode('utf-8') + b" FAIL\n")
+            print("FAIL")
         else:
-            outputfile.write(b"Race " + selectedrace.encode('utf-8') + b" PASSED\n")
+            fileTestsSummary.write(b"Race " + selectedrace.encode('utf-8') + b" PASSED\n")
+            print("PASSED")
         if endless == True:
             print(time)
-        print("Race " + selectedrace + " complete")
         ser.write(b"reset" + b"\n")
         for i in range(4):
             readline = ser.readline()
@@ -228,4 +247,4 @@ while selectedrace != "end":
             #selectedrace = input("Select race: ") # 0 or 1 or 2 or end
         racefile.close()
 exitfile.close()
-outputfile.close()
+fileTestsSummary.close()
