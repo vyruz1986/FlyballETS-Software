@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - INSTRUKCJA_PL.md updated with recommendation in relation to sunlight
+- First issue of python test script for ETS (in simulation mode)
 
 ### Changed
 - Filtering time of early dog while invisible dog is running changed from 4.5s to 5.5s (fix for 89-13)
