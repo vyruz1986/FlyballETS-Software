@@ -7,10 +7,7 @@ import string
 import sys
 from datetime import datetime
 from threading import Timer
-#from termcolor import colored
-#from colorama import init, Fore
 from serial.tools import list_ports
-from pathlib import Path
 
 def command_send_midprogramm(command):
     ser.write(command.encode('utf-8') + b"\n")
