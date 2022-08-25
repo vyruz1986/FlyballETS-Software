@@ -1,4 +1,4 @@
-#test ESP32
+# test ESP32
 import os
 import queue
 import serial
@@ -10,6 +10,7 @@ from threading import Timer
 #from termcolor import colored
 #from colorama import init, Fore
 from serial.tools import list_ports
+from pathlib import Path
 
 def command_send_midprogramm(command):
     ser.write(command.encode('utf-8') + b"\n")
@@ -23,6 +24,10 @@ for p in serialPorts:
 numberOfSerialPorts = len(serialPorts)
 selectedPortNumber = int(input("Select port: "))
 print(serialPorts[selectedPortNumber - 1])
+ser = serial.Serial(serialPorts[selectedPortNumber - 1].device, 115200)
+time.sleep(1)
+if ser.isOpen():
+    print("SERIAL port is open")
 
 OutputRootFolder = "results"
 pathOutputRootFolder = os.path.join(os.getcwd(), OutputRootFolder)
@@ -32,19 +37,14 @@ if not os.path.exists(pathOutputRootFolder):
 pathTestsOutputFolder = os.path.join(str(pathOutputRootFolder), str(datetime.now().strftime("%Y-%m-%d %H-%M-%S")))
 os.mkdir(pathTestsOutputFolder)
 
-fileTestsSummary = open(pathTestsOutputFolder + "\\!summary.txt", "wb")
-
-ser = serial.Serial(serialPorts[selectedPortNumber - 1].device, 115200)
-time.sleep(2)
-if ser.isOpen():
-    print("SERIAL port is available")
-else:
-    print("SERIAL port is not available")
+fileTestsSummary = open(pathTestsOutputFolder + "/!summary.txt", "wb")
 
 #ser.write(b"reboot" + b"\n")
+time.sleep(2)
 ser.write(b"stop" + b"\n")
+time.sleep(2)
 ser.write(b"reset" + b"\n")
-time.sleep(3)
+time.sleep(2)
 '''
 readline_reboot = ser.readline()[:-2]
 while b"ESP log level 4" not in readline_reboot:
@@ -58,7 +58,7 @@ endless = False
 invalidinput = False
 racestart = False
 
-#selectedrace = input("Select race: ") # 0/1/2/20 or end
+# selectedrace = input("Select race: ") # 0/1/2/20 or end
 argument_number = 1
 selectedrace = str(sys.argv[argument_number])
 
@@ -76,40 +76,39 @@ while selectedrace != "end":
     if selectedrace.isdigit() == True:
         bselectedrace = selectedrace.encode('utf-8')
         ser.write(b"race " + bselectedrace + b"\n")
-        racefile = open(os.getcwd() + "\\testcases" + "\\RACE" + selectedrace + ".txt", "r")
+        racefile = open(os.getcwd() + "/testcases" + "/RACE" + selectedrace + ".txt", "r")
     elif selectedrace == "all":
         ser.write(b"race 0" + b"\n")
         for a in range(2):
             numofraces = ser.readline()[:-2]
-            #print(numofraces)
+            # print(numofraces)
         splitnumofraces = numofraces.split(b"races: ")
         ammountofraces = int(splitnumofraces[1])
         #exitfile.write(b"//race 0" + b'\n')
-        racefile = open(os.getcwd() + "\\RACE0.txt", "r")
+        racefile = open(os.getcwd() + "/RACE0.txt", "r")
     elif selectedrace == "stab":
         endless = True
         ser.write(b"race 0" + b"\n")
         for a in range(2):
             numofraces = ser.readline()[:-2]
         splitnumofraces = numofraces.split(b"races: ")
-        #print(splitnumofraces)
+        # print(splitnumofraces)
         ammountofraces = int(splitnumofraces[1])
         #exitfile.write(b"//race 0" + b'\n')
-        racefile = open(os.getcwd() + "\\RACE0.txt", "r")
-    
+        racefile = open(os.getcwd() + "/RACE0.txt", "r")
     else:
         print("Error: Invalid input")
         invalidinput = True
         racenumber = ammountofraces
-    #print(ammountofraces)
+    # print(ammountofraces)
 
-    exitfile = open(pathTestsOutputFolder + "\\race" + selectedrace + ".txt", "wb")
+    exitfile = open(pathTestsOutputFolder + "/race" + selectedrace + ".txt", "wb")
     time.sleep(1)
     linestoskip = 0
     additionalargs = racefile.readline()
     while additionalargs.startswith("$"):
         splitadditionalargs = additionalargs.split(";")
-        #print(splitadditionalargs)
+        # print(splitadditionalargs)
         splitargs_len = len(splitadditionalargs)
         i = 1
         while i < splitargs_len and splitadditionalargs[i] != "\n":
@@ -118,7 +117,7 @@ while selectedrace != "end":
                 readline = ser.readline()[:-2]
                 decodeline = readline.decode('utf-8')
                 splitdecodeline = decodeline.split("(): ")
-                #print(splitdecodeline[1])
+                # print(splitdecodeline[1])
                 command_send_midprogramm(innitcommands)
                 i += 1
                 time.sleep(1)
@@ -140,8 +139,8 @@ while selectedrace != "end":
         bytetime = b'0'
         raceEND = False
         readline = ser.readline()
-        ser.write(b"start" + b"\n") #\x53\x54\x41\x52\x54\x0a (utf-8)
-                
+        ser.write(b"start" + b"\n")  # \x53\x54\x41\x52\x54\x0a (utf-8)
+
         '''
         while racenumber < ammountofraces:
             #ser.write(b"reset" + b"\n") #\x52\x45\x53\x45\x54\x0a (utf-8)
@@ -152,11 +151,11 @@ while selectedrace != "end":
                     bracenumber = b'%i' % racenumber
                     #print(bracenumber)
                     strracenumber = str(racenumber)
-                    racefile = open(os.getcwd() + "\\RACE" + selectedrace + ".txt", "r")
+                    racefile = open(os.getcwd() + "/RACE" + selectedrace + ".txt", "r")
                     ser.write(b"race " + bracenumber + b'\n')
                     for x in range(3):
                         ser.readline()
-                    exitfile.write(b"//Race " + bracenumber + b'\n')
+                    exitfile.write(b"/Race " + bracenumber + b'\n')
         '''
         stopline = ""
         consoleProgressPrint = "Running race " + selectedrace + "."
@@ -164,7 +163,7 @@ while selectedrace != "end":
         while raceEND != True:
             print("\r", end='')
             readline = ser.readline()[:-2]
-            #print(readline)
+            # print(readline)
             decodeline = readline.decode('utf-8')
             splitdecodeline = decodeline.split("(): ")
             exitfile.write(splitdecodeline[1].encode('utf-8') + b'\n')
@@ -186,13 +185,13 @@ while selectedrace != "end":
                     racenumber = 0
             #del splitdecodeline
         notOKcount = 0
-        while b"Net" not in stopline: 
+        while b"Net" not in stopline:
             readline = ser.readline()[:-2]
             stopline = readline
             decodeline = readline.decode('utf-8')
             splitdecodeline = decodeline.split("(): ")
             exitfile.write(splitdecodeline[1].encode('utf-8'))
-            if((splitdecodeline[1].startswith("Dog ") or splitdecodeline[1].startswith(" Team") or splitdecodeline[1].startswith("  Net")) and raceEND == True):
+            if ((splitdecodeline[1].startswith("Dog ") or splitdecodeline[1].startswith(" Team") or splitdecodeline[1].startswith("  Net")) and raceEND == True):
                 #exitfile.write(splitdecodeline[1].encode('utf-8') + b'\n')
                 lengthofline = len(splitdecodeline[1])
                 normdecodeline = splitdecodeline[1]
@@ -202,19 +201,19 @@ while selectedrace != "end":
                 if expectedline.startswith("//RACE") or expectedline.startswith("$") == True:
                     expectedline = racefile.readline()[:-1]
                 if splitdecodeline[1] == expectedline:
-                    #print(normdecodeline, colored("OK", 'green'))                    
-                    exitfile.write(normdecodeline.encode('utf-8')+ b'  OK' + b'\n')
+                    #print(normdecodeline, colored("OK", 'green'))
+                    exitfile.write(normdecodeline.encode('utf-8') + b'  OK' + b'\n')
                 else:
                     notOKcount += 1
                     #print(normdecodeline, colored("NOK", 'red'), " Exp: ", Fore.YELLOW + expectedline, Fore.RESET)
-                    exitfile.write(normdecodeline.encode('utf-8')+ b'  NOK' + b'   Exp: ' + expectedline.encode('utf-8') + b'\n')             
-                    
+                    exitfile.write(normdecodeline.encode('utf-8') + b'  NOK' + b'   Exp: ' + expectedline.encode('utf-8') + b'\n')
+
             if endless == True:
                 ser.write(b"time" + b'\n')
                 timecheck = ser.readline()[:-2]
                 timecheck = ser.readline()[:-2]
                 print(timecheck)
-                #if timecheck.startswith(b"[I]"):
+                # if timecheck.startswith(b"[I]"):
                 splittimecheck = timecheck.split(b" ")
                 splittimecheck = splittimecheck[5].split(b".")
                 time = int(splittimecheck[0])
@@ -223,7 +222,7 @@ while selectedrace != "end":
                 print(time)
                 if time > 21600000:
                     racenumber = ammountofraces
-                #print(racenumber)
+                # print(racenumber)
         if notOKcount != 0:
             fileTestsSummary.write(b"Race " + selectedrace.encode('utf-8') + b" FAIL\n")
             print("FAIL")
@@ -244,7 +243,7 @@ while selectedrace != "end":
         else:
             argument_number += 1
             selectedrace = str(sys.argv[argument_number])
-            #selectedrace = input("Select race: ") # 0 or 1 or 2 or end
+            # selectedrace = input("Select race: ") # 0 or 1 or 2 or end
         racefile.close()
 exitfile.close()
 fileTestsSummary.close()
