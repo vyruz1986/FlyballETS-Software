@@ -164,7 +164,7 @@ while selectedrace != "end":
             decodeline = readline.decode('utf-8')
             splitdecodeline = decodeline.split("(): ")
             exitfile.write(splitdecodeline[1].encode('utf-8') + b'\n')
-            if debugmode == True:
+            if debugmode:
                 print(splitdecodeline[1])
             else:
                 consoleProgressPrint += "."
