@@ -1,8 +1,9 @@
-przchowywanie ilości testów
-przchowywanie portu
-parametr 'number of stability runs'
-wifi ON/OFF
-czy mają być printy debugowe czy nie
+[]przchowywanie ilości testów
+[]przchowywanie portu
+[]detekcja aktywnego portu
+[]parametr 'number of stability runs wifi ON/OFF\
+
+[X]czy mają być printy debugowe czy nie
 
 program test
 []sprawdzenie odpowiedzi po reboot'cie
@@ -16,6 +17,7 @@ program test
 []ograniczenie wypisywania do pliku (wielkości pliku)
 [X]tworzenie katalogu z datą wykonania testu gdzie będą wyniki testów
 [X]szczegółowe wyniki (cały log)
+
 
 $innit ***
 [X]$numberofrunningdogs 1-4, default 4

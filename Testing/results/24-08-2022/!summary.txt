@@ -1,3 +1,0 @@
-Race 0 PASSED
-Race 1 PASSED
-Race 2 PASSED

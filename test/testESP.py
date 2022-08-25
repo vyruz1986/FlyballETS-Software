@@ -63,7 +63,7 @@ while selectedrace != "end":
         bselectedrace = selectedrace.encode('utf-8')
         ser.write(b"race " + bselectedrace + b"\n")
         racefile = open(os.getcwd() + "\\testcases" + "\\RACE" + selectedrace + ".txt", "r")
-    elif selectedrace == "-all":
+    elif selectedrace == "all":
         ser.write(b"race 0" + b"\n")
         for a in range(2):
             numofraces = ser.readline()[:-2]
@@ -72,7 +72,7 @@ while selectedrace != "end":
         ammountofraces = int(splitnumofraces[1])
         #exitfile.write(b"//race 0" + b'\n')
         racefile = open(os.getcwd() + "\\RACE0.txt", "r")
-    elif selectedrace == "-stab":
+    elif selectedrace == "stab":
         endless = True
         ser.write(b"race 0" + b"\n")
         for a in range(2):
@@ -145,8 +145,7 @@ while selectedrace != "end":
                     exitfile.write(b"//Race " + bracenumber + b'\n')
         '''
         stopline = ""
-        while raceEND != True:
-            
+        while raceEND != True: 
             readline = ser.readline()[:-2]
             #print(readline)
             decodeline = readline.decode('utf-8')
