@@ -7,8 +7,8 @@ import string
 import sys
 from datetime import datetime
 from threading import Timer
-from termcolor import colored
-from colorama import init, Fore
+#from termcolor import colored
+#from colorama import init, Fore
 from serial.tools import list_ports
 
 def command_send_midprogramm(command):
