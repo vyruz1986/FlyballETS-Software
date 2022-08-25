@@ -1,25 +1,19 @@
 #grep from log
-import serial
-import os
-ser = serial.Serial('COM7', 115200)
-if ser.isOpen():
-    print("COM port is available")
-else:
-    print("COM port is not available")
 
-interestingdata = open(os.getcwd() + "\\interestingDATA.txt", 'wb')
-readline = ser.readline()[:-2]
+log = open("D:\\Users\\konri\\Kurs\\ESP32\\log.txt", 'r')
+interestingdata = open("D:\\Users\\konri\\Kurs\\ESP32\\interestingDATA.txt", 'wb')
 
-race = int(input("Select race: "))
-while "Last dog came back." not in readline:
-    readline = ser.readline()[:-2]
-    #decodeline = readline.decode('utf-8')
-    #splitdecodeline = decodeline.split("(): ")
-
-while "Net" not in splitdecodeline:
-    readline = ser.readline()[:-2]
-    decodeline = readline.decode('utf-8')
-    splitdecodeline = decodeline.split("(): ")
-    interestingdata.write(splitdecodeline[1].encode('utf-8') + b'\n')
-
+readline = log.readline()
+interestingdata.write(b"####################### RACE 0" + b'\n')
+race = 0
+while readline != "":
+    if readline.startswith("D0") or readline.startswith("D1") or readline.startswith("D2") or readline.startswith("D3") or readline.startswith("RT") or readline.startswith("RS") or readline.startswith("Dog "):
+        encodeline = readline.encode('utf-8')
+        interestingdata.write(encodeline)
+        if readline.startswith("RS:  STOP") == True:
+            race += 1
+            byterace = b'%i' % race
+            interestingdata.write(b"####################### RACE " + byterace + b'\n')
+    readline = log.readline()
+log.close()
 interestingdata.close()

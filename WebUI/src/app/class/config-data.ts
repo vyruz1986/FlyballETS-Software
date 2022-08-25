@@ -4,6 +4,9 @@ export class ConfigData {
       public APPass: string,
       public AdminPass: string,
       public RunDirectionInverted: string,
-      public StartingSequenceNAFA: string
+      public StartingSequenceNAFA: string,
+      public LaserOnTimer: string,
+      public Accuracy3digits: string,
+      public CommaInCsv: string
    ) { }
 }

@@ -22,6 +22,8 @@
             <app-race-control
                [raceStates]="raceStates"
                (raceCommand)="onRaceCommand($event)"
+               (dogsCommand)="dogsChange($event)"
+               (setRerunsOff)="onSetRerunsOff($event)"
             ></app-race-control>
          </div>
       </div>

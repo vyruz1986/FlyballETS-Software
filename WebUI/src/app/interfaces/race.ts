@@ -3,10 +3,10 @@ export interface DogTimingData{
    time: String, crossingTime: String
 }
 export interface DogData{
-   dogNumber: number
-   , timing:Array<DogTimingData>
-   , fault: boolean
-   , running: boolean
+   dogNumber: number,
+   timing:Array<DogTimingData>,
+   fault: boolean,
+   running: boolean
 }
 export interface RaceData {
    id: number,
@@ -15,6 +15,8 @@ export interface RaceData {
    elapsedTime: String,
    NetTime: String,
    raceState: RaceStateEnum,
+   racingDogs: number,
    raceStateFriendly: String,
+   rerunsOff: boolean,
    dogData: Array<DogData>
 }

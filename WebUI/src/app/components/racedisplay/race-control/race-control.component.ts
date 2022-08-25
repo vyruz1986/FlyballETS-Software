@@ -1,6 +1,6 @@
 import { Component, OnInit, Input, OnChanges, SimpleChanges, SimpleChange, Output, EventEmitter } from '@angular/core';
 import { RaceState } from '../../../class/race-state';
-import { RaceStateEnum, RaceCommandEnum } from '../../../enums/race-state.enum';
+import { RaceCommandEnum } from '../../../enums/race-state.enum';
 
 @Component({
    selector: 'app-race-control',
@@ -10,13 +10,24 @@ import { RaceStateEnum, RaceCommandEnum } from '../../../enums/race-state.enum';
 export class RaceControlComponent implements OnChanges, OnInit {
    @Input() raceStates: RaceState;
    @Output() raceCommand = new EventEmitter<RaceCommandEnum>();
+   @Output() dogsCommand = new EventEmitter<number>();
+   @Output() setRerunsOff = new EventEmitter<boolean>();
    startDisabled: boolean = true;
    stopDisabled: boolean = true;
    resetDisabled: boolean = true;
+   dogsChangeDisabled: boolean = true;
+   rerunsOffDisabled: boolean = true;
 
    overallMaxState: number;
 
    constructor() { }
+
+   numberOfDogs = [
+      { id: 4, label: "4" },
+      { id: 3, label: "3" },       
+      { id: 2, label: "2" },
+      { id: 1, label: "1" }
+   ]
 
    ngOnInit() {
       if (this.raceStates === undefined) {
@@ -28,15 +39,25 @@ export class RaceControlComponent implements OnChanges, OnInit {
    ngOnChanges(changes: SimpleChanges) {
       const changedRaceStates: SimpleChange = changes.raceStates;
       this.raceStates = changedRaceStates.currentValue;
+      //console.log("RerunsOff value is %o", this.raceStates.RerunsOff);
       this.UpdateDisabled();
+   }
+
+   dogsChange(dogsValue: number) {
+      this.dogsCommand.emit(dogsValue);
+   }
+
+   EmitRerunsOff(rerunsOff: boolean) {
+      this.setRerunsOff.emit(rerunsOff);
    }
 
    UpdateDisabled() {
       this.overallMaxState = Math.max(...this.raceStates.RaceStates);
-
       this.startDisabled = !(this.overallMaxState == 0);
       this.stopDisabled = !(this.overallMaxState == 1 || this.overallMaxState == 2);
       this.resetDisabled = !(this.overallMaxState == 3);
+      this.dogsChangeDisabled = !(this.overallMaxState == 0);
+      this.rerunsOffDisabled = !(this.overallMaxState == 0);
    }
 
    EmitCommand(command: RaceCommandEnum) {

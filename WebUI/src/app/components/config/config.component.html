@@ -41,6 +41,16 @@
           </div>
         </div>
         <div class="form-group">
+          <label for="LaserOnTimer">Laser ON time [s] (max 240)</label>
+          <input type="number" min="0" max="240" class="form-control" id="LaserOnTimer"
+            required
+            [(ngModel)]="configData.LaserOnTimer" name="LaserOnTimer"
+            #LaserOnTimer="ngModel">
+          <div [hidden]="LaserOnTimer.valid || LaserOnTimer.pristine" class="alert alert-danger">
+              Laser ON time is required with max value 240s!
+          </div>
+        </div>
+        <div class="form-group">
           <label for="RunDirectionInverted">Run direction inverted?</label>
           <input type="text" class="form-control" id="RunDirectionInverted"
           required
@@ -50,14 +60,34 @@
               Select run direction!
           </div>
         </div>
-          <div class="form-group">
-          <label for="StartingSequenceNAFA">ETS mode NAFA?</label>
+        <div class="form-group">
+          <label for="StartingSequenceNAFA">Starting sequence NAFA?</label>
           <input type="text" class="form-control" id="StartingSequenceNAFA"
             required 
             [(ngModel)]="configData.StartingSequenceNAFA" name="StartingSequenceNAFA"
             #StartingSequenceNAFA="ngModel">
           <div [hidden]="StartingSequenceNAFA.valid || StartingSequenceNAFA.pristine" class="alert alert-danger">
-              Select ETS mode!
+              Select starting sequence mode!
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="Accuracy3digits">Results accuracy 3 digits?</label>
+          <input type="text" class="form-control" id="Accuracy3digits"
+            required 
+            [(ngModel)]="configData.Accuracy3digits" name="Accuracy3digits"
+            #Accuracy3digits="ngModel">
+          <div [hidden]="Accuracy3digits.valid || Accuracy3digits.pristine" class="alert alert-danger">
+              Select results accuracy!
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="CommaInCsv">Use comma ',' as decimal separator in CSV file?</label>
+          <input type="text" class="form-control" id="CommaInCsv"
+            required 
+            [(ngModel)]="configData.CommaInCsv" name="CommaInCsv"
+            #CommaInCsv="ngModel">
+          <div [hidden]="CommaInCsv.valid || CommaInCsv.pristine" class="alert alert-danger">
+              Select decimal separator!
           </div>
         </div>
         <button type="submit" class="btn btn-success" [disabled]="!configForm.form.valid">Submit</button>
