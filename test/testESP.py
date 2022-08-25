@@ -37,9 +37,9 @@ fileTestsSummary = open(pathTestsOutputFolder + "\\!summary.txt", "wb")
 ser = serial.Serial(serialPorts[selectedPortNumber - 1].device, 115200)
 time.sleep(2)
 if ser.isOpen():
-    print("COM port is available")
+    print("SERIAL port is available")
 else:
-    print("COM port is not available")
+    print("SERIAL port is not available")
 
 #ser.write(b"reboot" + b"\n")
 ser.write(b"stop" + b"\n")
