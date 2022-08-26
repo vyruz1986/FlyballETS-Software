@@ -79,6 +79,9 @@ while selectedrace != "end":
         for filename in os.listdir(os.getcwd() + "/testcases"):
             print(filename)
             race = re.findall(r'\d+', filename)
+            print(race)
+            selectedrace = 1
+            racefile = open(os.getcwd() + "/testcases" + "/RACE" + selectedrace + ".txt", "r")
     elif selectedrace == "stab":
         endless = True
         ser.write(b"race 0" + b"\n")
@@ -137,7 +140,7 @@ while selectedrace != "end":
         '''
         while racenumber < ammountofraces:
             #ser.write(b"reset" + b"\n") #\x52\x45\x53\x45\x54\x0a (utf-8)
-            if raceEND == True:
+            if raceEND:
                 raceEND = False
                 racefile.close()
                 if racenumber <= ammountofraces:
