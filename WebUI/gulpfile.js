@@ -26,14 +26,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 const fs = require("fs");
 const gulp = require("gulp");
 const htmlmin = require("gulp-htmlmin");
-const crass = require("gulp-crass");
-const uglify = require("gulp-uglify-es");
 const gzip = require("gulp-gzip");
 const inline = require("gulp-inline");
-const inlineImages = require("gulp-css-base64");
 const favicon = require("gulp-base64-favicon");
 const htmllint = require("gulp-htmllint");
-const gutil = require("gulp-util");
+const c = require('ansi-colors');
 
 const sourceFolder = "dist/";
 const staticFolder = sourceFolder;
@@ -77,10 +74,9 @@ gulp.task("toHeader", function (done) {
 function htmllintReporter(filepath, issues) {
    if (issues.length > 0) {
       issues.forEach(function (issue) {
-         gutil.log(
-            gutil.colors.cyan("[gulp-htmllint] ") +
-               gutil.colors.white(filepath + " [" + issue.line + "," + issue.column + "]: ") +
-               gutil.colors.red("(" + issue.code + ") " + issue.msg)
+         console.log(c.cyan('[gulp-htmllint] ') +
+            c.white(filepath + " [" + issue.line + "," + issue.column + "]: ") +
+            c.colors.red("(" + issue.code + ") " + issue.msg)
          );
       });
       process.exitCode = 1;
@@ -109,7 +105,7 @@ gulp.task("buildfs_inline", function () {
          inline({
             base: sourceFolder,
             js: [],
-            css: [crass, inlineImages],
+            css: [],
             disabledTypes: ["svg", "img"],
          })
       )
