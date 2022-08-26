@@ -426,6 +426,18 @@ void HandleSerialCommands()
    // Reboot ESP32
    if (strSerialData == "reboot")
       ESP.restart();
+   // Prepare for automatic tests (used by testETS.py script)
+   if (strSerialData == "preparefortesting")
+      if (!Simulate)
+         log_e("FAILED - Firmware's not compiled in Simulation mode");
+      else
+      {
+         if (SettingsManager.getSetting("Accuracy3digits").equals("0"))
+            RaceHandler.ToggleAccuracy();
+         if (SettingsManager.getSetting("RunDirectionInverted").equals("1"))
+            RaceHandler.ToggleRunDirection();
+         log_i("DONE - Simulation mode active. Accuracy set to 3. Run direction: normal.");
+      }
 #if Simulate
    // Change Race ID (only serial command), e.g. race 1 or race 2
    if (strSerialData.startsWith("race"))
