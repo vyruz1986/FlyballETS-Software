@@ -1,5 +1,6 @@
 # test ESP32
 import os
+import re
 import queue
 import serial
 import time
@@ -70,19 +71,14 @@ while selectedrace != "end":
         lastrace = int(racerange[1])
         selectedrace = racerange[0]
         testqueue = True
-    if selectedrace.isdigit() == True:
+    if selectedrace.isdigit():
         bselectedrace = selectedrace.encode('utf-8')
         ser.write(b"race " + bselectedrace + b"\n")
         racefile = open(os.getcwd() + "/testcases" + "/RACE" + selectedrace + ".txt", "r")
     elif selectedrace == "all":
-        ser.write(b"race 0" + b"\n")
-        for a in range(2):
-            numofraces = ser.readline()[:-2]
-            # print(numofraces)
-        splitnumofraces = numofraces.split(b"races: ")
-        ammountofraces = int(splitnumofraces[1])
-        #exitfile.write(b"//race 0" + b'\n')
-        racefile = open(os.getcwd() + "/RACE0.txt", "r")
+        for filename in os.listdir(os.getcwd() + "/testcases"):
+            print(filename)
+            race = re.findall(r'\d+', filename)
     elif selectedrace == "stab":
         endless = True
         ser.write(b"race 0" + b"\n")
@@ -130,7 +126,7 @@ while selectedrace != "end":
     for i in range(linestoskip):
         racefile.readline()
 
-    if invalidinput == True:
+    if invalidinput:
         selectedrace = "end"
     else:
         bytetime = b'0'
@@ -169,7 +165,7 @@ while selectedrace != "end":
             else:
                 consoleProgressPrint += "."
                 print(consoleProgressPrint, end='')
-            if endless == True:
+            if endless:
                 fileTestsSummary.write(readline + b'\n')
                 if splitdecodeline[1] == "RS:  STOP  ":
                     fileTestsSummary.write(bytetime + b'\n')
@@ -177,7 +173,7 @@ while selectedrace != "end":
                 raceEND = True
                 stopline = readline
                 racenumber += 1
-                if racenumber == ammountofraces and endless == True:
+                if racenumber == ammountofraces and endless:
                     racefile.seek(0)
                     racenumber = 0
             #del splitdecodeline
@@ -188,14 +184,14 @@ while selectedrace != "end":
             decodeline = readline.decode('utf-8')
             splitdecodeline = decodeline.split("(): ")
             exitfile.write(splitdecodeline[1].encode('utf-8'))
-            if ((splitdecodeline[1].startswith("Dog ") or splitdecodeline[1].startswith(" Team") or splitdecodeline[1].startswith("  Net")) and raceEND == True):
+            if ((splitdecodeline[1].startswith("Dog ") or splitdecodeline[1].startswith(" Team") or splitdecodeline[1].startswith("  Net")) and raceEND):
                 #exitfile.write(splitdecodeline[1].encode('utf-8') + b'\n')
                 lengthofline = len(splitdecodeline[1])
                 normdecodeline = splitdecodeline[1]
                 for x in range(30-lengthofline):
                     normdecodeline = normdecodeline + " "
                 expectedline = racefile.readline()[:-1]
-                if expectedline.startswith("//RACE") or expectedline.startswith("$") == True:
+                if expectedline.startswith("//RACE") or expectedline.startswith("$"):
                     expectedline = racefile.readline()[:-1]
                 if splitdecodeline[1] == expectedline:
                     #print(normdecodeline, colored("OK", 'green'))
@@ -205,7 +201,7 @@ while selectedrace != "end":
                     #print(normdecodeline, colored("NOK", 'red'), " Exp: ", Fore.YELLOW + expectedline, Fore.RESET)
                     exitfile.write(normdecodeline.encode('utf-8') + b'  NOK' + b'   Exp: ' + expectedline.encode('utf-8') + b'\n')
 
-            if endless == True:
+            if endless:
                 ser.write(b"time" + b'\n')
                 timecheck = ser.readline()[:-2]
                 timecheck = ser.readline()[:-2]
@@ -226,13 +222,13 @@ while selectedrace != "end":
         else:
             fileTestsSummary.write(b"Race " + selectedrace.encode('utf-8') + b" PASSED\n")
             print("PASSED")
-        if endless == True:
+        if endless:
             print(time)
         ser.write(b"reset" + b"\n")
         for i in range(4):
             readline = ser.readline()
         time.sleep(2)
-        if testqueue == True:
+        if testqueue:
             firstrace += 1
             selectedrace = str(firstrace)
             if firstrace == lastrace:
