@@ -1,6 +1,6 @@
 /*
 
-ESP8266 file system builder
+ESP32 file system builder
 
 Copyright (C) 2016-2017 by Xose Pérez <xose dot perez at gmail dot com>
 
@@ -28,13 +28,17 @@ const gulp = require("gulp");
 const htmlmin = require("gulp-htmlmin");
 const gzip = require("gulp-gzip");
 const inline = require("gulp-inline");
+const inlineImages = require('gulp-css-base64');
+const cleancss = require('gulp-clean-css');
 const favicon = require("gulp-base64-favicon");
 const htmllint = require("gulp-htmllint");
 const c = require('ansi-colors');
+const uglify = require("gulp-uglify");
 
 const sourceFolder = "dist/";
 const staticFolder = sourceFolder;
 const outputFolder = "../include/";
+//const outputFolder = "outputtest/";
 
 String.prototype.replaceAll = function (search, replacement) {
    var target = this;
@@ -84,8 +88,16 @@ function htmllintReporter(filepath, issues) {
 }
 
 gulp.task("buildfs_inline", function () {
-   return gulp
-      .src(sourceFolder + "*.html")
+   return gulp.src(sourceFolder + "*.html") 
+   .pipe(favicon())
+      .pipe(
+         inline({
+            base: sourceFolder,
+            js: [uglify],
+            css: [cleancss, inlineImages],
+            disabledTypes: ["svg", "img"],
+         })
+      )
       .pipe(
          htmllint(
             {
@@ -99,15 +111,6 @@ gulp.task("buildfs_inline", function () {
             },
             htmllintReporter
          )
-      )
-      .pipe(favicon())
-      .pipe(
-         inline({
-            base: sourceFolder,
-            js: [],
-            css: [],
-            disabledTypes: ["svg", "img"],
-         })
       )
       .pipe(
          htmlmin({

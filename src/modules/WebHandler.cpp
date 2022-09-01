@@ -183,7 +183,11 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
 
 void WebHandlerClass::init(int webPort)
 {
+   
+   // Populate the last modification date based on build datetime
+   //sprintf(_last_modified, "%s %s GMT", __DATE__, __TIME__);
    snprintf_P(_last_modified, sizeof(_last_modified), PSTR("%s %s GMT"), __DATE__, __TIME__);
+
    _server = new AsyncWebServer(webPort);
    _ws = new AsyncWebSocket("/ws");
    _wsa = new AsyncWebSocket("/wsa");
@@ -196,8 +200,7 @@ void WebHandlerClass::init(int webPort)
    _server->addHandler(_ws);
    _server->addHandler(_wsa);
 
-   _server->onNotFound([](AsyncWebServerRequest *request)
-                       {
+   _server->onNotFound([](AsyncWebServerRequest *request){
       log_e("Not found: %s!", request->url().c_str());
       request->send(404); });
 
@@ -261,7 +264,7 @@ void WebHandlerClass::loop()
          if (lCurrentUpTime - _lLastPingBroadcast > _lPingBroadcastInterval)
          {
             _ws->cleanupClients();
-            log_d("Have %i clients, %i consumers\r\n", _ws->count(), _iNumOfConsumers);
+            log_d("Have %i clients, %i consumers", _ws->count(), _iNumOfConsumers);
             //_ws->pingAll();
             //_lLastBroadcast = GET_MICROS / 1000;
             _lLastPingBroadcast = GET_MICROS / 1000;
@@ -562,7 +565,7 @@ bool WebHandlerClass::_ProcessConfig(JsonArray newConfig, String *ReturnError)
 
       if (value != SettingsManager.getSetting(key))
       {
-         log_d("[WEBHANDLER] Storing %s = %s", key.c_str(), value.c_str());
+         log_d("Storing %s = %s", key.c_str(), value.c_str());
          SettingsManager.setSetting(key, value);
          save = true;
       }
@@ -748,7 +751,7 @@ bool WebHandlerClass::_wsAuth(AsyncWebSocketClient *client)
 void WebHandlerClass::_onHome(AsyncWebServerRequest *request)
 {
 
-   // if (!_authenticate(request)) return request->requestAuthentication(getSetting("hostname").c_str());
+   // Check if the client already has the same version and respond with a 304 (Not modified)
    if (request->header("If-Modified-Since").equals(_last_modified))
    {
       request->send(304);
@@ -756,11 +759,14 @@ void WebHandlerClass::_onHome(AsyncWebServerRequest *request)
    else
    {
 #ifndef WebUIonSDcard
+      // Dump the byte array in PROGMEM with a 200 HTTP code (OK)
       AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", index_html_gz, index_html_gz_len);
+      // Tell the browswer the contemnt is Gzipped
       response->addHeader("Content-Encoding", "gzip");
 #else
       AsyncWebServerResponse *response = request->beginResponse(SD_MMC, "/index.htm", "text/html");
 #endif
+      // And set the last-modified datetime so we can check if we need to send it again next time or not
       response->addHeader("Last-Modified", _last_modified);
       request->send(response);
    }
@@ -768,12 +774,22 @@ void WebHandlerClass::_onHome(AsyncWebServerRequest *request)
 
 void WebHandlerClass::_onFavicon(AsyncWebServerRequest *request)
 {
+   if (request->header("If-Modified-Since").equals(_last_modified))
+   {
+      request->send(304);
+   }
+   else
+   {
 #ifndef WebUIonSDcard
    AsyncWebServerResponse *response = request->beginResponse_P(200, "image/png", index_html_gz, index_html_gz_len);
    response->addHeader("Content-Encoding", "gzip");
 #else
-   AsyncWebServerResponse *response = request->beginResponse(SD_MMC, "/favicon.ico", "image/png");
+      AsyncWebServerResponse *response = request->beginResponse(SD_MMC, "/favicon.ico", "image/png");
 #endif
-   request->send(response);
+      // And set the last-modified datetime so we can check if we need to send it again next time or not
+      response->addHeader("Last-Modified", _last_modified);
+      request->send(response);
+   }
 }
+
 WebHandlerClass WebHandler;
