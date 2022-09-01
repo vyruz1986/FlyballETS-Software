@@ -1,0 +1,7 @@
+$innit;setdogs 3;
+Dog 1:   4.806 | CR: +  0.118
+Dog 2:   4.608 | CR:    fault
+Dog 2:   4.747 | CR: +  4.737
+Dog 3:   4.601 | CR:       OK
+ Team:  23.616
+  Net:  18.762

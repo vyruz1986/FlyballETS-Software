@@ -1,0 +1,7 @@
+$innit;reruns off;
+Dog 1:   4.859 | CR: -  0.024
+Dog 2:   4.465 | CR:       ok
+Dog 3:   4.157 | CR:    fault
+Dog 4:   4.818 | CR: +  0.546
+ Team:  18.820
+  Net:  18.298

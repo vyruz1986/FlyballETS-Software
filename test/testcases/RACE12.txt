@@ -1,0 +1,8 @@
+$innit;setdogs 4;reruns on;
+Dog 1:   3.399 | CR: +  0.156
+Dog 2:   4.865 | CR: -  0.359
+Dog 2:   4.696 | CR: +  0.178
+Dog 3:   4.730 | CR:       OK
+Dog 4:   5.868 | CR:       OK
+ Team:  23.532
+  Net:  23.558
