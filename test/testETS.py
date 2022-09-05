@@ -94,16 +94,19 @@ while argument_number < len(sys.argv):
                 listOfRaces[elem_iter] = elem
             elem_iter += 1
         flatten_listOfRaces = list(flat2gen(listOfRaces))
-        print(flatten_listOfRaces)
     elif selectedrace == "-d":
         debugmode = True
-    #elif selectedrace == "-all":
-        #for i in range(45):
-            #flatten_listOfRaces.append(str(i))
+    elif selectedrace == "-all":
+        initial_count = 0
+        for Path in os.listdir(os.getcwd() + "/testcases"):
+            if os.path.isfile(os.path.join(os.getcwd() + "/testcases", Path)):
+                flatten_listOfRaces.append(str(initial_count))
+                initial_count += 1
     else:
         print("Error: Invalid input")
         invalidinput = True
     argument_number += 1
+print(flatten_listOfRaces)
 
 for selectedrace in flatten_listOfRaces:
     selectedrace = str(selectedrace)
