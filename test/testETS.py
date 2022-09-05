@@ -6,12 +6,22 @@ import serial
 import time
 import string
 import sys
+import itertools
 from datetime import datetime
 from threading import Timer
 from serial.tools import list_ports
 
+def flat2gen(alist):
+            for item in alist:
+                if isinstance(item, list):
+                    for subitem in item: yield subitem
+                else:
+                    yield item
+
 def command_send_midprogramm(command):
     ser.write(command.encode('utf-8') + b"\n")
+
+    
 
 serialPorts = list(list_ports.comports())
 serialPortIndex = 0
@@ -85,11 +95,8 @@ while argument_number < len(sys.argv):
                     firstrace += 1
                 listOfRaces[elem_iter] = elem
             elem_iter += 1
-        if rangeArg:
-            flatten_listOfRaces = [element for sublist in listOfRaces for element in sublist]
-        else:
-            flatten_listOfRaces = listOfRaces
-        #print(flatten_listOfRaces)
+        flatten_listOfRaces = list(flat2gen(listOfRaces))
+        print(flatten_listOfRaces)
     elif selectedrace == "-d":
         debugmode = True
     #elif selectedrace == "-all":
@@ -101,6 +108,7 @@ while argument_number < len(sys.argv):
     argument_number += 1
 
 for selectedrace in flatten_listOfRaces:
+    selectedrace = str(selectedrace)
     ser.write(b"race " + selectedrace.encode('utf-8') + b"\n")
     time.sleep(1)
     '''
