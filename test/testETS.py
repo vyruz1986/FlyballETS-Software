@@ -43,11 +43,12 @@ ser.write(b"stop" + b"\n")
 time.sleep(2)
 ser.write(b"reset" + b"\n")
 time.sleep(2)
-'''
-readline_reboot = ser.readline()[:-2]
-while b"ESP log level 4" not in readline_reboot:
-    readline_reboot = ser.readline()[:-2]
-'''
+
+ser.write(b"preparefortesting\n")
+readlineSkip = ser.readline()[:-2]
+while b"Simulation mode" not in readlineSkip:
+    readlineSkip = ser.readline()[:-2]
+
 ammountofraces = 1
 racenumber = 0
 testqueue = False
@@ -55,32 +56,62 @@ debugmode = False
 endless = False
 invalidinput = False
 racestart = False
+rangeArg = False
 
 # selectedrace = input("Select race: ") # 0/1/2/20 or end
+flatten_listOfRaces = []
 argument_number = 1
-selectedrace = str(sys.argv[argument_number])
-
-while selectedrace != "end":
-    if selectedrace == "debug":
+while argument_number < len(sys.argv):
+    #print(argument_number)
+    selectedrace = str(sys.argv[argument_number])
+    #print(selectedrace)
+    if selectedrace[0].isdigit():
+        listOfRaces = list(selectedrace.split(","))
+        #print(listOfRaces)
+        elem_iter = 0
+        for elem in listOfRaces:
+            #print(elem)
+            if '-' in elem:
+                rangeArg = True
+                racerange = elem.split("-")
+                #print(racerange)
+                firstrace = int(racerange[0])
+                lastrace = int(racerange[1])
+                #print(firstrace)
+                elem = []
+                while firstrace <= lastrace:
+                    elem.append(str(firstrace))
+                    #print(elem)
+                    firstrace += 1
+                listOfRaces[elem_iter] = elem
+            elem_iter += 1
+        if rangeArg:
+            flatten_listOfRaces = [element for sublist in listOfRaces for element in sublist]
+        else:
+            flatten_listOfRaces = listOfRaces
+        #print(flatten_listOfRaces)
+    elif selectedrace == "-d":
         debugmode = True
-        argument_number += 1
-        selectedrace = str(sys.argv[argument_number])
-    if '-' in selectedrace:
-        racerange = selectedrace.split("-")
-        firstrace = int(racerange[0])
-        lastrace = int(racerange[1])
-        selectedrace = racerange[0]
-        testqueue = True
+    #elif selectedrace == "-all":
+        #for i in range(45):
+            #flatten_listOfRaces.append(str(i))
+    else:
+        print("Error: Invalid input")
+        invalidinput = True
+    argument_number += 1
+
+for selectedrace in flatten_listOfRaces:
+    ser.write(b"race " + selectedrace.encode('utf-8') + b"\n")
+    time.sleep(1)
+    '''
     if selectedrace.isdigit():
         bselectedrace = selectedrace.encode('utf-8')
         ser.write(b"race " + bselectedrace + b"\n")
-        racefile = open(os.getcwd() + "/testcases" + "/RACE" + selectedrace + ".txt", "r")
-    elif selectedrace == "all":
+    if selectedrace == "all":
         for filename in os.listdir(os.getcwd() + "/testcases"):
             print(filename)
             race = re.findall(r'\d+', filename)
             print(race)
-            selectedrace = 1
             racefile = open(os.getcwd() + "/testcases" + "/RACE" + selectedrace + ".txt", "r")
     elif selectedrace == "stab":
         endless = True
@@ -92,12 +123,11 @@ while selectedrace != "end":
         ammountofraces = int(splitnumofraces[1])
         #exitfile.write(b"//race 0" + b'\n')
         racefile = open(os.getcwd() + "/RACE0.txt", "r")
-    else:
-        print("Error: Invalid input")
-        invalidinput = True
+    
         racenumber = ammountofraces
     # print(ammountofraces)
-
+    '''
+    racefile = open(os.getcwd() + "/testcases" + "/RACE" + selectedrace + ".txt", "r")
     exitfile = open(pathTestsOutputFolder + "/race" + selectedrace + ".txt", "wb")
     time.sleep(1)
     linestoskip = 0
@@ -127,7 +157,7 @@ while selectedrace != "end":
         additionalargs = racefile.readline()
     racefile.seek(0)
     for i in range(linestoskip):
-        racefile.readline()
+       racefile.readline()
 
     if invalidinput:
         selectedrace = "end"
@@ -136,7 +166,7 @@ while selectedrace != "end":
         raceEND = False
         readline = ser.readline()
         ser.write(b"start" + b"\n")  # \x53\x54\x41\x52\x54\x0a (utf-8)
-
+        time.sleep(1)
         '''
         while racenumber < ammountofraces:
             #ser.write(b"reset" + b"\n") #\x52\x45\x53\x45\x54\x0a (utf-8)
@@ -186,7 +216,7 @@ while selectedrace != "end":
             stopline = readline
             decodeline = readline.decode('utf-8')
             splitdecodeline = decodeline.split("(): ")
-            exitfile.write(splitdecodeline[1].encode('utf-8'))
+            #exitfile.write(splitdecodeline[1].encode('utf-8'))
             if ((splitdecodeline[1].startswith("Dog ") or splitdecodeline[1].startswith(" Team") or splitdecodeline[1].startswith("  Net")) and raceEND):
                 #exitfile.write(splitdecodeline[1].encode('utf-8') + b'\n')
                 lengthofline = len(splitdecodeline[1])
@@ -230,16 +260,8 @@ while selectedrace != "end":
         ser.write(b"reset" + b"\n")
         for i in range(4):
             readline = ser.readline()
+        ser.write(b"preparefortesting\n")
         time.sleep(2)
-        if testqueue:
-            firstrace += 1
-            selectedrace = str(firstrace)
-            if firstrace == lastrace:
-                testqueue = False
-        else:
-            argument_number += 1
-            selectedrace = str(sys.argv[argument_number])
-            # selectedrace = input("Select race: ") # 0 or 1 or 2 or end
         racefile.close()
 exitfile.close()
 fileTestsSummary.close()
