@@ -1,12 +1,10 @@
 # test ESP32
 import os
 import re
-import queue
 import serial
 import time
 import string
 import sys
-import itertools
 from datetime import datetime
 from threading import Timer
 from serial.tools import list_ports
