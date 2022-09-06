@@ -20,7 +20,6 @@ def command_send_midprogramm(command):
     ser.write(command.encode('utf-8') + b"\n")
 
     
-
 serialPorts = list(list_ports.comports())
 serialPortIndex = 0
 for p in serialPorts:
@@ -57,14 +56,10 @@ readlineSkip = ser.readline()[:-2]
 while b"Simulation mode" not in readlineSkip:
     readlineSkip = ser.readline()[:-2]
 
-ammountofraces = 1
 racenumber = 0
-testqueue = False
 debugmode = False
 endless = False
 invalidinput = False
-racestart = False
-rangeArg = False
 
 # selectedrace = input("Select race: ") # 0/1/2/20 or end
 flatten_listOfRaces = []
@@ -80,7 +75,6 @@ while argument_number < len(sys.argv):
         for elem in listOfRaces:
             #print(elem)
             if '-' in elem:
-                rangeArg = True
                 racerange = elem.split("-")
                 #print(racerange)
                 firstrace = int(racerange[0])
@@ -96,8 +90,10 @@ while argument_number < len(sys.argv):
         flatten_listOfRaces = list(flat2gen(listOfRaces))
     elif selectedrace == "-d":
         debugmode = True
-    elif selectedrace == "-all":
+    elif selectedrace == "-all" or selectedrace == "-stab":
         initial_count = 0
+        if selectedrace == "-stab":
+            endless = True
         for Path in os.listdir(os.getcwd() + "/testcases"):
             if os.path.isfile(os.path.join(os.getcwd() + "/testcases", Path)):
                 flatten_listOfRaces.append(str(initial_count))
@@ -106,23 +102,20 @@ while argument_number < len(sys.argv):
         print("Error: Invalid input")
         invalidinput = True
     argument_number += 1
-print(flatten_listOfRaces)
+#print(flatten_listOfRaces)
 
-for selectedrace in flatten_listOfRaces:
-    selectedrace = str(selectedrace)
+if endless:
+    stabTime = time.time()
+    #print(stabTime)
+
+testNum = 0
+#for selectedrace in flatten_listOfRaces:
+while testNum < len(flatten_listOfRaces):
+    selectedrace = str(flatten_listOfRaces[testNum])
     ser.write(b"race " + selectedrace.encode('utf-8') + b"\n")
     time.sleep(1)
     '''
-    if selectedrace.isdigit():
-        bselectedrace = selectedrace.encode('utf-8')
-        ser.write(b"race " + bselectedrace + b"\n")
-    if selectedrace == "all":
-        for filename in os.listdir(os.getcwd() + "/testcases"):
-            print(filename)
-            race = re.findall(r'\d+', filename)
-            print(race)
-            racefile = open(os.getcwd() + "/testcases" + "/RACE" + selectedrace + ".txt", "r")
-    elif selectedrace == "stab":
+    if selectedrace == "-stab":
         endless = True
         ser.write(b"race 0" + b"\n")
         for a in range(2):
@@ -132,9 +125,6 @@ for selectedrace in flatten_listOfRaces:
         ammountofraces = int(splitnumofraces[1])
         #exitfile.write(b"//race 0" + b'\n')
         racefile = open(os.getcwd() + "/RACE0.txt", "r")
-    
-        racenumber = ammountofraces
-    # print(ammountofraces)
     '''
     racefile = open(os.getcwd() + "/testcases" + "/RACE" + selectedrace + ".txt", "r")
     exitfile = open(pathTestsOutputFolder + "/race" + selectedrace + ".txt", "wb")
@@ -176,22 +166,6 @@ for selectedrace in flatten_listOfRaces:
         readline = ser.readline()
         ser.write(b"start" + b"\n")  # \x53\x54\x41\x52\x54\x0a (utf-8)
         time.sleep(1)
-        '''
-        while racenumber < ammountofraces:
-            #ser.write(b"reset" + b"\n") #\x52\x45\x53\x45\x54\x0a (utf-8)
-            if raceEND:
-                raceEND = False
-                racefile.close()
-                if racenumber <= ammountofraces:
-                    bracenumber = b'%i' % racenumber
-                    #print(bracenumber)
-                    strracenumber = str(racenumber)
-                    racefile = open(os.getcwd() + "/RACE" + selectedrace + ".txt", "r")
-                    ser.write(b"race " + bracenumber + b'\n')
-                    for x in range(3):
-                        ser.readline()
-                    exitfile.write(b"/Race " + bracenumber + b'\n')
-        '''
         stopline = ""
         consoleProgressPrint = "Running race " + selectedrace + "."
         print(consoleProgressPrint, end='')
@@ -207,18 +181,11 @@ for selectedrace in flatten_listOfRaces:
             else:
                 consoleProgressPrint += "."
                 print(consoleProgressPrint, end='')
-            if endless:
-                fileTestsSummary.write(readline + b'\n')
-                if splitdecodeline[1] == "RS:  STOP  ":
-                    fileTestsSummary.write(bytetime + b'\n')
             if splitdecodeline[1] == "RS:  STOP  ":
                 raceEND = True
                 stopline = readline
                 racenumber += 1
-                if racenumber == ammountofraces and endless:
-                    racefile.seek(0)
-                    racenumber = 0
-            #del splitdecodeline
+
         notOKcount = 0
         while b"Net" not in stopline:
             readline = ser.readline()[:-2]
@@ -243,34 +210,26 @@ for selectedrace in flatten_listOfRaces:
                     #print(normdecodeline, colored("NOK", 'red'), " Exp: ", Fore.YELLOW + expectedline, Fore.RESET)
                     exitfile.write(normdecodeline.encode('utf-8') + b'  NOK' + b'   Exp: ' + expectedline.encode('utf-8') + b'\n')
 
-            if endless:
-                ser.write(b"time" + b'\n')
-                timecheck = ser.readline()[:-2]
-                timecheck = ser.readline()[:-2]
-                print(timecheck)
-                # if timecheck.startswith(b"[I]"):
-                splittimecheck = timecheck.split(b" ")
-                splittimecheck = splittimecheck[5].split(b".")
-                time = int(splittimecheck[0])
-                bytetime = bytes(splittimecheck[0])
-                exitfile.write(bytetime + b'\n')
-                print(time)
-                if time > 21600000:
-                    racenumber = ammountofraces
-                # print(racenumber)
         if notOKcount != 0:
             fileTestsSummary.write(b"Race " + selectedrace.encode('utf-8') + b" FAIL\n")
             print("FAIL")
         else:
             fileTestsSummary.write(b"Race " + selectedrace.encode('utf-8') + b" PASSED\n")
             print("PASSED")
-        if endless:
-            print(time)
+
         ser.write(b"reset" + b"\n")
         for i in range(4):
             readline = ser.readline()
         ser.write(b"preparefortesting\n")
         time.sleep(2)
+        testNum += 1
         racefile.close()
+
+        if endless:
+            stabTime2 = time.time()
+            #print(stabTime2)
+            #print(stabTime2 - stabTime)
+            if stabTime2 - stabTime >= 3600.0:
+                testNum = len(flatten_listOfRaces)
 exitfile.close()
 fileTestsSummary.close()
