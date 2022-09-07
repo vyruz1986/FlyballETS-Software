@@ -231,5 +231,7 @@ while testNum < len(flatten_listOfRaces):
             #print(stabTime2 - stabTime)
             if stabTime2 - stabTime >= 3600.0:
                 testNum = len(flatten_listOfRaces)
+            elif testNum == len(flatten_listOfRaces):
+                testNum = 0
 exitfile.close()
 fileTestsSummary.close()
