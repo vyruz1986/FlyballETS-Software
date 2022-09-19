@@ -46,7 +46,7 @@
       "@types/node": "^17.0.18",
       "gulp": "^4.0.2",
       "gulp-base64-favicon": "^1.0.3",
-      "gulp-clean-css": "^4.3.0",
+      "gulp-crass": "^0.2.2",
       "gulp-css-base64": "^2.0.0",
       "gulp-gzip": "^1.4.2",
       "gulp-htmllint": "^0.0.19",

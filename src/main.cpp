@@ -113,6 +113,7 @@ void setup()
 
 #ifdef WiFiON
    // Setup AP
+   //WiFi.onEvent(WiFiEvent);
    WiFi.mode(WIFI_AP);
    String strAPName = SettingsManager.getSetting("APName");
    String strAPPass = SettingsManager.getSetting("APPass");
@@ -121,7 +122,6 @@ void setup()
       log_e("Error initializing softAP!");
    else
       log_i("Wifi started successfully, AP name: %s, pass: %s", strAPName.c_str(), strAPPass.c_str());
-   //WiFi.onEvent(WiFiEvent);
 
    // configure webserver
    WebHandler.init(80);
@@ -363,7 +363,7 @@ void WiFiEvent(WiFiEvent_t event)
       break;
 
    case SYSTEM_EVENT_AP_STAIPASSIGNED:
-      // log_i("IP assigned to new client");
+      log_i("IP assigned to new client");
       break;
 
    default:

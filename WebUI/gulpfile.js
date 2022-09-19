@@ -26,10 +26,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 const fs = require("fs");
 const gulp = require("gulp");
 const htmlmin = require("gulp-htmlmin");
+const crass = require("gulp-crass");
 const gzip = require("gulp-gzip");
 const inline = require("gulp-inline");
 const inlineImages = require('gulp-css-base64');
-const cleancss = require('gulp-clean-css');
 const favicon = require("gulp-base64-favicon");
 const htmllint = require("gulp-htmllint");
 const c = require('ansi-colors');
@@ -94,7 +94,7 @@ gulp.task("buildfs_inline", function () {
          inline({
             base: sourceFolder,
             js: [uglify],
-            css: [cleancss, inlineImages],
+            css: [crass, inlineImages],
             disabledTypes: ["svg", "img"],
          })
       )
