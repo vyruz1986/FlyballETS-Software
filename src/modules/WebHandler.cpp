@@ -676,6 +676,29 @@ void WebHandlerClass::_SendSystemData(int8_t iClientId)
    }
 }
 
+void WebHandlerClass::disconnectWsClient(IPAddress ipDisconnectedIP)
+{
+   uint8_t iId = 0;
+   for (auto &isConsumer : _bIsConsumerArray)
+   {
+      if (isConsumer)
+      {
+         log_d("Getting client obj for id %i", iId);
+         AsyncWebSocketClient *client = _ws->client(iId);
+         IPAddress ip = client->remoteIP();
+         log_d("IP to check: %s. IP of the client: %s", ipDisconnectedIP.toString().c_str(), ip.toString().c_str());
+         if (client && client->status() == WS_CONNECTED && ip == ipDisconnectedIP)
+         {
+            log_d("Closing client %i", iId);
+            client->close();
+            _iNumOfConsumers--;
+            _bIsConsumerArray[client->id()] = false;
+         }
+      }
+      iId++;
+   }
+}
+
 void WebHandlerClass::_onAuth(AsyncWebServerRequest *request)
 {
    if (!_authenticate(request))

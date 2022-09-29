@@ -112,6 +112,8 @@ uint8_t iCurrentDog;                 // currently running dog
 uint8_t iCurrentRaceState;           // current race state
 
 bool bRaceSummaryPrinted = false;    // race summary printed indicator
+bool bCheckWsClinetStatus = false;   // flag to check if WS client should be disconnected
+IPAddress ipTocheck;                 // IP address of disconnected WiFi user
 
 unsigned int uiLastProgress = 0;     // last % OTA progress value
 
