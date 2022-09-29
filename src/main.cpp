@@ -130,8 +130,7 @@ void setup()
    // OTA setup
    ArduinoOTA.setPassword(strAPPass.c_str());
    ArduinoOTA.setPort(3232);
-   ArduinoOTA.onStart([]()
-                      {
+   ArduinoOTA.onStart([](){
       String type;
       if (ArduinoOTA.getCommand() == U_FLASH)
          type = "Firmware";
@@ -139,12 +138,10 @@ void setup()
          type = "Filesystem";
       Serial.println("\n" + type + " update initiated.");
       LCDController.FirmwareUpdateInit(); });
-   ArduinoOTA.onEnd([]()
-                    { 
+   ArduinoOTA.onEnd([](){ 
       Serial.println("\nUpdate completed.\n");
       LCDController.FirmwareUpdateSuccess(); });
-   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total)
-                         {
+   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total){
       uint16_t iProgressPercentage = (progress / (total / 100));
       if (uiLastProgress != iProgressPercentage)
       {
@@ -155,8 +152,7 @@ void setup()
          LCDController.FirmwareUpdateProgress(sProgressPercentage);
          uiLastProgress = iProgressPercentage;
       } });
-   ArduinoOTA.onError([](ota_error_t error)
-                      {
+   ArduinoOTA.onError([](ota_error_t error){
       Serial.printf("Error[%u]: ", error);
       LCDController.FirmwareUpdateError();
       if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
@@ -347,14 +343,13 @@ void ResetRace()
 }
 
 #ifdef WiFiON
-void WiFiEvent(WiFiEvent_t event)
+void WiFiEvent(arduino_event_id_t event)
 {
    // Serial.printf("Wifi event %i\r\n", event);
    switch (event)
    {
-   case SYSTEM_EVENT_AP_START:
+   case ARDUINO_EVENT_WIFI_AP_START:
       // log_i("AP Started");
-      WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
       if (WiFi.softAPIP() != IPGateway)
       {
          log_e("I am not running on the correct IP (%s instead of %s), rebooting!", WiFi.softAPIP().toString().c_str(), IPGateway.toString().c_str());
@@ -363,12 +358,16 @@ void WiFiEvent(WiFiEvent_t event)
       log_i("Ready on IP: %s, v%s", WiFi.softAPIP().toString().c_str(), APP_VER);
       break;
 
-   case SYSTEM_EVENT_AP_STOP:
+   case ARDUINO_EVENT_WIFI_AP_STOP:
       // log_i("AP Stopped");
       break;
 
-   case SYSTEM_EVENT_AP_STAIPASSIGNED:
+   case ARDUINO_EVENT_WIFI_AP_STAIPASSIGNED:
       // log_i("IP assigned to new client");
+      break;
+
+   case ARDUINO_EVENT_WIFI_AP_STADISCONNECTED:
+      log_i("WiFi client disconnected");
       break;
 
    default:

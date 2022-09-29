@@ -21,7 +21,8 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
             return;
          }
       }
-      client->ping();
+      //client->ping();
+      //client->keepAlivePeriod(10);
    }
    else if (type == WS_EVT_DISCONNECT)
    {
@@ -31,15 +32,15 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
          _bIsConsumerArray[client->id()] = false;
       }
 
-      log_i("Client %u disconnected!\n", client->id());
+      log_i("Client %u disconnected! Have %i clients\n", client->id(), _ws->count());
    }
    else if (type == WS_EVT_ERROR)
    {
-      log_e("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t *)arg), (char *)data);
+      log_e("ws[%s][%u] error(%u): %s", server->url(), client->id(), *((uint16_t *)arg), (char *)data);
    }
    else if (type == WS_EVT_PONG)
    {
-      log_d("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len) ? (char *)data : "");
+      log_d("ws[%s][%u] pong[%u]: %s", server->url(), client->id(), len, (len) ? (char *)data : "");
    }
    else if (type == WS_EVT_DATA)
    {
@@ -64,7 +65,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
                msg += buff;
             }
          }
-         log_d("%s\n", msg.c_str());
+         log_d("%s", msg.c_str());
       }
       else
       {
@@ -72,8 +73,8 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
          if (info->index == 0)
          {
             if (info->num == 0)
-               log_d("ws[%s][%u] %s-message start\n", server->url(), client->id(), (info->message_opcode == WS_TEXT) ? "text" : "binary");
-            log_d("ws[%s][%u] frame[%u] start[%llu]\n", server->url(), client->id(), info->num, info->len);
+               log_d("ws[%s][%u] %s-message start", server->url(), client->id(), (info->message_opcode == WS_TEXT) ? "text" : "binary");
+            log_d("ws[%s][%u] frame[%u] start[%llu]", server->url(), client->id(), info->num, info->len);
          }
 
          log_d("ws[%s][%u] frame[%u] %s[%llu - %llu]: ", server->url(), client->id(), info->num, (info->message_opcode == WS_TEXT) ? "text" : "binary", info->index, info->index + len);
@@ -92,13 +93,13 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
                msg += buff;
             }
          }
-         log_d("%s\n", msg.c_str());
+         log_d("%s", msg.c_str());
 
          if ((info->index + len) == info->len)
          {
-            log_d("ws[%s][%u] frame[%u] end[%llu]\n", server->url(), client->id(), info->num, info->len);
+            log_d("ws[%s][%u] frame[%u] end[%llu]", server->url(), client->id(), info->num, info->len);
             if (info->final)
-               log_d("ws[%s][%u] %s-message end\n", server->url(), client->id(), (info->message_opcode == WS_TEXT) ? "text" : "binary");
+               log_d("ws[%s][%u] %s-message end", server->url(), client->id(), (info->message_opcode == WS_TEXT) ? "text" : "binary");
          }
       }
 
@@ -196,8 +197,7 @@ void WebHandlerClass::init(int webPort)
    _server->addHandler(_ws);
    _server->addHandler(_wsa);
 
-   _server->onNotFound([](AsyncWebServerRequest *request)
-                       {
+   _server->onNotFound([](AsyncWebServerRequest *request){
       log_e("Not found: %s!", request->url().c_str());
       request->send(404); });
 
@@ -247,7 +247,7 @@ void WebHandlerClass::init(int webPort)
 void WebHandlerClass::loop()
 {
    unsigned long lCurrentUpTime = GET_MICROS / 1000;
-   // log_d("_bSendRaceData: %i, _bUpdateLights: %i, since LastBroadcast: %ul, since WS received: %ul, \r\n", _bSendRaceData, _bUpdateLights, (lCurrentUpTime - _lLastBroadcast), (lCurrentUpTime - _lWebSocketReceivedTime));
+   // log_d("_bSendRaceData: %i, _bUpdateLights: %i, since LastBroadcast: %ul, since WS received: %ul", _bSendRaceData, _bUpdateLights, (lCurrentUpTime - _lLastBroadcast), (lCurrentUpTime - _lWebSocketReceivedTime));
    if ((lCurrentUpTime - _lLastBroadcast > 100) && (lCurrentUpTime - _lWebSocketReceivedTime > 50))
    {
       if (_bUpdateLights)
@@ -260,9 +260,9 @@ void WebHandlerClass::loop()
             _SendSystemData();
          if (lCurrentUpTime - _lLastPingBroadcast > _lPingBroadcastInterval)
          {
-            _ws->cleanupClients();
-            log_d("Have %i clients, %i consumers\r\n", _ws->count(), _iNumOfConsumers);
             //_ws->pingAll();
+            _ws->cleanupClients();
+            log_d("Have %i clients, %i consumers", _ws->count(), _iNumOfConsumers);
             //_lLastBroadcast = GET_MICROS / 1000;
             _lLastPingBroadcast = GET_MICROS / 1000;
          }
@@ -296,7 +296,7 @@ void WebHandlerClass::_SendLightsData()
             AsyncWebSocketClient *client = _ws->client(iId);
             if (client && client->status() == WS_CONNECTED)
             {
-               //log_d("Ligts update to client %i\r\n", iId);
+               //log_d("Ligts update to client %i", iId);
                client->text(wsBuffer);
             }
          }
@@ -384,7 +384,7 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
    }
    else if (ActionType == "AnnounceConsumer")
    {
-      log_d("We have a consumer with ID %i and IP %s", Client->id(), Client->remoteIP().toString().c_str());
+      log_d("We have a consumer with ID %i and IP %s\n", Client->id(), Client->remoteIP().toString().c_str());
       if (!_bIsConsumerArray[Client->id()])
       {
          _iNumOfConsumers++;
@@ -528,11 +528,11 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
             {
                if (isConsumer)
                {
-                  //log_d("Getting client obj for id %i\r\n", iId);
+                  //log_d("Getting client obj for id %i", iId);
                   AsyncWebSocketClient *client = _ws->client(iId);
                   if (client && client->status() == WS_CONNECTED)
                   {
-                     //log_d("Generic update. Sending to client %i\r\n", iId);
+                     //log_d("Generic update. Sending to client %i", iId);
                      client->text(wsBuffer);
                   }
                }
@@ -541,7 +541,7 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
          }
          else
          {
-            // log_d("Specific update. Sending to client %i\r\n", iClientId);
+            // log_d("Specific update. Sending to client %i", iClientId);
             AsyncWebSocketClient *client = _ws->client(iClientId);
             client->text(wsBuffer);
          }
@@ -554,7 +554,7 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
 bool WebHandlerClass::_ProcessConfig(JsonArray newConfig, String *ReturnError)
 {
    bool save = false;
-   log_d("Config has %i elements\r\n", newConfig.size());
+   log_d("Config has %i elements", newConfig.size());
    for (unsigned int i = 0; i < newConfig.size(); i++)
    {
       String key = newConfig[i]["name"];
@@ -653,11 +653,11 @@ void WebHandlerClass::_SendSystemData(int8_t iClientId)
             {
                if (isConsumer)
                {
-                  //log_d("Getting client obj for id %i\r\n", iId);
+                  //log_d("Getting client obj for id %i", iId);
                   AsyncWebSocketClient *client = _ws->client(iId);
                   if (client && client->status() == WS_CONNECTED)
                   {
-                     //log_d("Generic update. Sending to client %i\r\n", iId);
+                     //log_d("Generic update. Sending to client %i", iId);
                      client->text(wsBuffer);
                   }
                }
@@ -666,12 +666,12 @@ void WebHandlerClass::_SendSystemData(int8_t iClientId)
          }
          else
          {
-            // log_d("Specific update. Sending to client %i\r\n", iClientId);
+            // log_d("Specific update. Sending to client %i", iClientId);
             AsyncWebSocketClient *client = _ws->client(iClientId);
             client->text(wsBuffer);
          }
          _lLastSystemDataBroadcast = _lLastBroadcast = GET_MICROS / 1000;
-         // log_d("Sent sysdata at %lu\r\n", GET_MICROS / 1000);
+         // log_d("Sent sysdata at %lu", GET_MICROS / 1000);
       }
    }
 }
@@ -736,7 +736,7 @@ bool WebHandlerClass::_wsAuth(AsyncWebSocketClient *client)
 
    if (index == WS_TICKET_BUFFER_SIZE)
    {
-      log_e("[WEBSOCKET] Validation check failed\n");
+      log_e("[WEBSOCKET] Validation check failed");
       client->text("{\"success\": false, \"error\": \"You shall not pass!!!! Please authenticate first :-)\", \"authenticated\": false}");
       _lLastBroadcast = GET_MICROS / 1000;
       return false;

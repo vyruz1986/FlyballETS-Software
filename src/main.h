@@ -55,7 +55,7 @@ void HandleLCDUpdates();
 void ToggleWifi();
 String GetButtonString(uint8_t _iActiveBit);
 #ifdef WiFiON
-void WiFiEvent(WiFiEvent_t event);
+void WiFiEvent(arduino_event_id_t event);
 #endif
 
 // Photoelectric sensors
