@@ -356,7 +356,7 @@ void WiFiEvent(arduino_event_id_t event)
    {
    case ARDUINO_EVENT_WIFI_AP_START:
       // log_i("AP Started");
-      //WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
+      WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
       if (WiFi.softAPIP() != IPGateway)
       {
          log_e("I am not running on the correct IP (%s instead of %s), rebooting!", WiFi.softAPIP().toString().c_str(), IPGateway.toString().c_str());
