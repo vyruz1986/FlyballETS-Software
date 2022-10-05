@@ -374,10 +374,10 @@ void WiFiEvent(arduino_event_id_t event)
       break;
 
    case ARDUINO_EVENT_WIFI_AP_STADISCONNECTED:
-         //bCheckWsClinetStatus = true;
-         //ipTocheck = IPAddress (192,168,20,2);
-         //log_i("IP to check: %s", ipTocheck.toString().c_str());
-         break;
+      //bCheckWsClinetStatus = true;
+      //ipTocheck = IPAddress (192,168,20,2);
+      //log_i("IP to check: %s", ipTocheck.toString().c_str());
+      break;
 
    default:
       break;
