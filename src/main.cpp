@@ -181,6 +181,13 @@ void loop()
 #ifdef WiFiON
       // Handle OTA update if incoming
       ArduinoOTA.handle();
+      if (bCheckWsClinetStatus)
+      {
+         bCheckWsClinetStatus = false;
+         log_i("IP to check: %s", ipTocheck.toString().c_str());
+         WebHandler.disconnectWsClient(ipTocheck);
+      }
+         
 #endif
 
       // Handle GPS
@@ -342,12 +349,12 @@ void ResetRace()
 }
 
 #ifdef WiFiON
-void WiFiEvent(WiFiEvent_t event)
+void WiFiEvent(arduino_event_id_t event)
 {
    // Serial.printf("Wifi event %i\r\n", event);
    switch (event)
    {
-   case SYSTEM_EVENT_AP_START:
+   case ARDUINO_EVENT_WIFI_AP_START:
       // log_i("AP Started");
       //WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
       if (WiFi.softAPIP() != IPGateway)
@@ -358,13 +365,19 @@ void WiFiEvent(WiFiEvent_t event)
       log_i("Ready on IP: %s, v%s", WiFi.softAPIP().toString().c_str(), APP_VER);
       break;
 
-   case SYSTEM_EVENT_AP_STOP:
+   case ARDUINO_EVENT_WIFI_AP_STOP:
       // log_i("AP Stopped");
       break;
 
-   case SYSTEM_EVENT_AP_STAIPASSIGNED:
-      log_i("IP assigned to new client");
+   case ARDUINO_EVENT_WIFI_AP_STAIPASSIGNED:
+      // log_i("IP assigned to new client");
       break;
+
+   case ARDUINO_EVENT_WIFI_AP_STADISCONNECTED:
+         //bCheckWsClinetStatus = true;
+         //ipTocheck = IPAddress (192,168,20,2);
+         //log_i("IP to check: %s", ipTocheck.toString().c_str());
+         break;
 
    default:
       break;

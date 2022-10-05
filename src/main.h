@@ -55,7 +55,7 @@ void HandleLCDUpdates();
 void ToggleWifi();
 String GetButtonString(uint8_t _iActiveBit);
 #ifdef WiFiON
-void WiFiEvent(WiFiEvent_t event);
+void WiFiEvent(arduino_event_id_t event);
 #endif
 
 // Photoelectric sensors
@@ -112,6 +112,8 @@ uint8_t iCurrentDog;                 // currently running dog
 uint8_t iCurrentRaceState;           // current race state
 
 bool bRaceSummaryPrinted = false;    // race summary printed indicator
+bool bCheckWsClinetStatus = false;   // flag to check if WS client should be disconnected
+IPAddress ipTocheck;                 // IP address of disconnected WiFi user
 
 unsigned int uiLastProgress = 0;     // last % OTA progress value
 
