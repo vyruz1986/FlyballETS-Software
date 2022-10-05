@@ -29,6 +29,19 @@ export class RaceControlComponent implements OnChanges, OnInit {
       { id: 1, label: "1" }
    ]
 
+   setTagClass(overallMaxState) {
+      switch (overallMaxState) {
+      case 0: 
+         return 'badge badge-pill badge-success';
+      case 1: 
+         return 'badge badge-pill badge-warning';
+      case 2: 
+         return 'badge badge-pill badge-danger';
+      case 3: 
+         return 'badge badge-pill badge-secondary';
+      }
+   }
+
    ngOnInit() {
       if (this.raceStates === undefined) {
          return;

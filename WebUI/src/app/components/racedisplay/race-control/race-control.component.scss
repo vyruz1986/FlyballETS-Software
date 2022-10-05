@@ -1,5 +1,6 @@
 div.raceState {
-    font-size: large;
+    font-size: x-large;
+    margin-top: 10px;
 }
 
 .row {
@@ -14,8 +15,9 @@ div.raceState {
 
 select {
     width: auto;
+    margin: auto;
 }
 select:focus {
     max-width: 100px;
     width: auto;
-} 
+}
