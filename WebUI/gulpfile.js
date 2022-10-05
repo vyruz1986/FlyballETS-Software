@@ -33,7 +33,7 @@ const inlineImages = require('gulp-css-base64');
 const favicon = require("gulp-base64-favicon");
 const htmllint = require("gulp-htmllint");
 const c = require('ansi-colors');
-const uglify = require("gulp-uglify");
+//const uglify = require("gulp-uglify");
 
 const sourceFolder = "dist/";
 const staticFolder = sourceFolder;
@@ -93,7 +93,8 @@ gulp.task("buildfs_inline", function () {
       .pipe(
          inline({
             base: sourceFolder,
-            js: [uglify],
+            //js: [uglify],
+            js: [],
             css: [crass, inlineImages],
             disabledTypes: ["svg", "img"],
          })
