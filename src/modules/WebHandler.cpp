@@ -798,12 +798,12 @@ void WebHandlerClass::_onHome(AsyncWebServerRequest *request)
 
 void WebHandlerClass::_onFavicon(AsyncWebServerRequest *request)
 {
-   /*if (request->header("If-Modified-Since").equals(_last_modified))
+   if (request->header("If-Modified-Since").equals(_last_modified))
    {
       request->send(304);
    }
    else
-   {*/
+   {
 #ifndef WebUIonSDcard
    AsyncWebServerResponse *response = request->beginResponse_P(200, "image/png", index_html_gz, index_html_gz_len);
    response->addHeader("Content-Encoding", "gzip");
@@ -811,9 +811,9 @@ void WebHandlerClass::_onFavicon(AsyncWebServerRequest *request)
       AsyncWebServerResponse *response = request->beginResponse(SD_MMC, "/favicon.ico", "image/png");
 #endif
       // And set the last-modified datetime so we can check if we need to send it again next time or not
-      //response->addHeader("Last-Modified", _last_modified);
+      response->addHeader("Last-Modified", _last_modified);
       request->send(response);
-   //}
+   }
 }
 
 WebHandlerClass WebHandler;
