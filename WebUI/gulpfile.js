@@ -79,7 +79,7 @@ function htmllintReporter(filepath, issues) {
       issues.forEach(function (issue) {
          console.log(c.cyan('[gulp-htmllint] ') +
             c.white(filepath + " [" + issue.line + "," + issue.column + "]: ") +
-            c.colors.red("(" + issue.code + ") " + issue.msg)
+            c.red("(" + issue.code + ") " + issue.msg)
          );
       });
       process.exitCode = 1;
@@ -88,7 +88,7 @@ function htmllintReporter(filepath, issues) {
 
 gulp.task("buildfs_inline", function () {
    return gulp.src(sourceFolder + "*.html") 
-   .pipe(favicon())
+      .pipe(favicon())
       .pipe(
          inline({
             base: sourceFolder,
