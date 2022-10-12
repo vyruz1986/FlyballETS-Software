@@ -8,11 +8,11 @@ from threading import Timer
 from serial.tools import list_ports
 
 def flat2gen(alist):
-            for item in alist:
-                if isinstance(item, list):
-                    for subitem in item: yield subitem
-                else:
-                    yield item
+    for item in alist:
+        if isinstance(item, list):
+            for subitem in item: yield subitem
+        else:
+            yield item
 
 def command_send_midprogramm(command):
     ser.write(command.encode('utf-8') + b"\n")
@@ -61,6 +61,7 @@ invalidInput = False
 # selectedrace = input("Select race: ") # 0/1/2/20 or end
 flatten_listOfRaces = []
 argument_number = 1
+stabNumOfLoops = 1
 while argument_number < len(sys.argv):
     #print(argument_number)
     selectedRace = str(sys.argv[argument_number])
@@ -89,7 +90,6 @@ while argument_number < len(sys.argv):
         debugmode = True
     elif selectedRace == "-all" or selectedRace == "-stab":
         initial_count = 0
-        stabNumOfLoops = 1
         if selectedRace == "-stab":
             argument_number += 1
             stabNumOfLoops = int(sys.argv[argument_number])
@@ -112,7 +112,10 @@ for loop in range(stabNumOfLoops):
         time.sleep(2)
 
         racefile = open(os.getcwd() + "/testcases" + "/RACE" + selectedRace + ".txt", "r")
-        exitfile = open(pathTestsOutputFolder + "/race" + selectedRace + ".txt", "wb")
+        if loop > 0:
+            exitfile = open(pathTestsOutputFolder + "/race" + selectedRace + "_" + loop + ".txt", "wb")
+        else:
+            exitfile = open(pathTestsOutputFolder + "/race" + selectedRace + ".txt", "wb")
         time.sleep(2)
 
         linestoskip = 0
