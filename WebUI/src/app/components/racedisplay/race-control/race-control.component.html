@@ -1,37 +1,85 @@
 <div class="row">
-   <div class="column" style="width:6%;"></div>
-   <div class="column" style="width:22%;">
-      <select name="NumberOfRacingDogs" id="NumberOfRacingDogs" (change)="dogsChange($event.target.value)" [(ngModel)]="raceStates.RacingDogs"
-         [ngStyle]="{'font-size':'23px'}" [disabled]="dogsChangeDisabled">
-            <option *ngFor="let dog of numberOfDogs" [value]="dog.id">{{ dog.label }}</option>
+   <div class="column" style="width: 5%"></div>
+   <div class="column" style="width: 22%">
+      <select
+         *ngIf="!startDisabled"
+         class="form-control form-control-sm"
+         name="NumberOfRacingDogs"
+         id="NumberOfRacingDogs"
+         (change)="dogsChange($event.target.value)"
+         [(ngModel)]="raceStates.RacingDogs"
+         [ngStyle]="{ 'font-size': '23px' }"
+         [disabled]="dogsChangeDisabled"
+      >
+         <option class="" *ngFor="let dog of numberOfDogs" [value]="dog.id">{{ dog.label }}</option>
       </select>
    </div>
-   <div class="column" style="width:22%;">
-      <button type="button" class="btn btn-success" (click)="EmitCommand(0)" [disabled]="startDisabled" >Start</button>
+   <div class="column" style="width: 40%">
+      <div class="raceState">
+         <div>
+            <h5><span [ngClass]="setTagClass(overallMaxState)">
+               {{ overallMaxState | friendlyRaceState }}
+            </span></h5>
+         </div>
+      </div>
+   </div>   
+   <div class="column d-flex align-items-center" style="width: 28%">
+      <button
+         type="button"
+         *ngIf="!startDisabled"
+         [ngClass]="{ btn: true, 'btn-success': true, 'btn-block': true, 'btn-lg': true }"
+         (click)="EmitCommand(0)"
+         [disabled]="startDisabled"
+      >
+         Start
+      </button>
+      <button
+         type="button"
+         *ngIf="!stopDisabled"
+         [ngClass]="{ btn: true, 'btn-danger': true, 'btn-block': true, 'btn-lg': true  }"
+         (click)="EmitCommand(1)"
+         [disabled]="stopDisabled"
+      >
+         Stop
+      </button>
+      <button
+         type="button"
+         *ngIf="!resetDisabled"
+         [ngClass]="{ btn: true, 'btn-info': true, 'btn-block': true, 'btn-lg': true  }"
+         (click)="EmitCommand(2)"
+         [disabled]="resetDisabled"
+      >
+         Reset
+      </button>
    </div>
-   <div class="column" style="width:22%;">
-      <button type="button" class="btn btn-danger" (click)="EmitCommand(1)" [disabled]="stopDisabled" >Stop</button>
-   </div>
-   <div class="column" style="width:22%;">
-      <button type="button" class="btn btn-info" (click)="EmitCommand(2)" [disabled]="resetDisabled" >Reset</button>
-   </div>
-   <div class="column" style="width:6%;"></div>
+   <div class="column" style="width: 5%"></div>
 </div>
 <div class="row">
-   <div class="column" style="width:50%;">
-      <div class="form-check checkbox-slider--c-weight checkbox-slider-danger checkbox-slider-md d-inline">
+   <div class="column" style="width: 32%">
+      <button
+      type="button"
+      *ngIf="!raceStates.RerunsOff[0] && !startDisabled"
+      [ngClass]="{ btn: true, 'btn-default': true, 'btn-block': true, 'btn-sm': true  }"
+      (click)="EmitRerunsOff(!raceStates.RerunsOff[0])"
+      [disabled]="rerunsOffDisabled"
+      >
+         Re-runs ON
+      </button>
+      <button
+         type="button"
+         *ngIf="raceStates.RerunsOff[0] && !startDisabled"
+         [ngClass]="{ btn: true, 'btn-secondary': true, 'btn-block': true, 'btn-sm': true }"
+         (click)="EmitRerunsOff(!raceStates.RerunsOff[0])"
+         [disabled]="rerunsOffDisabled"
+      >
+         Re-runs OFF
+      </button>
+      <!--<div class="form-check checkbox-slider--c-weight checkbox-slider-danger checkbox-slider-md d-inline">
          <label>
-            <input type="checkbox" [disabled]="rerunsOffDisabled" [(ngModel)]="raceStates.RerunsOff[0]" (click)="EmitRerunsOff(!raceStates.RerunsOff[0])">
-            <span style="font-size: x-small;" >Reruns OFF</span>
-         </label>           
-      </div>
-   </div>
-   <div class="column" style="width:50%;">
-      <div class="raceState">
-         <span [ngClass]="{'badge': true, 'badge-success': overallMaxState == 0, 'badge-danger': overallMaxState == 2,
-                           'badge-warning': overallMaxState == 1 || overallMaxState == 3}">
-            {{overallMaxState | friendlyRaceState}}
-         </span>
-      </div>
+            <input type="checkbox" [disabled]="rerunsOffDisabled" [(ngModel)]="raceStates.RerunsOff[0]" (click)="EmitRerunsOff(!raceStates.RerunsOff[0])" />
+            <span style="font-size: x-small">Reruns OFF</span>
+         </label>
+      </div>-->
+      <div class="column" style="width: 50%"></div>
    </div>
 </div>
