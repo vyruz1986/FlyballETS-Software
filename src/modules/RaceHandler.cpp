@@ -185,7 +185,7 @@ void RaceHandlerClass::Main()
 
       // Calculate what our next dog will be
       uint8_t iNextDogChanged = iNextDog;
-      if (_bFault && iCurrentDog == (iNumberOfRacingDogs - 1))
+      if (_bFault && iCurrentDog == (iNumberOfRacingDogs - 1) && iNextDog < 5)
       {
          // If reruns are turned off set next do to dummy value 5
          if (bRerunsOff)
@@ -204,7 +204,7 @@ void RaceHandlerClass::Main()
             }
          }
       }
-      else if (_bFault && _bRerunBusy)
+      else if (_bFault && _bRerunBusy && !bRerunsOff)
       {
          // In case we have re-runs in progress we have to check which the next offending dog with proper order
          for (uint8_t i = (iCurrentDog + 1); i < iNumberOfRacingDogs; i++)
@@ -232,16 +232,16 @@ void RaceHandlerClass::Main()
          }
          _bNextDogFound = false;
       }
-      else if ((!_bFault && iCurrentDog == (iNumberOfRacingDogs - 1)) || (!_bFault && _bRerunBusy))
+      else if ((!bRerunsOff && !_bFault && iCurrentDog == (iNumberOfRacingDogs - 1)) || (!_bFault && _bRerunBusy))
          iNextDog = iCurrentDog;
-      else
+      else if (iNextDog != iCurrentDog + 1 && iNextDog < 5)
          // First runs of every dog, just increase number
          iNextDog = iCurrentDog + 1;
       if (iNextDogChanged != iNextDog)
          log_d("Next Dog is %i.", iNextDog + 1);
 
       // Handle sensor 1 events (handlers side) with gates CLEAR
-      if (STriggerRecord.iSensorNumber == 1 && STriggerRecord.iSensorState == 1 && _bGatesClear) // Only if gates are clear and S1 sensor is HIGH (A)
+      if (STriggerRecord.iSensorNumber == 1 && STriggerRecord.iSensorState == 1 && _bGatesClear && iCurrentDog < 5) // Only if gates are clear and S1 sensor is HIGH (A)
       {
          // Update race elapsed time
          _llRaceElapsedTime = STriggerRecord.llTriggerTime - llRaceStartTime;
@@ -344,7 +344,7 @@ void RaceHandlerClass::Main()
       }
 
       ////Handle sensor 1 events (handlers side) with gates state DOG IN
-      if (STriggerRecord.iSensorNumber == 1 && STriggerRecord.iSensorState == 1 && !_bGatesClear) // Only if gates are busy (dog in) and S1 sensor is HIGH (A)
+      if (STriggerRecord.iSensorNumber == 1 && STriggerRecord.iSensorState == 1 && !_bGatesClear && iCurrentDog < 5) // Only if gates are busy (dog in) and S1 sensor is HIGH (A)
       {
          // If negative cross detected and S1 crossed above 6ms from S2 crossing
          if (_bPotentialNegativeCrossDetected && ((STriggerRecord.llTriggerTime - _llS2CrossedUnsafeTriggerTime) > 6000))
@@ -426,7 +426,7 @@ void RaceHandlerClass::Main()
       }
 
       // Handle sensor 2 (box side)
-      if (STriggerRecord.iSensorNumber == 2 && STriggerRecord.iSensorState == 1 && _bGatesClear) // Only if gates are clear S2 sensor is HIGH (B)
+      if (STriggerRecord.iSensorNumber == 2 && STriggerRecord.iSensorState == 1 && _bGatesClear && iCurrentDog < 5) // Only if gates are clear S2 sensor is HIGH (B)
       {
          if (_byDogState == GOINGIN && (STriggerRecord.llTriggerTime - _llLastDogExitTime) > 3000000)
          {

@@ -72,6 +72,7 @@ protected:
 public:
    void init(int webPort);
    void loop();
+   void disconnectWsClient(IPAddress ipDisconnectedIP);
    bool _bUpdateLights = false;
    bool _bSendRaceData = false;
 };

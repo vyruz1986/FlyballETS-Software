@@ -113,11 +113,16 @@ Przy źle wypozycjonowanym ETSie w stanie GOTOWOŚĆ / READY górne biało świa
 ## Interfejs www (WiFi)
 Maksymalnie można podłączyć 8 klientów Wifi jednocześnie, jednakże ze względów wydajnościowych lepiej nie przekraczać ilości 4 klientów jednocześnie szczególnie, że w praktyce jedna osoba steruje ETSem i prezentuje wyniki handlerom.
 
-Uwaga użytkownicy iOSa!!!
+<b>UWAGA użytkownicy iOSa!!!</b>
 Bez poniższej zmiany, próba połączenia z ETSem będzie powodowała ciągłe restarty systemu.
 
 Od wersji iOS 15 wymagane jest wyłączenie w Ustawieniach jednej funkcji:
 Ustawienia => Safari => Zaawansowane => Experimental Features => NSURLSession WebSocket
+
+Dodatkowo po nawiązaniu połączenia z siecią WiFi nadawaną przez ETS należy wejść w opcję:
+Ustawienia => Wi-Fi => przy sieci FlyballETS nacisnąć "i" w kółku, a następnie wyłączyć:
+- Prywatny adres Wi-Fi
+- Ograniczaj śledzenie adresu IP
 
 #### Strona główna (Race)
 Na tej stronie dostępne te same funkcje sterowania, co przy pomocy pilota z tą różnicą, że start i stop to osobne przyciski. Podobnie dostępne są wszystkie dane widoczne na wyświetlaczu LCD z wyjątkiem informacji o włożonej karcie SD i kierunku biegu.
