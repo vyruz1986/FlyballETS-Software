@@ -9,10 +9,23 @@ Pre-conditions:
 
 Examples:
 - run testcases 1, 3, 4 and 8 in normal mode (minimized prints to console):
-python3 testETS.py 1 3 4 8 end
+python3 testETS.py 1,3,4,8
 
 - run testcases 4, 5, 6, 7, 8 in debug mode (serial transmision printed to console)
-python3 testETS.py debug 4-8 end
+python3 testETS.py 4-8 -d
+
+- run all testcases from 'testcases' folder in normal mode (minimized prints to console):
+python3 testETS.py -all
+
+- run all testcases in loop for 1 hour in normal mode (minimized prints to console):
+python3 testETS.py -stab
+
+Testcases:
+At the beginning of every testcase file there are "$innit" parameters (divided by ";") determining system setup for testcase.
+
+If testcase requires you to send command while the test is running, in next line after "$innit" there should be
+a line with "$commend" parameters where first parameter determines time in seconds after which the command is sent 
+and second parameter being the command you want to send.  (eg. "$command;8.5;d2f;")
 
 Results are stored in two forms in "results" folder consisting subfolders for each
 script execution with timestamps in the name. There is one "!summary.txt" file
