@@ -112,8 +112,9 @@ for loop in range(stabNumOfLoops):
         time.sleep(2)
 
         racefile = open(os.getcwd() + "/testcases" + "/RACE" + selectedRace + ".txt", "r")
-        if loop > 1:
+        if loop > 0:
             exitfile = open(pathTestsOutputFolder + "/race" + selectedRace + "_" + loop + ".txt", "wb")
+        else:
             exitfile = open(pathTestsOutputFolder + "/race" + selectedRace + ".txt", "wb")
         time.sleep(2)
 
