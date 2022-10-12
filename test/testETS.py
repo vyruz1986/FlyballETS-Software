@@ -56,7 +56,6 @@ while b"Simulation mode" not in readlineSkip:
 
 racenumber = 0
 debugmode = False
-endless = False
 invalidInput = False
 
 # selectedrace = input("Select race: ") # 0/1/2/20 or end
@@ -94,7 +93,6 @@ while argument_number < len(sys.argv):
         if selectedRace == "-stab":
             argument_number += 1
             stabNumOfLoops = int(sys.argv[argument_number])
-            #endless = True
         for Path in os.listdir(os.getcwd() + "/testcases"):
             if os.path.isfile(os.path.join(os.getcwd() + "/testcases", Path)):
                 flatten_listOfRaces.append(str(initial_count))
@@ -104,10 +102,6 @@ while argument_number < len(sys.argv):
         invalidInput = True
     argument_number += 1
 #print(flatten_listOfRaces)
-'''
-if endless:
-    stabTime = time.time()
-    #print(stabTime)'''
 
 for loop in range(stabNumOfLoops):
     testNum = 0
@@ -216,14 +210,5 @@ for loop in range(stabNumOfLoops):
             time.sleep(2)
             testNum += 1
             racefile.close()
-            '''
-            if endless:
-                stabTime2 = time.time()
-                #print(stabTime2)
-                #print(stabTime2 - stabTime)
-                if stabTime2 - stabTime >= 3600.0:
-                    testNum = len(flatten_listOfRaces)
-                elif testNum == len(flatten_listOfRaces):
-                    testNum = 0'''
 exitfile.close()
 fileTestsSummary.close()
