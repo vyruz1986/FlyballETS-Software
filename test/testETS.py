@@ -90,7 +90,7 @@ while argument_number < len(sys.argv):
         debugmode = True
     elif selectedRace == "-all" or selectedRace == "-stab":
         initial_count = 0
-        stabNumOfLoops = 0
+        stabNumOfLoops = 1
         if selectedRace == "-stab":
             argument_number += 1
             stabNumOfLoops = int(sys.argv[argument_number])
