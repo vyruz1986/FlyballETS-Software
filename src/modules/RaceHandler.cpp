@@ -707,6 +707,7 @@ void RaceHandlerClass::ResetRace()
    if (RaceState == STOPPED)
    {
       iCurrentDog = 0;
+      iNextDog = 1;
       iPreviousDog = 0;
       llRaceStartTime = 0;
       _llRaceEndTime = 0;
