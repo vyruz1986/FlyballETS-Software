@@ -61,6 +61,7 @@ invalidInput = False
 # selectedrace = input("Select race: ") # 0/1/2/20 or end
 flatten_listOfRaces = []
 argument_number = 1
+stabNumOfLoops = 1
 while argument_number < len(sys.argv):
     #print(argument_number)
     selectedRace = str(sys.argv[argument_number])
@@ -89,7 +90,6 @@ while argument_number < len(sys.argv):
         debugmode = True
     elif selectedRace == "-all" or selectedRace == "-stab":
         initial_count = 0
-        stabNumOfLoops = 1
         if selectedRace == "-stab":
             argument_number += 1
             stabNumOfLoops = int(sys.argv[argument_number])
