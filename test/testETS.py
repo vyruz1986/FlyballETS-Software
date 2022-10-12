@@ -8,11 +8,11 @@ from threading import Timer
 from serial.tools import list_ports
 
 def flat2gen(alist):
-            for item in alist:
-                if isinstance(item, list):
-                    for subitem in item: yield subitem
-                else:
-                    yield item
+    for item in alist:
+        if isinstance(item, list):
+            for subitem in item: yield subitem
+        else:
+            yield item
 
 def command_send_midprogramm(command):
     ser.write(command.encode('utf-8') + b"\n")
@@ -112,7 +112,9 @@ for loop in range(stabNumOfLoops):
         time.sleep(2)
 
         racefile = open(os.getcwd() + "/testcases" + "/RACE" + selectedRace + ".txt", "r")
-        exitfile = open(pathTestsOutputFolder + "/race" + selectedRace + ".txt", "wb")
+        if loop > 1:
+            exitfile = open(pathTestsOutputFolder + "/race" + selectedRace + "_" + loop + ".txt", "wb")
+            exitfile = open(pathTestsOutputFolder + "/race" + selectedRace + ".txt", "wb")
         time.sleep(2)
 
         linestoskip = 0
