@@ -5,11 +5,16 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
-- INSTRUKCJA_PL.md updated with recommendation in relation to sunlight
+- INSTRUKCJA_PL.md updated with recommendation in relation to sunlight and Wi-Fi settings
+- First issue of python test script for ETS (in simulation mode)
+- Run direction and firmware version visible in WebUI (system data section)
 
 ### Changed
+- WebUI main Race and Configuration pages updated (thanks to MiKoKappa)
+- INSTRUKCJA_PL.md updated with details about symptoms collection in case of faults
 - Filtering time of early dog while invisible dog is running changed from 4.5s to 5.5s (fix for 89-13)
 - Repositorium structure change in order to simplify development work and resolve library dependencies problems
+- Logs format change
 
 ## [1.6.0] - 2022-06-23
 

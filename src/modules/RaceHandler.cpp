@@ -38,20 +38,20 @@ void RaceHandlerClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
    ResetRace();
    if (SettingsManager.getSetting("RunDirectionInverted").equals("1"))
    {
-      _bRunDirectionInverted = true;
+      bRunDirectionInverted = true;
       LCDController.UpdateField(LCDController.BoxDirection, "<");
-      ESP_LOGI(__FILE__, "Run direction from settings: inverted");
+      log_i("Run direction from settings: inverted");
    }
    else
-      ESP_LOGI(__FILE__, "Run direction from settings: normal");
+      log_i("Run direction from settings: normal");
 
    if (SettingsManager.getSetting("Accuracy3digits").equals("1"))
    {
       _bAccuracy3digits = true;
-      ESP_LOGI(__FILE__, "Accuracy from settings: 3 digits");
+      log_i("Accuracy from settings: 3 digits");
    }
    else
-      ESP_LOGI(__FILE__, "Accuracy from settings: 2 digits");
+      log_i("Accuracy from settings: 2 digits");
 }
 
 /// <summary>
@@ -78,7 +78,7 @@ void RaceHandlerClass::_ChangeDogState(_byDogStates byNewDogState)
 {
    if (_byDogState != byNewDogState)
       _byDogState = byNewDogState;
-   // ESP_LOGD(__FILE__, "DogState: %i", byNewDogState);
+   // log_d("DogState: %i", byNewDogState);
 }
 
 /// <summary>
@@ -93,7 +93,7 @@ void RaceHandlerClass::_ChangeDogNumber(uint8_t iNewDogNumber)
    {
       iPreviousDog = iCurrentDog;
       iCurrentDog = iNewDogNumber;
-      ESP_LOGD(__FILE__, "Dog:%i|ENT:%lld|EXIT:%lld|TOT:%lld", iPreviousDog + 1, _llDogEnterTimes[iPreviousDog], _llLastDogExitTime, _llDogTimes[iPreviousDog][iDogRunCounters[iPreviousDog]]);
+      log_d("Dog:%i|ENT:%lld|EXIT:%lld|TOT:%lld", iPreviousDog + 1, _llDogEnterTimes[iPreviousDog], _llLastDogExitTime, _llDogTimes[iPreviousDog][iDogRunCounters[iPreviousDog]]);
    }
 }
 
@@ -108,7 +108,7 @@ void RaceHandlerClass::Main()
    // Trigger filterring of sensors interrupts if new records available and 15ms waiting time passed
    while ((_iInputQueueReadIndex != _iInputQueueWriteIndex) && (GET_MICROS - _InputTriggerQueue[_iInputQueueWriteIndex - 1].llTriggerTime > 15000))
    {
-      ESP_LOGV(__FILE__, "IQRI:%d | IQWI:%d | Delta:%lld", _iInputQueueReadIndex, _iInputQueueWriteIndex, GET_MICROS - _InputTriggerQueue[_iInputQueueWriteIndex - 1].llTriggerTime);
+      log_v("IQRI:%d | IQWI:%d | Delta:%lld", _iInputQueueReadIndex, _iInputQueueWriteIndex, GET_MICROS - _InputTriggerQueue[_iInputQueueWriteIndex - 1].llTriggerTime);
       _QueueFilter();
    }
 
@@ -131,7 +131,7 @@ void RaceHandlerClass::Main()
       // If the transition string is not empty and it wasn't updated for 350ms then it was noise and we have to clear it.
       // Forst first entering dog filtering is 750ms to cover scenario from simulated race 39.
       if (_strTransition.length() != 0 && ((GET_MICROS - _llLastTransitionStringUpdate) > 350000 && (iCurrentDog != 0 || (iCurrentDog == 0 && _bRerunBusy)) //
-         || (GET_MICROS - _llLastTransitionStringUpdate) > 750000 && iCurrentDog == 0 && !_bRerunBusy))
+                                           || (GET_MICROS - _llLastTransitionStringUpdate) > 750000 && iCurrentDog == 0 && !_bRerunBusy))
       {
          if (_byDogState == GOINGIN)
          {
@@ -141,13 +141,13 @@ void RaceHandlerClass::Main()
                _ChangeDogState(COMINGBACK);
                _bS1StillSafe = false;
                _llDogEnterTimes[iCurrentDog] = _llLastDogExitTime;
-               ESP_LOGD(__FILE__, "Seems next dog entered gate already as S2 state 'b' detected. S1 is not safe anymore.");
+               log_d("Seems next dog entered gate already as S2 state 'b' detected. S1 is not safe anymore.");
             }
             // If dog state is GOINGIN we could have false detection of entering dog so we need to set S1StillSafe flag
             else
             {
                _bS1StillSafe = true;
-               ESP_LOGD(__FILE__, "False entering dog detected. S1 is again safe.");
+               log_d("False entering dog detected. S1 is again safe.");
             }
          }
          else
@@ -157,19 +157,19 @@ void RaceHandlerClass::Main()
             {
                _ChangeDogState(GOINGIN);
                _bS1StillSafe = true;
-               ESP_LOGD(__FILE__, "Seems next dog stil didn't enter gate as S1 state 'a' detected.");
+               log_d("Seems next dog stil didn't enter gate as S1 state 'a' detected.");
             }
             else
             {
                _bS1StillSafe = false;
-               ESP_LOGD(__FILE__, "Noise caused by entering dog detected. S1 is not safe anymore.");
+               log_d("Noise caused by entering dog detected. S1 is not safe anymore.");
             }
          }
          _strTransition = "";
          _bSensorNoise = false;
          _bGatesClear = true;
-         ESP_LOGD(__FILE__, "Reset transition strings.");
-         ESP_LOGD(__FILE__, "Gate: CLEAR.");
+         log_d("Reset transition strings.");
+         log_d("Gate: CLEAR.");
       }
 
       // If we have potential negative cross detected on S2, but S1 wasn't crossed for 100ms since then it had to be sensor noise and we need to reset flag
@@ -178,14 +178,14 @@ void RaceHandlerClass::Main()
          _bPotentialNegativeCrossDetected = false;
          _strTransition = "";
          _bGatesClear = true;
-         ESP_LOGD(__FILE__, "Potential negative cross flag reset as S1 not crossed for 100ms");
+         log_d("Potential negative cross flag reset as S1 not crossed for 100ms");
       }
 
-      ESP_LOGD(__FILE__, "S%i | TT:%lld | T:%lld | St:%i", STriggerRecord.iSensorNumber, STriggerRecord.llTriggerTime, STriggerRecord.llTriggerTime - llRaceStartTime, STriggerRecord.iSensorState);
+      log_d("S%i | TT:%lld | T:%lld | St:%i", STriggerRecord.iSensorNumber, STriggerRecord.llTriggerTime, STriggerRecord.llTriggerTime - llRaceStartTime, STriggerRecord.iSensorState);
 
       // Calculate what our next dog will be
       uint8_t iNextDogChanged = iNextDog;
-      if (_bFault && iCurrentDog == (iNumberOfRacingDogs - 1))
+      if (_bFault && iCurrentDog == (iNumberOfRacingDogs - 1) && iNextDog < 5)
       {
          // If reruns are turned off set next do to dummy value 5
          if (bRerunsOff)
@@ -204,7 +204,7 @@ void RaceHandlerClass::Main()
             }
          }
       }
-      else if (_bFault && _bRerunBusy)
+      else if (_bFault && _bRerunBusy && !bRerunsOff)
       {
          // In case we have re-runs in progress we have to check which the next offending dog with proper order
          for (uint8_t i = (iCurrentDog + 1); i < iNumberOfRacingDogs; i++)
@@ -232,16 +232,16 @@ void RaceHandlerClass::Main()
          }
          _bNextDogFound = false;
       }
-      else if ((!_bFault && iCurrentDog == (iNumberOfRacingDogs - 1)) || (!_bFault && _bRerunBusy))
+      else if ((!bRerunsOff && !_bFault && iCurrentDog == (iNumberOfRacingDogs - 1)) || (!_bFault && _bRerunBusy))
          iNextDog = iCurrentDog;
-      else
+      else if (iNextDog != iCurrentDog + 1 && iNextDog < 5)
          // First runs of every dog, just increase number
          iNextDog = iCurrentDog + 1;
       if (iNextDogChanged != iNextDog)
-         ESP_LOGD(__FILE__, "Next Dog is %i.", iNextDog + 1);
+         log_d("Next Dog is %i.", iNextDog + 1);
 
       // Handle sensor 1 events (handlers side) with gates CLEAR
-      if (STriggerRecord.iSensorNumber == 1 && STriggerRecord.iSensorState == 1 && _bGatesClear) // Only if gates are clear and S1 sensor is HIGH (A)
+      if (STriggerRecord.iSensorNumber == 1 && STriggerRecord.iSensorState == 1 && _bGatesClear && iCurrentDog < 5) // Only if gates are clear and S1 sensor is HIGH (A)
       {
          // Update race elapsed time
          _llRaceElapsedTime = STriggerRecord.llTriggerTime - llRaceStartTime;
@@ -255,7 +255,7 @@ void RaceHandlerClass::Main()
             if (STriggerRecord.llTriggerTime < llRaceStartTime)
             {
                SetDogFault(iCurrentDog, ON);
-               ESP_LOGI(__FILE__, "Dog 1 FALSE START!");
+               log_i("Dog 1 FALSE START!");
             }
          }
          // Normal race handling (positive cross)
@@ -264,9 +264,9 @@ void RaceHandlerClass::Main()
             // If this is not re-run and last string was BAba and next dog didn't enter yet, we might have fast next dog that is already running
             // and next dog entered gate to early (fault). This is fix for simulated race 40 (74-15).
             // Period between 3.5s and 5.5s is covered and scenario when last dog is running excluded. Fix for simulated race 45 (83-30).
-            //ESP_LOGD(__FILE__, "bRerunBusy: %i, _bLastStringBAba: %i, TfromLastDogExit: %lld, iCurrentDog: %i, iNextDog: %i.", _bRerunBusy, _bLastStringBAba, (STriggerRecord.llTriggerTime - _llLastDogExitTime), iCurrentDog + 1, iNextDog + 1);
+            // log_d("bRerunBusy: %i, _bLastStringBAba: %i, TfromLastDogExit: %lld, iCurrentDog: %i, iNextDog: %i.", _bRerunBusy, _bLastStringBAba, (STriggerRecord.llTriggerTime - _llLastDogExitTime), iCurrentDog + 1, iNextDog + 1);
             if (!_bRerunBusy && _bLastStringBAba && (STriggerRecord.llTriggerTime - _llLastDogExitTime) > 3500000 //
-               && (STriggerRecord.llTriggerTime - _llLastDogExitTime) < 5500000 && iCurrentDog != iNextDog)
+                && (STriggerRecord.llTriggerTime - _llLastDogExitTime) < 5500000 && iCurrentDog != iNextDog)
             {
                // Calculte times for running invisible dog
                SetDogFault(iNextDog, ON);
@@ -281,14 +281,14 @@ void RaceHandlerClass::Main()
                else // This is true invisible dog case so treated as big OK cross
                   _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
                _ChangeDogNumber(iNextDog);
-               ESP_LOGD(__FILE__, "S1 crossed after 3.5-5.5s and last Tstring was BAba. Invisible dog %i is running and next dog enters with fault.", iPreviousDog + 1);
+               log_d("S1 crossed after 3.5-5.5s and last Tstring was BAba. Invisible dog %i is running and next dog enters with fault.", iPreviousDog + 1);
             }
             else
             {
                // If this dog is doing a rerun we have to turn the error light for this dog off
                if (_bRerunBusy)
                   SetDogFault(iCurrentDog, OFF);
-               ESP_LOGD(__FILE__, "Dog %i going in crossed S1 safely. Clear fault if rerun.", iCurrentDog + 1);
+               log_d("Dog %i going in crossed S1 safely. Clear fault if rerun.", iCurrentDog + 1);
             }
             _llDogEnterTimes[iCurrentDog] = STriggerRecord.llTriggerTime;
             _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = _llDogEnterTimes[iCurrentDog] - _llLastDogExitTime;
@@ -309,7 +309,7 @@ void RaceHandlerClass::Main()
             _llDogTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = _llLastDogExitTime - _llDogEnterTimes[iCurrentDog];
             // Handle next dog
             _llDogEnterTimes[iNextDog] = STriggerRecord.llTriggerTime;
-            ESP_LOGD(__FILE__, "Dog %i FAULT as coming back dog was expected.", iNextDog + 1);
+            log_d("Dog %i FAULT as coming back dog was expected.", iNextDog + 1);
             if ((iCurrentDog == (iNumberOfRacingDogs - 1) && _bFault && !_bRerunBusy && !bRerunsOff) // If current dog is last dog before reruns and a fault exists, we have to initiate rerun sequence
                 || _bRerunBusy)                                                                      // or if rerun is busy (and faults still exist)
             {
@@ -319,13 +319,13 @@ void RaceHandlerClass::Main()
                _llDogExitTimes[iNextDog] = 0;
                // Increase run counter for this dog
                iDogRunCounters[iNextDog]++;
-               ESP_LOGD(__FILE__, "Re-run for dog %i", iNextDog + 1);
+               log_d("Re-run for dog %i", iNextDog + 1);
             }
             // In case reruns are turned off and current dog is last racing dog
             else if (iNextDog == 5)
             {
                StopRace(STriggerRecord.llTriggerTime);
-               ESP_LOGI(__FILE__, "Reruns off. No more dogs was expected. Race stopped.");
+               log_i("Reruns off. No more dogs was expected. Race stopped.");
             }
             _ChangeDogNumber(iNextDog);
          }
@@ -337,14 +337,14 @@ void RaceHandlerClass::Main()
             _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] = false;
             _llDogEnterTimes[iCurrentDog] = STriggerRecord.llTriggerTime;
             _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = _llDogEnterTimes[iCurrentDog] - _llLastDogExitTime;
-            ESP_LOGD(__FILE__, "False 'ok crossing' detected. Recalculate dog %i times.", iCurrentDog + 1);
+            log_d("False 'ok crossing' detected. Recalculate dog %i times.", iCurrentDog + 1);
          }
          // else
-         //    ESP_LOGD(__FILE__, "Unexpected S1 crossing while gate CLEAR. CurrentDog: %i, NextDog: %i, S1StillSafe: %i, RerunBusy: %i", iCurrentDog + 1, iNextDog + 1, _bS1StillSafe, _bRerunBusy);
+         //    log_d("Unexpected S1 crossing while gate CLEAR. CurrentDog: %i, NextDog: %i, S1StillSafe: %i, RerunBusy: %i", iCurrentDog + 1, iNextDog + 1, _bS1StillSafe, _bRerunBusy);
       }
 
       ////Handle sensor 1 events (handlers side) with gates state DOG IN
-      if (STriggerRecord.iSensorNumber == 1 && STriggerRecord.iSensorState == 1 && !_bGatesClear) // Only if gates are busy (dog in) and S1 sensor is HIGH (A)
+      if (STriggerRecord.iSensorNumber == 1 && STriggerRecord.iSensorState == 1 && !_bGatesClear && iCurrentDog < 5) // Only if gates are busy (dog in) and S1 sensor is HIGH (A)
       {
          // If negative cross detected and S1 crossed above 6ms from S2 crossing
          if (_bPotentialNegativeCrossDetected && ((STriggerRecord.llTriggerTime - _llS2CrossedUnsafeTriggerTime) > 6000))
@@ -367,7 +367,7 @@ void RaceHandlerClass::Main()
                   _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
                if (_bRerunBusy)
                   iDogRunCounters[iNextDog]++; // Increase run counter for next dog
-               ESP_LOGD(__FILE__, "Invisible dog %i came back! Dog times updated. OK or Perfect crossing.", iNextDog + 1);
+               log_d("Invisible dog %i came back! Dog times updated. OK or Perfect crossing.", iNextDog + 1);
                _ChangeDogNumber(iNextDog);
             }
             // And previous dog time (who just crossed S1)
@@ -378,15 +378,15 @@ void RaceHandlerClass::Main()
             _llRaceElapsedTime = STriggerRecord.llTriggerTime - llRaceStartTime;
             //_bNegativeCrossDetected = false; // moved to Tstring section and used as "if" condition in BAba scenario
             //
-            ESP_LOGD(__FILE__, "Calculate negative cross time for dog %i and update times for previous dog %i.", iCurrentDog + 1, iPreviousDog + 1);
-            ESP_LOGD(__FILE__, "Dod %i updated crossing time [ms]: %lld", iCurrentDog + 1, (_llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] + 500) / 1000);
-            ESP_LOGD(__FILE__, "Dog %i updated time [ms]: %lld", iPreviousDog + 1, ((_llDogTimes[iPreviousDog][iDogRunCounters[iPreviousDog]] + 500) / 1000));
+            log_d("Calculate negative cross time for dog %i and update times for previous dog %i.", iCurrentDog + 1, iPreviousDog + 1);
+            log_d("Dod %i updated crossing time [ms]: %lld", iCurrentDog + 1, (_llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] + 500) / 1000);
+            log_d("Dog %i updated time [ms]: %lld", iPreviousDog + 1, ((_llDogTimes[iPreviousDog][iDogRunCounters[iPreviousDog]] + 500) / 1000));
          }
          // Negative cross detected, but S1 was crossed below 6ms from S2 crossing. This can't be a dog and it has to be sensor noise  (fix for simulated race 36 & 37)
          else if (_bPotentialNegativeCrossDetected && ((STriggerRecord.llTriggerTime - _llS2CrossedUnsafeTriggerTime) <= 6000))
          {
             _bSensorNoise = true;
-            ESP_LOGD(__FILE__, "S2/S1 sensors noise.");
+            log_d("S2/S1 sensors noise.");
          }
          else if (_bS1isSafe) // If S2 crossed before S1 (ok or positive cross scenarios)
          {
@@ -396,12 +396,12 @@ void RaceHandlerClass::Main()
             _llLastDogExitTime = _llDogExitTimes[iCurrentDog];
             _llDogTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = _llDogExitTimes[iCurrentDog] - _llDogEnterTimes[iCurrentDog];
             _bS1isSafe = false;
-            ESP_LOGD(__FILE__, "S1 line crossed while being safe. Calculate dog %i time.", iCurrentDog + 1);
+            log_d("S1 line crossed while being safe. Calculate dog %i time.", iCurrentDog + 1);
             if (_llDogExitTimes[iCurrentDog] - _llS2CrossedSafeTime < 5000) // If S1 (safe) crossing time is below 5ms after S2 crossing means S1 was crossed
                                                                             // by going in dog and we have true PERFECT crossing
             {
                _bDogPerfectCross[iNextDog][iDogRunCounters[iNextDog]] = true;
-               ESP_LOGD(__FILE__, "PERFECT cross below 5ms detected for dog %i.", iNextDog + 1);
+               log_d("PERFECT cross below 5ms detected for dog %i.", iNextDog + 1);
             }
             if ((iCurrentDog == (iNumberOfRacingDogs - 1) && !_bFault && !_bRerunBusy) // If this is the last dog and there are no faults (reruns) we have to stop the race
                 || (_bRerunBusy && !_bFault)                                           // or if the rerun sequence was started but no faults exist anymore
@@ -417,16 +417,16 @@ void RaceHandlerClass::Main()
                _llDogExitTimes[iNextDog] = 0;
                // Increase run counter for this dog
                iDogRunCounters[iNextDog]++;
-               ESP_LOGD(__FILE__, "Re-run for dog %i", iNextDog + 1);
+               log_d("Re-run for dog %i", iNextDog + 1);
             }
             _ChangeDogNumber(iNextDog);
          }
          // else
-         //    ESP_LOGD(__FILE__, "Unexpected S1 crossing while gate DOG(s). CurrentDog: %i, NextDog: %i, S1StillSafe: %i, RerunBusy: %i", iCurrentDog + 1, iNextDog + 1, _bS1StillSafe, _bRerunBusy);
+         //    log_d("Unexpected S1 crossing while gate DOG(s). CurrentDog: %i, NextDog: %i, S1StillSafe: %i, RerunBusy: %i", iCurrentDog + 1, iNextDog + 1, _bS1StillSafe, _bRerunBusy);
       }
 
       // Handle sensor 2 (box side)
-      if (STriggerRecord.iSensorNumber == 2 && STriggerRecord.iSensorState == 1 && _bGatesClear) // Only if gates are clear S2 sensor is HIGH (B)
+      if (STriggerRecord.iSensorNumber == 2 && STriggerRecord.iSensorState == 1 && _bGatesClear && iCurrentDog < 5) // Only if gates are clear S2 sensor is HIGH (B)
       {
          if (_byDogState == GOINGIN && (STriggerRecord.llTriggerTime - _llLastDogExitTime) > 3000000)
          {
@@ -446,7 +446,7 @@ void RaceHandlerClass::Main()
             _bS1StillSafe = true;
             _llS2CrossedSafeTime = STriggerRecord.llTriggerTime;
             _ChangeDogState(COMINGBACK);
-            ESP_LOGD(__FILE__, "Invisible dog %i came back!. Update enter time. OK or Perfect crossing.", iCurrentDog + 1);
+            log_d("Invisible dog %i came back!. Update enter time. OK or Perfect crossing.", iCurrentDog + 1);
          }
          else if (_byDogState == COMINGBACK)
          {
@@ -459,12 +459,12 @@ void RaceHandlerClass::Main()
                   _bPotentialNegativeCrossDetected = true;
                   _llS2CrossedUnsafeTriggerTime = STriggerRecord.llTriggerTime;
                   _llS2CrossedUnsafeGetMicrosTime = GET_MICROS; // fix for simulated race 35
-                  ESP_LOGD(__FILE__, "Dog %i potential negative cross detected.", iCurrentDog + 1);
+                  log_d("Dog %i potential negative cross detected.", iCurrentDog + 1);
                }
                else
                {
                   _bSensorNoise = true;
-                  ESP_LOGD(__FILE__, "Entering first dog caused S2 sensor noise.");
+                  log_d("Entering first dog caused S2 sensor noise.");
                }
             }
             else // S2 was triggered after 2s since current dog entry time
@@ -472,7 +472,7 @@ void RaceHandlerClass::Main()
                _bS1isSafe = true;
                _bS1StillSafe = true;
                _llS2CrossedSafeTime = STriggerRecord.llTriggerTime;
-               ESP_LOGD(__FILE__, "Coming back dog %i crossed S2 line. S1 is safe.", iCurrentDog + 1);
+               log_d("Coming back dog %i crossed S2 line. S1 is safe.", iCurrentDog + 1);
             }
          }
       }
@@ -510,10 +510,10 @@ void RaceHandlerClass::Main()
           || strLast2TransitionChars == "ab" || strLast2TransitionChars == "ba") // Sensors going low in either direction indicate gates are clear
       {
          // Print the transition string up til now for debugging purposes
-         ESP_LOGD(__FILE__, "Tstring: %s", _strTransition.c_str());
+         log_d("Tstring: %s", _strTransition.c_str());
          // The gates are clear, set flag
          _bGatesClear = true;
-         ESP_LOGD(__FILE__, "Gate: CLEAR.");
+         log_d("Gate: CLEAR.");
 
          // Only check transition string when gates are clear
          // TODO: If transistion string is 3 or longer but actually more events are coming related to same transition, these are not considered.
@@ -526,7 +526,7 @@ void RaceHandlerClass::Main()
             // So we can check what happened
             if (_bSensorNoise) // fix for simulated race 36
             {
-               ESP_LOGD(__FILE__, "Sensor noise was detected. Ignore Tstring");
+               log_d("Sensor noise was detected. Ignore Tstring");
                _bSensorNoise = false;
             }
             else if (_strTransition == "ABab") // Dog going to box
@@ -534,7 +534,7 @@ void RaceHandlerClass::Main()
                // Change dog state to coming back
                _ChangeDogState(COMINGBACK);
                _strPreviousTransitionFirstLetter = "A";
-               ESP_LOGD(__FILE__, "New dog state: COMINGBACK. ABab.");
+               log_d("New dog state: COMINGBACK. ABab.");
                if (_bDogManualFaults[iPreviousDog]) // If previous dog has manual fault we assume it's because he missed gate while coming back
                                                     // If however this will be negative cross scenario flag will be deactivated in S2 sensor section
                {
@@ -547,10 +547,10 @@ void RaceHandlerClass::Main()
                _ChangeDogState(GOINGIN);
                _strPreviousTransitionFirstLetter = "B";
                _bLastStringBAba = true;
-               ESP_LOGD(__FILE__, "New dog state: GOINGING.");
+               log_d("New dog state: GOINGING.");
             }
             else if (RaceState == STOPPED) // Last returning dog
-               ESP_LOGD(__FILE__, "Last dog came back.");
+               log_d("Last dog came back.");
             else // So called "uncertain Tstring"
             {
                // If Transition string indicated something else and we expect returning dog, it means 2 dogs must have passed
@@ -563,7 +563,7 @@ void RaceHandlerClass::Main()
                   if (_bNegativeCrossDetected && RaceState != STOPPED) // Dog comming back after negative cross
                   {
                      _bNegativeCrossDetected = false;
-                     ESP_LOGD(__FILE__, "Dog state still COMINGBACK. Dog coming back after negative cross of next dog.");
+                     log_d("Dog state still COMINGBACK. Dog coming back after negative cross of next dog.");
                   }
                   // If this is Re-run and dog had fault active we need to turn it OFF if this is perfect crossing case (string starts with B) during re-run
                   else
@@ -576,26 +576,26 @@ void RaceHandlerClass::Main()
                      if (_strTransition == "BAab" || _strTransition == "BAba") // Big OK cross
                      {
                         _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
-                        ESP_LOGD(__FILE__, "Unmeasurable OK crossing for dog %i. BAab or BAba", iCurrentDog + 1);
+                        log_d("Unmeasurable OK crossing for dog %i. BAab or BAba", iCurrentDog + 1);
                      }
                      else
                      {
                         _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
-                        ESP_LOGD(__FILE__, "Unmeasurable ok crossing for dog %i.", iCurrentDog + 1);
+                        log_d("Unmeasurable ok crossing for dog %i.", iCurrentDog + 1);
                      }
                   }
                }
                else if (_byDogState == COMINGBACK && strFirstTransitionChar == "A")
                {
                   _strPreviousTransitionFirstLetter = "A";
-                  ESP_LOGD(__FILE__, "Dog %i fault. Tstring starting with A.", iCurrentDog + 1);
+                  log_d("Dog %i fault. Tstring starting with A.", iCurrentDog + 1);
                }
                else
                // It has to be dog going in + sensors noise
                {
                   _ChangeDogState(COMINGBACK);
                   _strPreviousTransitionFirstLetter = _strTransition.substring(0, 1);
-                  ESP_LOGD(__FILE__, "New dog %i state: COMINGBACK. Uncertain.", iCurrentDog + 1);
+                  log_d("New dog %i state: COMINGBACK. Uncertain.", iCurrentDog + 1);
                }
             }
          }
@@ -604,7 +604,7 @@ void RaceHandlerClass::Main()
       else if (_bGatesClear)
       {
          _bGatesClear = false;
-         ESP_LOGD(__FILE__, "Gate: DOG(s)");
+         log_d("Gate: DOG(s)");
       }
    }
 
@@ -612,7 +612,7 @@ void RaceHandlerClass::Main()
    if (RaceState == STARTING && GET_MICROS >= llRaceStartTime)
    {
       _ChangeRaceState(RUNNING);
-      ESP_LOGD(__FILE__, "GREEN light is ON!");
+      log_d("GREEN light is ON!");
    }*/
 
    // Update racetime
@@ -660,9 +660,9 @@ void RaceHandlerClass::StartRaceTimer()
 {
    llRaceStartTime = GET_MICROS + 3000000;
    _ChangeRaceState(STARTING);
-   ESP_LOGI(__FILE__, "STARTING! Tag: %i, Race ID: %i.", SDcardController.iTagValue, iCurrentRaceId + 1);
+   log_i("STARTING! Tag: %i, Race ID: %i.", SDcardController.iTagValue, iCurrentRaceId + 1);
    cRaceStartTimestamp = GPSHandler.GetLocalTimestamp();
-   ESP_LOGI(__FILE__, "Timestamp: %s", cRaceStartTimestamp);
+   log_i("Timestamp: %s", cRaceStartTimestamp);
 #ifdef WiFiON
    // Send updated racedata to all web clients
    WebHandler._bSendRaceData = true;
@@ -707,6 +707,7 @@ void RaceHandlerClass::ResetRace()
    if (RaceState == STOPPED)
    {
       iCurrentDog = 0;
+      iNextDog = 1;
       iPreviousDog = 0;
       llRaceStartTime = 0;
       _llRaceEndTime = 0;
@@ -794,7 +795,7 @@ void RaceHandlerClass::ResetRace()
    while (_sCurrentRaceId.length() < 2)
       _sCurrentRaceId = " " + _sCurrentRaceId;
    LCDController.UpdateField(LCDController.RaceID, _sCurrentRaceId);
-   ESP_LOGI(__FILE__, "Reset Race: DONE");
+   log_i("Reset Race: DONE");
 #ifdef WiFiON
    // Send updated racedata to any web clients
    WebHandler._bSendRaceData = true;
@@ -889,14 +890,14 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
       // If fault is true, set light to on and set general value fault variable to true
       LightsController.ToggleFaultLight(iDogNumber, LightsController.ON);
       _bFault = true;
-      ESP_LOGI(__FILE__, "Dog %i fault ON", iDogNumber + 1);
+      log_i("Dog %i fault ON", iDogNumber + 1);
    }
    else
    {
       // If fault is false, turn off fault light for this dog and reset also manual fault state
       _bDogManualFaults[iDogNumber] = bFault;
       LightsController.ToggleFaultLight(iDogNumber, LightsController.OFF);
-      ESP_LOGI(__FILE__, "Dog %i fault OFF", iDogNumber + 1);
+      log_i("Dog %i fault OFF", iDogNumber + 1);
    }
 }
 
@@ -918,7 +919,7 @@ void RaceHandlerClass::TriggerSensor1()
       // LightsController.ReaceReadyFault(LightsController.OFF);
    }
    else
-      _QueuePush({_bRunDirectionInverted ? 2 : 1, GET_MICROS, digitalRead(_iS1Pin)});
+      _QueuePush({bRunDirectionInverted ? 2 : 1, GET_MICROS, digitalRead(_iS1Pin)});
 }
 
 /// <summary>
@@ -939,7 +940,7 @@ void RaceHandlerClass::TriggerSensor2()
       // LightsController.ReaceReadyFault(LightsController.OFF);
    }
    else
-      _QueuePush({_bRunDirectionInverted ? 1 : 2, GET_MICROS, digitalRead(_iS2Pin)});
+      _QueuePush({bRunDirectionInverted ? 1 : 2, GET_MICROS, digitalRead(_iS2Pin)});
 }
 
 /// <summary>
@@ -1417,17 +1418,17 @@ stRaceData RaceHandlerClass::GetRaceData(int iRaceId)
 /// </summary>
 void RaceHandlerClass::ToggleRunDirection()
 {
-   _bRunDirectionInverted = !_bRunDirectionInverted;
-   SettingsManager.setSetting("RunDirectionInverted", String(_bRunDirectionInverted));
-   if (_bRunDirectionInverted)
+   bRunDirectionInverted = !bRunDirectionInverted;
+   SettingsManager.setSetting("RunDirectionInverted", String(bRunDirectionInverted));
+   if (bRunDirectionInverted)
    {
       LCDController.UpdateField(LCDController.BoxDirection, "<");
-      ESP_LOGI(__FILE__, "Run direction changed to: inverted");
+      log_i("Run direction changed to: inverted");
    }
    else
    {
       LCDController.UpdateField(LCDController.BoxDirection, ">");
-      ESP_LOGI(__FILE__, "Run direction changed to: normal");
+      log_i("Run direction changed to: normal");
    }
 }
 
@@ -1439,9 +1440,9 @@ void RaceHandlerClass::ToggleAccuracy()
    _bAccuracy3digits = !_bAccuracy3digits;
    SettingsManager.setSetting("Accuracy3digits", String(_bAccuracy3digits));
    if (_bAccuracy3digits)
-      ESP_LOGI(__FILE__, "Accuracy switched to 3 digits");
+      log_i("Accuracy switched to 3 digits");
    else
-      ESP_LOGI(__FILE__, "Accuracy switched to 2 digits");
+      log_i("Accuracy switched to 2 digits");
 #ifdef WiFiON
    WebHandler._bSendRaceData = true;
 #endif
@@ -1460,9 +1461,9 @@ void RaceHandlerClass::ToggleRerunsOffOn(uint8_t _iState)
       bRerunsOff = false;
 
    if (bRerunsOff)
-      ESP_LOGI(__FILE__, "Reruns turned off.");
+      log_i("Reruns turned off.");
    else
-      ESP_LOGI(__FILE__, "Reruns turned on.");
+      log_i("Reruns turned on.");
 
 #ifdef WiFiON
    WebHandler._bSendRaceData = true;
@@ -1478,7 +1479,7 @@ void RaceHandlerClass::ToggleRerunsOffOn(uint8_t _iState)
 /// </returns>
 bool RaceHandlerClass::GetRunDirection()
 {
-   return _bRunDirectionInverted;
+   return bRunDirectionInverted;
 }
 
 /// <summary>
@@ -1491,7 +1492,7 @@ void RaceHandlerClass::SetNumberOfDogs(uint8_t _iNumberOfRacingDogs)
 #ifdef WiFiON
    WebHandler._bSendRaceData = true;
 #endif
-   ESP_LOGI(__FILE__, "Number of dogs set to: %i.", iNumberOfRacingDogs);
+   log_i("Number of dogs set to: %i.", iNumberOfRacingDogs);
 }
 
 /// <summary>
@@ -1528,11 +1529,11 @@ void RaceHandlerClass::_QueueFilter()
       // If 2 records are from the same sensors line and delta time is below 6ms ignore both
       if (_CurrentRecord.iSensorNumber == _NextRecord.iSensorNumber && _NextRecord.llTriggerTime - _CurrentRecord.llTriggerTime <= 6000)
       {
-         // ESP_LOGD(__FILE__, "Next record %lld - Current record %lld = %lld < 6ms.", _NextRecord.llTriggerTime, _CurrentRecord.llTriggerTime, _NextRecord.llTriggerTime - _CurrentRecord.llTriggerTime);
-         ESP_LOGD(__FILE__, "S%i | TT:%lld | T:%lld | St:%i | IGNORED", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime,
-                  _CurrentRecord.llTriggerTime - llRaceStartTime, _CurrentRecord.iSensorState);
-         ESP_LOGD(__FILE__, "S%i | TT:%lld | T:%lld | St:%i | IGNORED < 6ms", _NextRecord.iSensorNumber, _NextRecord.llTriggerTime,
-                  _NextRecord.llTriggerTime - llRaceStartTime, _NextRecord.iSensorState);
+         // log_d("Next record %lld - Current record %lld = %lld < 6ms.", _NextRecord.llTriggerTime, _CurrentRecord.llTriggerTime, _NextRecord.llTriggerTime - _CurrentRecord.llTriggerTime);
+         log_d("S%i | TT:%lld | T:%lld | St:%i | IGNORED", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime,
+               _CurrentRecord.llTriggerTime - llRaceStartTime, _CurrentRecord.iSensorState);
+         log_d("S%i | TT:%lld | T:%lld | St:%i | IGNORED < 6ms", _NextRecord.iSensorNumber, _NextRecord.llTriggerTime,
+               _NextRecord.llTriggerTime - llRaceStartTime, _NextRecord.iSensorState);
 
          // Input Read index has to be increased, check it we should wrap-around
          if (_iInputQueueReadIndex == TRIGGER_QUEUE_LENGTH - 2)
@@ -1545,7 +1546,7 @@ void RaceHandlerClass::_QueueFilter()
       else
       {
          // Next record is for different sensor line or delta time is higher than 6ms. Push Current record Output Queue.
-         // ESP_LOGD(__FILE__, "Next record > 6ms or for different sensors line. Push Current S%i record %lld to Output Queue.", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime);
+         // log_d("Next record > 6ms or for different sensors line. Push Current S%i record %lld to Output Queue.", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime);
          // This function copy current record to common interrupt queue
          _OutputTriggerQueue[_iOutputQueueWriteIndex] = _InputTriggerQueue[_iInputQueueReadIndex];
 
@@ -1569,7 +1570,7 @@ void RaceHandlerClass::_QueueFilter()
    else
    {
       // Only one record available in the Input Queue. Push it to Output Queue.
-      // ESP_LOGD(__FILE__, "One record in the Input Queue. Push S%i record %lld to Output Queue.", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime);
+      // log_d("One record in the Input Queue. Push S%i record %lld to Output Queue.", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime);
       // This function copy current record to common interrupt queue
       _OutputTriggerQueue[_iOutputQueueWriteIndex] = _InputTriggerQueue[_iInputQueueReadIndex];
 
@@ -1673,22 +1674,22 @@ void RaceHandlerClass::_AddToTransitionString(STriggerRecord _InterruptTrigger)
    if (_strTransition.endsWith("AaA"))
    {
       _strTransition.replace("AaA", "A");
-      ESP_LOGD(__FILE__, "Tstring AaA replaced with A");
+      log_d("Tstring AaA replaced with A");
    }
    if (_strTransition.endsWith("aAa"))
    {
       _strTransition.replace("aAa", "a");
-      ESP_LOGD(__FILE__, "Tstring aAa replaced with a");
+      log_d("Tstring aAa replaced with a");
    }
    if (_strTransition.endsWith("BbB"))
    {
       _strTransition.replace("BbB", "B");
-      ESP_LOGD(__FILE__, "Tstring BbB replaced with B");
+      log_d("Tstring BbB replaced with B");
    }
    if (_strTransition.endsWith("bBb"))
    {
       _strTransition.replace("bBb", "b");
-      ESP_LOGD(__FILE__, "Tstring bBb replaced with b");
+      log_d("Tstring bBb replaced with b");
    }
 }
 

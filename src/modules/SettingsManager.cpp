@@ -9,7 +9,7 @@ void SettingsManagerClass::loop()
    // do we really need to check in loop if there is something to write???
    if (_settings_save)
    {
-      ESP_LOGI(__FILE__, "[SETTINGS] Saving to EEPROM");
+      log_i("[SETTINGS] Saving to EEPROM");
       EEPROM.commit();
       _settings_save = false;
    }
@@ -21,11 +21,13 @@ void SettingsManagerClass::init()
    _settings_save = false;
 
    Embedis::dictionary(
-      F("EEPROM"),
-      SPI_FLASH_SEC_SIZE,
-      [](size_t pos) -> char { return EEPROM.read(pos); },
-      [](size_t pos, char value) { EEPROM.write(pos, value); },
-      []() {});
+       F("EEPROM"),
+       SPI_FLASH_SEC_SIZE,
+       [](size_t pos) -> char
+       { return EEPROM.read(pos); },
+       [](size_t pos, char value)
+       { EEPROM.write(pos, value); },
+       []() {});
 
    setDefaultSettings();
 }
@@ -43,7 +45,7 @@ String SettingsManagerClass::getSetting(const String &key)
    return getSetting(key, "");
 }
 
-//template<typename T> bool SettingsManagerClass::setSetting(const String& key, T value)
+// template<typename T> bool SettingsManagerClass::setSetting(const String& key, T value)
 bool SettingsManagerClass::setSetting(const String &key, String value)
 {
    saveSettings();
@@ -53,7 +55,7 @@ bool SettingsManagerClass::setSetting(const String &key, String value)
 void SettingsManagerClass::saveSettings()
 {
    _settings_save = true;
-   //ESP_LOGD(__FILE__, "Save settings flag set");
+   // log_d("Save settings flag set");
 }
 
 bool SettingsManagerClass::hasSetting(const String &key)

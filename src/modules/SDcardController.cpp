@@ -23,14 +23,14 @@
 ///   Initialises SD card.
 /// </summary>
 void SDcardControllerClass::init()
-{   
+{
    if (SettingsManager.getSetting("CommaInCsv").equals("1"))
    {
       _bCommaInCsv = true;
-      ESP_LOGI(__FILE__, "CSV decimal separator from settings: comma ','");
+      log_i("CSV decimal separator from settings: comma ','");
    }
    else
-      ESP_LOGI(__FILE__, "CSV decimal separator from settings: period '.'");
+      log_i("CSV decimal separator from settings: period '.'");
 
    if (!SD_MMC.begin("/SDCARD", true, false, SDMMC_FREQ_DEFAULT))
    {
@@ -63,7 +63,7 @@ void SDcardControllerClass::init()
       }
       else
          Serial.println("UNKNOWN");
-      
+
       if (bSDCardDetected)
       {
          LCDController.UpdateField(LCDController.SDcardState, "sd");
@@ -84,7 +84,7 @@ void SDcardControllerClass::init()
             tagfile.close();
             iTagValue = 1;
             sTagValue = "0001";
-            ESP_LOGI(__FILE__, "New tag.txt file created.");
+            log_i("New tag.txt file created.");
          }
          else
          {
@@ -96,7 +96,7 @@ void SDcardControllerClass::init()
             {
                sTagValue = "0" + sTagValue;
             }
-            ESP_LOGI(__FILE__, "New tag value: %i. Tag string: %s", iTagValue, sTagValue);
+            log_i("New tag value: %i. Tag string: %s", iTagValue, sTagValue);
          }
       }
    }
@@ -114,7 +114,7 @@ void SDcardControllerClass::SaveRaceDataToFile()
       UpdateTagFile();
       raceDataFileName = "/" + sTagValue + "_ETS_" + sDate + ".csv";
       writeFile(SD_MMC, raceDataFileName.c_str(),
-               "sep=;\nTag;Race ID;Date;Race timestamp;Number of racing dogs;Re-runs turned OFF?;Dog 1 time;Dog 1 starting;Dog 1 re-run time;Dog 1 re-run crossing;Dog 1 2nd re-run time;Dog 1 2nd re-run crossing;Dog 2 time;Dog 2 crossing;Dog 2 re-run time;Dog 2 re-run crossing;Dog 2 2nd re-run time;Dog 2 2nd re-run crossing;Dog 3 time;Dog 3 crossing;Dog 3 re-run time;Dog 3 re-run crossing;Dog 3 2nd re-run time;Dog 3 2nd re-run crossing;Dog 4 time;Dog 4 crossing;Dog 4 re-run time;Dog 4 re-run crossing;Dog 4 2nd re-run time;Dog 4 2nd re-run crossing;Team time; Net time;Comments\n");
+                "sep=;\nTag;Race ID;Date;Race timestamp;Number of racing dogs;Re-runs turned OFF?;Dog 1 time;Dog 1 starting;Dog 1 re-run time;Dog 1 re-run crossing;Dog 1 2nd re-run time;Dog 1 2nd re-run crossing;Dog 2 time;Dog 2 crossing;Dog 2 re-run time;Dog 2 re-run crossing;Dog 2 2nd re-run time;Dog 2 2nd re-run crossing;Dog 3 time;Dog 3 crossing;Dog 3 re-run time;Dog 3 re-run crossing;Dog 3 2nd re-run time;Dog 3 2nd re-run crossing;Dog 4 time;Dog 4 crossing;Dog 4 re-run time;Dog 4 re-run crossing;Dog 4 2nd re-run time;Dog 4 2nd re-run crossing;Team time; Net time;Comments\n");
    }
    raceDataFile = SD_MMC.open(raceDataFileName.c_str(), FILE_APPEND);
    if (raceDataFile)
@@ -188,7 +188,7 @@ void SDcardControllerClass::UpdateTagFile()
    deleteFile(SD_MMC, "/tag.txt");
    String writeTagValue = String(iTagValue) + "\r\n";
    writeFile(SD_MMC, "/tag.txt", writeTagValue.c_str());
-   ESP_LOGI(__FILE__, "Tag.txt file updated with value %i.", iTagValue);
+   log_i("Tag.txt file updated with value %i.", iTagValue);
 }
 
 /// <summary>
@@ -219,12 +219,12 @@ void SDcardControllerClass::ToggleDecimalSeparator()
    _bCommaInCsv = !_bCommaInCsv;
    SettingsManager.setSetting("CommaInCsv", String(_bCommaInCsv));
    if (_bCommaInCsv)
-      ESP_LOGI(__FILE__, "Decimal separator set to: comma ','");
+      log_i("Decimal separator set to: comma ','");
    else
-      ESP_LOGI(__FILE__, "Decimal separator set to: period '.'");
-   #ifdef WiFiON
+      log_i("Decimal separator set to: period '.'");
+#ifdef WiFiON
    WebHandler._bSendRaceData = true;
-   #endif
+#endif
 }
 
 /// <summary>

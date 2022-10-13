@@ -113,11 +113,16 @@ Przy źle wypozycjonowanym ETSie w stanie GOTOWOŚĆ / READY górne biało świa
 ## Interfejs www (WiFi)
 Maksymalnie można podłączyć 8 klientów Wifi jednocześnie, jednakże ze względów wydajnościowych lepiej nie przekraczać ilości 4 klientów jednocześnie szczególnie, że w praktyce jedna osoba steruje ETSem i prezentuje wyniki handlerom.
 
-Uwaga użytkownicy iOSa!!!
+<b>UWAGA użytkownicy iOSa!!!</b>
 Bez poniższej zmiany, próba połączenia z ETSem będzie powodowała ciągłe restarty systemu.
 
 Od wersji iOS 15 wymagane jest wyłączenie w Ustawieniach jednej funkcji:
 Ustawienia => Safari => Zaawansowane => Experimental Features => NSURLSession WebSocket
+
+Dodatkowo po nawiązaniu połączenia z siecią WiFi nadawaną przez ETS należy wejść w opcję:
+Ustawienia => Wi-Fi => przy sieci FlyballETS nacisnąć "i" w kółku, a następnie wyłączyć:
+- Prywatny adres Wi-Fi
+- Ograniczaj śledzenie adresu IP
 
 #### Strona główna (Race)
 Na tej stronie dostępne te same funkcje sterowania, co przy pomocy pilota z tą różnicą, że start i stop to osobne przyciski. Podobnie dostępne są wszystkie dane widoczne na wyświetlaczu LCD z wyjątkiem informacji o włożonej karcie SD i kierunku biegu.
@@ -131,8 +136,13 @@ Została opisane na początku instrukcji w punkcie dotyczącym aktualizacji opro
 
 
 ## Zgłaszanie usterek oprogramowania
-System wyposażony jest w dwie diody w okolicach wyświetlacza LCD. Pozwala to tak sfilmować zmiany psów, aby jednocześnie widzieć reakcję systemu (przecięcia wiązek). W przypadku wykrycia dziwnego zachowania, w szczególności niespodziewanych wartości na wyświetlaczu, bardzo proszę o przesłanie mi pliku z wynikami (wystarczy tylko część dla danego biegu) oraz odpowiedniego pliku z zapisem odczytów sensorów.
-Wysyłanie zgłoszeń o błędach preferuję w formie [Issue](https://github.com/simonttp78/FlyballETS-Software/issues) bezpośrednio w github. Alternatywnie proszę o kontakt bezpośredni.
+System wyposażony jest w dwie diody w okolicach wyświetlacza LCD. Pozwala to tak sfilmować zmiany psów, aby jednocześnie widzieć reakcję systemu (przecięcia wiązek). W przypadku wykrycia dziwnego zachowania, w szczególności niespodziewanych wartości na wyświetlaczu, bardzo proszę o przesłanie mi:
+- zrzut ekranu z telefonu tak, aby był widoczny status systemu na dole ekranu (tam gdzie jest poziom baterii, Race ID, etc.)
+- pliku z karty SD z wynikami (początek nazwy pliku to numer, taki sam jak pierwszy człon Race ID wyświetlany na dole ekranu telefonu,
+  np. Race ID: 14 - 1 --> nazwa pliku  zaczyna się od 0014)
+- plik z karty SD z odczytami sensorów z katalogu SENSORS_DATA, którego początek nazwy (numer) pokrywa się z numerem pliku z wynikami (np. 0014).
+Wysyłanie zgłoszeń o błędach preferuję w formie [Issue](https://github.com/simonttp78/FlyballETS-Software/issues) bezpośrednio w github.
+Alternatywnie proszę o kontakt bezpośredni.
 
 
 ## Zgłaszanie pomysłów na nowe funkcjonalności

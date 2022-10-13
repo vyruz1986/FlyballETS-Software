@@ -1,27 +1,22 @@
 <div class="container" >
     &nbsp;
     <div class="title">
-        &nbsp;&nbsp;&nbsp;Please login
+        Please login
     </div>
     &nbsp;
-    <div class="panel-body">
-        <div class="row">
-            <div class="input-field col-s-12">
-                <input [(ngModel)]="user.username" id="username" 
-                    type="username" class="validate">&nbsp;
+    <div class="panel-body pr-4">
+            <div class="form-group m-0">
                 <label for="username">Username</label>
+                <input [(ngModel)]="user.username" id="username" 
+                    type="username" class="validate form-control">&nbsp;
             </div>
-        </div>
-
-        <div class="row">
-            <div class="input-field col-s-12">
-                <input [(ngModel)]="user.password" id="password" 
-                    type="password" class="validate">&nbsp;
+            <div class="form-group m-0">
                 <label for="password">Password</label>
+                <input [(ngModel)]="user.password" id="password" 
+                    type="password" class="validate form-control">&nbsp;
             </div>
-        </div>
 
         <span>{{errorMsg}}</span>&nbsp;&nbsp;&nbsp;&nbsp;
-        <button (click)="login()" type="submit" name="action">Login</button>
+        <button (click)="login()" type="submit" name="action" class="form-control">Login</button>
     </div>
 </div>

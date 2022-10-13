@@ -35,9 +35,9 @@ void LCDControllerClass::init(LiquidCrystal *Clcd1, LiquidCrystal *Clcd2)
    _Clcd2->begin(40, 2);
    _Clcd2->clear();
 
-   //Put initial text on screen
-   //                                 1         2         3
-   //LCD layout:            0123456789012345678901234567890123456789
+   // Put initial text on screen
+   //                                  1         2         3
+   // LCD layout:            0123456789012345678901234567890123456789
    _UpdateLCD(2, 0, String("   Flyball Electronic Training System   "), 40);
    _UpdateLCD(3, 0, String("            ver.        rev.S           "), 40);
    _UpdateLCD(3, 17, String(FW_VER), 6);
@@ -82,13 +82,13 @@ void LCDControllerClass::reInit()
    _UpdateLCD(4, 0, String("                                        "), 40);
    if (!LightsController.bModeNAFA)
    {
-   _UpdateLCD(3, 0, String("                  FCI                   "), 40);
-   delay(500);
+      _UpdateLCD(3, 0, String("                  FCI                   "), 40);
+      delay(500);
    }
    else
    {
-   _UpdateLCD(3, 0, String("                 NAFA                   "), 40);
-   delay(500);
+      _UpdateLCD(3, 0, String("                 NAFA                   "), 40);
+      delay(500);
    }
    _UpdateLCD(1, 0, String("1:                      |               "), 40);
    _UpdateLCD(2, 0, String("2:                      | Team:         "), 40);
@@ -171,7 +171,7 @@ void LCDControllerClass::FirmwareUpdateError()
 /// </summary>
 void LCDControllerClass::Main()
 {
-   //This is the main loop which handles LCD updates
+   // This is the main loop which handles LCD updates
    if ((GET_MICROS / 1000 - _lLastLCDUpdate) > _lLCDUpdateInterval)
    {
       for (const SLCDField &lcdField : _SlcdfieldFields)
@@ -192,8 +192,8 @@ void LCDControllerClass::UpdateField(LCDFields lcdfieldField, String strNewValue
 {
    if (_SlcdfieldFields[lcdfieldField].iFieldLength < strNewValue.length())
    {
-      //The new value will not fit into the new field!
-      ESP_LOGE(__FILE__, "[LCD Controller] Field (%i) received value that was too long (%i): %s", lcdfieldField, strNewValue.length(), strNewValue.c_str());
+      // The new value will not fit into the new field!
+      log_e("[LCD Controller] Field (%i) received value that was too long (%i): %s", lcdfieldField, strNewValue.length(), strNewValue.c_str());
       return;
    }
    _SlcdfieldFields[lcdfieldField].strText = strNewValue;
@@ -212,9 +212,9 @@ void LCDControllerClass::_UpdateLCD(int iLine, int iPosition, String strText, in
    LiquidCrystal *CActiveLCD = 0;
    if (iLine > 2)
    {
-      //DisplayLine is higher than 2, this means we need to update the 2nd LCD
+      // DisplayLine is higher than 2, this means we need to update the 2nd LCD
       CActiveLCD = _Clcd2;
-      iLine = iLine - 2; //Convert line number to correct line number for 2nd display
+      iLine = iLine - 2; // Convert line number to correct line number for 2nd display
    }
    else
    {
@@ -225,11 +225,11 @@ void LCDControllerClass::_UpdateLCD(int iLine, int iPosition, String strText, in
    */
    iLine = iLine - 1;
 
-   //Check how long strMessage is:
+   // Check how long strMessage is:
    int iMessageLength = strText.length();
    if (iMessageLength > iFieldLength)
    {
-      //Message is too long, make it scroll!
+      // Message is too long, make it scroll!
       int iExtraChars = iMessageLength - (iFieldLength - 1);
       for (int i = 0; i < iExtraChars; i++)
       {
@@ -241,8 +241,8 @@ void LCDControllerClass::_UpdateLCD(int iLine, int iPosition, String strText, in
    }
    else if (iMessageLength < iFieldLength)
    {
-      //Message is too short, we need to pad it
-      //First find missing characters
+      // Message is too short, we need to pad it
+      // First find missing characters
       int iMissingChars = iFieldLength - iMessageLength;
       for (int i = 0; i < iMissingChars; i++)
       {

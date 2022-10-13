@@ -10,9 +10,9 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
 
    if (type == WS_EVT_CONNECT)
    {
-      ESP_LOGI(__FILE__, "Client %i connected to %s!", client->id(), server->url());
+      log_i("Client %i connected to %s!", client->id(), server->url());
 
-      //Access via /wsa. Checking if clinet/consumer has already athenticated
+      // Access via /wsa. Checking if clinet/consumer has already athenticated
       if (isAdmin)
       {
          if (!_wsAuth(client))
@@ -21,7 +21,8 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
             return;
          }
       }
-      client->ping();
+      // client->ping();
+      // client->keepAlivePeriod(10);
    }
    else if (type == WS_EVT_DISCONNECT)
    {
@@ -31,15 +32,15 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
          _bIsConsumerArray[client->id()] = false;
       }
 
-      ESP_LOGI(__FILE__, "Client %u disconnected!\n", client->id());
+      log_i("Client %u disconnected! Have %i clients\n", client->id(), _ws->count());
    }
    else if (type == WS_EVT_ERROR)
    {
-      ESP_LOGE(__FILE__, "ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t *)arg), (char *)data);
+      log_e("ws[%s][%u] error(%u): %s", server->url(), client->id(), *((uint16_t *)arg), (char *)data);
    }
    else if (type == WS_EVT_PONG)
    {
-      ESP_LOGD(__FILE__, "ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len) ? (char *)data : "");
+      log_d("ws[%s][%u] pong[%u]: %s", server->url(), client->id(), len, (len) ? (char *)data : "");
    }
    else if (type == WS_EVT_DATA)
    {
@@ -47,13 +48,13 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
       String msg = "";
       if (info->final && info->index == 0 && info->len == len)
       {
-         //the whole message is in a single frame and we got all of it's data
-         //ESP_LOGD(__FILE__, "ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT) ? "text" : "binary", info->len);
+         // the whole message is in a single frame and we got all of it's data
+         // log_d("ws[%s][%u] %s-message[%llu]: ", server->url(), client->id(), (info->opcode == WS_TEXT) ? "text" : "binary", info->len);
 
          if (info->opcode == WS_TEXT)
          {
             data[len] = 0;
-            msg = (char*)data;
+            msg = (char *)data;
          }
          else
          {
@@ -64,24 +65,24 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
                msg += buff;
             }
          }
-         ESP_LOGD(__FILE__, "%s\n", msg.c_str());
+         log_d("%s", msg.c_str());
       }
       else
       {
-         //message is comprised of multiple frames or the frame is split into multiple packets
+         // message is comprised of multiple frames or the frame is split into multiple packets
          if (info->index == 0)
          {
             if (info->num == 0)
-               ESP_LOGD(__FILE__, "ws[%s][%u] %s-message start\n", server->url(), client->id(), (info->message_opcode == WS_TEXT) ? "text" : "binary");
-            ESP_LOGD(__FILE__, "ws[%s][%u] frame[%u] start[%llu]\n", server->url(), client->id(), info->num, info->len);
+               log_d("ws[%s][%u] %s-message start", server->url(), client->id(), (info->message_opcode == WS_TEXT) ? "text" : "binary");
+            log_d("ws[%s][%u] frame[%u] start[%llu]", server->url(), client->id(), info->num, info->len);
          }
 
-         ESP_LOGD(__FILE__, "ws[%s][%u] frame[%u] %s[%llu - %llu]: ", server->url(), client->id(), info->num, (info->message_opcode == WS_TEXT) ? "text" : "binary", info->index, info->index + len);
+         log_d("ws[%s][%u] frame[%u] %s[%llu - %llu]: ", server->url(), client->id(), info->num, (info->message_opcode == WS_TEXT) ? "text" : "binary", info->index, info->index + len);
 
          if (info->opcode == WS_TEXT)
          {
             data[len] = 0;
-            msg = (char*)data;
+            msg = (char *)data;
          }
          else
          {
@@ -92,13 +93,13 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
                msg += buff;
             }
          }
-         ESP_LOGD(__FILE__, "%s\n", msg.c_str());
+         log_d("%s", msg.c_str());
 
          if ((info->index + len) == info->len)
          {
-            ESP_LOGD(__FILE__, "ws[%s][%u] frame[%u] end[%llu]\n", server->url(), client->id(), info->num, info->len);
+            log_d("ws[%s][%u] frame[%u] end[%llu]", server->url(), client->id(), info->num, info->len);
             if (info->final)
-               ESP_LOGD(__FILE__, "ws[%s][%u] %s-message end\n", server->url(), client->id(), (info->message_opcode == WS_TEXT) ? "text" : "binary");
+               log_d("ws[%s][%u] %s-message end", server->url(), client->id(), (info->message_opcode == WS_TEXT) ? "text" : "binary");
          }
       }
 
@@ -108,13 +109,13 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
       JsonObject request = jsonRequestDoc.as<JsonObject>();
       if (error)
       {
-         ESP_LOGE(__FILE__, "Error parsing JSON: %s", error.c_str());
+         log_e("Error parsing JSON: %s", error.c_str());
          client->text("{\"error\":\"Invalid JSON received\"}");
          return;
       }
 
       _lWebSocketReceivedTime = GET_MICROS / 1000;
-      //const size_t bufferSize = JSON_ARRAY_SIZE(50) + 50 * JSON_OBJECT_SIZE(3);
+      // const size_t bufferSize = JSON_ARRAY_SIZE(50) + 50 * JSON_OBJECT_SIZE(3);
       const size_t bufferSize = 384;
       StaticJsonDocument<bufferSize> jsonResponseDoc;
       JsonObject JsonResponseRoot = jsonResponseDoc.to<JsonObject>();
@@ -132,7 +133,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
          JsonObject ConfigResult = JsonResponseRoot.createNestedObject("configResult");
          String errorText;
          JsonArray config = request["config"].as<JsonArray>();
-         //We allow setting config only over admin websocket
+         // We allow setting config only over admin websocket
          bool result;
          if (isAdmin)
          {
@@ -165,7 +166,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
       }
       else
       {
-         ESP_LOGW(__FILE__, "Got valid JSON but unknown message!");
+         log_w("Got valid JSON but unknown message!");
          JsonResponseRoot["error"] = "Got valid JSON but unknown message!";
       }
 
@@ -175,7 +176,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
       if (wsBuffer)
       {
          serializeJson(jsonResponseDoc, (char *)wsBuffer->get(), len + 1);
-         //ESP_LOGD(__FILE__, "wsBuffer to send: %s", (char *)wsBuffer->get());
+         // log_d("wsBuffer to send: %s", (char *)wsBuffer->get());
          client->text(wsBuffer);
       }
    }
@@ -183,7 +184,11 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
 
 void WebHandlerClass::init(int webPort)
 {
+
+   // Populate the last modification date based on build datetime
+   // sprintf(_last_modified, "%s %s GMT", __DATE__, __TIME__);
    snprintf_P(_last_modified, sizeof(_last_modified), PSTR("%s %s GMT"), __DATE__, __TIME__);
+
    _server = new AsyncWebServer(webPort);
    _ws = new AsyncWebSocket("/ws");
    _wsa = new AsyncWebSocket("/wsa");
@@ -196,30 +201,29 @@ void WebHandlerClass::init(int webPort)
    _server->addHandler(_ws);
    _server->addHandler(_wsa);
 
-   _server->onNotFound([](AsyncWebServerRequest *request) {
-      ESP_LOGE(__FILE__, "Not found: %s!", request->url().c_str());
-      request->send(404);
-   });
+   _server->onNotFound([](AsyncWebServerRequest *request){
+      log_e("Not found: %s!", request->url().c_str());
+      request->send(404); });
 
    // Rewrites
    _server->rewrite("/", "/index.html");
-   #ifdef WebUIonSDcard
+#ifdef WebUIonSDcard
    _server->serveStatic("/", SD_MMC, "/");
-   #endif
+#endif
 
    // Serve home (basic authentication protection)
    _server->on("/index.html", HTTP_GET, std::bind(&WebHandlerClass::_onHome, this, std::placeholders::_1));
 
-   //Authentication handler
+   // Authentication handler
    _server->on("/auth", HTTP_GET, std::bind(&WebHandlerClass::_onAuth, this, std::placeholders::_1));
 
-   //Favicon handler
+   // Favicon handler
    _server->on("/favicon.ico", HTTP_GET, std::bind(&WebHandlerClass::_onFavicon, this, std::placeholders::_1));
 
    String password = SettingsManager.getSetting("AdminPass");
    char httpPassword[password.length() + 1];
    password.toCharArray(httpPassword, password.length() + 1);
-   AsyncElegantOTA.begin(_server, "Admin", httpPassword);    // Start ElegantOTA
+   AsyncElegantOTA.begin(_server, "Admin", httpPassword); // Start ElegantOTA
 
    _server->begin();
 
@@ -247,14 +251,12 @@ void WebHandlerClass::init(int webPort)
 void WebHandlerClass::loop()
 {
    unsigned long lCurrentUpTime = GET_MICROS / 1000;
-   //ESP_LOGD(__FILE__, "_bSendRaceData: %i, _bUpdateLights: %i, since LastBroadcast: %ul, since WS received: %ul, \r\n", _bSendRaceData, _bUpdateLights, (lCurrentUpTime - _lLastBroadcast), (lCurrentUpTime - _lWebSocketReceivedTime));
+   // log_d("_bSendRaceData: %i, _bUpdateLights: %i, since LastBroadcast: %ul, since WS received: %ul", _bSendRaceData, _bUpdateLights, (lCurrentUpTime - _lLastBroadcast), (lCurrentUpTime - _lWebSocketReceivedTime));
    if ((lCurrentUpTime - _lLastBroadcast > 100) && (lCurrentUpTime - _lWebSocketReceivedTime > 50))
    {
       if (_bUpdateLights)
          _SendLightsData();
-      else if (_bSendRaceData
-               || ((RaceHandler.RaceState == RaceHandler.RUNNING || (RaceHandler.RaceState == RaceHandler.STOPPED && (GET_MICROS - RaceHandler._llRaceEndTime) / 1000 < 1500))
-                     && (lCurrentUpTime - _lLastRaceDataBroadcast > _lRaceDataBroadcastInterval)))
+      else if (_bSendRaceData || ((RaceHandler.RaceState == RaceHandler.RUNNING || (RaceHandler.RaceState == RaceHandler.STOPPED && (GET_MICROS - RaceHandler._llRaceEndTime) / 1000 < 1500)) && (lCurrentUpTime - _lLastRaceDataBroadcast > _lRaceDataBroadcastInterval)))
          _SendRaceData(RaceHandler.iCurrentRaceId, -1);
       else if (RaceHandler.RaceState == RaceHandler.RESET || (RaceHandler.RaceState == RaceHandler.STOPPED && (GET_MICROS - RaceHandler._llRaceEndTime) / 1000 > 1500))
       {
@@ -262,9 +264,9 @@ void WebHandlerClass::loop()
             _SendSystemData();
          if (lCurrentUpTime - _lLastPingBroadcast > _lPingBroadcastInterval)
          {
-            _ws->cleanupClients();
-            ESP_LOGD(__FILE__, "Have %i clients, %i consumers\r\n", _ws->count(), _iNumOfConsumers);
             //_ws->pingAll();
+            _ws->cleanupClients();
+            log_d("Have %i clients, %i consumers", _ws->count(), _iNumOfConsumers);
             //_lLastBroadcast = GET_MICROS / 1000;
             _lLastPingBroadcast = GET_MICROS / 1000;
          }
@@ -286,7 +288,7 @@ void WebHandlerClass::_SendLightsData()
    if (wsBuffer)
    {
       serializeJson(jsonLightsDoc, (char *)wsBuffer->get(), len + 1);
-      //ESP_LOGD(__FILE__, "LightsData wsBuffer to send: %s. No of ws clients is: %i", (char *)wsBuffer->get(), _ws->count());
+      // log_d("LightsData wsBuffer to send: %s. No of ws clients is: %i", (char *)wsBuffer->get(), _ws->count());
       _ws->textAll(wsBuffer);
       _lLastBroadcast = GET_MICROS / 1000;
       _bUpdateLights = false;
@@ -298,7 +300,7 @@ void WebHandlerClass::_SendLightsData()
             AsyncWebSocketClient *client = _ws->client(iId);
             if (client && client->status() == WS_CONNECTED)
             {
-               //ESP_LOGD(__FILE__, "Ligts update to client %i\r\n", iId);
+               //log_d("Ligts update to client %i", iId);
                client->text(wsBuffer);
             }
          }
@@ -327,7 +329,7 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
    {
       if (RaceHandler.RaceState != RaceHandler.RESET)
       {
-         //ReturnError = String("Race was not reset, stop and reset it first!");
+         // ReturnError = String("Race was not reset, stop and reset it first!");
          return false;
       }
       else
@@ -343,7 +345,7 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
    {
       if (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)
       {
-         //ReturnError = "Race was already stopped!";
+         // ReturnError = "Race was already stopped!";
          _bSendRaceData = true;
          _bUpdateLights = true;
          return false;
@@ -359,7 +361,7 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
    {
       if (RaceHandler.RaceState != RaceHandler.STOPPED)
       {
-         //ReturnError = "Race was not stopped, or already in RESET state.";
+         // ReturnError = "Race was not stopped, or already in RESET state.";
          _bSendRaceData = true;
          _bUpdateLights = true;
          return false;
@@ -375,18 +377,18 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
    {
       if (!ActionObj.containsKey("actionData"))
       {
-         //ReturnError = "No actionData found!";
+         // ReturnError = "No actionData found!";
          return false;
       }
       uint8_t iDogNum = ActionObj["actionData"]["dogNumber"];
-      //bool bFaultState = ActionObj["actionData"]["faultState"];
-      //RaceHandler.SetDogFault(iDogNum, (bFaultState ? RaceHandler.ON : RaceHandler.OFF));
+      // bool bFaultState = ActionObj["actionData"]["faultState"];
+      // RaceHandler.SetDogFault(iDogNum, (bFaultState ? RaceHandler.ON : RaceHandler.OFF));
       RaceHandler.SetDogFault(iDogNum);
       return true;
    }
    else if (ActionType == "AnnounceConsumer")
    {
-      ESP_LOGD(__FILE__, "We have a consumer with ID %i and IP %s", Client->id(), Client->remoteIP().toString().c_str());
+      log_d("We have a consumer with ID %i and IP %s\n", Client->id(), Client->remoteIP().toString().c_str());
       if (!_bIsConsumerArray[Client->id()])
       {
          _iNumOfConsumers++;
@@ -456,11 +458,11 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
    {
       if (!ActionObj.containsKey("actionData") || (RaceHandler.RaceState != RaceHandler.RESET))
       {
-         //ReturnError = "No actionData found!";
+         // ReturnError = "No actionData found!";
          return false;
       }
       bool _bRerunsOff = ActionObj["actionData"]["rerunsOff"];
-      //ESP_LOGD(__FILE__, "Received rerunsOff: %o", _bRerunsOff);
+      // log_d("Received rerunsOff: %o", _bRerunsOff);
       if (_bRerunsOff)
          RaceHandler.ToggleRerunsOffOn(1);
       else
@@ -469,8 +471,8 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
    }
    else
    {
-      //ReturnError = "Unknown action received!";
-      ESP_LOGD(__FILE__, "Unknown action received: %s", ActionType.c_str());
+      // ReturnError = "Unknown action received!";
+      log_d("Unknown action received: %s", ActionType.c_str());
       return false;
    }
 }
@@ -521,7 +523,7 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
       if (wsBuffer)
       {
          serializeJson(JsonRaceDataDoc, (char *)wsBuffer->get(), len + 1);
-         //ESP_LOGD(__FILE__, "RaceData wsBuffer to send: %s", (char *)wsBuffer->get());
+         // log_d("RaceData wsBuffer to send: %s", (char *)wsBuffer->get());
          if (iClientId == -1)
          {
             _ws->textAll(wsBuffer);
@@ -530,11 +532,11 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
             {
                if (isConsumer)
                {
-                  //ESP_LOGD(__FILE__, "Getting client obj for id %i\r\n", iId);
+                  //log_d("Getting client obj for id %i", iId);
                   AsyncWebSocketClient *client = _ws->client(iId);
                   if (client && client->status() == WS_CONNECTED)
                   {
-                     //ESP_LOGD(__FILE__, "Generic update. Sending to client %i\r\n", iId);
+                     //log_d("Generic update. Sending to client %i", iId);
                      client->text(wsBuffer);
                   }
                }
@@ -543,21 +545,20 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
          }
          else
          {
-            //ESP_LOGD(__FILE__, "Specific update. Sending to client %i\r\n", iClientId);
+            // log_d("Specific update. Sending to client %i", iClientId);
             AsyncWebSocketClient *client = _ws->client(iClientId);
             client->text(wsBuffer);
          }
          _lLastRaceDataBroadcast = _lLastBroadcast = GET_MICROS / 1000;
          _bSendRaceData = false;
       }
-      
    }
 }
 
 bool WebHandlerClass::_ProcessConfig(JsonArray newConfig, String *ReturnError)
 {
    bool save = false;
-   ESP_LOGD(__FILE__, "Config has %i elements\r\n", newConfig.size());
+   log_d("Config has %i elements", newConfig.size());
    for (unsigned int i = 0; i < newConfig.size(); i++)
    {
       String key = newConfig[i]["name"];
@@ -565,7 +566,7 @@ bool WebHandlerClass::_ProcessConfig(JsonArray newConfig, String *ReturnError)
 
       if (value != SettingsManager.getSetting(key))
       {
-         ESP_LOGD(__FILE__, "[WEBHANDLER] Storing %s = %s", key.c_str(), value.c_str());
+         log_d("Storing %s = %s", key.c_str(), value.c_str());
          SettingsManager.setSetting(key, value);
          save = true;
       }
@@ -574,8 +575,8 @@ bool WebHandlerClass::_ProcessConfig(JsonArray newConfig, String *ReturnError)
    if (save)
    {
       SettingsManager.saveSettings();
-      //Schedule system reboot to activate new settings in 5s
-      //SystemManager.scheduleReboot(GET_MICROS / 1000 + 5000);
+      // Schedule system reboot to activate new settings in 5s
+      // SystemManager.scheduleReboot(GET_MICROS / 1000 + 5000);
    }
 
    return true;
@@ -593,7 +594,7 @@ bool WebHandlerClass::_GetData(String dataType, JsonObject Data)
       Data["LaserOnTimer"] = SettingsManager.getSetting("LaserOnTimer");
       Data["Accuracy3digits"] = SettingsManager.getSetting("Accuracy3digits");
       Data["CommaInCsv"] = SettingsManager.getSetting("CommaInCsv");
-      //ESP_LOGD(__FILE__, "AdminPass: %s, RunDirection: %s", SettingsManager.getSetting("AdminPass").c_str(), SettingsManager.getSetting("RunDirectionInverted"));
+      // log_d("AdminPass: %s, RunDirection: %s", SettingsManager.getSetting("AdminPass").c_str(), SettingsManager.getSetting("RunDirectionInverted"));
    }
    else if (dataType == "triggerQueue")
    {
@@ -624,26 +625,31 @@ void WebHandlerClass::_SendSystemData(int8_t iClientId)
    }
    else
    {
-      _SystemData.FreeHeap = esp_get_free_heap_size();
+      _SystemData.FwVer = (char *)FW_VER;
       _SystemData.RaceID = RaceHandler.iCurrentRaceId + 1;
       _SystemData.Uptime = GET_MICROS / 1000;
       _SystemData.NumClients = _ws->count();
-      _SystemData.LocalSystemTime =  (char*) GPSHandler.GetUtcDateAndTime();
+      _SystemData.LocalSystemTime = (char *)GPSHandler.GetUtcDateAndTime();
       _SystemData.BatteryPercentage = BatterySensor.GetBatteryPercentage();
-      
+      if (!RaceHandler.bRunDirectionInverted)
+         _SystemData.RunDirection = (char *)"->";
+      else
+         _SystemData.RunDirection = (char *)"<-";
+
       StaticJsonDocument<192> JsonSystemDataDoc;
       JsonObject JsonRoot = JsonSystemDataDoc.to<JsonObject>();
 
       JsonObject JsonSystemData = JsonRoot.createNestedObject("SystemData");
       JsonSystemData["uptime"] = _SystemData.Uptime;
-      JsonSystemData["freeHeap"] = _SystemData.FreeHeap;
+      JsonSystemData["FwVer"] = _SystemData.FwVer;
       JsonSystemData["PwrOnTag"] = _SystemData.PwrOnTag;
       JsonSystemData["RaceID"] = _SystemData.RaceID;
       JsonSystemData["numClients"] = _SystemData.NumClients;
       JsonSystemData["systemTimestamp"] = _SystemData.LocalSystemTime;
       JsonSystemData["batteryPercentage"] = _SystemData.BatteryPercentage;
+      JsonSystemData["runDirection"] = _SystemData.RunDirection;
 
-      size_t len = measureJson(JsonSystemDataDoc);   
+      size_t len = measureJson(JsonSystemDataDoc);
       AsyncWebSocketMessageBuffer *wsBuffer = _ws->makeBuffer(len);
       if (wsBuffer)
       {
@@ -656,11 +662,11 @@ void WebHandlerClass::_SendSystemData(int8_t iClientId)
             {
                if (isConsumer)
                {
-                  //ESP_LOGD(__FILE__, "Getting client obj for id %i\r\n", iId);
+                  //log_d("Getting client obj for id %i", iId);
                   AsyncWebSocketClient *client = _ws->client(iId);
                   if (client && client->status() == WS_CONNECTED)
                   {
-                     //ESP_LOGD(__FILE__, "Generic update. Sending to client %i\r\n", iId);
+                     //log_d("Generic update. Sending to client %i", iId);
                      client->text(wsBuffer);
                   }
                }
@@ -669,13 +675,36 @@ void WebHandlerClass::_SendSystemData(int8_t iClientId)
          }
          else
          {
-            //ESP_LOGD(__FILE__, "Specific update. Sending to client %i\r\n", iClientId);
+            // log_d("Specific update. Sending to client %i", iClientId);
             AsyncWebSocketClient *client = _ws->client(iClientId);
             client->text(wsBuffer);
          }
          _lLastSystemDataBroadcast = _lLastBroadcast = GET_MICROS / 1000;
-         //ESP_LOGD(__FILE__, "Sent sysdata at %lu\r\n", GET_MICROS / 1000);
+         // log_d("Sent sysdata at %lu", GET_MICROS / 1000);
       }
+   }
+}
+
+void WebHandlerClass::disconnectWsClient(IPAddress ipDisconnectedIP)
+{
+   uint8_t iId = 0;
+   for (auto &isConsumer : _bIsConsumerArray)
+   {
+      if (isConsumer)
+      {
+         log_d("Getting client obj for id %i", iId);
+         AsyncWebSocketClient *client = _ws->client(iId);
+         IPAddress ip = client->remoteIP();
+         log_d("IP to check: %s. IP of the client: %s", ipDisconnectedIP.toString().c_str(), ip.toString().c_str());
+         if (client && client->status() == WS_CONNECTED && ip == ipDisconnectedIP)
+         {
+            log_d("Closing client %i", iId);
+            client->close();
+            _iNumOfConsumers--;
+            _bIsConsumerArray[client->id()] = false;
+         }
+      }
+      iId++;
    }
 }
 
@@ -715,7 +744,7 @@ bool WebHandlerClass::_authenticate(AsyncWebServerRequest *request)
    bool bAuthResult = request->authenticate("Admin", httpPassword);
    if (!bAuthResult)
    {
-      ESP_LOGE(__FILE__, "[WEBHANDLER] Admin user failed to login!");
+      log_e("[WEBHANDLER] Admin user failed to login!");
    }
    return bAuthResult;
 }
@@ -725,21 +754,21 @@ bool WebHandlerClass::_wsAuth(AsyncWebSocketClient *client)
    IPAddress ip = client->remoteIP();
    unsigned short index = 0;
 
-   //TODO: Here be dragons, this way of 'authenticating' is all but secure
-   //We are just storing the client's IP and an expiration timestamp of now + 30 mins
-   //So if someone logs in, then disconnects from the WiFi, and then someone else connects
-   //this new user will/could have the same IP as the previous user, and will be authenticated :(
+   // TODO: Here be dragons, this way of 'authenticating' is all but secure
+   // We are just storing the client's IP and an expiration timestamp of now + 30 mins
+   // So if someone logs in, then disconnects from the WiFi, and then someone else connects
+   // this new user will/could have the same IP as the previous user, and will be authenticated :(
 
    for (index = 0; index < WS_TICKET_BUFFER_SIZE; index++)
    {
-      ESP_LOGD(__FILE__, "Checking ticket: %i, ip: %s, time: %ul", index, _ticket[index].ip.toString().c_str(), _ticket[index].timestamp);
+      log_d("Checking ticket: %i, ip: %s, time: %ul", index, _ticket[index].ip.toString().c_str(), _ticket[index].timestamp);
       if ((_ticket[index].ip == ip) && (GET_MICROS / 1000 - _ticket[index].timestamp < WS_TIMEOUT))
          break;
    }
 
    if (index == WS_TICKET_BUFFER_SIZE)
    {
-      ESP_LOGE(__FILE__, "[WEBSOCKET] Validation check failed\n");
+      log_e("[WEBSOCKET] Validation check failed");
       client->text("{\"success\": false, \"error\": \"You shall not pass!!!! Please authenticate first :-)\", \"authenticated\": false}");
       _lLastBroadcast = GET_MICROS / 1000;
       return false;
@@ -751,33 +780,45 @@ bool WebHandlerClass::_wsAuth(AsyncWebSocketClient *client)
 void WebHandlerClass::_onHome(AsyncWebServerRequest *request)
 {
 
-   //if (!_authenticate(request)) return request->requestAuthentication(getSetting("hostname").c_str());
+   // Check if the client already has the same version and respond with a 304 (Not modified)
    if (request->header("If-Modified-Since").equals(_last_modified))
    {
       request->send(304);
    }
    else
    {
-      #ifndef WebUIonSDcard
+#ifndef WebUIonSDcard
+      // Dump the byte array in PROGMEM with a 200 HTTP code (OK)
       AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", index_html_gz, index_html_gz_len);
+      // Tell the browswer the contemnt is Gzipped
       response->addHeader("Content-Encoding", "gzip");
-      #else
+#else
       AsyncWebServerResponse *response = request->beginResponse(SD_MMC, "/index.htm", "text/html");
-      #endif
+#endif
+      // And set the last-modified datetime so we can check if we need to send it again next time or not
       response->addHeader("Last-Modified", _last_modified);
       request->send(response);
    }
 }
 
-
 void WebHandlerClass::_onFavicon(AsyncWebServerRequest *request)
 {
-   #ifndef WebUIonSDcard
-   AsyncWebServerResponse *response = request->beginResponse_P(200, "image/png", index_html_gz, index_html_gz_len);
-   response->addHeader("Content-Encoding", "gzip");
-   #else
-   AsyncWebServerResponse *response = request->beginResponse(SD_MMC, "/favicon.ico", "image/png");
-   #endif
-   request->send(response);
+   if (request->header("If-Modified-Since").equals(_last_modified))
+   {
+      request->send(304);
+   }
+   else
+   {
+#ifndef WebUIonSDcard
+      AsyncWebServerResponse *response = request->beginResponse_P(200, "image/png", index_html_gz, index_html_gz_len);
+      response->addHeader("Content-Encoding", "gzip");
+#else
+      AsyncWebServerResponse *response = request->beginResponse(SD_MMC, "/favicon.ico", "image/png");
+#endif
+      // And set the last-modified datetime so we can check if we need to send it again next time or not
+      response->addHeader("Last-Modified", _last_modified);
+      request->send(response);
+   }
 }
+
 WebHandlerClass WebHandler;

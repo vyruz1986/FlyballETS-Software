@@ -34,7 +34,9 @@
       "iostream": "cpp",
       "new": "cpp",
       "stdexcept": "cpp",
-      "streambuf": "cpp"
+      "streambuf": "cpp",
+      "memory": "cpp",
+      "algorithm": "cpp"
    },
    "C_Cpp.dimInactiveRegions": true
 }

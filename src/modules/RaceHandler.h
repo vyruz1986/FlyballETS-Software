@@ -27,7 +27,7 @@ public:
 
    uint8_t iCurrentDog;
    uint8_t iPreviousDog;
-   uint8_t iNextDog;
+   uint8_t iNextDog = 1;
    uint8_t iNumberOfRacingDogs = 4;
    uint8_t iDogRunCounters[4]; // Number of (re-)runs for each dog
    long long llRaceStartTime;
@@ -35,6 +35,7 @@ public:
    int iCurrentRaceId = -1;
    char *cRaceStartTimestamp;
    bool bRerunsOff = false;
+   bool bRunDirectionInverted = false;
 
    void Main();
    void ChangeRaceStateToRunning();
@@ -101,7 +102,6 @@ private:
    volatile uint8_t _iOutputQueueWriteIndex = 0;
    volatile uint8_t _iInputQueueWriteIndex = 0;
 
-   bool _bRunDirectionInverted = false;
    bool _bAccuracy3digits = false;
    bool _bNextDogFound = false;
    bool _bSensorNoise = false;
