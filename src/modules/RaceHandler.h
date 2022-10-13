@@ -35,6 +35,7 @@ public:
    int iCurrentRaceId = -1;
    char *cRaceStartTimestamp;
    bool bRerunsOff = false;
+   bool bRunDirectionInverted = false;
 
    void Main();
    void ChangeRaceStateToRunning();
@@ -101,7 +102,6 @@ private:
    volatile uint8_t _iOutputQueueWriteIndex = 0;
    volatile uint8_t _iInputQueueWriteIndex = 0;
 
-   bool _bRunDirectionInverted = false;
    bool _bAccuracy3digits = false;
    bool _bNextDogFound = false;
    bool _bSensorNoise = false;

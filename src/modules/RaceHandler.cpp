@@ -38,7 +38,7 @@ void RaceHandlerClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
    ResetRace();
    if (SettingsManager.getSetting("RunDirectionInverted").equals("1"))
    {
-      _bRunDirectionInverted = true;
+      bRunDirectionInverted = true;
       LCDController.UpdateField(LCDController.BoxDirection, "<");
       log_i("Run direction from settings: inverted");
    }
@@ -919,7 +919,7 @@ void RaceHandlerClass::TriggerSensor1()
       // LightsController.ReaceReadyFault(LightsController.OFF);
    }
    else
-      _QueuePush({_bRunDirectionInverted ? 2 : 1, GET_MICROS, digitalRead(_iS1Pin)});
+      _QueuePush({bRunDirectionInverted ? 2 : 1, GET_MICROS, digitalRead(_iS1Pin)});
 }
 
 /// <summary>
@@ -940,7 +940,7 @@ void RaceHandlerClass::TriggerSensor2()
       // LightsController.ReaceReadyFault(LightsController.OFF);
    }
    else
-      _QueuePush({_bRunDirectionInverted ? 1 : 2, GET_MICROS, digitalRead(_iS2Pin)});
+      _QueuePush({bRunDirectionInverted ? 1 : 2, GET_MICROS, digitalRead(_iS2Pin)});
 }
 
 /// <summary>
@@ -1418,9 +1418,9 @@ stRaceData RaceHandlerClass::GetRaceData(int iRaceId)
 /// </summary>
 void RaceHandlerClass::ToggleRunDirection()
 {
-   _bRunDirectionInverted = !_bRunDirectionInverted;
-   SettingsManager.setSetting("RunDirectionInverted", String(_bRunDirectionInverted));
-   if (_bRunDirectionInverted)
+   bRunDirectionInverted = !bRunDirectionInverted;
+   SettingsManager.setSetting("RunDirectionInverted", String(bRunDirectionInverted));
+   if (bRunDirectionInverted)
    {
       LCDController.UpdateField(LCDController.BoxDirection, "<");
       log_i("Run direction changed to: inverted");
@@ -1479,7 +1479,7 @@ void RaceHandlerClass::ToggleRerunsOffOn(uint8_t _iState)
 /// </returns>
 bool RaceHandlerClass::GetRunDirection()
 {
-   return _bRunDirectionInverted;
+   return bRunDirectionInverted;
 }
 
 /// <summary>

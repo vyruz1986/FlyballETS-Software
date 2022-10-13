@@ -9,28 +9,28 @@ import { EtsdataService } from '../../services/etsdata.service';
 })
 export class SystemDataComponent implements OnInit {
 
-  hmsTime:string;
+  hmsTime: string;
 
-  systemData:SystemData = {batteryPercentage: 0, PwrOnTag: 0, RaceID: 0, uptime: 0, systemTimestamp: null, numClients: 0, freeHeap: 0};
-  constructor(private etsDataService:EtsdataService) {
+  systemData: SystemData = { batteryPercentage: 0, PwrOnTag: 0, RaceID: 0, uptime: 0, systemTimestamp: null, numClients: 0, FwVer: null, runDirection: null };
+  constructor(private etsDataService: EtsdataService) {
     this.etsDataService.dataStream.subscribe((data) => {
-      if(data.SystemData) {
+      if (data.SystemData) {
         this.systemData = <SystemData>data.SystemData;
         this.formatHMSTime(data.SystemData.uptime / 1000);
       }
     });
-  }  
+  }
 
-  formatHMSTime(d:number){
-    
+  formatHMSTime(d: number) {
+
     var h = Math.floor(d / 3600);
     var m = Math.floor(d % 3600 / 60);
     var s = Math.floor(d % 3600 % 60 / 10);
-    
+
     this.hmsTime = ('0' + h).slice(-1) + ":" + ('0' + m).slice(-2) + ":" + ('0' + s).slice(-1);
   }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   ngOnDestroy() {
     this.etsDataService.dataStream.unsubscribe();

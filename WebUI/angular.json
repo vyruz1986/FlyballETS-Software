@@ -3,7 +3,7 @@
    "version": 1,
    "newProjectRoot": "projects",
    "projects": {
-      "flyball-etsweb": {
+      "flyballets-webui": {
          "root": "",
          "sourceRoot": "src",
          "projectType": "application",
@@ -57,18 +57,18 @@
             "serve": {
                "builder": "@angular-devkit/build-angular:dev-server",
                "options": {
-                  "browserTarget": "flyball-etsweb:build"
+                  "browserTarget": "flyballets-webui:build"
                },
                "configurations": {
                   "production": {
-                     "browserTarget": "flyball-etsweb:build:production"
+                     "browserTarget": "flyballets-webui:build:production"
                   }
                }
             },
             "extract-i18n": {
                "builder": "@angular-devkit/build-angular:extract-i18n",
                "options": {
-                  "browserTarget": "flyball-etsweb:build"
+                  "browserTarget": "flyballets-webui:build"
                }
             },
             "test": {
@@ -85,7 +85,7 @@
             }
          }
       },
-      "flyball-etsweb-e2e": {
+      "flyballets-webui-e2e": {
          "root": "",
          "sourceRoot": "e2e",
          "projectType": "application",
@@ -94,13 +94,13 @@
                "builder": "@angular-devkit/build-angular:protractor",
                "options": {
                   "protractorConfig": "./protractor.conf.js",
-                  "devServerTarget": "flyball-etsweb:serve"
+                  "devServerTarget": "flyballets-webui:serve"
                }
             }
          }
       }
    },
-   "defaultProject": "flyball-etsweb",
+   "defaultProject": "flyballets-webui",
    "schematics": {
       "@schematics/angular:component": {
          "prefix": "app",

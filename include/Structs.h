@@ -10,7 +10,7 @@ struct stDogTimeData
 struct stDogData
 {
    uint8_t DogNumber;
-   //String DogName;
+   // String DogName;
    stDogTimeData Timing[4];
    bool Running;
    bool Fault;
@@ -32,12 +32,13 @@ struct stRaceData
 struct stSystemData
 {
    unsigned long Uptime;
-   uint32_t FreeHeap;
+   char *FwVer;
    uint16_t PwrOnTag;
    int RaceID;
    uint NumClients;
-   char* LocalSystemTime;
+   char *LocalSystemTime;
    uint BatteryPercentage = 0;
+   char *RunDirection;
 };
 
 struct stLightsState

@@ -3,9 +3,10 @@
       <span class="badge badge-light text-center">
         Battery: {{systemData.batteryPercentage}}%
         &nbsp;&nbsp;&nbsp; Race Id: {{systemData.PwrOnTag}} - {{systemData.RaceID}}
-        &nbsp;&nbsp;&nbsp; Clients: {{systemData.numClients}}<br />
+        &nbsp;&nbsp;&nbsp; Clients: {{systemData.numClients}}
+        &nbsp;&nbsp;&nbsp; Dir: {{systemData.runDirection}}<br />
         <br />
-        {{systemData.systemTimestamp | date:'yyyy-MM-dd &nbsp;&nbsp;HH:mm'}} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Up: {{hmsTime}} 
+        {{systemData.systemTimestamp | date:'yyyy-MM-dd &nbsp;HH:mm'}} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Up: {{hmsTime}} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FW: {{systemData.FwVer}} 
         <!--| Mem: {{systemData.freeHeap}}-->
       </span>
     </p>

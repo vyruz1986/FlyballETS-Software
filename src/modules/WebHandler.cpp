@@ -21,8 +21,8 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
             return;
          }
       }
-      //client->ping();
-      //client->keepAlivePeriod(10);
+      // client->ping();
+      // client->keepAlivePeriod(10);
    }
    else if (type == WS_EVT_DISCONNECT)
    {
@@ -184,9 +184,9 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
 
 void WebHandlerClass::init(int webPort)
 {
-   
+
    // Populate the last modification date based on build datetime
-   //sprintf(_last_modified, "%s %s GMT", __DATE__, __TIME__);
+   // sprintf(_last_modified, "%s %s GMT", __DATE__, __TIME__);
    snprintf_P(_last_modified, sizeof(_last_modified), PSTR("%s %s GMT"), __DATE__, __TIME__);
 
    _server = new AsyncWebServer(webPort);
@@ -625,24 +625,29 @@ void WebHandlerClass::_SendSystemData(int8_t iClientId)
    }
    else
    {
-      _SystemData.FreeHeap = esp_get_free_heap_size();
+      _SystemData.FwVer = (char *)FW_VER;
       _SystemData.RaceID = RaceHandler.iCurrentRaceId + 1;
       _SystemData.Uptime = GET_MICROS / 1000;
       _SystemData.NumClients = _ws->count();
       _SystemData.LocalSystemTime = (char *)GPSHandler.GetUtcDateAndTime();
       _SystemData.BatteryPercentage = BatterySensor.GetBatteryPercentage();
+      if (!RaceHandler.bRunDirectionInverted)
+         _SystemData.RunDirection = (char *)"->";
+      else
+         _SystemData.RunDirection = (char *)"<-";
 
       StaticJsonDocument<192> JsonSystemDataDoc;
       JsonObject JsonRoot = JsonSystemDataDoc.to<JsonObject>();
 
       JsonObject JsonSystemData = JsonRoot.createNestedObject("SystemData");
       JsonSystemData["uptime"] = _SystemData.Uptime;
-      JsonSystemData["freeHeap"] = _SystemData.FreeHeap;
+      JsonSystemData["FwVer"] = _SystemData.FwVer;
       JsonSystemData["PwrOnTag"] = _SystemData.PwrOnTag;
       JsonSystemData["RaceID"] = _SystemData.RaceID;
       JsonSystemData["numClients"] = _SystemData.NumClients;
       JsonSystemData["systemTimestamp"] = _SystemData.LocalSystemTime;
       JsonSystemData["batteryPercentage"] = _SystemData.BatteryPercentage;
+      JsonSystemData["runDirection"] = _SystemData.RunDirection;
 
       size_t len = measureJson(JsonSystemDataDoc);
       AsyncWebSocketMessageBuffer *wsBuffer = _ws->makeBuffer(len);
@@ -805,8 +810,8 @@ void WebHandlerClass::_onFavicon(AsyncWebServerRequest *request)
    else
    {
 #ifndef WebUIonSDcard
-   AsyncWebServerResponse *response = request->beginResponse_P(200, "image/png", index_html_gz, index_html_gz_len);
-   response->addHeader("Content-Encoding", "gzip");
+      AsyncWebServerResponse *response = request->beginResponse_P(200, "image/png", index_html_gz, index_html_gz_len);
+      response->addHeader("Content-Encoding", "gzip");
 #else
       AsyncWebServerResponse *response = request->beginResponse(SD_MMC, "/favicon.ico", "image/png");
 #endif
