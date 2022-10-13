@@ -136,8 +136,13 @@ Została opisane na początku instrukcji w punkcie dotyczącym aktualizacji opro
 
 
 ## Zgłaszanie usterek oprogramowania
-System wyposażony jest w dwie diody w okolicach wyświetlacza LCD. Pozwala to tak sfilmować zmiany psów, aby jednocześnie widzieć reakcję systemu (przecięcia wiązek). W przypadku wykrycia dziwnego zachowania, w szczególności niespodziewanych wartości na wyświetlaczu, bardzo proszę o przesłanie mi pliku z wynikami (wystarczy tylko część dla danego biegu) oraz odpowiedniego pliku z zapisem odczytów sensorów.
-Wysyłanie zgłoszeń o błędach preferuję w formie [Issue](https://github.com/simonttp78/FlyballETS-Software/issues) bezpośrednio w github. Alternatywnie proszę o kontakt bezpośredni.
+System wyposażony jest w dwie diody w okolicach wyświetlacza LCD. Pozwala to tak sfilmować zmiany psów, aby jednocześnie widzieć reakcję systemu (przecięcia wiązek). W przypadku wykrycia dziwnego zachowania, w szczególności niespodziewanych wartości na wyświetlaczu, bardzo proszę o przesłanie mi:
+- zrzut ekranu z telefonu tak, aby był widoczny status systemu na dole ekranu (tam gdzie jest poziom baterii, Race ID, etc.)
+- pliku z karty SD z wynikami (początek nazwy pliku to numer, taki sam jak pierwszy człon Race ID wyświetlany na dole ekranu telefonu,
+  np. Race ID: 14 - 1 --> nazwa pliku  zaczyna się od 0014)
+- plik z karty SD z odczytami sensorów z katalogu SENSORS_DATA, którego początek nazwy (numer) pokrywa się z numerem pliku z wynikami (np. 0014).
+Wysyłanie zgłoszeń o błędach preferuję w formie [Issue](https://github.com/simonttp78/FlyballETS-Software/issues) bezpośrednio w github.
+Alternatywnie proszę o kontakt bezpośredni.
 
 
 ## Zgłaszanie pomysłów na nowe funkcjonalności

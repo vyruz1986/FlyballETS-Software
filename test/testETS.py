@@ -43,11 +43,12 @@ os.mkdir(pathTestsOutputFolder)
 fileTestsSummary = open(pathTestsOutputFolder + "/!summary.txt", "wb")
 
 #ser.write(b"reboot" + b"\n")
-time.sleep(2)
+print("Preparing environment... ")
+#time.sleep(2)
 ser.write(b"stop" + b"\n")
 time.sleep(2)
 ser.write(b"reset" + b"\n")
-time.sleep(2)
+time.sleep(1)
 
 ser.write(b"preparefortesting\n")
 readlineSkip = ser.readline()[:-2]
@@ -103,20 +104,21 @@ while argument_number < len(sys.argv):
     argument_number += 1
 #print(flatten_listOfRaces)
 
+print("Starting execution... ")
 for loop in range(stabNumOfLoops):
     testNum = 0
     #for selectedrace in flatten_listOfRaces:
     while testNum < len(flatten_listOfRaces):
         selectedRace = str(flatten_listOfRaces[testNum])
         ser.write(b"race " + selectedRace.encode('utf-8') + b"\n")
-        time.sleep(2)
+        time.sleep(1)
 
         racefile = open(os.getcwd() + "/testcases" + "/RACE" + selectedRace + ".txt", "r")
         if loop > 0:
             exitfile = open(pathTestsOutputFolder + "/race" + selectedRace + "_" + loop + ".txt", "wb")
         else:
             exitfile = open(pathTestsOutputFolder + "/race" + selectedRace + ".txt", "wb")
-        time.sleep(2)
+        time.sleep(1)
 
         linestoskip = 0
         additionalargs = racefile.readline()
@@ -134,7 +136,7 @@ for loop in range(stabNumOfLoops):
                     # print(splitdecodeline[1])
                     command_send_midprogramm(innitcommands)
                     i += 1
-                    time.sleep(2)
+                    time.sleep(1)
                 elif splitadditionalargs[0] == "$commands":
                     command_sendtime = float(splitadditionalargs[i])
                     command_name = (splitadditionalargs[i+1],)
@@ -154,10 +156,11 @@ for loop in range(stabNumOfLoops):
             raceEND = False
             readline = ser.readline()
             ser.write(b"start" + b"\n")  # \x53\x54\x41\x52\x54\x0a (utf-8)
-            time.sleep(2)
+            time.sleep(1)
             stopline = ""
             consoleProgressPrint = "Running race " + selectedRace + "."
             print(consoleProgressPrint, end='')
+            progresscounter = 1
             while raceEND != True:
                 print("\r", end='')
                 readline = ser.readline()[:-2]
@@ -168,9 +171,16 @@ for loop in range(stabNumOfLoops):
                 if debugmode:
                     print(splitdecodeline[1])
                 else:
+                    progresscounter += 1
+                if progresscounter == 5:
                     consoleProgressPrint += "."
                     print(consoleProgressPrint, end='')
+                    progresscounter = 0
                 if splitdecodeline[1] == "RS:  STOP  ":
+                    if progresscounter == 0:
+                        print("", end='')
+                    else:
+                        print(consoleProgressPrint, end='')
                     raceEND = True
                     stopline = readline
                     racenumber += 1
@@ -210,7 +220,7 @@ for loop in range(stabNumOfLoops):
             for i in range(4):
                 readline = ser.readline()
             ser.write(b"preparefortesting\n")
-            time.sleep(2)
+            time.sleep(1)
             testNum += 1
             racefile.close()
 exitfile.close()
