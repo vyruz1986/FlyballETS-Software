@@ -14,7 +14,7 @@ All notable changes to this project will be documented in this file.
 - INSTRUKCJA_PL.md updated with recommendation in relation to sunlight and Wi-Fi settings
 - First issue of python test script for ETS (in simulation mode)
 - Run direction and firmware version visible in WebUI (system data section)
-- Python tests (thanks to Control17)
+- Python tests (thanks to Controll17)
 
 ### Changed
 - WebUI main Race and Configuration pages updated (thanks to MiKoKappa)
