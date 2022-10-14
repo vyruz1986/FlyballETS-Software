@@ -1,4 +1,4 @@
-FlyballETS-WebUI 1.0.0 (c) by Szymon Giemza based Alex Goris FlyballETS-WebUI
+FlyballETS-WebUI 1.x.x (c) by Szymon Giemza based Alex Goris FlyballETS-WebUI
 
 FlyballETS-WebUI is licensed under a
 Creative Commons Attribution-ShareAlike 4.0 International License.
