@@ -201,7 +201,8 @@ void WebHandlerClass::init(int webPort)
    _server->addHandler(_ws);
    _server->addHandler(_wsa);
 
-   _server->onNotFound([](AsyncWebServerRequest *request){
+   _server->onNotFound([](AsyncWebServerRequest *request)
+                       {
       log_e("Not found: %s!", request->url().c_str());
       request->send(404); });
 
@@ -251,12 +252,12 @@ void WebHandlerClass::init(int webPort)
 void WebHandlerClass::loop()
 {
    unsigned long lCurrentUpTime = GET_MICROS / 1000;
-   // log_d("_bSendRaceData: %i, _bUpdateLights: %i, since LastBroadcast: %ul, since WS received: %ul", _bSendRaceData, _bUpdateLights, (lCurrentUpTime - _lLastBroadcast), (lCurrentUpTime - _lWebSocketReceivedTime));
+   // log_d("bSendRaceData: %i, bUpdateLights: %i, since LastBroadcast: %ul, since WS received: %ul", bSendRaceData, bUpdateLights, (lCurrentUpTime - _lLastBroadcast), (lCurrentUpTime - _lWebSocketReceivedTime));
    if ((lCurrentUpTime - _lLastBroadcast > 100) && (lCurrentUpTime - _lWebSocketReceivedTime > 50))
    {
-      if (_bUpdateLights)
+      if (bUpdateLights)
          _SendLightsData();
-      else if (_bSendRaceData || ((RaceHandler.RaceState == RaceHandler.RUNNING || (RaceHandler.RaceState == RaceHandler.STOPPED && (GET_MICROS - RaceHandler._llRaceEndTime) / 1000 < 1500)) && (lCurrentUpTime - _lLastRaceDataBroadcast > _lRaceDataBroadcastInterval)))
+      else if (bSendRaceData || ((RaceHandler.RaceState == RaceHandler.RUNNING || (RaceHandler.RaceState == RaceHandler.STOPPED && (GET_MICROS - RaceHandler._llRaceEndTime) / 1000 < 1500)) && (lCurrentUpTime - _lLastRaceDataBroadcast > _lRaceDataBroadcastInterval)))
          _SendRaceData(RaceHandler.iCurrentRaceId, -1);
       else if (RaceHandler.RaceState == RaceHandler.RESET || (RaceHandler.RaceState == RaceHandler.STOPPED && (GET_MICROS - RaceHandler._llRaceEndTime) / 1000 > 1500))
       {
@@ -291,7 +292,7 @@ void WebHandlerClass::_SendLightsData()
       // log_d("LightsData wsBuffer to send: %s. No of ws clients is: %i", (char *)wsBuffer->get(), _ws->count());
       _ws->textAll(wsBuffer);
       _lLastBroadcast = GET_MICROS / 1000;
-      _bUpdateLights = false;
+      bUpdateLights = false;
       /*uint8_t iId = 0;
       for (auto &isConsumer : _bIsConsumerArray)
       {
@@ -316,8 +317,8 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
    {
       if (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)
       {
-         _bSendRaceData = true;
-         _bUpdateLights = true;
+         bSendRaceData = true;
+         bUpdateLights = true;
          return true;
       }
       else
@@ -346,8 +347,8 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
       if (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)
       {
          // ReturnError = "Race was already stopped!";
-         _bSendRaceData = true;
-         _bUpdateLights = true;
+         bSendRaceData = true;
+         bUpdateLights = true;
          return false;
       }
       else
@@ -362,8 +363,8 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
       if (RaceHandler.RaceState != RaceHandler.STOPPED)
       {
          // ReturnError = "Race was not stopped, or already in RESET state.";
-         _bSendRaceData = true;
-         _bUpdateLights = true;
+         bSendRaceData = true;
+         bUpdateLights = true;
          return false;
       }
       else
@@ -394,16 +395,16 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
          _iNumOfConsumers++;
       }
       _bIsConsumerArray[Client->id()] = true;
-      _bSendRaceData = true;
-      _bUpdateLights = true;
+      bSendRaceData = true;
+      bUpdateLights = true;
       return true;
    }
    else if (ActionType == "SetDogs4")
    {
       if (RaceHandler.RaceState != RaceHandler.RESET)
       {
-         _bSendRaceData = true;
-         _bUpdateLights = true;
+         bSendRaceData = true;
+         bUpdateLights = true;
          return false;
       }
       else
@@ -416,8 +417,8 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
    {
       if (RaceHandler.RaceState != RaceHandler.RESET)
       {
-         _bSendRaceData = true;
-         _bUpdateLights = true;
+         bSendRaceData = true;
+         bUpdateLights = true;
          return false;
       }
       else
@@ -430,8 +431,8 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
    {
       if (RaceHandler.RaceState != RaceHandler.RESET)
       {
-         _bSendRaceData = true;
-         _bUpdateLights = true;
+         bSendRaceData = true;
+         bUpdateLights = true;
          return false;
       }
       else
@@ -444,8 +445,8 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
    {
       if (RaceHandler.RaceState != RaceHandler.RESET)
       {
-         _bSendRaceData = true;
-         _bUpdateLights = true;
+         bSendRaceData = true;
+         bUpdateLights = true;
          return false;
       }
       else
@@ -550,7 +551,7 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
             client->text(wsBuffer);
          }
          _lLastRaceDataBroadcast = _lLastBroadcast = GET_MICROS / 1000;
-         _bSendRaceData = false;
+         bSendRaceData = false;
       }
    }
 }
