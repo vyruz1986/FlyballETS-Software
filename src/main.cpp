@@ -506,6 +506,9 @@ void HandleSerialCommands()
    // Toggle wifi on/off
    if (strSerialData == "wifi")
       ToggleWifi();
+   // Toggle wifi on/off
+   if (strSerialData == "fwver")
+      log_i(FW_VER);
 
    // Make sure this stays last in the function!
    if (strSerialData.length() > 0)

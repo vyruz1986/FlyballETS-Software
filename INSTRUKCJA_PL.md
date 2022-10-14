@@ -125,8 +125,8 @@ Ustawienia => Wi-Fi => przy sieci FlyballETS nacisnąć "i" w kółku, a następ
 - Ograniczaj śledzenie adresu IP
 
 #### Strona główna (Race)
-Na tej stronie dostępne te same funkcje sterowania, co przy pomocy pilota z tą różnicą, że start i stop to osobne przyciski. Podobnie dostępne są wszystkie dane widoczne na wyświetlaczu LCD z wyjątkiem informacji o włożonej karcie SD i kierunku biegu.
-Ręczne włączanie błędów można wykonać przy użyciu suwaka opisanego przy każdym z psów, opisanego jako "Błąd / Fault"
+Na tej stronie dostępne te same funkcje sterowania co przy pomocy pilota z tą różnicą, że jest jeden przycisk zmieniający funkcję (start, stop, reset). Podobnie jest z informacjami z wyświetlacza LCD za wyjątkiem informacji o włożeniu karty SD.
+Ręczne włączanie błędu psa można wykonać przez naciśnięcie przycisku "Błąd / Fault" w sekcji danego psa. Podświetli się on wówczas na czerwono.
 
 #### Strona konfiguracji (Configuration)
 Po zalogowaniu przy użyciu loginu "Admin" i hasła (domyślnie "FlyballETS.1234) i wciśnięciu przycisku Login pojawia się menu z rzadziej zmienianymi parametrami systemu, takimi jak nazwa sieci WiFi, hasło do sieci, hasło administratora, czas załączenia diod laserowych (wyłączą się automatycznie, jeśli zostanie wystartowany bieg), kierunek biegu, typ sekwencji startowej (FCI lub NAFA), dokładność wników (2 lub 3 cyfry po przecinku) oraz separator dziesiętny w pliku CSV (kropka lub przecinek).

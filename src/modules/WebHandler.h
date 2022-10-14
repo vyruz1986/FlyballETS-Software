@@ -23,7 +23,6 @@
 #include "index.html.gz.h"
 #endif
 
-
 class WebHandlerClass
 {
    friend class RaceHandlerClass;
@@ -73,8 +72,8 @@ public:
    void init(int webPort);
    void loop();
    void disconnectWsClient(IPAddress ipDisconnectedIP);
-   bool _bUpdateLights = false;
-   bool _bSendRaceData = false;
+   bool bUpdateLights = false;
+   bool bSendRaceData = false;
 };
 
 extern WebHandlerClass WebHandler;

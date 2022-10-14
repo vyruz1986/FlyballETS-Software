@@ -69,6 +69,10 @@ void LightsControllerClass::Main()
       {
          ToggleLightState(_byLightsArray[i], OFF);
          _lLightsOutSchedule[i] = 0; // Delete schedule
+#ifdef WiFiON
+         if (i < 2)
+            WebHandler.bUpdateLights = true;
+#endif
       }
    }
 
@@ -84,7 +88,7 @@ void LightsControllerClass::Main()
       _byCurrentLightsState = _byNewLightsState;
 #ifdef WiFiON
       // Send data to websocket clients
-      WebHandler._bUpdateLights = true;
+      WebHandler.bUpdateLights = true;
 #endif
    }
 }
@@ -174,9 +178,7 @@ void LightsControllerClass::ResetLights()
 
    // Set all lights off
    for (uint16_t i = 0; i < _LightsStrip->PixelCount(); i++)
-   {
       _LightsStrip->SetPixelColor(i, 0);
-   }
    _byNewLightsState = 0;
    DeleteSchedules();
 }
@@ -210,13 +212,9 @@ void LightsControllerClass::ToggleLightState(Lights byLight, LightStates byLight
    {
       // We have to toggle the lights
       if (byCurrentLightState == ON)
-      {
          byLightState = OFF;
-      }
       else
-      {
          byLightState = ON;
-      }
    }
 
    SNeoPixelConfig LightConfig = _GetNeoPixelConfig(byLight);
@@ -257,13 +255,9 @@ void LightsControllerClass::ToggleLightState(Lights byLight, LightStates byLight
    {
 
       if (byLightState == ON)
-      {
          _byNewLightsState = _byNewLightsState + byLight;
-      }
       else
-      {
          _byNewLightsState = _byNewLightsState - byLight;
-      }
    }
 }
 
@@ -312,43 +306,25 @@ stLightsState LightsControllerClass::GetLightsState()
 
    // 1st light can have 2 colors
    if (CheckLightState(WHITE0))
-   {
       CurrentLightsState.State[0] = 1;
-   }
    else if (CheckLightState(RED0))
-   {
       CurrentLightsState.State[0] = 2;
-   }
    else
-   {
       CurrentLightsState.State[0] = 0;
-   }
    // 2nd light can have 2 colors
    if (CheckLightState(YELLOW1))
-   {
       CurrentLightsState.State[1] = 1;
-   }
    else if (CheckLightState(RED1))
-   {
       CurrentLightsState.State[1] = 2;
-   }
    else
-   {
       CurrentLightsState.State[1] = 0;
-   }
    // 3rd light can have 2 colors
    if (CheckLightState(YELLOW2))
-   {
       CurrentLightsState.State[2] = 1;
-   }
    else if (CheckLightState(BLUE2))
-   {
       CurrentLightsState.State[2] = 2;
-   }
    else
-   {
       CurrentLightsState.State[2] = 0;
-   }
    CurrentLightsState.State[3] = CheckLightState(YELLOW3) == 1 ? 1 : 0;
    CurrentLightsState.State[4] = CheckLightState(GREEN4) == 1 ? 1 : 0;
 
@@ -370,13 +346,9 @@ LightsControllerClass::LightStates LightsControllerClass::CheckLightState(Lights
    SNeoPixelConfig TargetConfig = _GetNeoPixelConfig(byLight);
    iCurrentColor = _LightsStrip->GetPixelColor(TargetConfig.iPixelNumber);
    if (iCurrentColor == TargetConfig.iColor)
-   {
       return ON;
-   }
    else
-   {
       return OFF;
-   }
 }
 
 /// <summary>
@@ -392,7 +364,7 @@ void LightsControllerClass::ToggleStartingSequence()
       log_i("Starting sequence: FCI");
    LCDController.reInit();
 #ifdef WiFiON
-   WebHandler._bSendRaceData = true;
+   WebHandler.bSendRaceData = true;
 #endif
 }
 

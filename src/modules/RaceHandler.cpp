@@ -665,7 +665,7 @@ void RaceHandlerClass::StartRaceTimer()
    log_i("Timestamp: %s", cRaceStartTimestamp);
 #ifdef WiFiON
    // Send updated racedata to all web clients
-   WebHandler._bSendRaceData = true;
+   WebHandler.bSendRaceData = true;
 #endif
 }
 
@@ -798,7 +798,7 @@ void RaceHandlerClass::ResetRace()
    log_i("Reset Race: DONE");
 #ifdef WiFiON
    // Send updated racedata to any web clients
-   WebHandler._bSendRaceData = true;
+   WebHandler.bSendRaceData = true;
 #endif
 }
 
@@ -1444,7 +1444,7 @@ void RaceHandlerClass::ToggleAccuracy()
    else
       log_i("Accuracy switched to 2 digits");
 #ifdef WiFiON
-   WebHandler._bSendRaceData = true;
+   WebHandler.bSendRaceData = true;
 #endif
 }
 
@@ -1466,7 +1466,7 @@ void RaceHandlerClass::ToggleRerunsOffOn(uint8_t _iState)
       log_i("Reruns turned on.");
 
 #ifdef WiFiON
-   WebHandler._bSendRaceData = true;
+   WebHandler.bSendRaceData = true;
 #endif
 }
 
@@ -1490,7 +1490,7 @@ void RaceHandlerClass::SetNumberOfDogs(uint8_t _iNumberOfRacingDogs)
    iNumberOfRacingDogs = _iNumberOfRacingDogs;
    LCDController.UpdateNumberOfDogsOnLCD(iNumberOfRacingDogs);
 #ifdef WiFiON
-   WebHandler._bSendRaceData = true;
+   WebHandler.bSendRaceData = true;
 #endif
    log_i("Number of dogs set to: %i.", iNumberOfRacingDogs);
 }

@@ -8,16 +8,17 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-## [1.8.5] - 2022-10-14
+## [1.8.6] - 2022-10-15
 
 ### Added
 - INSTRUKCJA_PL.md updated with recommendation in relation to sunlight and Wi-Fi settings
 - First issue of python test script for ETS (in simulation mode)
 - Run direction and firmware version visible in WebUI (system data section)
-- Python tests (thanks to Control17)
+- Python tests (thanks to Controll17)
 
 ### Changed
-- WebUI main Race and Configuration pages updated (thanks to MiKoKappa)
+- WebUI main Race and Configuration pages updated (with support from MiKoKappa)
+- Fix for Light0 (fault light) is not truning off in WebUI
 - INSTRUKCJA_PL.md updated with details about symptoms collection in case of faults
 - Filtering time of early dog while invisible dog is running changed from 4.5s to 5.5s (fix for 89-13)
 - Repositorium structure change in order to simplify development work and resolve library dependencies problems
@@ -155,8 +156,8 @@ All notable changes to this project will be documented in this file.
 
 
 
-[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.8.5...HEAD
-[1.8.5]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.6.0...v1.8.5
+[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.8.6...HEAD
+[1.8.6]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.6.0...v1.8.6
 [1.6.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.5.3...v1.6.0
 [1.5.3]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.4.1...v1.5.3
 [1.4.1]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.2.1...v1.4.1

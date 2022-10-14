@@ -1,11 +1,35 @@
 <!-- <h4>Dog details</h4> -->
 <ul class="list-group">
    <li *ngFor="let dog of dogData" [ngClass]="{'list-group-item': true, 'active': dog.running}">
-      <b>Dog {{dog.dogNumber + 1}}</b> &nbsp;&nbsp;
-      <div class="form-check checkbox-slider--c-weight checkbox-slider-danger checkbox-slider-md d-inline offset-4">
-         <label>
-            <input type="checkbox" [(ngModel)]="dog.fault" (click)="EmitDogFault(dog.dogNumber, !dog.fault)"><span>Fault</span>
-         </label>           
+      <div class="row">
+         <div class="column1">
+            <b>Dog {{dog.dogNumber + 1}}</b>
+         </div>
+         <div class="column2"></div>
+         <div class="column3">
+            <button
+            type="button"
+            *ngIf="!dog.fault"
+            [ngClass]="{ btn: true, 'btn-secondary': true, 'btn-block': true, 'btn-sm': true  }"
+            (click)="EmitDogFault(dog.dogNumber, !dog.fault)"
+            >
+               Fault
+            </button>
+            <button
+               type="button"
+               *ngIf="dog.fault"
+               [ngClass]="{ btn: true, 'btn-danger': true, 'btn-block': true, 'btn-sm': true }"
+               (click)="EmitDogFault(dog.dogNumber, !dog.fault)"
+            >
+               Fault ON
+            </button>
+         </div>
+         <!-- <div class="form-check checkbox-slider--c-weight checkbox-slider-danger checkbox-slider-md d-inline offset-4">
+            <label>
+               <input type="checkbox" [(ngModel)]="dog.fault" (click)="EmitDogFault(dog.dogNumber, !dog.fault)">
+               <span>Fault</span>
+            </label>           
+         </div>-->
       </div>
       <div *ngFor="let dogTime of dog.timing; let i = index">
          <ng-container *ngIf="dogTime.crossingTime != 0 || dogTime.time != 0 || i == 0">
