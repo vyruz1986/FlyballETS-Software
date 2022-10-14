@@ -59,7 +59,7 @@
       <button
       type="button"
       *ngIf="!raceStates.RerunsOff[0] && !startDisabled"
-      [ngClass]="{ btn: true, 'btn-info': true, 'btn-block': true, 'btn-sm': true  }"
+      [ngClass]="{ btn: true, 'btn-outline-dark': true, 'btn-block': true, 'btn-sm': true  }"
       (click)="EmitRerunsOff(!raceStates.RerunsOff[0])"
       [disabled]="rerunsOffDisabled"
       >
@@ -68,7 +68,7 @@
       <button
          type="button"
          *ngIf="raceStates.RerunsOff[0] && !startDisabled"
-         [ngClass]="{ btn: true, 'btn-warning': true, 'btn-block': true, 'btn-sm': true }"
+         [ngClass]="{ btn: true, 'btn-info': true, 'btn-block': true, 'btn-sm': true }"
          (click)="EmitRerunsOff(!raceStates.RerunsOff[0])"
          [disabled]="rerunsOffDisabled"
       >
