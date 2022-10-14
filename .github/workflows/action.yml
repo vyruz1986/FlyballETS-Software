@@ -62,12 +62,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
           body_path: CHANGELOG.md
-          release_name: ${{ github.ref }}
           draft: true
           prerelease: false
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-          asset_path: .pio/build/lolin32/firmware.bin
-          asset_name: FlyballETS-Firmware-${{ github.ref }}.bin
-          asset_content_type: application/octet-stream
+          files: firmware.bin
