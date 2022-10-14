@@ -8,6 +8,8 @@ on:
   push:
     tags:
       - '**'
+    branches:
+      - develop
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -19,10 +21,10 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup node
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: '16'
 
@@ -33,7 +35,7 @@ jobs:
           npm run build
 
       - name: Set up python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
 
       - name: Install dependencies
         working-directory: ./
@@ -46,7 +48,7 @@ jobs:
         run: platformio run
 
       #- name: Upload build artifact
-      #  uses: actions/upload-artifact@v2
+      #  uses: actions/upload-artifact@v3
       #  with:
       #    name: FlyballETS-Firmware
       #    path: .pio/build/lolin32/firmware.bin
