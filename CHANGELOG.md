@@ -8,7 +8,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-## [1.8.6] - 2022-10-14
+## [1.8.6] - 2022-10-15
 
 ### Added
 - INSTRUKCJA_PL.md updated with recommendation in relation to sunlight and Wi-Fi settings
@@ -17,7 +17,7 @@ All notable changes to this project will be documented in this file.
 - Python tests (thanks to Controll17)
 
 ### Changed
-- WebUI main Race and Configuration pages updated (thanks to MiKoKappa)
+- WebUI main Race and Configuration pages updated (with support from MiKoKappa)
 - Fix for Light0 (fault light) is not truning off in WebUI
 - INSTRUKCJA_PL.md updated with details about symptoms collection in case of faults
 - Filtering time of early dog while invisible dog is running changed from 4.5s to 5.5s (fix for 89-13)
