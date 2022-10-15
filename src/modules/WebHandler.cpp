@@ -570,12 +570,21 @@ bool WebHandlerClass::_ProcessConfig(JsonArray newConfig, String *ReturnError)
          log_d("Storing %s = %s", key.c_str(), value.c_str());
          SettingsManager.setSetting(key, value);
          save = true;
+         if (key == "RunDirectionInverted")
+            RaceHandler.ToggleRunDirection();
+         else if (key =="StartingSequenceNAFA")
+            LightsController.ToggleStartingSequence();
+         else if (key == "Accuracy3digits")
+            RaceHandler.ToggleAccuracy();
+         else if (key == "CommaInCsv")
+            SDcardController.ToggleDecimalSeparator();
       }
    }
 
    if (save)
    {
       SettingsManager.saveSettings();
+      bSendRaceData = true;
       // Schedule system reboot to activate new settings in 5s
       // SystemManager.scheduleReboot(GET_MICROS / 1000 + 5000);
    }
