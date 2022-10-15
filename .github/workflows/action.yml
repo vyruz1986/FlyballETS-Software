@@ -15,14 +15,15 @@ jobs:
   build:
     # The type of runner that the job will run on
     runs-on: macos-latest
-
+    permissions:
+      contents: write
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup node
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: '16'
 
@@ -33,7 +34,10 @@ jobs:
           npm run build
 
       - name: Set up python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+          cache: pip
 
       - name: Install dependencies
         working-directory: ./
@@ -45,31 +49,12 @@ jobs:
         working-directory: ./
         run: platformio run
 
-      #- name: Upload build artifact
-      #  uses: actions/upload-artifact@v2
-      #  with:
-      #    name: FlyballETS-Firmware
-      #    path: .pio/build/lolin32/firmware.bin
-
-      - name: Create Release
+      - name: Create a Release
         id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: ncipollo/release-action@v1
         with:
-          tag_name: ${{ github.ref }}
-          body_path: CHANGELOG.md
-          release_name: ${{ github.ref }}
+          bodyFile: "CHANGELOG.md"
           draft: true
           prerelease: false
-
-      - name: Upload Release Asset
-        id: upload-release-asset 
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-          asset_path: .pio/build/lolin32/firmware.bin
-          asset_name: FlyballETS-Firmware-${{ github.ref }}.bin
-          asset_content_type: application/octet-stream
+          artifacts: ".pio/build/lolin32/firmware.bin"
+          token: ${{ secrets.GITHUB_TOKEN }}

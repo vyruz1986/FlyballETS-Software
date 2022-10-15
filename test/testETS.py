@@ -32,16 +32,6 @@ time.sleep(2)
 if ser.isOpen():
     print("SERIAL port is open")
 
-OutputRootFolder = "results"
-pathOutputRootFolder = os.path.join(os.getcwd(), OutputRootFolder)
-if not os.path.exists(pathOutputRootFolder):
-    os.mkdir(pathOutputRootFolder)
-
-pathTestsOutputFolder = os.path.join(str(pathOutputRootFolder), str(datetime.now().strftime("%Y-%m-%d %H-%M-%S")))
-os.mkdir(pathTestsOutputFolder)
-
-fileTestsSummary = open(pathTestsOutputFolder + "/!summary.txt", "wb")
-
 #ser.write(b"reboot" + b"\n")
 print("Preparing environment... ")
 #time.sleep(2)
@@ -49,6 +39,23 @@ ser.write(b"stop" + b"\n")
 time.sleep(2)
 ser.write(b"reset" + b"\n")
 time.sleep(1)
+
+OutputRootFolder = "results"
+pathOutputRootFolder = os.path.join(os.getcwd(), OutputRootFolder)
+if not os.path.exists(pathOutputRootFolder):
+    os.mkdir(pathOutputRootFolder)
+
+ser.write(b"fwver\n")
+firmware = ser.readline()[:-2]
+while b"Firmware" not in firmware:
+    firmware = ser.readline()[:-2]
+firmware = firmware[69:].decode("utf-8")
+print("Firmware: ", firmware)
+
+pathTestsOutputFolder = os.path.join(str(pathOutputRootFolder), str(datetime.now().strftime("%Y-%m-%d %H-%M-%S v")+ firmware))
+os.mkdir(pathTestsOutputFolder)
+
+fileTestsSummary = open(pathTestsOutputFolder + "/!summary.txt", "wb")
 
 ser.write(b"preparefortesting\n")
 readlineSkip = ser.readline()[:-2]

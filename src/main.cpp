@@ -508,7 +508,7 @@ void HandleSerialCommands()
       ToggleWifi();
    // Toggle wifi on/off
    if (strSerialData == "fwver")
-      log_i(FW_VER);
+      log_i("Firmware version: %s", FW_VER);
 
    // Make sure this stays last in the function!
    if (strSerialData.length() > 0)
