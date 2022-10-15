@@ -58,4 +58,4 @@ jobs:
           draft: true
           prerelease: false
           artifacts: ".pio/build/lolin32/firmware.bin"
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.YOUR_GITHUB_TOKEN }}
