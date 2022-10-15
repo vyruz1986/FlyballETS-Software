@@ -57,9 +57,5 @@ jobs:
           bodyFile: "CHANGELOG.md"
           draft: true
           prerelease: false
-          artifacts: "".pio/build/lolin32/firmware.bin"
+          artifacts: ".pio/build/lolin32/firmware.bin"
           token: ${{ secrets.RELEASE_TOKEN }}
-
-
-
-
