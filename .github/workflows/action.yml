@@ -65,3 +65,16 @@ jobs:
           body_path: CHANGELOG.md
           draft: true
           prerelease: false
+
+      - name: Upload Release Asset
+        id: upload-asset 
+        uses: WebFreak001/upload-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          #upload_url: ${{ fromJSON(steps.create_release.outputs.assets)[0].browser_download_url }}
+          file: .pio/build/lolin32/firmware.bin
+          mime: application/octet-stream
+          name: FlyballETS-Firmware-${TAG_RAW}.bin
+
+
