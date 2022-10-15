@@ -53,8 +53,6 @@ jobs:
       - name: Create a Release
         id: create_release
         uses: ncipollo/release-action@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         with:
           bodyFile: "CHANGELOG.md"
           draft: true
