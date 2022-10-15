@@ -65,7 +65,7 @@ jobs:
           body_path: CHANGELOG.md
           draft: true
           prerelease: false
-          file: .pio/build/lolin32/firmware.bin
+          files: .pio/build/lolin32/firmware.bin
 
 
 
