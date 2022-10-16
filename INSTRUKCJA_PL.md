@@ -23,19 +23,21 @@ Im lepsza dokładność ustawienia czujników, tym bardziej niezawodne jest dzia
 
 #### Sprawdzenie, pobranie nowej wersji firmware ETS
 
-1. Uruchomić ETSa i odczytać wyświetlaną w trakcie uruchamiania wersję firmware (np. "ver. 1.2.1")
+1. Uruchomić ETSa i odczytać wyświetlaną w trakcie uruchamiania wersję firmware (np. "ver. 1.2.1"). Od wersji 1.9.0 informacja o bieżącym
+   firmware widoczna jest także w stopce "system data" przez interfejs WiFi.
 2. Otworzyć stronę z aktualizacjami firmware, dostępną pod adresem [Releases](https://github.com/simonttp78/FlyballETS-Software/releases)
 3. Sprawdzić najnowszą dostępną wersję oprogramowania. Jeśli jest nowsza od zainstalowanej, to zalecania jest aktualizacja
 4. Pobrać plik z rozszerzeniem ".bin", który ma w nazwie wersję oprogramowania. Jeśli plik jest niewidoczny kliknąć najpierw w nagłówek "Assets"
 
 #### Wykonanie aktualizacji firmware
+Wspierana/testowana wersja przedlądarki do wykonania aktualizacji to Chrome. Aktualizacja może nie dziłać prawidłowo z Safari.
 1. Uruchomić ETSa
 2. Połączyć komputer z siecią WiFi nadawaną przez ETSa (domyślna nazwa sieci zaczyna się od "FlyballETS", domyślne hasło "FlybaETS.1234")
-3. Otworzyć stronę główną systemu ETS przez wpisanie w przeglądarkę [flyballets.local] lub [192.168.20.1]
+3. Otworzyć w Chrome stronę główną systemu ETS przez wpisanie w przeglądarkę [flyballets.local] lub [192.168.20.1]
 4. Kliknąć w zakładkę "Firmware update"
 5. Zalogować się używając loginu "Admin" oraz hasła (domyślne to "FlyballETS.1234)
 6. Po zalogowaniu domyślnie będzie zaznaczona opcja "Firmware", tak zostawić. Kliknąć "Wybierz plik" i wskazać pobrany plik firmware z rozszerzeniem ".bin"
-7. Aktualizacja rozpocznie się automatycznie. Postęp widać także na ekranie LCD. Poprawnie wykonana zakończy się napisem "OTA Success". ETS zrestartuje się automatycznie.
+7. Aktualizacja rozpocznie się automatycznie. Poprawnie wykonana zakończy się napisem "OTA Success". ETS zrestartuje się automatycznie.
 
 
 ## Wyświetlacz LCD
@@ -118,6 +120,7 @@ Bez poniższej zmiany, próba połączenia z ETSem będzie powodowała ciągłe 
 
 Od wersji iOS 15 wymagane jest wyłączenie w Ustawieniach jednej funkcji:
 Ustawienia => Safari => Zaawansowane => Experimental Features => NSURLSession WebSocket
+Link do filmu, gdzie jest to pokazane: [Jak_skonfigurować_telefon_z_iOS] (https://youtu.be/ohZqT0l43w4)
 
 Dodatkowo po nawiązaniu połączenia z siecią WiFi nadawaną przez ETS należy wejść w opcję:
 Ustawienia => Wi-Fi => przy sieci FlyballETS nacisnąć "i" w kółku, a następnie wyłączyć:
@@ -143,6 +146,7 @@ System wyposażony jest w dwie diody w okolicach wyświetlacza LCD. Pozwala to t
 - plik z karty SD z odczytami sensorów z katalogu SENSORS_DATA, którego początek nazwy (numer) pokrywa się z numerem pliku z wynikami (np. 0014).
 Wysyłanie zgłoszeń o błędach preferuję w formie [Issue](https://github.com/simonttp78/FlyballETS-Software/issues) bezpośrednio w github.
 Alternatywnie proszę o kontakt bezpośredni.
+Dla wzrokowców zamieszam link do fimlu ;-): [Jak_zebrać_logi_ETS] (https://youtu.be/VitzgYN1oZY)
 
 
 ## Zgłaszanie pomysłów na nowe funkcjonalności
