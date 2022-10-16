@@ -120,7 +120,7 @@ Bez poniższej zmiany, próba połączenia z ETSem będzie powodowała ciągłe 
 
 Od wersji iOS 15 wymagane jest wyłączenie w Ustawieniach jednej funkcji:
 Ustawienia => Safari => Zaawansowane => Experimental Features => NSURLSession WebSocket
-Link do filmu, gdzie jest to pokazane: [Jak skonfigurować telefon z iOS] (https://youtu.be/ohZqT0l43w4)
+Link do filmu, gdzie jest to pokazane: [Jak skonfigurować telefon z iOS](https://youtu.be/ohZqT0l43w4)
 
 Dodatkowo po nawiązaniu połączenia z siecią WiFi nadawaną przez ETS należy wejść w opcję:
 Ustawienia => Wi-Fi => przy sieci FlyballETS nacisnąć "i" w kółku, a następnie wyłączyć:
@@ -146,7 +146,7 @@ System wyposażony jest w dwie diody w okolicach wyświetlacza LCD. Pozwala to t
 - plik z karty SD z odczytami sensorów z katalogu SENSORS_DATA, którego początek nazwy (numer) pokrywa się z numerem pliku z wynikami (np. 0014).
 Wysyłanie zgłoszeń o błędach preferuję w formie [Issue](https://github.com/simonttp78/FlyballETS-Software/issues) bezpośrednio w github.
 Alternatywnie proszę o kontakt bezpośredni.
-Dla wzrokowców zamieszam link do fimlu ;-): [Jak zebrać logi ETS] (https://youtu.be/VitzgYN1oZY)
+Dla wzrokowców zamieszam link do fimlu ;-): [Jak zebrać logi ETS](https://youtu.be/VitzgYN1oZY)
 
 
 ## Zgłaszanie pomysłów na nowe funkcjonalności
