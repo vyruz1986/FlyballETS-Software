@@ -18,6 +18,7 @@ Jeśli w stanie gotowości (READY, po resecie) pojawiają górne białe światł
 Podobna sytuacja może mieć w trakcie deszczu / mżawki, wówczas należy przetrzeć lusterka oraz same czujniki miękką chłonną szmatką.
 Czujniki mogą też być zakłócone w przypadku bezpośredniego jasnego oświetlenia (słońce), dlatego należy ustawiać część aktywną tyłem do słońca (szczególnie rano oraz wieczorem, gdy słońce jest nisko na horyzoncie). Oczywiście należy także stosownie ustawić kierunek biegu ("side switch").
 Im lepsza dokładność ustawienia czujników, tym bardziej niezawodne jest działanie systemu. Doświadczenie pokazało, że jeśli w trakcie treningu często pojawiają się "dziwne/nienaturalne" wyniki, to w większości przypadków jest to spowodowane problemami z pozycjonowaniem systemu.
+[Film z opisem pozycjonowania](https://youtu.be/arwH5YqZwjc)
 
 ## Aktualizacja Firmware'u ETS
 
