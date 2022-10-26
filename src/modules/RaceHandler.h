@@ -112,6 +112,7 @@ private:
    bool _bDogPerfectCross[5][4];
    bool _bDogBigOK[5][4];
    bool _bDogSmallok[5][4];
+   bool _bDogFakeTime[4][4];
    bool _bDogMissedGateGoingin[4][4];
    bool _bDogMissedGateComingback[4][4];
    bool _bRerunBusy;

@@ -5,8 +5,11 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- runtime update of accuracy and run direction from WebUI config menu (no need to reset)
+- fake dogs times (next dog did unmeasurable fault) marked with # in results
 
 ### Changed
+
 
 ## [1.9.0] - 2022-10-15
 

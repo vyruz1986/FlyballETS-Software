@@ -375,6 +375,12 @@ void RaceHandlerClass::Main()
             _llDogTimes[iPreviousDog][iDogRunCounters[iPreviousDog]] = _llDogExitTimes[iPreviousDog] - _llDogEnterTimes[iPreviousDog];
             // Update crossing (negative) and dog time of current dog (the one with fault)
             _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = _llDogEnterTimes[iCurrentDog] - _llDogExitTimes[iPreviousDog];
+            // Check if previous dog has fake time flag active and clear it 
+            if (_bDogFakeTime[iPreviousDog][iDogRunCounters[iPreviousDog]])
+            {
+               _bDogFakeTime[iPreviousDog][iDogRunCounters[iPreviousDog]] = false;
+               log_d("Fake time flag for dog %i cleared.", iPreviousDog + 1);
+            }   
             _llRaceElapsedTime = STriggerRecord.llTriggerTime - llRaceStartTime;
             //_bNegativeCrossDetected = false; // moved to Tstring section and used as "if" condition in BAba scenario
             //
@@ -754,6 +760,11 @@ void RaceHandlerClass::ResetRace()
          for (auto &bDogSmallok : Dog)
             bDogSmallok = false;
       }
+      for (auto &Dog : _bDogFakeTime)
+      {
+         for (auto &bDogFakeTime : Dog)
+            bDogFakeTime = false;
+      }
       for (auto &Dog : _bDogMissedGateGoingin)
       {
          for (auto &bDogMissedGateGoingin : Dog)
@@ -883,6 +894,9 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
       bFault = State;
       // Set fault to specified value for relevant dog (automatic faults)
       _bDogFaults[iDogNumber] = bFault;
+      // If crossing fault detected of next dog dog then set fake time flag for current dog
+      if (bFault && (iDogNumber > 0 || (iDogNumber == 0 && iCurrentDog > 0)))
+         _bDogFakeTime[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
    }
 
    if (bFault)
@@ -1064,7 +1078,11 @@ String RaceHandlerClass::GetDogTime(uint8_t iDogNumber, int8_t iRunNumber)
    else if (_bDogMissedGateComingback[iDogNumber][iRunNumber])
       strDogTime = "outside";
    else
+   {
       strDogTime = cDogTime;
+      if (_bDogFakeTime[iDogNumber][iRunNumber])
+         strDogTime[0] = '#';
+   }
    return strDogTime;
 }
 
@@ -1093,14 +1111,19 @@ String RaceHandlerClass::GetStoredDogTimes(uint8_t iDogNumber, int8_t iRunNumber
       dDogTime = ((long long)(_llDogTimes[iDogNumber][iRunNumber] + 500) / 1000) / 1000.0;
       dtostrf(dDogTime, 7, 3, cDogTime);
    }
-   if (dDogTime == 0)
-      strDogTime = "";
-   else
-      strDogTime = cDogTime;
    if (_bDogMissedGateGoingin[iDogNumber][iRunNumber])
       strDogTime = " run in";
    else if (_bDogMissedGateComingback[iDogNumber][iRunNumber])
       strDogTime = "outside";
+   else if (dDogTime == 0)
+      strDogTime = "";
+   else
+   {
+      strDogTime = cDogTime;
+      if (_bDogFakeTime[iDogNumber][iRunNumber])
+         strDogTime[0] = '#';
+   }
+
    return strDogTime;
 }
 
