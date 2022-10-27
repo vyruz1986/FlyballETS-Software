@@ -81,7 +81,7 @@ void setup()
    pinMode(iGPSppsPin, INPUT_PULLDOWN);
 
    // Print SW version
-   log_i("Firmware version %s", FW_VER);
+   Serial.printf("Firmware version: %s\n", FW_VER);
 
    // Initialize BatterySensor class with correct pin
    BatterySensor.init(iBatterySensorPin);
@@ -101,7 +101,7 @@ void setup()
    if (digitalRead(iSDdetectPin) == LOW)
       SDcardController.init();
    else
-      Serial.println("\nSD Card not inserted!\n");
+      Serial.println("SD Card not inserted!\n");
 
    // Initialize RaceHandler class with S1 and S2 pins
    RaceHandler.init(iS1Pin, iS2Pin);
