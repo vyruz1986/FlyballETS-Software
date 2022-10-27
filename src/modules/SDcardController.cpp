@@ -114,7 +114,7 @@ void SDcardControllerClass::SaveRaceDataToFile()
       UpdateTagFile();
       raceDataFileName = "/" + sTagValue + "_ETS_" + sDate + ".csv";
       writeFile(SD_MMC, raceDataFileName.c_str(),
-                "sep=;\nTag;Race ID;Date;Race timestamp;Number of racing dogs;Re-runs turned OFF?;Dog 1 time;Dog 1 starting;Dog 1 re-run time;Dog 1 re-run crossing;Dog 1 2nd re-run time;Dog 1 2nd re-run crossing;Dog 2 time;Dog 2 crossing;Dog 2 re-run time;Dog 2 re-run crossing;Dog 2 2nd re-run time;Dog 2 2nd re-run crossing;Dog 3 time;Dog 3 crossing;Dog 3 re-run time;Dog 3 re-run crossing;Dog 3 2nd re-run time;Dog 3 2nd re-run crossing;Dog 4 time;Dog 4 crossing;Dog 4 re-run time;Dog 4 re-run crossing;Dog 4 2nd re-run time;Dog 4 2nd re-run crossing;Team time; Net time;Comments\n");
+                "sep=;\nTag;Race ID;Date;Race timestamp;Number of racing dogs;Re-runs turned OFF?;Dog 1 time;Dog 1 starting;Dog 1 re-run time;Dog 1 re-run crossing;Dog 1 2nd re-run time;Dog 1 2nd re-run crossing;Dog 2 time;Dog 2 crossing;Dog 2 re-run time;Dog 2 re-run crossing;Dog 2 2nd re-run time;Dog 2 2nd re-run crossing;Dog 3 time;Dog 3 crossing;Dog 3 re-run time;Dog 3 re-run crossing;Dog 3 2nd re-run time;Dog 3 2nd re-run crossing;Dog 4 time;Dog 4 crossing;Dog 4 re-run time;Dog 4 re-run crossing;Dog 4 2nd re-run time;Dog 4 2nd re-run crossing;Team time; Clean time;Comments\n");
    }
    raceDataFile = SD_MMC.open(raceDataFileName.c_str(), FILE_APPEND);
    if (raceDataFile)
@@ -148,7 +148,7 @@ void SDcardControllerClass::SaveRaceDataToFile()
          }
          raceDataFile.print(RaceHandler.GetRaceTime());
          raceDataFile.print(";");
-         raceDataFile.print(RaceHandler.GetNetTime());
+         raceDataFile.print(RaceHandler.GetCleanTime());
       }
       else
       {
@@ -170,7 +170,7 @@ void SDcardControllerClass::SaveRaceDataToFile()
          sConvert = RaceHandler.GetRaceTime();
          sConvert.replace(".", ",");
          raceDataFile.print(sConvert);
-         sConvert = RaceHandler.GetNetTime();
+         sConvert = RaceHandler.GetCleanTime();
          sConvert.replace(".", ",");
          raceDataFile.print(";");
          raceDataFile.print(sConvert);

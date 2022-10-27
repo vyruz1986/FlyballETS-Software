@@ -50,7 +50,7 @@ while selectedrace.isdigit():
     print('###')
     writeline = ser.readline().split(b"(): ")
     stopline = b""
-    while b" Net: " not in stopline:
+    while b"  CT: " not in stopline:
         print(writeline[1])
         testcase.write(writeline[1])
         stopline = writeline[1]

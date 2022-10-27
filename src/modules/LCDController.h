@@ -24,8 +24,6 @@
 class LCDControllerClass
 {
 protected:
-
-
 public:
    void init(LiquidCrystal *Clcd1, LiquidCrystal *Clcd2);
    void reInit();
@@ -53,7 +51,7 @@ public:
       RaceID,
       BattLevel,
       TeamTime,
-      NetTime,
+      CleanTime,
       WifiState,
       GpsState,
       SDcardState,
@@ -67,7 +65,7 @@ private:
    LiquidCrystal *_Clcd1;
    LiquidCrystal *_Clcd2;
    unsigned long _lLastLCDUpdate = 0;
-   unsigned long _lLCDUpdateInterval = 500; //500ms update interval
+   unsigned long _lLCDUpdateInterval = 500; // 500ms update interval
 
    struct SLCDField
    {

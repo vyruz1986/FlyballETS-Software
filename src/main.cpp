@@ -98,7 +98,7 @@ void setup()
    GPSHandler.init(iGPSrxPin, iGPStxPin);
 
    // SD card init
-   if (digitalRead(iSDdetectPin) == LOW || SDcardForcedDetect)
+   if (digitalRead(iSDdetectPin) == LOW)
       SDcardController.init();
    else
       Serial.println("\nSD Card not inserted!\n");
@@ -122,7 +122,7 @@ void setup()
    else
       log_i("Wifi started successfully, AP name: %s, pass: %s", strAPName.c_str(), strAPPass.c_str());
    WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
-   
+
    // configure webserver
    WebHandler.init(80);
 
@@ -187,7 +187,7 @@ void loop()
          log_i("IP to check: %s", ipTocheck.toString().c_str());
          WebHandler.disconnectWsClient(ipTocheck);
       }
-         
+
 #endif
 
       // Handle GPS
@@ -249,7 +249,7 @@ void loop()
             log_i("Dog %i: %s | CR: %s", i + 1, RaceHandler.GetStoredDogTimes(i, i2), RaceHandler.TransformCrossingTime(i, i2));
       }
       log_i(" Team: %s", RaceHandler.GetRaceTime());
-      log_i("  Net: %s\n", RaceHandler.GetNetTime());
+      log_i("   CT: %s\n", RaceHandler.GetCleanTime());
       if (SDcardController.bSDCardDetected)
          SDcardController.SaveRaceDataToFile();
 #if !Simulate
@@ -374,9 +374,9 @@ void WiFiEvent(arduino_event_id_t event)
       break;
 
    case ARDUINO_EVENT_WIFI_AP_STADISCONNECTED:
-      //bCheckWsClinetStatus = true;
-      //ipTocheck = IPAddress (192,168,20,2);
-      //log_i("IP to check: %s", ipTocheck.toString().c_str());
+      // bCheckWsClinetStatus = true;
+      // ipTocheck = IPAddress (192,168,20,2);
+      // log_i("IP to check: %s", ipTocheck.toString().c_str());
       break;
 
    default:
@@ -523,8 +523,8 @@ void HandleLCDUpdates()
    // Update team time
    LCDController.UpdateField(LCDController.TeamTime, RaceHandler.GetRaceTime());
 
-   // Update team netto time
-   LCDController.UpdateField(LCDController.NetTime, RaceHandler.GetNetTime());
+   // Update team clean time
+   LCDController.UpdateField(LCDController.CleanTime, RaceHandler.GetCleanTime());
 
    // Handle individual dog info
    LCDController.UpdateField(LCDController.D1Time, RaceHandler.GetDogTime(0));

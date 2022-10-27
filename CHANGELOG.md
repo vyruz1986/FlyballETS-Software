@@ -9,7 +9,7 @@ All notable changes to this project will be documented in this file.
 - fake dogs times (next dog did unmeasurable fault) marked with # in results
 
 ### Changed
-
+- Net time renamed to Clean Time (CT) and has value only for clean races otherwise "n/a" is shown
 
 ## [1.9.0] - 2022-10-15
 

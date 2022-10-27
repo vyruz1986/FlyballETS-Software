@@ -63,7 +63,7 @@ public:
    String GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber = -1);
    String TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNumber, bool bToFile = false);
    String GetRerunInfo(uint8_t iDogNumber);
-   String GetNetTime();
+   String GetCleanTime();
 
    String GetRaceStateString();
 
@@ -106,6 +106,7 @@ private:
    bool _bNextDogFound = false;
    bool _bSensorNoise = false;
    bool _bLastStringBAba = false;
+   bool _bNoValidCleanTime = false;
    bool _bFault;
    bool _bDogFaults[5];
    bool _bDogManualFaults[4];

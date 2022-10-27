@@ -375,12 +375,12 @@ void RaceHandlerClass::Main()
             _llDogTimes[iPreviousDog][iDogRunCounters[iPreviousDog]] = _llDogExitTimes[iPreviousDog] - _llDogEnterTimes[iPreviousDog];
             // Update crossing (negative) and dog time of current dog (the one with fault)
             _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = _llDogEnterTimes[iCurrentDog] - _llDogExitTimes[iPreviousDog];
-            // Check if previous dog has fake time flag active and clear it 
+            // Check if previous dog has fake time flag active and clear it
             if (_bDogFakeTime[iPreviousDog][iDogRunCounters[iPreviousDog]])
             {
                _bDogFakeTime[iPreviousDog][iDogRunCounters[iPreviousDog]] = false;
                log_d("Fake time flag for dog %i cleared.", iPreviousDog + 1);
-            }   
+            }
             _llRaceElapsedTime = STriggerRecord.llTriggerTime - llRaceStartTime;
             //_bNegativeCrossDetected = false; // moved to Tstring section and used as "if" condition in BAba scenario
             //
@@ -740,7 +740,7 @@ void RaceHandlerClass::ResetRace()
       _bPotentialNegativeCrossDetected = false;
       _bSensorNoise = false;
       _bLastStringBAba = false;
-
+      _bNoValidCleanTime = false;
       for (auto &bFault : _bDogFaults)
          bFault = false;
       for (auto &bManualFault : _bDogManualFaults)
@@ -1312,37 +1312,45 @@ String RaceHandlerClass::GetRerunInfo(uint8_t iDogNumber)
 }
 
 /// <summary>
-///   Gets team Net Time in seconds.
-///   In case of heat without faults (clean heat) Net Time == Clean Time.
+///   Gets team Clean Time in seconds.
+///   In case of heat would have a fault(s) Clean Time will not be displayed as it has no meaning.
+///   In such situation "n/a" will be shown.
 ///   Please mark that "Cleat Time" term is often use in the meaning of Clean Time Breakout.
 ///   Please refer to FCI Regulations for Flyball Competition section 1.03 point (h).
 /// </summary>
-String RaceHandlerClass::GetNetTime()
+String RaceHandlerClass::GetCleanTime()
 {
-   long long llTotalNetTime = 0;
-   for (auto &Dog : _llDogTimes)
+   String strCleanTime;
+   if (_bFault)
+      _bNoValidCleanTime = true;
+   if (!_bNoValidCleanTime)
    {
-      for (auto &llNetTime : Dog)
+      long long llTotalNetTime = 0;
+      for (auto &Dog : _llDogTimes)
       {
-         if (llNetTime > 0)
-            llTotalNetTime += llNetTime;
+         for (auto &llNetTime : Dog)
+         {
+            if (llNetTime > 0)
+               llTotalNetTime += llNetTime;
+         }
       }
-   }
-   char cNetTime[8];
-   String strNetTime;
-   double dNetTime;
-   if (!_bAccuracy3digits)
-   {
-      dNetTime = ((long long)(llTotalNetTime + 5000) / 10000) / 100.0;
-      dtostrf(dNetTime, 7, 2, cNetTime);
+      char cCleanTime[8];
+      double dCleanTime;
+      if (!_bAccuracy3digits)
+      {
+         dCleanTime = ((long long)(llTotalNetTime + 5000) / 10000) / 100.0;
+         dtostrf(dCleanTime, 7, 2, cCleanTime);
+      }
+      else
+      {
+         dCleanTime = ((long long)(llTotalNetTime + 500) / 1000) / 1000.0;
+         dtostrf(dCleanTime, 7, 3, cCleanTime);
+      }
+      strCleanTime = cCleanTime;
    }
    else
-   {
-      dNetTime = ((long long)(llTotalNetTime + 500) / 1000) / 1000.0;
-      dtostrf(dNetTime, 7, 3, cNetTime);
-   }
-   strNetTime = cNetTime;
-   return strNetTime;
+      strCleanTime = "    n/a";
+   return strCleanTime;
 }
 
 /// <summary>
@@ -1410,7 +1418,7 @@ stRaceData RaceHandlerClass::GetRaceData(int iRaceId)
       RequestedRaceData.StartTime = llRaceStartTime / 1000;
       RequestedRaceData.EndTime = _llRaceEndTime / 1000;
       RequestedRaceData.ElapsedTime = GetRaceTime();
-      RequestedRaceData.NetTime = GetNetTime();
+      RequestedRaceData.CleanTime = GetCleanTime();
       RequestedRaceData.RaceState = RaceState;
       RequestedRaceData.RacingDogs = iNumberOfRacingDogs;
       RequestedRaceData.RerunsOff = bRerunsOff;

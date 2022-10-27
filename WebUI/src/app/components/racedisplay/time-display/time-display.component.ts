@@ -9,17 +9,17 @@ import { Component, OnInit, Input } from '@angular/core';
 export class TimeDisplayComponent implements OnInit {
 
    /*msElapsedTime: string;
-   msNetTime: string;*/
+   msCleanTime: string;*/
 
    @Input() elapsedTime: String;
-   @Input() NetTime: String;
+   @Input() cleanTime: String;
    
    constructor() { }
 
    ngOnInit() { }
    /*ngOnInit() {
       this.formatElapsedTime(this.elapsedTime);
-      this.formatNetTime(this.NetTime);
+      this.formatCleanTime(this.cleanTime);
 
    }
 
@@ -29,9 +29,9 @@ export class TimeDisplayComponent implements OnInit {
       this.msElapsedTime = ('  ' + s).slice(-2) + "." + ('0' + ms).slice(-2);
    }
 
-   formatNetTime(d:number){
+   formatCleanTime(d:number){
       var s = Math.floor(d % 100);
       var ms = Math.floor(d * 100);      
-      this.msNetTime = ('     ' + s).slice(-5) + "." + ('0' + ms).slice(-2);
+      this.msCleanTime = ('     ' + s).slice(-5) + "." + ('0' + ms).slice(-2);
    }*/
 }

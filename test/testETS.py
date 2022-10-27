@@ -193,13 +193,13 @@ for loop in range(stabNumOfLoops):
                     racenumber += 1
 
             notOKcount = 0
-            while b"Net" not in stopline:
+            while b"CT" not in stopline:
                 readline = ser.readline()[:-2]
                 stopline = readline
                 decodeline = readline.decode('utf-8')
                 splitdecodeline = decodeline.split("(): ")
                 #exitfile.write(splitdecodeline[1].encode('utf-8'))
-                if ((splitdecodeline[1].startswith("Dog ") or splitdecodeline[1].startswith(" Team") or splitdecodeline[1].startswith("  Net")) and raceEND):
+                if ((splitdecodeline[1].startswith("Dog ") or splitdecodeline[1].startswith(" Team") or splitdecodeline[1].startswith("   CT")) and raceEND):
                     #exitfile.write(splitdecodeline[1].encode('utf-8') + b'\n')
                     lengthofline = len(splitdecodeline[1])
                     normdecodeline = splitdecodeline[1]
@@ -223,6 +223,7 @@ for loop in range(stabNumOfLoops):
                 fileTestsSummary.write(b"Race " + selectedRace.encode('utf-8') + b" PASSED\n")
                 print("PASSED")
 
+            time.sleep(1)
             ser.write(b"reset" + b"\n")
             for i in range(4):
                 readline = ser.readline()

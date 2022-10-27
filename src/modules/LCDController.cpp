@@ -44,7 +44,7 @@ void LCDControllerClass::init(LiquidCrystal *Clcd1, LiquidCrystal *Clcd2)
    delay(1500);
    _UpdateLCD(1, 0, String("1:   0.000  +  0.000    |   WELCOME   00"), 40);
    _UpdateLCD(2, 0, String("2:   0.000  +  0.000    | Team:    0.000"), 40);
-   _UpdateLCD(3, 0, String("3:   0.000  +  0.000    |  Net:    0.000"), 40);
+   _UpdateLCD(3, 0, String("3:   0.000  +  0.000    |   CT:    0.000"), 40);
    _UpdateLCD(4, 0, String("4:   0.000  +  0.000    |  100% W G sd >"), 40);
 
    _SlcdfieldFields[D1Time] = {1, 3, 7, String("  0.000")};
@@ -67,7 +67,7 @@ void LCDControllerClass::init(LiquidCrystal *Clcd1, LiquidCrystal *Clcd2)
    _SlcdfieldFields[BattLevel] = {4, 27, 3, String("UNK")};
 #endif
    _SlcdfieldFields[TeamTime] = {2, 33, 7, String("  0.000")};
-   _SlcdfieldFields[NetTime] = {3, 33, 7, String("  0.000")};
+   _SlcdfieldFields[CleanTime] = {3, 33, 7, String("  0.000")};
    _SlcdfieldFields[WifiState] = {4, 32, 1, String("W")};
    _SlcdfieldFields[GpsState] = {4, 34, 1, String(" ")};
    _SlcdfieldFields[SDcardState] = {4, 36, 2, String("  ")};
@@ -92,7 +92,7 @@ void LCDControllerClass::reInit()
    }
    _UpdateLCD(1, 0, String("1:                      |               "), 40);
    _UpdateLCD(2, 0, String("2:                      | Team:         "), 40);
-   _UpdateLCD(3, 0, String("3:                      |  Net:         "), 40);
+   _UpdateLCD(3, 0, String("3:                      |   CT:         "), 40);
    _UpdateLCD(4, 0, String("4:                      |     %         "), 40);
 }
 
@@ -102,7 +102,7 @@ void LCDControllerClass::UpdateNumberOfDogsOnLCD(uint8_t iNumberOfDogs)
    {
       _UpdateLCD(1, 0, String("1:                      |               "), 40);
       _UpdateLCD(2, 0, String("2:                      | Team:         "), 40);
-      _UpdateLCD(3, 0, String("3:                      |  Net:         "), 40);
+      _UpdateLCD(3, 0, String("3:                      |   CT:         "), 40);
       _UpdateLCD(4, 0, String("                        |     %         "), 40);
       _SlcdfieldFields[D4Time].strText = "       ";
       _SlcdfieldFields[D4RerunInfo].strText = "  ";
@@ -111,7 +111,7 @@ void LCDControllerClass::UpdateNumberOfDogsOnLCD(uint8_t iNumberOfDogs)
    {
       _UpdateLCD(1, 0, String("1:                      |               "), 40);
       _UpdateLCD(2, 0, String("2:                      | Team:         "), 40);
-      _UpdateLCD(3, 0, String("                        |  Net:         "), 40);
+      _UpdateLCD(3, 0, String("                        |   CT:         "), 40);
       _UpdateLCD(4, 0, String("                        |     %         "), 40);
       _SlcdfieldFields[D3Time].strText = "       ";
       _SlcdfieldFields[D4Time].strText = "       ";
@@ -122,7 +122,7 @@ void LCDControllerClass::UpdateNumberOfDogsOnLCD(uint8_t iNumberOfDogs)
    {
       _UpdateLCD(1, 0, String("1:                      |               "), 40);
       _UpdateLCD(2, 0, String("                        | Team:         "), 40);
-      _UpdateLCD(3, 0, String("                        |  Net:         "), 40);
+      _UpdateLCD(3, 0, String("                        |   CT:         "), 40);
       _UpdateLCD(4, 0, String("                        |     %         "), 40);
       _SlcdfieldFields[D2Time].strText = "       ";
       _SlcdfieldFields[D3Time].strText = "       ";
@@ -135,7 +135,7 @@ void LCDControllerClass::UpdateNumberOfDogsOnLCD(uint8_t iNumberOfDogs)
    {
       _UpdateLCD(1, 0, String("1:                      |               "), 40);
       _UpdateLCD(2, 0, String("2:                      | Team:         "), 40);
-      _UpdateLCD(3, 0, String("3:                      |  Net:         "), 40);
+      _UpdateLCD(3, 0, String("3:                      |   CT:         "), 40);
       _UpdateLCD(4, 0, String("4:                      |     %         "), 40);
    }
 }

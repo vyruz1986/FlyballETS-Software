@@ -1,4 +1,4 @@
 $innit;setdogs 1;reruns off;
 Dog 1:   4.794 | CR: +  0.885
  Team:   5.679
-  Net:   4.794
+   CT:   4.794
