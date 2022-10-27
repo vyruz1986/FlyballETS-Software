@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+## [1.10.2] - 2022-10-27
+
+### Added
 - runtime update of accuracy and run direction from WebUI config menu (no need to reset)
 - fake dogs times (next dog did unmeasurable fault) marked with # in results
 
@@ -160,8 +166,9 @@ All notable changes to this project will be documented in this file.
 
 
 
-[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.9.0...HEAD
-[1.9.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.6.0...v1.8.6
+[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.10.2...HEAD
+[1.10.2]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.9.0...v1.10.2
+[1.9.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.6.0...v1.9.0
 [1.6.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.5.3...v1.6.0
 [1.5.3]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.4.1...v1.5.3
 [1.4.1]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.2.1...v1.4.1
