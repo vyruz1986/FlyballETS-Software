@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - Net time renamed to Clean Time (CT) and has value only for clean races otherwise "n/a" is shown
+- corrected option "all" bug in testESP.py
 
 ## [1.9.0] - 2022-10-15
 
