@@ -22,27 +22,26 @@
 #ifndef GLOBALVAR_H
 #define GLOBALVAR_H
 
-#define FW_VER "1.9.1"          // Flyball ETS firmware version
+#define FW_VER "1.10.2"          // Flyball ETS firmware version
 
 
-#define Simulate false          // Set to true to enable race simulation (see Simulator.h/.cpp)
-#define NumSimulatedRaces 48    // Number of prepeared simulated races. Sererial interface command to change interface: e.g. "race 1"
-#define TRIGGER_QUEUE_LENGTH 60 // Number of triggers in the queue
+#define Simulate false           // Set to true to enable race simulation (see Simulator.h/.cpp)
+#define NumSimulatedRaces 48     // Number of prepeared simulated races. Sererial interface command to change interface: e.g. "race 1"
+#define TRIGGER_QUEUE_LENGTH 60  // Number of triggers in the queue
 
-#define WiFiON                  // If defined all WiFi features are on: OTA, Web server. Please be carefull. Keep remote receiver board (antenna) away from ESP32 to avoid interferences.
-#define SDcardForcedDetect false// Forcing SD Card initialization even SDdetectPin state isn't LOW
+#define WiFiON                   // If defined all WiFi features are on: OTA, Web server. Please be carefull. Keep remote receiver board (antenna) away from ESP32 to avoid interferences.
 //#define WebUIonSDcard           // When defined webserver data will be loaded from SC card (MMC 1 bit mode) and not taken compiled into fimrware package. Precondition: SDcard defined too.
-#define BatteryCalibration false// after setting to true LCD will display analog read value from battery pin (range 0-4095). This is handfull for battery volate curve definition (dPinVoltage)
+#define BatteryCalibration false // after setting to true LCD will display analog read value from battery pin (range 0-4095). This is handfull for battery volate curve definition (dPinVoltage)
 
-#define LIGHTSCHAINS 1          // Numer of WS281x lights chains. 1 - one chain of 5 pixels/lights, 2 - two chains --> 10 pixels/lights, etc.
+#define LIGHTSCHAINS 1           // Numer of WS281x lights chains. 1 - one chain of 5 pixels/lights, 2 - two chains --> 10 pixels/lights, etc.
 #define WS_METHOD NeoEsp32Rmt0800KbpsMethod
 
-#define EEPROM_SIZE 4096        // EEPROM size in bytes
-#define SPI_FLASH_SEC_SIZE 4096 // Flash Sector Size declaration for ESP32 as it seems to become removed from embedded libraries
+#define EEPROM_SIZE 4096         // EEPROM size in bytes
+#define SPI_FLASH_SEC_SIZE 4096  // Flash Sector Size declaration for ESP32 as it seems to become removed from embedded libraries
 
-#define WS_TICKET_BUFFER_SIZE 8 // Number of websocket tickets kept in memory
-#define WS_TIMEOUT 1800000      // Timeout for secured websocket in miliseconds
+#define WS_TICKET_BUFFER_SIZE 8  // Number of websocket tickets kept in memory
+#define WS_TIMEOUT 1800000       // Timeout for secured websocket in miliseconds
 
-#define APP_VER "1.0.2"         // WebUI version
+#define APP_VER "1.0.3"          // WebUI version
 
 #endif

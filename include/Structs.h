@@ -24,7 +24,7 @@ struct stRaceData
    String ElapsedTime;
    uint8_t RaceState;
    stDogData DogData[4];
-   String NetTime;
+   String CleanTime;
    uint8_t RacingDogs;
    bool RerunsOff;
 };

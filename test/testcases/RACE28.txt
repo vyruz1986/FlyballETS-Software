@@ -1,6 +1,6 @@
 $innit;setdogs 3;reruns off;
-Dog 1:   3.712 | CR: -  0.142
+Dog 1: # 3.712 | CR: -  0.142
 Dog 2:   4.050 | CR:    fault
 Dog 3:   4.104 | CR: -  0.169
  Team:  11.555
-  Net:  11.866
+   CT:     n/a

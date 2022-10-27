@@ -13,7 +13,7 @@ export interface RaceData {
    startTime: number,
    endTime: number,
    elapsedTime: String,
-   NetTime: String,
+   cleanTime: String,
    raceState: RaceStateEnum,
    racingDogs: number,
    raceStateFriendly: String,

@@ -32,7 +32,7 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
          _bIsConsumerArray[client->id()] = false;
       }
 
-      log_i("Client %u disconnected! Have %i clients\n", client->id(), _ws->count());
+      log_i("Client %u disconnected! Have %i clients", client->id(), _ws->count());
    }
    else if (type == WS_EVT_ERROR)
    {
@@ -389,7 +389,7 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
    }
    else if (ActionType == "AnnounceConsumer")
    {
-      log_d("We have a consumer with ID %i and IP %s\n", Client->id(), Client->remoteIP().toString().c_str());
+      log_d("We have a consumer with ID %i and IP %s", Client->id(), Client->remoteIP().toString().c_str());
       if (!_bIsConsumerArray[Client->id()])
       {
          _iNumOfConsumers++;
@@ -495,7 +495,7 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
       JsonRaceData["startTime"] = RequestedRaceData.StartTime;
       JsonRaceData["endTime"] = RequestedRaceData.EndTime;
       JsonRaceData["elapsedTime"] = RequestedRaceData.ElapsedTime;
-      JsonRaceData["NetTime"] = RequestedRaceData.NetTime;
+      JsonRaceData["cleanTime"] = RequestedRaceData.CleanTime;
       JsonRaceData["raceState"] = RequestedRaceData.RaceState;
       JsonRaceData["racingDogs"] = RequestedRaceData.RacingDogs;
       JsonRaceData["rerunsOff"] = RequestedRaceData.RerunsOff;
@@ -572,7 +572,7 @@ bool WebHandlerClass::_ProcessConfig(JsonArray newConfig, String *ReturnError)
          save = true;
          if (key == "RunDirectionInverted")
             RaceHandler.ToggleRunDirection();
-         else if (key =="StartingSequenceNAFA")
+         else if (key == "StartingSequenceNAFA")
             LightsController.ToggleStartingSequence();
          else if (key == "Accuracy3digits")
             RaceHandler.ToggleAccuracy();

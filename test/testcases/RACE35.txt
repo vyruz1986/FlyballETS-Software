@@ -4,4 +4,4 @@ Dog 2:   4.013 | CR: -  0.173
 Dog 2:   4.249 | CR: +  8.568
 Dog 3:   4.061 | CR:  Perfect
  Team:  24.868
-  Net:  16.321
+   CT:     n/a

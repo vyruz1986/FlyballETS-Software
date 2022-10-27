@@ -18,30 +18,34 @@ Jeśli w stanie gotowości (READY, po resecie) pojawiają górne białe światł
 Podobna sytuacja może mieć w trakcie deszczu / mżawki, wówczas należy przetrzeć lusterka oraz same czujniki miękką chłonną szmatką.
 Czujniki mogą też być zakłócone w przypadku bezpośredniego jasnego oświetlenia (słońce), dlatego należy ustawiać część aktywną tyłem do słońca (szczególnie rano oraz wieczorem, gdy słońce jest nisko na horyzoncie). Oczywiście należy także stosownie ustawić kierunek biegu ("side switch").
 Im lepsza dokładność ustawienia czujników, tym bardziej niezawodne jest działanie systemu. Doświadczenie pokazało, że jeśli w trakcie treningu często pojawiają się "dziwne/nienaturalne" wyniki, to w większości przypadków jest to spowodowane problemami z pozycjonowaniem systemu.
+[Film z opisem pozycjonowania](https://youtu.be/arwH5YqZwjc)
 
 ## Aktualizacja Firmware'u ETS
 
 #### Sprawdzenie, pobranie nowej wersji firmware ETS
 
-1. Uruchomić ETSa i odczytać wyświetlaną w trakcie uruchamiania wersję firmware (np. "ver. 1.2.1")
+1. Uruchomić ETSa i odczytać wyświetlaną w trakcie uruchamiania wersję firmware (np. "ver. 1.2.1"). Od wersji 1.9.0 informacja o bieżącym
+   firmware widoczna jest także w stopce "system data" przez interfejs WiFi.
 2. Otworzyć stronę z aktualizacjami firmware, dostępną pod adresem [Releases](https://github.com/simonttp78/FlyballETS-Software/releases)
 3. Sprawdzić najnowszą dostępną wersję oprogramowania. Jeśli jest nowsza od zainstalowanej, to zalecania jest aktualizacja
 4. Pobrać plik z rozszerzeniem ".bin", który ma w nazwie wersję oprogramowania. Jeśli plik jest niewidoczny kliknąć najpierw w nagłówek "Assets"
 
 #### Wykonanie aktualizacji firmware
+Wspierana/testowana wersja przedlądarki do wykonania aktualizacji to Chrome. Aktualizacja może nie dziłać prawidłowo z Safari.
 1. Uruchomić ETSa
 2. Połączyć komputer z siecią WiFi nadawaną przez ETSa (domyślna nazwa sieci zaczyna się od "FlyballETS", domyślne hasło "FlybaETS.1234")
-3. Otworzyć stronę główną systemu ETS przez wpisanie w przeglądarkę [flyballets.local] lub [192.168.20.1]
+3. Otworzyć w Chrome stronę główną systemu ETS przez wpisanie w przeglądarkę [flyballets.local] lub [192.168.20.1]
 4. Kliknąć w zakładkę "Firmware update"
 5. Zalogować się używając loginu "Admin" oraz hasła (domyślne to "FlyballETS.1234)
 6. Po zalogowaniu domyślnie będzie zaznaczona opcja "Firmware", tak zostawić. Kliknąć "Wybierz plik" i wskazać pobrany plik firmware z rozszerzeniem ".bin"
-7. Aktualizacja rozpocznie się automatycznie. Postęp widać także na ekranie LCD. Poprawnie wykonana zakończy się napisem "OTA Success". ETS zrestartuje się automatycznie.
+7. Aktualizacja rozpocznie się automatycznie. Poprawnie wykonana zakończy się napisem "OTA Success". ETS zrestartuje się automatycznie.
 
 
 ## Wyświetlacz LCD
 - W trakcie uruchamiania na ekranie LCD wyświetlana jest wersja firmware'u
 - Dokładność wyświetlanych czasów może być z dokładnością do 3 lub 2 miejsc po przecinku. Zmiana przy pomocy przycisku "mode / tryb"
-- Czas netto ma sens wyłącznie dla bezbłędnych biegów
+- Clean Time "CT" (Czysty Czas) ma sens wyłącznie dla bezbłędnych biegów. W innym prazypadku pojawi się "n/a".
+- Jeśli pies zrobił niemierzalny błąd zmiany ("fault"), to czas wcześniejszego psa jest nieważny i poprzedzony tagiem "#"
 - W prawym górnym rogu wyświetlany jest nr biegu. Ten numer zapisany jest też na karcie SD. Służy do identyfikacji biegu
 - Wartość numeryczna ze znakiem "%" to przybliżony stan naładowania baterii
 - Symbol ">" lub "<" w prawym dolnym rogu oznacza kierunek nabiegania psa. Zalecane jest ustawianie aktywnej części ETSa po prawej stronie patrząc w kierunku boksu.
@@ -118,6 +122,7 @@ Bez poniższej zmiany, próba połączenia z ETSem będzie powodowała ciągłe 
 
 Od wersji iOS 15 wymagane jest wyłączenie w Ustawieniach jednej funkcji:
 Ustawienia => Safari => Zaawansowane => Experimental Features => NSURLSession WebSocket
+Link do filmu, gdzie jest to pokazane: [Jak skonfigurować telefon z iOS](https://youtu.be/ohZqT0l43w4)
 
 Dodatkowo po nawiązaniu połączenia z siecią WiFi nadawaną przez ETS należy wejść w opcję:
 Ustawienia => Wi-Fi => przy sieci FlyballETS nacisnąć "i" w kółku, a następnie wyłączyć:
@@ -143,6 +148,7 @@ System wyposażony jest w dwie diody w okolicach wyświetlacza LCD. Pozwala to t
 - plik z karty SD z odczytami sensorów z katalogu SENSORS_DATA, którego początek nazwy (numer) pokrywa się z numerem pliku z wynikami (np. 0014).
 Wysyłanie zgłoszeń o błędach preferuję w formie [Issue](https://github.com/simonttp78/FlyballETS-Software/issues) bezpośrednio w github.
 Alternatywnie proszę o kontakt bezpośredni.
+Dla wzrokowców zamieszam link do fimlu ;-): [Jak zebrać logi z ETS](https://youtu.be/VitzgYN1oZY)
 
 
 ## Zgłaszanie pomysłów na nowe funkcjonalności
@@ -155,7 +161,7 @@ Ponieważ konstrukcja systemu bazuje na zasadzie działania EJSa, to dziedziczy 
 - Analogicznie ma się sprawa z bezbłędnymi krosami. System analizuje wyłącznie przecięcia wiązek, ale nie wie, który pies przecina linię startu/mety lub kiedy dokładnie to robi, bo drugi pies już mógł "zakryć" wiązki. Z tego też powodu większość krosów do ok. 0.10s będzie rozpoznawany jako "OK" lub "ok", przy czym małe "ok" jest w większości przypadków nieco gorszym krosem.
 - Wyjątek od powyższej reguły stanowi bardzo mały kros, poniżej 6ms. Wówczas z ograniczeń fizycznych wiadomo, że po przecięciu linii kierunku (tej od boksu) to nabiegający pies musiał przeciąć linię startu mety (powracający nie zdążyłby tego zrobić). W takiej sytuacji system wyświetli "Perfect".
 - Podobnie jak w EJSie błąd psa powoduje, że czas psa poprzedniego jest zakłamany i nie należy go uwzględniać w statystykach
-- Czas netto ma sens wyłącznie dla bezbłędnych przebiegów
+- Clean Time ma sens wyłącznie dla bezbłędnych przebiegów, dlatego w innym przypadku jest brak wartości "n/a"
 
 Pomimo tych wad, które można częściowo obejść, ale to już wykracza poza zakres tej instrukcji, ciągle mamy wiele pozytywnych funkcji czasami niedostępnych w systemach EJS, np.:
 - kompaktowość, łatwość instalacji

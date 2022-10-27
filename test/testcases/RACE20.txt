@@ -6,4 +6,4 @@ Dog 2:   4.696 | CR: +  0.178
 Dog 3:   4.017 | CR:       ok
 Dog 4:   6.044 | CR:       ok
  Team:  23.532
-  Net:  23.305
+   CT:     n/a
