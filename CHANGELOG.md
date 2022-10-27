@@ -8,7 +8,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-## [1.10.2]
+## [1.10.2] - 2022-10-27
 
 ### Added
 - runtime update of accuracy and run direction from WebUI config menu (no need to reset)
