@@ -19,7 +19,7 @@ program test
 [X]szczegółowe wyniki (cały log)
 
 
-$innit ***
+$init ***
 [X]$numberofrunningdogs 1-4, default 4
 [X]$rerunsoff on,off, default on
 [X]$commands 6.250 d2f, 12.350 d3f

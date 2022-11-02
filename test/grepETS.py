@@ -48,6 +48,7 @@ while selectedrace.isdigit():
         readline = ser.readline()
         print(readline)
     print('###')
+    
     writeline = ser.readline().split(b"(): ")
     stopline = b""
     while b"  CT: " not in stopline:

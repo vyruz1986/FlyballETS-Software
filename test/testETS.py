@@ -14,8 +14,19 @@ def flat2gen(alist):
             for subitem in item: yield subitem
         else:
             yield item
+
 def command_send_midprogramm(command):
     ser.write(command.encode('utf-8') + b"\n")
+
+def serialLineDecode():
+    readline = ser.readline()[:-2]
+    decodeline = readline.decode('utf-8')
+    splitdecodeline = decodeline.split("(): ")
+    if len(splitdecodeline) > 1:
+        decodedLine = splitdecodeline[1]
+    else:
+        decodedLine = splitdecodeline[0]
+    return decodedLine
     
 serialPorts = list(list_ports.comports())
 serialPortIndex = 0
@@ -37,7 +48,7 @@ print("Preparing environment... ")
 ser.write(b"stop" + b"\n")
 time.sleep(2)
 ser.write(b"reset" + b"\n")
-time.sleep(1)
+time.sleep(2)
 
 OutputRootFolder = "results"
 pathOutputRootFolder = os.path.join(os.getcwd(), OutputRootFolder)
@@ -68,13 +79,13 @@ invalidInput = False
 # selectedrace = input("Select race: ") # 0/1/2/20 or end
 flatten_listOfRaces = []
 argument_number = 1
-stabNumOfLoops = 1
+numberOfStabilityLoops = 1
 while argument_number < len(sys.argv):
     #print(argument_number)
-    selectedRace = str(sys.argv[argument_number])
+    raceToRun = str(sys.argv[argument_number])
     #print(selectedrace)
-    if selectedRace[0].isdigit():
-        listOfRaces = list(selectedRace.split(","))
+    if raceToRun[0].isdigit():
+        listOfRaces = list(raceToRun.split(","))
         #print(listOfRaces)
         elem_iter = 0
         for elem in listOfRaces:
@@ -93,124 +104,115 @@ while argument_number < len(sys.argv):
                 listOfRaces[elem_iter] = elem
             elem_iter += 1
         flatten_listOfRaces = list(flat2gen(listOfRaces))
-    elif selectedRace == "-d":
+    elif raceToRun == "-d":
         debugmode = True
-    elif selectedRace == "-all" or selectedRace == "-stab":
+    elif raceToRun == "all" or raceToRun == "stab":
         initial_count = 0
-        if selectedRace == "-stab":
+        if raceToRun == "stab":
             argument_number += 1
-            stabNumOfLoops = int(sys.argv[argument_number])
+            numberOfStabilityLoops = int(sys.argv[argument_number])
+            if numberOfStabilityLoops < 1:
+                invalidInput = True
         for Path in os.listdir(os.getcwd() + "/testcases"):
             if os.path.isfile(os.path.join(os.getcwd() + "/testcases", Path)):
                 flatten_listOfRaces.append(str(initial_count))
                 initial_count += 1
     else:
-        print("Error: Invalid input")
         invalidInput = True
     argument_number += 1
 #print(flatten_listOfRaces)
+
 print("Starting execution... ")
-for loop in range(stabNumOfLoops):
-    testNum = 0
+for stabilityLoopIndex in range(numberOfStabilityLoops):
+    loopIndex = 0
     #for selectedrace in flatten_listOfRaces:
-    while testNum < len(flatten_listOfRaces):
-        selectedRace = str(flatten_listOfRaces[testNum])
-        ser.write(b"race " + selectedRace.encode('utf-8') + b"\n")
+    while loopIndex < len(flatten_listOfRaces):
+        raceToRun = str(flatten_listOfRaces[loopIndex])
+        ser.write(b"race " + raceToRun.encode('utf-8') + b"\n")
         time.sleep(1)
 
-        racefilePATH = os.getcwd() + "/testcases" + "/RACE" + selectedRace + ".txt"
+        racefilePATH = os.getcwd() + "/testcases" + "/RACE" + raceToRun + ".txt"
         if os.path.isfile(racefilePATH):
             racefile = open(racefilePATH, "r")
-            if loop > 0:
-                exitfile = open(pathTestsOutputFolder + "/race" + selectedRace + "_" + str(loop) + ".txt", "wb")
+            if stabilityLoopIndex > 0:
+                exitfile = open(str(stabilityLoopIndex) + "_" + pathTestsOutputFolder + "/race" + raceToRun  + ".txt", "wb")
             else:
-                exitfile = open(pathTestsOutputFolder + "/race" + selectedRace + ".txt", "wb")
+                exitfile = open(pathTestsOutputFolder + "/race" + raceToRun + ".txt", "wb")
             time.sleep(1)
 
             linestoskip = 0
-            additionalargs = racefile.readline()
-            while additionalargs.startswith("$"):
-                splitadditionalargs = additionalargs.split(";")
+            additionalArgs = racefile.readline()
+            while additionalArgs.startswith("$"):
+                splitAdditionalArgs = additionalArgs.split(";")
                 # print(splitadditionalargs)
-                splitargs_len = len(splitadditionalargs)
-                i = 1
-                while i < splitargs_len and splitadditionalargs[i] != "\n":
-                    if splitadditionalargs[0] == "$innit":
-                        innitcommands = splitadditionalargs[i]
-                        readline = ser.readline()[:-2]
-                        decodeline = readline.decode('utf-8')
-                        splitdecodeline = decodeline.split("(): ")
-                        # print(splitdecodeline[1])
-                        command_send_midprogramm(innitcommands)
-                        i += 1
+                splitargs_len = len(splitAdditionalArgs)
+                additionalCommandsIndex = 1
+                while additionalCommandsIndex < splitargs_len and splitAdditionalArgs[additionalCommandsIndex] != "\n":
+                    if splitAdditionalArgs[0] == "$init":
+                        initCommands = splitAdditionalArgs[additionalCommandsIndex]
+                        # print(decodedLine)
+                        command_send_midprogramm(initCommands)
+                        additionalCommandsIndex += 1
                         time.sleep(1)
-                    elif splitadditionalargs[0] == "$commands":
-                        command_sendtime = float(splitadditionalargs[i])
-                        command_name = (splitadditionalargs[i+1],)
-                        i += 2
+                    elif splitAdditionalArgs[0] == "$commands":
+                        command_sendtime = float(splitAdditionalArgs[additionalCommandsIndex])
+                        command_name = (splitAdditionalArgs[additionalCommandsIndex+1],)
+                        additionalCommandsIndex += 2
                         timer = Timer(command_sendtime, command_send_midprogramm, args=command_name)
                         timer.start()
                         linestoskip += 1
-                additionalargs = racefile.readline()
+                additionalArgs = racefile.readline()
             racefile.seek(0)
-            for i in range(linestoskip):
+            for additionalCommandsIndex in range(linestoskip):
                 racefile.readline()
 
             if invalidInput:
-                selectedRace = "end"
+                loopIndex = len(flatten_listOfRaces)
             else:
-                bytetime = b'0'
                 raceEND = False
-                readline = ser.readline()
+                #readline = ser.readline()
                 ser.write(b"start" + b"\n")  # \x53\x54\x41\x52\x54\x0a (utf-8)
-                time.sleep(1)
+                time.sleep(0.2)
                 stopline = ""
-                consoleProgressPrint = "Running race " + selectedRace + "."
+                consoleProgressPrint = "Running race " + raceToRun + "."
                 print(consoleProgressPrint, end='')
                 progresscounter = 1
                 while raceEND != True:
                     print("\r", end='')
-                    readline = ser.readline()[:-2]
-                    # print(readline)
-                    decodeline = readline.decode('utf-8')
-                    splitdecodeline = decodeline.split("(): ")
-                    exitfile.write(splitdecodeline[1].encode('utf-8') + b'\n')
+                    decodedLine = serialLineDecode()
+                    exitfile.write(decodedLine.encode('utf-8') + b'\n')
                     if debugmode:
-                        print(splitdecodeline[1])
+                        print(decodedLine)
                     else:
                         progresscounter += 1
                     if progresscounter == 5:
                         consoleProgressPrint += "."
                         print(consoleProgressPrint, end='')
                         progresscounter = 0
-                    if splitdecodeline[1] == "RS:  STOP  ":
+                    if decodedLine == "RS:  STOP  ":
                         if progresscounter == 0:
                             print("", end='')
                         else:
                             print(consoleProgressPrint, end='')
                         raceEND = True
-                        stopline = readline
+                        stopline = decodedLine
                         racenumber += 1
 
                 notOKcount = 0
-                while b"CT" not in stopline:
-                    readline = ser.readline()[:-2]
-                    #print(readline)
-                    stopline = readline
-                    decodeline = readline.decode('utf-8')
-                    #print(decodeline)
-                    splitdecodeline = decodeline.split("(): ")
-                    #exitfile.write(splitdecodeline[1].encode('utf-8'))
-                    if ((splitdecodeline[1].startswith("Dog ") or splitdecodeline[1].startswith(" Team") or splitdecodeline[1].startswith("  Net")) and raceEND):
-                        #exitfile.write(splitdecodeline[1].encode('utf-8') + b'\n')
-                        lengthofline = len(splitdecodeline[1])
-                        normdecodeline = splitdecodeline[1]
+                while "CT" not in stopline:
+                    decodedLine = serialLineDecode()
+                    stopline = decodedLine
+                    #exitfile.write(decodedLine.encode('utf-8'))
+                    if ((decodedLine.startswith("Dog ") or decodedLine.startswith(" Team") or decodedLine.startswith("  Net")) and raceEND):
+                        #exitfile.write(decodedLine.encode('utf-8') + b'\n')
+                        lengthofline = len(decodedLine)
+                        normdecodeline = decodedLine
                         for x in range(30-lengthofline):
                             normdecodeline = normdecodeline + " "
                         expectedline = racefile.readline()[:-1]
                         if expectedline.startswith("//RACE") or expectedline.startswith("$"):
                             expectedline = racefile.readline()[:-1]
-                        if splitdecodeline[1] == expectedline:
+                        if decodedLine == expectedline:
                             #print(normdecodeline, colored("OK", 'green'))
                             exitfile.write(normdecodeline.encode('utf-8') + b'  OK' + b'\n')
                         else:
@@ -219,24 +221,24 @@ for loop in range(stabNumOfLoops):
                             exitfile.write(normdecodeline.encode('utf-8') + b'  NOK' + b'   Exp: ' + expectedline.encode('utf-8') + b'\n')
 
                 if notOKcount != 0:
-                    fileTestsSummary.write(b"Race " + selectedRace.encode('utf-8') + b" FAIL\n")
+                    fileTestsSummary.write(b"Race " + raceToRun.encode('utf-8') + b" FAIL\n")
                     print("FAIL")
                 else:
-                    fileTestsSummary.write(b"Race " + selectedRace.encode('utf-8') + b" PASSED\n")
+                    fileTestsSummary.write(b"Race " + raceToRun.encode('utf-8') + b" PASSED\n")
                     print("PASSED")
 
+                time.sleep(1.5)
                 ser.write(b"reset" + b"\n")
-                for i in range(4):
-                    readline = ser.readline()
-                ser.write(b"preparefortesting\n")
-                readlineSkip = ser.readline()[:-2]
-                while b"Simulation mode" not in readlineSkip:
-                    readlineSkip = ser.readline()[:-2]
-                time.sleep(1)
-                testNum += 1
+                time.sleep(0.5)
+                loopIndex += 1
                 racefile.close()
         else:
             print("There are no more testcases")
-            testNum = len(flatten_listOfRaces)
-exitfile.close()
-fileTestsSummary.close()
+            loopIndex = len(flatten_listOfRaces)
+try:
+    exitfile
+except NameError:
+    print("Invalid parameters")
+else:
+    exitfile.close()
+    fileTestsSummary.close()

@@ -1,4 +1,4 @@
-$innit;setdogs 4;reruns on;
+$init;setdogs 4;reruns on;
 Dog 1: # 4.719 | CR: -  0.415
 Dog 1:   4.356 | CR: +  0.301
 Dog 2: # 4.201 | CR:    fault
