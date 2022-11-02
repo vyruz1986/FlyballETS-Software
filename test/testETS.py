@@ -1,5 +1,5 @@
 # test ESP32
-from genericpath import isdir
+from genericpath import isfile
 import os
 import serial
 import time
@@ -14,10 +14,8 @@ def flat2gen(alist):
             for subitem in item: yield subitem
         else:
             yield item
-
 def command_send_midprogramm(command):
     ser.write(command.encode('utf-8') + b"\n")
-
     
 serialPorts = list(list_ports.comports())
 serialPortIndex = 0
@@ -111,7 +109,6 @@ while argument_number < len(sys.argv):
         invalidInput = True
     argument_number += 1
 #print(flatten_listOfRaces)
-
 print("Starting execution... ")
 for loop in range(stabNumOfLoops):
     testNum = 0
@@ -121,10 +118,11 @@ for loop in range(stabNumOfLoops):
         ser.write(b"race " + selectedRace.encode('utf-8') + b"\n")
         time.sleep(1)
 
-        if os.path.exists(os.getcwd() + "/testcases" + "/RACE" + selectedRace + ".txt"):
-            racefile = open(os.getcwd() + "/testcases" + "/RACE" + selectedRace + ".txt", "r")
+        racefilePATH = os.getcwd() + "/testcases" + "/RACE" + selectedRace + ".txt"
+        if os.path.isfile(racefilePATH):
+            racefile = open(racefilePATH, "r")
             if loop > 0:
-                exitfile = open(pathTestsOutputFolder + "/race" + selectedRace + "_" + loop + ".txt", "wb")
+                exitfile = open(pathTestsOutputFolder + "/race" + selectedRace + "_" + str(loop) + ".txt", "wb")
             else:
                 exitfile = open(pathTestsOutputFolder + "/race" + selectedRace + ".txt", "wb")
             time.sleep(1)
@@ -194,29 +192,31 @@ for loop in range(stabNumOfLoops):
                         stopline = readline
                         racenumber += 1
 
-            notOKcount = 0
-            while b"CT" not in stopline:
-                readline = ser.readline()[:-2]
-                stopline = readline
-                decodeline = readline.decode('utf-8')
-                splitdecodeline = decodeline.split("(): ")
-                #exitfile.write(splitdecodeline[1].encode('utf-8'))
-                if ((splitdecodeline[1].startswith("Dog ") or splitdecodeline[1].startswith(" Team") or splitdecodeline[1].startswith("   CT")) and raceEND):
-                    #exitfile.write(splitdecodeline[1].encode('utf-8') + b'\n')
-                    lengthofline = len(splitdecodeline[1])
-                    normdecodeline = splitdecodeline[1]
-                    for x in range(30-lengthofline):
-                        normdecodeline = normdecodeline + " "
-                    expectedline = racefile.readline()[:-1]
-                    if expectedline.startswith("//RACE") or expectedline.startswith("$"):
+                notOKcount = 0
+                while b"CT" not in stopline:
+                    readline = ser.readline()[:-2]
+                    #print(readline)
+                    stopline = readline
+                    decodeline = readline.decode('utf-8')
+                    #print(decodeline)
+                    splitdecodeline = decodeline.split("(): ")
+                    #exitfile.write(splitdecodeline[1].encode('utf-8'))
+                    if ((splitdecodeline[1].startswith("Dog ") or splitdecodeline[1].startswith(" Team") or splitdecodeline[1].startswith("  Net")) and raceEND):
+                        #exitfile.write(splitdecodeline[1].encode('utf-8') + b'\n')
+                        lengthofline = len(splitdecodeline[1])
+                        normdecodeline = splitdecodeline[1]
+                        for x in range(30-lengthofline):
+                            normdecodeline = normdecodeline + " "
                         expectedline = racefile.readline()[:-1]
-                    if splitdecodeline[1] == expectedline:
-                        #print(normdecodeline, colored("OK", 'green'))
-                        exitfile.write(normdecodeline.encode('utf-8') + b'  OK' + b'\n')
-                    else:
-                        notOKcount += 1
-                        #print(normdecodeline, colored("NOK", 'red'), " Exp: ", Fore.YELLOW + expectedline, Fore.RESET)
-                        exitfile.write(normdecodeline.encode('utf-8') + b'  NOK' + b'   Exp: ' + expectedline.encode('utf-8') + b'\n')
+                        if expectedline.startswith("//RACE") or expectedline.startswith("$"):
+                            expectedline = racefile.readline()[:-1]
+                        if splitdecodeline[1] == expectedline:
+                            #print(normdecodeline, colored("OK", 'green'))
+                            exitfile.write(normdecodeline.encode('utf-8') + b'  OK' + b'\n')
+                        else:
+                            notOKcount += 1
+                            #print(normdecodeline, colored("NOK", 'red'), " Exp: ", Fore.YELLOW + expectedline, Fore.RESET)
+                            exitfile.write(normdecodeline.encode('utf-8') + b'  NOK' + b'   Exp: ' + expectedline.encode('utf-8') + b'\n')
 
                 if notOKcount != 0:
                     fileTestsSummary.write(b"Race " + selectedRace.encode('utf-8') + b" FAIL\n")
@@ -225,16 +225,18 @@ for loop in range(stabNumOfLoops):
                     fileTestsSummary.write(b"Race " + selectedRace.encode('utf-8') + b" PASSED\n")
                     print("PASSED")
 
-                time.sleep(1)
                 ser.write(b"reset" + b"\n")
                 for i in range(4):
                     readline = ser.readline()
                 ser.write(b"preparefortesting\n")
+                readlineSkip = ser.readline()[:-2]
+                while b"Simulation mode" not in readlineSkip:
+                    readlineSkip = ser.readline()[:-2]
                 time.sleep(1)
                 testNum += 1
                 racefile.close()
         else:
-            testNum = len(flatten_listOfRaces)
             print("There are no more testcases")
+            testNum = len(flatten_listOfRaces)
 exitfile.close()
 fileTestsSummary.close()
