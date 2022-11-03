@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 ### Changed
+- testETS scripts corrections and small refactoring
 
 ## [1.10.2] - 2022-10-27
 
