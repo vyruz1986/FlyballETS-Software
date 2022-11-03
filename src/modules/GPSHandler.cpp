@@ -47,14 +47,15 @@ void GPSHandlerClass::loop()
    }
 }
 
-char *GPSHandlerClass::GetLocalDateAndTime()
-{
-   // sprintf(_cLocalDateAndTime, "%i-%02i-%02iT%02i:%02i:%02iZ", year(), month(), day(), hour(), minute(), second());
-   return _cLocalDateAndTime;
-}
-
 char *GPSHandlerClass::GetUtcDateAndTime()
 {
+   if (!_bGSPconnected) // Use local time if GPS time is not available
+   {
+      tmElements_t tm;
+      timeLocal = euCentral.toUTC(now());
+      breakTime(timeLocal, tm);
+      sprintf(_cUTCTime, "%i-%02i-%02iT%02i:%02i:%02iZ", tm.Year + 1970, tm.Month, tm.Day, tm.Hour, tm.Minute, tm.Second);
+   }
    return _cUTCTime;
 }
 

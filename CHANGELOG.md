@@ -8,6 +8,8 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - testETS scripts corrections and small refactoring
+- pre-filtering waiting time changed from 15ms to 10ms
+- fixed WebUI time in case of no GPS connection
 
 ## [1.10.2] - 2022-10-27
 

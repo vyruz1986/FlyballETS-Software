@@ -20,13 +20,13 @@ def command_send_midprogramm(command):
 
 def serialLineDecode():
     readline = ser.readline()[:-2]
-    decodeline = readline.decode('utf-8')
-    splitdecodeline = decodeline.split("(): ")
+    readedLine = readline.decode('utf-8')
+    splitdecodeline = readedLine.split("(): ")
     if len(splitdecodeline) > 1:
-        decodedLine = splitdecodeline[1]
+        readedLine = splitdecodeline[1]
     else:
-        decodedLine = splitdecodeline[0]
-    return decodedLine
+        readedLine = splitdecodeline[0]
+    return readedLine
     
 serialPorts = list(list_ports.comports())
 serialPortIndex = 0
@@ -134,8 +134,8 @@ for stabilityLoopIndex in range(numberOfStabilityLoops):
         racefilePATH = os.getcwd() + "/testcases" + "/RACE" + raceToRun + ".txt"
         if os.path.isfile(racefilePATH):
             racefile = open(racefilePATH, "r")
-            if stabilityLoopIndex > 0:
-                exitfile = open(str(stabilityLoopIndex) + "_" + pathTestsOutputFolder + "/race" + raceToRun  + ".txt", "wb")
+            if numberOfStabilityLoops > 1:
+                exitfile = open(pathTestsOutputFolder + "/" + str(stabilityLoopIndex) + "_" + "race" + raceToRun  + ".txt", "wb")
             else:
                 exitfile = open(pathTestsOutputFolder + "/race" + raceToRun + ".txt", "wb")
             time.sleep(1)
@@ -171,6 +171,7 @@ for stabilityLoopIndex in range(numberOfStabilityLoops):
             else:
                 raceEND = False
                 #readline = ser.readline()
+                ser.flushInput()
                 ser.write(b"start" + b"\n")  # \x53\x54\x41\x52\x54\x0a (utf-8)
                 time.sleep(0.2)
                 stopline = ""
@@ -203,7 +204,7 @@ for stabilityLoopIndex in range(numberOfStabilityLoops):
                     decodedLine = serialLineDecode()
                     stopline = decodedLine
                     #exitfile.write(decodedLine.encode('utf-8'))
-                    if ((decodedLine.startswith("Dog ") or decodedLine.startswith(" Team") or decodedLine.startswith("  Net")) and raceEND):
+                    if ((decodedLine.startswith("Dog ") or decodedLine.startswith(" Team") or decodedLine.startswith("   CT")) and raceEND):
                         #exitfile.write(decodedLine.encode('utf-8') + b'\n')
                         lengthofline = len(decodedLine)
                         normdecodeline = decodedLine

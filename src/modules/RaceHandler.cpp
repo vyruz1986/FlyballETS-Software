@@ -105,10 +105,10 @@ void RaceHandlerClass::_ChangeDogNumber(uint8_t iNewDogNumber)
 /// </summary>
 void RaceHandlerClass::Main()
 {
-   // Trigger filterring of sensors interrupts if new records available and 15ms waiting time passed
-   while ((_iInputQueueReadIndex != _iInputQueueWriteIndex) && (GET_MICROS - _InputTriggerQueue[_iInputQueueWriteIndex - 1].llTriggerTime > 15000))
+   // Trigger filterring of sensors interrupts if new records available and 10ms waiting time passed
+   while ((_iInputQueueReadIndex != _iInputQueueWriteIndex) && ((GET_MICROS - _InputTriggerQueue[_iInputQueueWriteIndex - 1].llTriggerTime) > 10000))
    {
-      log_v("IQRI:%d | IQWI:%d | Delta:%lld", _iInputQueueReadIndex, _iInputQueueWriteIndex, GET_MICROS - _InputTriggerQueue[_iInputQueueWriteIndex - 1].llTriggerTime);
+      log_v("IQRI:%d | IQWI:%d | Delta:%lld | RaceTime:%lld", _iInputQueueReadIndex, _iInputQueueWriteIndex, GET_MICROS - _InputTriggerQueue[_iInputQueueWriteIndex - 1].llTriggerTime, GET_MICROS - llRaceStartTime);
       _QueueFilter();
    }
 
@@ -131,7 +131,7 @@ void RaceHandlerClass::Main()
       // If the transition string is not empty and it wasn't updated for 350ms then it was noise and we have to clear it.
       // Forst first entering dog filtering is 750ms to cover scenario from simulated race 39.
       if (_strTransition.length() != 0 && ((GET_MICROS - _llLastTransitionStringUpdate) > 350000 && (iCurrentDog != 0 || (iCurrentDog == 0 && _bRerunBusy)) //
-                                           || (GET_MICROS - _llLastTransitionStringUpdate) > 750000 && iCurrentDog == 0 && !_bRerunBusy))
+                                             || (GET_MICROS - _llLastTransitionStringUpdate) > 750000 && iCurrentDog == 0 && !_bRerunBusy))
       {
          if (_byDogState == GOINGIN)
          {
@@ -266,7 +266,7 @@ void RaceHandlerClass::Main()
             // Period between 3.5s and 5.5s is covered and scenario when last dog is running excluded. Fix for simulated race 45 (83-30).
             // log_d("bRerunBusy: %i, _bLastStringBAba: %i, TfromLastDogExit: %lld, iCurrentDog: %i, iNextDog: %i.", _bRerunBusy, _bLastStringBAba, (STriggerRecord.llTriggerTime - _llLastDogExitTime), iCurrentDog + 1, iNextDog + 1);
             if (!_bRerunBusy && _bLastStringBAba && (STriggerRecord.llTriggerTime - _llLastDogExitTime) > 3500000 //
-                && (STriggerRecord.llTriggerTime - _llLastDogExitTime) < 5500000 && iCurrentDog != iNextDog)
+                  && (STriggerRecord.llTriggerTime - _llLastDogExitTime) < 5500000 && iCurrentDog != iNextDog)
             {
                // Calculte times for running invisible dog
                SetDogFault(iNextDog, ON);
@@ -332,7 +332,7 @@ void RaceHandlerClass::Main()
          // Special case after false detection of "ok crossing" --> S1 activated above 100ms after "ok crossing" detection or re-run with next dog = current dog
          else if (_byDogState == COMINGBACK && _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] && !_bS1StillSafe &&
                   (((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) > 100000 && (STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) < 2000000) // filtering changed to < 2s fix for 79-7
-                   || (_bRerunBusy && iCurrentDog == iNextDog)))
+                     || (_bRerunBusy && iCurrentDog == iNextDog)))
          {
             _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] = false;
             _llDogEnterTimes[iCurrentDog] = STriggerRecord.llTriggerTime;
