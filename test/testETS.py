@@ -48,7 +48,7 @@ print("Preparing environment... ")
 ser.write(b"stop" + b"\n")
 time.sleep(2)
 ser.write(b"reset" + b"\n")
-time.sleep(2)
+time.sleep(1)
 
 OutputRootFolder = "results"
 pathOutputRootFolder = os.path.join(os.getcwd(), OutputRootFolder)
