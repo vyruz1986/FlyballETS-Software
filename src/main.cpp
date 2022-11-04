@@ -81,7 +81,7 @@ void setup()
    pinMode(iGPSppsPin, INPUT_PULLDOWN);
 
    // Print SW version
-   Serial.printf("Firmware version: %s\n", FW_VER);
+   Serial.printf("Firmware version: %s\r\n", FW_VER);
 
    // Initialize BatterySensor class with correct pin
    BatterySensor.init(iBatterySensorPin);
@@ -101,7 +101,7 @@ void setup()
    if (digitalRead(iSDdetectPin) == LOW)
       SDcardController.init();
    else
-      Serial.println("SD Card not inserted!\n");
+      Serial.println("SD Card not inserted!\r\n");
 
    // Initialize RaceHandler class with S1 and S2 pins
    RaceHandler.init(iS1Pin, iS2Pin);
@@ -138,7 +138,7 @@ void setup()
       Serial.println("\n" + type + " update initiated.");
       LCDController.FirmwareUpdateInit(); });
    ArduinoOTA.onEnd([](){ 
-      Serial.println("\nUpdate completed.\n");
+      Serial.println("\nUpdate completed.\r\n");
       LCDController.FirmwareUpdateSuccess(); });
    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total){
       uint16_t iProgressPercentage = (progress / (total / 100));
@@ -249,7 +249,7 @@ void loop()
             log_i("Dog %i: %s | CR: %s", i + 1, RaceHandler.GetStoredDogTimes(i, i2), RaceHandler.TransformCrossingTime(i, i2));
       }
       log_i(" Team: %s", RaceHandler.GetRaceTime());
-      log_i("   CT: %s\n", RaceHandler.GetCleanTime());
+      log_i("   CT: %s", RaceHandler.GetCleanTime());
       if (SDcardController.bSDCardDetected)
          SDcardController.SaveRaceDataToFile();
 #if !Simulate
@@ -508,7 +508,7 @@ void HandleSerialCommands()
       ToggleWifi();
    // Toggle wifi on/off
    if (strSerialData == "fwver")
-      log_i("Firmware version: %s", FW_VER);
+      Serial.printf("Firmware version: %s\r\n", FW_VER);
 
    // Make sure this stays last in the function!
    if (strSerialData.length() > 0)

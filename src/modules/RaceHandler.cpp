@@ -105,8 +105,8 @@ void RaceHandlerClass::_ChangeDogNumber(uint8_t iNewDogNumber)
 /// </summary>
 void RaceHandlerClass::Main()
 {
-   // Trigger filterring of sensors interrupts if new records available and 10ms waiting time passed
-   while ((_iInputQueueReadIndex != _iInputQueueWriteIndex) && ((GET_MICROS - _InputTriggerQueue[_iInputQueueWriteIndex - 1].llTriggerTime) > 10000))
+   // Trigger filterring of sensors interrupts if new records available and 12ms waiting time passed
+   while ((_iInputQueueReadIndex != _iInputQueueWriteIndex) && ((GET_MICROS - _InputTriggerQueue[_iInputQueueWriteIndex - 1].llTriggerTime) > 12000))
    {
       log_v("IQRI:%d | IQWI:%d | Delta:%lld | RaceTime:%lld", _iInputQueueReadIndex, _iInputQueueWriteIndex, GET_MICROS - _InputTriggerQueue[_iInputQueueWriteIndex - 1].llTriggerTime, GET_MICROS - llRaceStartTime);
       _QueueFilter();
@@ -822,12 +822,12 @@ void RaceHandlerClass::PrintRaceTriggerRecords()
    while (iRecordToPrintIndex < _iInputQueueWriteIndex)
    {
       STriggerRecord RecordToPrint = _InputTriggerQueue[iRecordToPrintIndex];
-      printf("{%i, %lld, %i},\n", RecordToPrint.iSensorNumber, RecordToPrint.llTriggerTime - llRaceStartTime, RecordToPrint.iSensorState);
+      printf("{%i, %lld, %i},\r\n", RecordToPrint.iSensorNumber, RecordToPrint.llTriggerTime - llRaceStartTime, RecordToPrint.iSensorState);
       iRecordToPrintIndex++;
    }
    while (iRecordToPrintIndex < TRIGGER_QUEUE_LENGTH)
    {
-      printf("{0, 0, 0},\n");
+      printf("{0, 0, 0},\r\n");
       iRecordToPrintIndex++;
    }
 }

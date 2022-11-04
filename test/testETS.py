@@ -59,10 +59,10 @@ ser.write(b"fwver\n")
 firmware = ser.readline()[:-2]
 while b"Firmware" not in firmware:
     firmware = ser.readline()[:-2]
-firmware = firmware[68:].decode("utf-8")
+firmware = firmware[18:].decode("utf-8")
 print("Firmware: ", firmware)
 
-pathTestsOutputFolder = os.path.join(str(pathOutputRootFolder), str(datetime.now().strftime("%Y-%m-%d %H-%M-%S v")+ firmware))
+pathTestsOutputFolder = os.path.join(str(pathOutputRootFolder), str(datetime.now().strftime("%Y-%m-%d %H-%M-%S v") + firmware))
 os.mkdir(pathTestsOutputFolder)
 
 fileTestsSummary = open(pathTestsOutputFolder + "/!summary.txt", "wb")
