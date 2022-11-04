@@ -626,6 +626,11 @@ void RaceHandlerClass::Main()
    {
       if (GET_MICROS > llRaceStartTime)
          llRaceTime = GET_MICROS - llRaceStartTime;
+      if (llRaceTime > 995000000)
+      {
+         log_w("Race TIEOUT!!!");
+         StopRace(llRaceTime);
+      }
    }
 
    // Check for faults, loop through array of dogs checking for faults
@@ -701,7 +706,6 @@ void RaceHandlerClass::StopRace(long long llStopTime)
       llRaceTime = 0;
    }
    _ChangeRaceState(STOPPED);
-   _HistoricRaceData[iCurrentRaceId] = GetRaceData(iCurrentRaceId);
 }
 
 /// <summary>
@@ -798,12 +802,12 @@ void RaceHandlerClass::ResetRace()
       _ChangeRaceState(RESET);
    }
 
-   if (iCurrentRaceId == NUM_HISTORIC_RACE_RECORDS)
+   if (iCurrentRaceId == 999)
       iCurrentRaceId = 0;
    else
       iCurrentRaceId++;
    String _sCurrentRaceId = String(iCurrentRaceId + 1);
-   while (_sCurrentRaceId.length() < 2)
+   while (_sCurrentRaceId.length() < 3)
       _sCurrentRaceId = " " + _sCurrentRaceId;
    LCDController.UpdateField(LCDController.RaceID, _sCurrentRaceId);
    log_i("Reset Race: DONE");
@@ -1395,51 +1399,29 @@ String RaceHandlerClass::GetRaceStateString()
 /// </returns>
 stRaceData RaceHandlerClass::GetRaceData()
 {
-   return GetRaceData(iCurrentRaceId);
-}
-
-/// <summary>
-///   Gets race data for given race ID
-/// </summary>
-
-/// <param name="iRaceId">The ID for the race you want the data for</param>
-///
-/// <returns>
-///  Race data struct
-/// </returns>
-stRaceData RaceHandlerClass::GetRaceData(int iRaceId)
-{
    stRaceData RequestedRaceData;
+   // We need to return data for the current dace
+   RequestedRaceData.Id = iCurrentRaceId + 1;
+   RequestedRaceData.StartTime = llRaceStartTime / 1000;
+   RequestedRaceData.EndTime = _llRaceEndTime / 1000;
+   RequestedRaceData.ElapsedTime = GetRaceTime();
+   RequestedRaceData.CleanTime = GetCleanTime();
+   RequestedRaceData.RaceState = RaceState;
+   RequestedRaceData.RacingDogs = iNumberOfRacingDogs;
+   RequestedRaceData.RerunsOff = bRerunsOff;
 
-   if (iRaceId == iCurrentRaceId)
+   // Get Dog info
+   for (uint8_t i = 0; i < iNumberOfRacingDogs; i++)
    {
-      // We need to return data for the current dace
-      RequestedRaceData.Id = iCurrentRaceId + 1;
-      RequestedRaceData.StartTime = llRaceStartTime / 1000;
-      RequestedRaceData.EndTime = _llRaceEndTime / 1000;
-      RequestedRaceData.ElapsedTime = GetRaceTime();
-      RequestedRaceData.CleanTime = GetCleanTime();
-      RequestedRaceData.RaceState = RaceState;
-      RequestedRaceData.RacingDogs = iNumberOfRacingDogs;
-      RequestedRaceData.RerunsOff = bRerunsOff;
+      RequestedRaceData.DogData[i].DogNumber = i;
 
-      // Get Dog info
-      for (uint8_t i = 0; i < iNumberOfRacingDogs; i++)
+      for (uint8_t i2 = 0; i2 <= iDogRunCounters[i]; i2++)
       {
-         RequestedRaceData.DogData[i].DogNumber = i;
-
-         for (uint8_t i2 = 0; i2 <= iDogRunCounters[i]; i2++)
-         {
-            RequestedRaceData.DogData[i].Timing[i2].Time = GetDogTime(i, i2);
-            RequestedRaceData.DogData[i].Timing[i2].CrossingTime = GetCrossingTime(i, i2);
-         }
-         RequestedRaceData.DogData[i].Fault = (_bDogFaults[i] || _bDogManualFaults[i]);
-         RequestedRaceData.DogData[i].Running = (iCurrentDog == i);
+         RequestedRaceData.DogData[i].Timing[i2].Time = GetDogTime(i, i2);
+         RequestedRaceData.DogData[i].Timing[i2].CrossingTime = GetCrossingTime(i, i2);
       }
-   }
-   else
-   {
-      RequestedRaceData = _HistoricRaceData[iRaceId];
+      RequestedRaceData.DogData[i].Fault = (_bDogFaults[i] || _bDogManualFaults[i]);
+      RequestedRaceData.DogData[i].Running = (iCurrentDog == i);
    }
    return RequestedRaceData;
 }

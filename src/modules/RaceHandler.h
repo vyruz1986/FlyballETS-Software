@@ -4,8 +4,7 @@
 
 #include "Structs.h"
 #include "Arduino.h"
-
-#define NUM_HISTORIC_RACE_RECORDS 100
+#include "config.h"
 
 class RaceHandlerClass
 {
@@ -68,7 +67,6 @@ public:
    String GetRaceStateString();
 
    stRaceData GetRaceData();
-   stRaceData GetRaceData(int iRaceId);
    bool GetRunDirection();
    void ToggleRunDirection();
    void ToggleAccuracy();
@@ -124,7 +122,7 @@ private:
    bool _bRaceReadyFaultON;
    bool _bRaceReadyFaultOFF;
    long long _llLastDogTimeReturnTimeStamp[4];
-   uint8_t _iLastReturnedRunNumber[4];
+   int8_t _iLastReturnedRunNumber[4];
    long long _llDogEnterTimes[5];
    long long _llDogExitTimes[4];
    long long _llDogTimes[4][4];
@@ -140,8 +138,6 @@ private:
    };
    _byDogStates _byDogState;
    bool _bGatesClear = true;
-
-   stRaceData _HistoricRaceData[NUM_HISTORIC_RACE_RECORDS];
 
    void _ChangeRaceState(RaceStates _byNewRaceState);
    void _ChangeDogState(_byDogStates _byNewDogState);

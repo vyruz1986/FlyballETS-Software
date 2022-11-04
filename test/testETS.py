@@ -1,4 +1,5 @@
 # test ESP32
+# v1.0.1
 from genericpath import isfile
 import os
 import serial
@@ -11,7 +12,8 @@ from serial.tools import list_ports
 def flat2gen(alist):
     for item in alist:
         if isinstance(item, list):
-            for subitem in item: yield subitem
+            for subitem in item:
+                yield subitem
         else:
             yield item
 
@@ -27,7 +29,7 @@ def serialLineDecode():
     else:
         readedLine = splitdecodeline[0]
     return readedLine
-    
+
 serialPorts = list(list_ports.comports())
 serialPortIndex = 0
 for p in serialPorts:
@@ -37,14 +39,13 @@ for p in serialPorts:
 numberOfSerialPorts = len(serialPorts)
 selectedPortNumber = int(input("Select port: "))
 print(serialPorts[selectedPortNumber - 1])
-ser = serial.Serial(serialPorts[selectedPortNumber - 1].device, 115200)
+ser = serial.Serial(port=serialPorts[selectedPortNumber - 1].device, baudrate=115200, timeout=2)
 time.sleep(2)
 if ser.isOpen():
     print("SERIAL port is open")
 
 #ser.write(b"reboot" + b"\n")
 print("Preparing environment... ")
-#time.sleep(2)
 ser.write(b"stop" + b"\n")
 time.sleep(2)
 ser.write(b"reset" + b"\n")
@@ -62,7 +63,8 @@ while b"Firmware" not in firmware:
 firmware = firmware[18:].decode("utf-8")
 print("Firmware: ", firmware)
 
-pathTestsOutputFolder = os.path.join(str(pathOutputRootFolder), str(datetime.now().strftime("%Y-%m-%d %H-%M-%S v") + firmware))
+pathTestsOutputFolder = os.path.join(str(pathOutputRootFolder), str(
+    datetime.now().strftime("%Y-%m-%d %H-%M-%S v") + firmware))
 os.mkdir(pathTestsOutputFolder)
 
 fileTestsSummary = open(pathTestsOutputFolder + "/!summary.txt", "wb")
@@ -81,25 +83,18 @@ flatten_listOfRaces = []
 argument_number = 1
 numberOfStabilityLoops = 1
 while argument_number < len(sys.argv):
-    #print(argument_number)
     raceToRun = str(sys.argv[argument_number])
-    #print(selectedrace)
     if raceToRun[0].isdigit():
         listOfRaces = list(raceToRun.split(","))
-        #print(listOfRaces)
         elem_iter = 0
         for elem in listOfRaces:
-            #print(elem)
             if '-' in elem:
                 raceRange = elem.split("-")
-                #print(racerange)
                 firstRace = int(raceRange[0])
                 lastRace = int(raceRange[1])
-                #print(firstrace)
                 elem = []
                 while firstRace <= lastRace:
                     elem.append(str(firstRace))
-                    #print(elem)
                     firstRace += 1
                 listOfRaces[elem_iter] = elem
             elem_iter += 1
@@ -120,12 +115,10 @@ while argument_number < len(sys.argv):
     else:
         invalidInput = True
     argument_number += 1
-#print(flatten_listOfRaces)
 
 print("Starting execution... ")
 for stabilityLoopIndex in range(numberOfStabilityLoops):
     loopIndex = 0
-    #for selectedrace in flatten_listOfRaces:
     while loopIndex < len(flatten_listOfRaces):
         raceToRun = str(flatten_listOfRaces[loopIndex])
         ser.write(b"race " + raceToRun.encode('utf-8') + b"\n")
@@ -135,7 +128,7 @@ for stabilityLoopIndex in range(numberOfStabilityLoops):
         if os.path.isfile(racefilePATH):
             racefile = open(racefilePATH, "r")
             if numberOfStabilityLoops > 1:
-                exitfile = open(pathTestsOutputFolder + "/" + str(stabilityLoopIndex) + "_" + "race" + raceToRun  + ".txt", "wb")
+                exitfile = open(pathTestsOutputFolder + "/" + str(stabilityLoopIndex) + "_" + "race" + raceToRun + ".txt", "wb")
             else:
                 exitfile = open(pathTestsOutputFolder + "/race" + raceToRun + ".txt", "wb")
             time.sleep(1)
@@ -155,11 +148,13 @@ for stabilityLoopIndex in range(numberOfStabilityLoops):
                         additionalCommandsIndex += 1
                         time.sleep(1)
                     elif splitAdditionalArgs[0] == "$commands":
-                        command_sendtime = float(splitAdditionalArgs[additionalCommandsIndex])
-                        command_name = (splitAdditionalArgs[additionalCommandsIndex+1],)
+                        command_sendtime = float(
+                            splitAdditionalArgs[additionalCommandsIndex])
+                        command_name = (
+                            splitAdditionalArgs[additionalCommandsIndex+1],)
                         additionalCommandsIndex += 2
-                        timer = Timer(command_sendtime, command_send_midprogramm, args=command_name)
-                        timer.start()
+                        inRaceCommandTimer = Timer(command_sendtime, command_send_midprogramm, args=command_name)
+                        inRaceCommandTimer.start()
                         linestoskip += 1
                 additionalArgs = racefile.readline()
             racefile.seek(0)
@@ -170,15 +165,16 @@ for stabilityLoopIndex in range(numberOfStabilityLoops):
                 loopIndex = len(flatten_listOfRaces)
             else:
                 raceEND = False
-                #readline = ser.readline()
                 ser.flushInput()
-                ser.write(b"start" + b"\n")  # \x53\x54\x41\x52\x54\x0a (utf-8)
-                time.sleep(0.2)
+                ser.write(b"start" + b"\n")
+                raceStartTime = int(time.time())
+                time.sleep(0.1)
                 stopline = ""
                 consoleProgressPrint = "Running race " + raceToRun + "."
                 print(consoleProgressPrint, end='')
                 progresscounter = 1
-                while raceEND != True:
+                notOKcount = 0
+                while (not raceEND) & (notOKcount == 0):
                     print("\r", end='')
                     decodedLine = serialLineDecode()
                     exitfile.write(decodedLine.encode('utf-8') + b'\n')
@@ -198,12 +194,17 @@ for stabilityLoopIndex in range(numberOfStabilityLoops):
                         raceEND = True
                         stopline = decodedLine
                         racenumber += 1
+                    if ((time.time() - raceStartTime) > 90):
+                        if progresscounter == 0:
+                            print("", end='')
+                        else:
+                            print(consoleProgressPrint, end='')
+                        notOKcount = 10
+                        exitfile.write(decodedLine.encode('utf-8') + b'  TIMEOUT\n')
 
-                notOKcount = 0
-                while "CT" not in stopline:
+                while ("CT" not in stopline) & (notOKcount < 10):
                     decodedLine = serialLineDecode()
                     stopline = decodedLine
-                    #exitfile.write(decodedLine.encode('utf-8'))
                     if ((decodedLine.startswith("Dog ") or decodedLine.startswith(" Team") or decodedLine.startswith("   CT")) and raceEND):
                         #exitfile.write(decodedLine.encode('utf-8') + b'\n')
                         lengthofline = len(decodedLine)
@@ -220,13 +221,23 @@ for stabilityLoopIndex in range(numberOfStabilityLoops):
                             notOKcount += 1
                             #print(normdecodeline, colored("NOK", 'red'), " Exp: ", Fore.YELLOW + expectedline, Fore.RESET)
                             exitfile.write(normdecodeline.encode('utf-8') + b'  NOK' + b'   Exp: ' + expectedline.encode('utf-8') + b'\n')
+                    if ((time.time() - raceStartTime) > 110):
+                        notOKcount = 11
+                        exitfile.write(normdecodeline.encode('utf-8') + b'  TIMEOUT\n')
 
-                if notOKcount != 0:
+                if notOKcount == 0:
+                    fileTestsSummary.write(b"Race " + raceToRun.encode('utf-8') + b" PASSED\n")
+                    print("PASSED")
+                elif notOKcount < 10:
                     fileTestsSummary.write(b"Race " + raceToRun.encode('utf-8') + b" FAIL\n")
                     print("FAIL")
                 else:
-                    fileTestsSummary.write(b"Race " + raceToRun.encode('utf-8') + b" PASSED\n")
-                    print("PASSED")
+                    fileTestsSummary.write(b"Race " + raceToRun.encode('utf-8') + b" TIMEOUT\n")
+                    print("TIMEOUT")
+                    ser.write(b"stop" + b"\n")
+                    time.sleep(2)
+                    ser.flushInput()
+
 
                 time.sleep(1.5)
                 ser.write(b"reset" + b"\n")

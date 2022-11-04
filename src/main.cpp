@@ -202,35 +202,40 @@ void loop()
 
    // Check for serial events
    serialEvent();
-
-   // Handle lights main processing
-   LightsController.Main();
-
-   // Handle Race main processing
-   RaceHandler.Main();
-
-#if Simulate
-   // Run simulator
-   Simulator.Main();
-#endif
-
-   // Handle LCD processing
-   LCDController.Main();
-
-#ifdef WiFiON
-   // Handle WebSocket server
-   WebHandler.loop();
-#endif
-
    // Handle serial console commands
+
    if (bSerialStringComplete)
       HandleSerialCommands();
 
    // Handle remote control and buttons states
    HandleRemoteAndButtons();
 
+   // Handle lights main processing
+   LightsController.Main();
+
+#if Simulate
+   // Run simulator
+   Simulator.Main();
+#endif
+
+   // Handle Race main processing
+   RaceHandler.Main();
+
    // Handle LCD data updates
    HandleLCDUpdates();
+
+   // Handle LCD processing
+   LCDController.Main();
+
+#if Simulate
+   // Run simulator
+   Simulator.Main();
+#endif
+
+#ifdef WiFiON
+   // Handle WebSocket server
+   WebHandler.loop();
+#endif
 
    // Reset variables when state RESET
    if (RaceHandler.RaceState == RaceHandler.RESET)

@@ -5,11 +5,15 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- timeout support in testETS (1.0.1)
 
 ### Changed
-- testETS scripts corrections and small refactoring
+- testETS scripts corrections and small refactoring (1.0.0)
 - pre-filtering waiting time changed from 15ms to 12ms
+- optimization of main program loop
 - fixed WebUI time in case of no GPS connection
+- removed unused historical racec data (fix for stability tests)
+- max number of races changed from 100 to 1000 (fix for stability tests)
 
 ## [1.10.2] - 2022-10-27
 
