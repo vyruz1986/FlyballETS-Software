@@ -1,5 +1,5 @@
 # test ESP32
-# v1.0.1
+# v1.0.2
 from genericpath import isfile
 import os
 import serial
@@ -9,6 +9,7 @@ from datetime import datetime
 from threading import Timer
 from serial.tools import list_ports
 
+
 def flat2gen(alist):
     for item in alist:
         if isinstance(item, list):
@@ -17,8 +18,10 @@ def flat2gen(alist):
         else:
             yield item
 
+
 def command_send_midprogramm(command):
     ser.write(command.encode('utf-8') + b"\n")
+
 
 def serialLineDecode():
     readline = ser.readline()[:-2]
@@ -29,6 +32,7 @@ def serialLineDecode():
     else:
         readedLine = splitdecodeline[0]
     return readedLine
+
 
 serialPorts = list(list_ports.comports())
 serialPortIndex = 0
@@ -118,6 +122,11 @@ while argument_number < len(sys.argv):
 
 print("Starting execution... ")
 for stabilityLoopIndex in range(numberOfStabilityLoops):
+    if numberOfStabilityLoops > 1:
+        print("Stability loop " + str(stabilityLoopIndex+1) + ":")
+        if fileTestsSummary._checkClosed:
+            fileTestsSummary = open(pathTestsOutputFolder + "/!summary.txt", "ab")
+        fileTestsSummary.write(b"Stability loop " + str(stabilityLoopIndex+1).encode('utf-8') + b":\n")
     loopIndex = 0
     while loopIndex < len(flatten_listOfRaces):
         raceToRun = str(flatten_listOfRaces[loopIndex])
@@ -126,15 +135,15 @@ for stabilityLoopIndex in range(numberOfStabilityLoops):
 
         racefilePATH = os.getcwd() + "/testcases" + "/RACE" + raceToRun + ".txt"
         if os.path.isfile(racefilePATH):
-            racefile = open(racefilePATH, "r")
+            testcaseInputFile = open(racefilePATH, "r")
             if numberOfStabilityLoops > 1:
-                exitfile = open(pathTestsOutputFolder + "/" + str(stabilityLoopIndex) + "_" + "race" + raceToRun + ".txt", "wb")
+                testcaseOutputFile = open(pathTestsOutputFolder + "/" + str(stabilityLoopIndex+1) + "_" + "race" + raceToRun + ".txt", "wb")
             else:
-                exitfile = open(pathTestsOutputFolder + "/race" + raceToRun + ".txt", "wb")
+                testcaseOutputFile = open(pathTestsOutputFolder + "/race" + raceToRun + ".txt", "wb")
             time.sleep(1)
 
             linestoskip = 0
-            additionalArgs = racefile.readline()
+            additionalArgs = testcaseInputFile.readline()
             while additionalArgs.startswith("$"):
                 splitAdditionalArgs = additionalArgs.split(";")
                 # print(splitadditionalargs)
@@ -156,10 +165,10 @@ for stabilityLoopIndex in range(numberOfStabilityLoops):
                         inRaceCommandTimer = Timer(command_sendtime, command_send_midprogramm, args=command_name)
                         inRaceCommandTimer.start()
                         linestoskip += 1
-                additionalArgs = racefile.readline()
-            racefile.seek(0)
+                additionalArgs = testcaseInputFile.readline()
+            testcaseInputFile.seek(0)
             for additionalCommandsIndex in range(linestoskip):
-                racefile.readline()
+                testcaseInputFile.readline()
 
             if invalidInput:
                 loopIndex = len(flatten_listOfRaces)
@@ -177,7 +186,7 @@ for stabilityLoopIndex in range(numberOfStabilityLoops):
                 while (not raceEND) & (notOKcount == 0):
                     print("\r", end='')
                     decodedLine = serialLineDecode()
-                    exitfile.write(decodedLine.encode('utf-8') + b'\n')
+                    testcaseOutputFile.write(decodedLine.encode('utf-8') + b'\n')
                     if debugmode:
                         print(decodedLine)
                     else:
@@ -200,7 +209,7 @@ for stabilityLoopIndex in range(numberOfStabilityLoops):
                         else:
                             print(consoleProgressPrint, end='')
                         notOKcount = 10
-                        exitfile.write(decodedLine.encode('utf-8') + b'  TIMEOUT\n')
+                        testcaseOutputFile.write(decodedLine.encode('utf-8') + b'  TIMEOUT\n')
 
                 while ("CT" not in stopline) & (notOKcount < 10):
                     decodedLine = serialLineDecode()
@@ -211,20 +220,22 @@ for stabilityLoopIndex in range(numberOfStabilityLoops):
                         normdecodeline = decodedLine
                         for x in range(30-lengthofline):
                             normdecodeline = normdecodeline + " "
-                        expectedline = racefile.readline()[:-1]
+                        expectedline = testcaseInputFile.readline()[:-1]
                         if expectedline.startswith("//RACE") or expectedline.startswith("$"):
-                            expectedline = racefile.readline()[:-1]
+                            expectedline = testcaseInputFile.readline()[:-1]
                         if decodedLine == expectedline:
                             #print(normdecodeline, colored("OK", 'green'))
-                            exitfile.write(normdecodeline.encode('utf-8') + b'  OK' + b'\n')
+                            testcaseOutputFile.write(normdecodeline.encode('utf-8') + b'  OK' + b'\n')
                         else:
                             notOKcount += 1
                             #print(normdecodeline, colored("NOK", 'red'), " Exp: ", Fore.YELLOW + expectedline, Fore.RESET)
-                            exitfile.write(normdecodeline.encode('utf-8') + b'  NOK' + b'   Exp: ' + expectedline.encode('utf-8') + b'\n')
+                            testcaseOutputFile.write(normdecodeline.encode('utf-8') + b'  NOK' + b'   Exp: ' + expectedline.encode('utf-8') + b'\n')
                     if ((time.time() - raceStartTime) > 110):
                         notOKcount = 11
-                        exitfile.write(normdecodeline.encode('utf-8') + b'  TIMEOUT\n')
+                        testcaseOutputFile.write(normdecodeline.encode('utf-8') + b'  TIMEOUT\n')
 
+                if fileTestsSummary._checkClosed:
+                    fileTestsSummary = open(pathTestsOutputFolder + "/!summary.txt", "ab")
                 if notOKcount == 0:
                     fileTestsSummary.write(b"Race " + raceToRun.encode('utf-8') + b" PASSED\n")
                     print("PASSED")
@@ -238,19 +249,19 @@ for stabilityLoopIndex in range(numberOfStabilityLoops):
                     time.sleep(2)
                     ser.flushInput()
 
-
                 time.sleep(1.5)
                 ser.write(b"reset" + b"\n")
                 time.sleep(0.5)
                 loopIndex += 1
-                racefile.close()
+                testcaseInputFile.close()
+                testcaseOutputFile.close()
+                fileTestsSummary.close()
         else:
             print("There are no more testcases")
             loopIndex = len(flatten_listOfRaces)
 try:
-    exitfile
+    testcaseOutputFile
 except NameError:
     print("Invalid parameters")
 else:
-    exitfile.close()
     fileTestsSummary.close()

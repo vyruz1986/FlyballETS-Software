@@ -637,7 +637,7 @@ void WebHandlerClass::_SendSystemData(int8_t iClientId)
    {
       _SystemData.FwVer = (char *)FW_VER;
       _SystemData.RaceID = RaceHandler.iCurrentRaceId + 1;
-      _SystemData.Uptime = GET_MICROS / 1000;
+      _SystemData.Uptime = GET_MICROS / 1000000;
       _SystemData.NumClients = _ws->count();
       _SystemData.LocalSystemTime = (char *)GPSHandler.GetUtcDateAndTime();
       _SystemData.BatteryPercentage = BatterySensor.GetBatteryPercentage();

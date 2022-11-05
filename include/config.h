@@ -22,7 +22,7 @@
 #ifndef GLOBALVAR_H
 #define GLOBALVAR_H
 
-#define FW_VER "1.10.5"          // Flyball ETS firmware version
+#define FW_VER "1.10.6"          // Flyball ETS firmware version
 
 
 #define Simulate true            // Set to true to enable race simulation (see Simulator.h/.cpp)
@@ -42,6 +42,6 @@
 #define WS_TICKET_BUFFER_SIZE 8  // Number of websocket tickets kept in memory
 #define WS_TIMEOUT 1800000       // Timeout for secured websocket in miliseconds
 
-#define APP_VER "1.0.3"          // WebUI version
+#define APP_VER "1.0.4"          // WebUI version
 
 #endif

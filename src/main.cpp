@@ -227,11 +227,6 @@ void loop()
    // Handle LCD processing
    LCDController.Main();
 
-#if Simulate
-   // Run simulator
-   Simulator.Main();
-#endif
-
 #ifdef WiFiON
    // Handle WebSocket server
    WebHandler.loop();
@@ -556,7 +551,7 @@ void HandleLCDUpdates()
 
    // Update battery percentage
    if ((GET_MICROS / 1000 < 2000 || ((GET_MICROS / 1000 - llLastBatteryLCDupdate) > 30000)) //
-       && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
+         && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
    {
       iBatteryVoltage = BatterySensor.GetBatteryVoltage();
       uint16_t iBatteryPercentage = BatterySensor.GetBatteryPercentage();
@@ -581,15 +576,6 @@ void HandleLCDUpdates()
       LCDController.UpdateField(LCDController.BattLevel, sBatteryPercentage);
       // log_d("Battery: analog: %i ,voltage: %i, level: %i%%", BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
       llLastBatteryLCDupdate = GET_MICROS / 1000;
-   }
-
-   if (iCurrentRaceState != RaceHandler.RaceState)
-   {
-      iCurrentRaceState = RaceHandler.RaceState;
-      String sRaceStateMain = RaceHandler.GetRaceStateString();
-      log_i("RS: %s", sRaceStateMain);
-      // Update race status to display
-      LCDController.UpdateField(LCDController.RaceState, sRaceStateMain);
    }
 }
 

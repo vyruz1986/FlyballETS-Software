@@ -23,6 +23,7 @@ public:
    };
    RaceStates RaceState = RESET;
    RaceStates PreviousRaceState = RESET;
+   String strRaceState;
 
    uint8_t iCurrentDog;
    uint8_t iPreviousDog;
@@ -63,8 +64,6 @@ public:
    String TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNumber, bool bToFile = false);
    String GetRerunInfo(uint8_t iDogNumber);
    String GetCleanTime();
-
-   String GetRaceStateString();
 
    stRaceData GetRaceData();
    bool GetRunDirection();

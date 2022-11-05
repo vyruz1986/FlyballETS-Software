@@ -61,12 +61,27 @@ void RaceHandlerClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
 /// <param name="byNewRaceState">   New race state. </param>
 void RaceHandlerClass::_ChangeRaceState(RaceStates byNewRaceState)
 {
-   // First check if the new state (this function could be called superfluously)
-   if (RaceState != byNewRaceState)
+   PreviousRaceState = RaceState;
+   RaceState = byNewRaceState;
+   switch (RaceState)
    {
-      PreviousRaceState = RaceState;
-      RaceState = byNewRaceState;
+   case RaceHandlerClass::STOPPED:
+      strRaceState = " STOP  ";
+      break;
+   case RaceHandlerClass::STARTING:
+      strRaceState = " START ";
+      break;
+   case RaceHandlerClass::RUNNING:
+      strRaceState = "RUNNING";
+      break;
+   case RaceHandlerClass::RESET:
+      strRaceState = " READY ";
+      break;
+   default:
+      break;
    }
+   log_i("RS: %s", strRaceState);
+   LCDController.UpdateField(LCDController.RaceState, strRaceState);
 }
 
 /// <summary>
@@ -1355,39 +1370,6 @@ String RaceHandlerClass::GetCleanTime()
    else
       strCleanTime = "    n/a";
    return strCleanTime;
-}
-
-/// <summary>
-///   Gets race state string. Internally the software uses a (enumerated) byte to keep the race
-///   state, however on the display we have to display english text. This function returns the
-///   correct english text for the current race state.
-/// </summary>
-///
-/// <returns>
-///   The race state string.
-/// </returns>
-String RaceHandlerClass::GetRaceStateString()
-{
-   String strRaceState;
-   switch (RaceState)
-   {
-   case RaceHandlerClass::STOPPED:
-      strRaceState = " STOP  ";
-      break;
-   case RaceHandlerClass::STARTING:
-      strRaceState = " START ";
-      break;
-   case RaceHandlerClass::RUNNING:
-      strRaceState = "RUNNING";
-      break;
-   case RaceHandlerClass::RESET:
-      strRaceState = " READY ";
-      break;
-   default:
-      break;
-   }
-
-   return strRaceState;
 }
 
 /// <summary>
