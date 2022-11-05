@@ -109,7 +109,6 @@ const uint8_t iLightsDataPin = 21;    // WS2811B lights data
 
 // Global variables
 uint8_t iCurrentDog;                 // currently running dog
-uint8_t iCurrentRaceState;           // current race state
 
 bool bRaceSummaryPrinted = false;    // race summary printed indicator
 bool bCheckWsClinetStatus = false;   // flag to check if WS client should be disconnected

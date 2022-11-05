@@ -27,7 +27,6 @@ protected:
 public:
    void init(uint8_t _iGPSrxPin, uint8_t _iGPStxPin);
    void loop();
-   char* GetLocalDateAndTime();
    char* GetUtcDateAndTime();
    char* GetLocalTimestamp();
    char* GetDate();

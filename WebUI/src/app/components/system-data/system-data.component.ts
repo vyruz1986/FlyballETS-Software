@@ -16,7 +16,7 @@ export class SystemDataComponent implements OnInit {
     this.etsDataService.dataStream.subscribe((data) => {
       if (data.SystemData) {
         this.systemData = <SystemData>data.SystemData;
-        this.formatHMSTime(data.SystemData.uptime / 1000);
+        this.formatHMSTime(data.SystemData.uptime);
       }
     });
   }
@@ -27,7 +27,7 @@ export class SystemDataComponent implements OnInit {
     var m = Math.floor(d % 3600 / 60);
     var s = Math.floor(d % 3600 % 60 / 10);
 
-    this.hmsTime = ('0' + h).slice(-1) + ":" + ('0' + m).slice(-2) + ":" + ('0' + s).slice(-1);
+    this.hmsTime = ('0' + h).slice(-2) + ":" + ('0' + m).slice(-2) + ":" + ('0' + s).slice(-1);
   }
 
   ngOnInit() { }

@@ -2982,10 +2982,11 @@ void SimulatorClass::Main()
    }
 
    // Simulate sensors
-   if ((PendingRecord.llTriggerTime < 0 && RaceHandler.RaceState == RaceHandler.STARTING) || (PendingRecord.llTriggerTime > 0 && RaceHandler.RaceState == RaceHandler.RUNNING) || (RaceHandler.RaceState == RaceHandler.STOPPED && GET_MICROS <= RaceHandler._llRaceEndTime + 2000000))
+   if(RaceHandler.RaceState == RaceHandler.STARTING || RaceHandler.RaceState == RaceHandler.RUNNING || (RaceHandler.RaceState == RaceHandler.STOPPED && GET_MICROS <= RaceHandler._llRaceEndTime + 1000000))
    {
-      while (PendingRecord.llTriggerTime != 0 && PendingRecord.llTriggerTime <= (long long)(GET_MICROS - (RaceHandler.llRaceStartTime))) // 0ms advance added
+      while (PendingRecord.llTriggerTime != 0 && PendingRecord.llTriggerTime <= (long long)(GET_MICROS - (RaceHandler.llRaceStartTime) + 0)) // 0ms advance added
       {
+         log_v("Pending record");
          // log_d("Pending record S%d TriggerTime %lld | %lld", PendingRecord.iSensorNumber, RaceHandler.llRaceStartTime + PendingRecord.llTriggerTime, PendingRecord.llTriggerTime);
          RaceHandler._QueuePush({PendingRecord.iSensorNumber, (RaceHandler.llRaceStartTime + PendingRecord.llTriggerTime), PendingRecord.iState});
          // And increase pending record

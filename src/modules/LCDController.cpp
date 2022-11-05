@@ -42,7 +42,7 @@ void LCDControllerClass::init(LiquidCrystal *Clcd1, LiquidCrystal *Clcd2)
    _UpdateLCD(3, 0, String("            ver.        rev.S           "), 40);
    _UpdateLCD(3, 17, String(FW_VER), 6);
    delay(1500);
-   _UpdateLCD(1, 0, String("1:   0.000  +  0.000    |   WELCOME   00"), 40);
+   _UpdateLCD(1, 0, String("1:   0.000  +  0.000    |   WELCOME  000"), 40);
    _UpdateLCD(2, 0, String("2:   0.000  +  0.000    | Team:    0.000"), 40);
    _UpdateLCD(3, 0, String("3:   0.000  +  0.000    |   CT:    0.000"), 40);
    _UpdateLCD(4, 0, String("4:   0.000  +  0.000    |  100% W G sd >"), 40);
@@ -60,7 +60,7 @@ void LCDControllerClass::init(LiquidCrystal *Clcd1, LiquidCrystal *Clcd2)
    _SlcdfieldFields[D3RerunInfo] = {3, 22, 2, String("  ")};
    _SlcdfieldFields[D4RerunInfo] = {4, 22, 2, String("  ")};
    _SlcdfieldFields[RaceState] = {1, 28, 7, String(" READY ")};
-   _SlcdfieldFields[RaceID] = {1, 38, 2, String(" 1")};
+   _SlcdfieldFields[RaceID] = {1, 37, 3, String("  1")};
 #if BatteryCalibration
    _SlcdfieldFields[BattLevel] = {4, 27, 4, String("0000")};
 #else

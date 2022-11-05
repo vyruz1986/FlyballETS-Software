@@ -61,12 +61,27 @@ void RaceHandlerClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
 /// <param name="byNewRaceState">   New race state. </param>
 void RaceHandlerClass::_ChangeRaceState(RaceStates byNewRaceState)
 {
-   // First check if the new state (this function could be called superfluously)
-   if (RaceState != byNewRaceState)
+   PreviousRaceState = RaceState;
+   RaceState = byNewRaceState;
+   switch (RaceState)
    {
-      PreviousRaceState = RaceState;
-      RaceState = byNewRaceState;
+   case RaceHandlerClass::STOPPED:
+      strRaceState = " STOP  ";
+      break;
+   case RaceHandlerClass::STARTING:
+      strRaceState = " START ";
+      break;
+   case RaceHandlerClass::RUNNING:
+      strRaceState = "RUNNING";
+      break;
+   case RaceHandlerClass::RESET:
+      strRaceState = " READY ";
+      break;
+   default:
+      break;
    }
+   log_i("RS: %s", strRaceState);
+   LCDController.UpdateField(LCDController.RaceState, strRaceState);
 }
 
 /// <summary>
@@ -105,10 +120,10 @@ void RaceHandlerClass::_ChangeDogNumber(uint8_t iNewDogNumber)
 /// </summary>
 void RaceHandlerClass::Main()
 {
-   // Trigger filterring of sensors interrupts if new records available and 15ms waiting time passed
-   while ((_iInputQueueReadIndex != _iInputQueueWriteIndex) && (GET_MICROS - _InputTriggerQueue[_iInputQueueWriteIndex - 1].llTriggerTime > 15000))
+   // Trigger filterring of sensors interrupts if new records available and 12ms waiting time passed
+   while ((_iInputQueueReadIndex != _iInputQueueWriteIndex) && ((GET_MICROS - _InputTriggerQueue[_iInputQueueWriteIndex - 1].llTriggerTime) > 12000))
    {
-      log_v("IQRI:%d | IQWI:%d | Delta:%lld", _iInputQueueReadIndex, _iInputQueueWriteIndex, GET_MICROS - _InputTriggerQueue[_iInputQueueWriteIndex - 1].llTriggerTime);
+      log_v("IQRI:%d | IQWI:%d | Delta:%lld | RaceTime:%lld", _iInputQueueReadIndex, _iInputQueueWriteIndex, GET_MICROS - _InputTriggerQueue[_iInputQueueWriteIndex - 1].llTriggerTime, GET_MICROS - llRaceStartTime);
       _QueueFilter();
    }
 
@@ -131,7 +146,7 @@ void RaceHandlerClass::Main()
       // If the transition string is not empty and it wasn't updated for 350ms then it was noise and we have to clear it.
       // Forst first entering dog filtering is 750ms to cover scenario from simulated race 39.
       if (_strTransition.length() != 0 && ((GET_MICROS - _llLastTransitionStringUpdate) > 350000 && (iCurrentDog != 0 || (iCurrentDog == 0 && _bRerunBusy)) //
-                                           || (GET_MICROS - _llLastTransitionStringUpdate) > 750000 && iCurrentDog == 0 && !_bRerunBusy))
+                                             || (GET_MICROS - _llLastTransitionStringUpdate) > 750000 && iCurrentDog == 0 && !_bRerunBusy))
       {
          if (_byDogState == GOINGIN)
          {
@@ -266,7 +281,7 @@ void RaceHandlerClass::Main()
             // Period between 3.5s and 5.5s is covered and scenario when last dog is running excluded. Fix for simulated race 45 (83-30).
             // log_d("bRerunBusy: %i, _bLastStringBAba: %i, TfromLastDogExit: %lld, iCurrentDog: %i, iNextDog: %i.", _bRerunBusy, _bLastStringBAba, (STriggerRecord.llTriggerTime - _llLastDogExitTime), iCurrentDog + 1, iNextDog + 1);
             if (!_bRerunBusy && _bLastStringBAba && (STriggerRecord.llTriggerTime - _llLastDogExitTime) > 3500000 //
-                && (STriggerRecord.llTriggerTime - _llLastDogExitTime) < 5500000 && iCurrentDog != iNextDog)
+                  && (STriggerRecord.llTriggerTime - _llLastDogExitTime) < 5500000 && iCurrentDog != iNextDog)
             {
                // Calculte times for running invisible dog
                SetDogFault(iNextDog, ON);
@@ -332,7 +347,7 @@ void RaceHandlerClass::Main()
          // Special case after false detection of "ok crossing" --> S1 activated above 100ms after "ok crossing" detection or re-run with next dog = current dog
          else if (_byDogState == COMINGBACK && _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] && !_bS1StillSafe &&
                   (((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) > 100000 && (STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) < 2000000) // filtering changed to < 2s fix for 79-7
-                   || (_bRerunBusy && iCurrentDog == iNextDog)))
+                     || (_bRerunBusy && iCurrentDog == iNextDog)))
          {
             _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] = false;
             _llDogEnterTimes[iCurrentDog] = STriggerRecord.llTriggerTime;
@@ -626,6 +641,11 @@ void RaceHandlerClass::Main()
    {
       if (GET_MICROS > llRaceStartTime)
          llRaceTime = GET_MICROS - llRaceStartTime;
+      if (llRaceTime > 995000000)
+      {
+         log_w("Race TIEOUT!!!");
+         StopRace(llRaceTime);
+      }
    }
 
    // Check for faults, loop through array of dogs checking for faults
@@ -701,7 +721,6 @@ void RaceHandlerClass::StopRace(long long llStopTime)
       llRaceTime = 0;
    }
    _ChangeRaceState(STOPPED);
-   _HistoricRaceData[iCurrentRaceId] = GetRaceData(iCurrentRaceId);
 }
 
 /// <summary>
@@ -798,12 +817,12 @@ void RaceHandlerClass::ResetRace()
       _ChangeRaceState(RESET);
    }
 
-   if (iCurrentRaceId == NUM_HISTORIC_RACE_RECORDS)
+   if (iCurrentRaceId == 999)
       iCurrentRaceId = 0;
    else
       iCurrentRaceId++;
    String _sCurrentRaceId = String(iCurrentRaceId + 1);
-   while (_sCurrentRaceId.length() < 2)
+   while (_sCurrentRaceId.length() < 3)
       _sCurrentRaceId = " " + _sCurrentRaceId;
    LCDController.UpdateField(LCDController.RaceID, _sCurrentRaceId);
    log_i("Reset Race: DONE");
@@ -822,12 +841,12 @@ void RaceHandlerClass::PrintRaceTriggerRecords()
    while (iRecordToPrintIndex < _iInputQueueWriteIndex)
    {
       STriggerRecord RecordToPrint = _InputTriggerQueue[iRecordToPrintIndex];
-      printf("{%i, %lld, %i},\n", RecordToPrint.iSensorNumber, RecordToPrint.llTriggerTime - llRaceStartTime, RecordToPrint.iSensorState);
+      printf("{%i, %lld, %i},\r\n", RecordToPrint.iSensorNumber, RecordToPrint.llTriggerTime - llRaceStartTime, RecordToPrint.iSensorState);
       iRecordToPrintIndex++;
    }
    while (iRecordToPrintIndex < TRIGGER_QUEUE_LENGTH)
    {
-      printf("{0, 0, 0},\n");
+      printf("{0, 0, 0},\r\n");
       iRecordToPrintIndex++;
    }
 }
@@ -1354,39 +1373,6 @@ String RaceHandlerClass::GetCleanTime()
 }
 
 /// <summary>
-///   Gets race state string. Internally the software uses a (enumerated) byte to keep the race
-///   state, however on the display we have to display english text. This function returns the
-///   correct english text for the current race state.
-/// </summary>
-///
-/// <returns>
-///   The race state string.
-/// </returns>
-String RaceHandlerClass::GetRaceStateString()
-{
-   String strRaceState;
-   switch (RaceState)
-   {
-   case RaceHandlerClass::STOPPED:
-      strRaceState = " STOP  ";
-      break;
-   case RaceHandlerClass::STARTING:
-      strRaceState = " START ";
-      break;
-   case RaceHandlerClass::RUNNING:
-      strRaceState = "RUNNING";
-      break;
-   case RaceHandlerClass::RESET:
-      strRaceState = " READY ";
-      break;
-   default:
-      break;
-   }
-
-   return strRaceState;
-}
-
-/// <summary>
 ///   Gets race data for the current race
 /// </summary>
 ///
@@ -1395,51 +1381,29 @@ String RaceHandlerClass::GetRaceStateString()
 /// </returns>
 stRaceData RaceHandlerClass::GetRaceData()
 {
-   return GetRaceData(iCurrentRaceId);
-}
-
-/// <summary>
-///   Gets race data for given race ID
-/// </summary>
-
-/// <param name="iRaceId">The ID for the race you want the data for</param>
-///
-/// <returns>
-///  Race data struct
-/// </returns>
-stRaceData RaceHandlerClass::GetRaceData(int iRaceId)
-{
    stRaceData RequestedRaceData;
+   // We need to return data for the current dace
+   RequestedRaceData.Id = iCurrentRaceId + 1;
+   RequestedRaceData.StartTime = llRaceStartTime / 1000;
+   RequestedRaceData.EndTime = _llRaceEndTime / 1000;
+   RequestedRaceData.ElapsedTime = GetRaceTime();
+   RequestedRaceData.CleanTime = GetCleanTime();
+   RequestedRaceData.RaceState = RaceState;
+   RequestedRaceData.RacingDogs = iNumberOfRacingDogs;
+   RequestedRaceData.RerunsOff = bRerunsOff;
 
-   if (iRaceId == iCurrentRaceId)
+   // Get Dog info
+   for (uint8_t i = 0; i < iNumberOfRacingDogs; i++)
    {
-      // We need to return data for the current dace
-      RequestedRaceData.Id = iCurrentRaceId + 1;
-      RequestedRaceData.StartTime = llRaceStartTime / 1000;
-      RequestedRaceData.EndTime = _llRaceEndTime / 1000;
-      RequestedRaceData.ElapsedTime = GetRaceTime();
-      RequestedRaceData.CleanTime = GetCleanTime();
-      RequestedRaceData.RaceState = RaceState;
-      RequestedRaceData.RacingDogs = iNumberOfRacingDogs;
-      RequestedRaceData.RerunsOff = bRerunsOff;
+      RequestedRaceData.DogData[i].DogNumber = i;
 
-      // Get Dog info
-      for (uint8_t i = 0; i < iNumberOfRacingDogs; i++)
+      for (uint8_t i2 = 0; i2 <= iDogRunCounters[i]; i2++)
       {
-         RequestedRaceData.DogData[i].DogNumber = i;
-
-         for (uint8_t i2 = 0; i2 <= iDogRunCounters[i]; i2++)
-         {
-            RequestedRaceData.DogData[i].Timing[i2].Time = GetDogTime(i, i2);
-            RequestedRaceData.DogData[i].Timing[i2].CrossingTime = GetCrossingTime(i, i2);
-         }
-         RequestedRaceData.DogData[i].Fault = (_bDogFaults[i] || _bDogManualFaults[i]);
-         RequestedRaceData.DogData[i].Running = (iCurrentDog == i);
+         RequestedRaceData.DogData[i].Timing[i2].Time = GetDogTime(i, i2);
+         RequestedRaceData.DogData[i].Timing[i2].CrossingTime = GetCrossingTime(i, i2);
       }
-   }
-   else
-   {
-      RequestedRaceData = _HistoricRaceData[iRaceId];
+      RequestedRaceData.DogData[i].Fault = (_bDogFaults[i] || _bDogManualFaults[i]);
+      RequestedRaceData.DogData[i].Running = (iCurrentDog == i);
    }
    return RequestedRaceData;
 }
