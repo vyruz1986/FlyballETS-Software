@@ -422,6 +422,17 @@ void HandleSerialCommands()
    // Print time
    if (strSerialData == "time")
       log_i("System time:  %s", GPSHandler.GetLocalTimestamp());
+   // Print uptime
+   if (strSerialData == "uptime")
+   {
+      uint32_t t = (uint32_t)(millis() / 1000);
+      uint8_t s = t % 60;
+      t = (t - s) / 60;
+      uint8_t m = t % 60;
+      t = (t - m) / 60;
+      uint16_t h = t;
+      log_i("Up time: %i:%i:%i", h, m, s);
+   }
    // Delete tag file
    if (strSerialData == "deltagfile")
       SDcardController.deleteFile(SD_MMC, "/tag.txt");

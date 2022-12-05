@@ -7,6 +7,75 @@
 #include "RaceHandler.h"
 #include "PROGMEM_readAnything.h"
 //#include <avr/pgmspace.h>
+
+/// <summary>
+///   Initialises this object.
+/// </summary>
+///
+/// <param name="iS1Pin">  Zero-based index of the S1 pin. </param>
+/// <param name="iS2Pin">  Zero-based index of the S2 pin. </param>
+void SimulatorClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
+{
+   _iS1Pin = iS1Pin;
+   // pinMode(_iS1Pin, OUTPUT);
+   // digitalWrite(_iS1Pin, LOW);
+   _iS2Pin = iS2Pin;
+   // pinMode(_iS2Pin, OUTPUT);
+   // digitalWrite(_iS2Pin, LOW);
+   _iDataPos = 0;
+   _iDataStartPos = 0;
+   PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
+   log_i("Simulated Race 0 selected!");
+}
+
+/// <summary>
+///   Main entry-point for this application. Should be called every main loop cycle if simulation is wished.
+/// </summary>
+void SimulatorClass::Main()
+{
+   if (RaceHandler.RaceState == RaceHandler.RESET)
+   {
+      if (_iDataPos != _iDataStartPos)
+      {
+         // We've reset a race, reset data position to 0
+         _iDataPos = _iDataStartPos;
+         PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
+      }
+      return;
+   }
+   if (PendingRecord.llTriggerTime == 0)
+   {
+      // Pending record doesn't contain valid data, this means we've reched the end of our queue
+      return;
+   }
+
+   // Simulate sensors
+   if(RaceHandler.RaceState == RaceHandler.STARTING || RaceHandler.RaceState == RaceHandler.RUNNING || (RaceHandler.RaceState == RaceHandler.STOPPED && GET_MICROS <= RaceHandler._llRaceEndTime + 1000000))
+   {
+      while (PendingRecord.llTriggerTime != 0 && PendingRecord.llTriggerTime <= (long long)(GET_MICROS - (RaceHandler.llRaceStartTime) + 0)) // 0ms advance added
+      {
+         log_v("Pending record");
+         // log_d("Pending record S%d TriggerTime %lld | %lld", PendingRecord.iSensorNumber, RaceHandler.llRaceStartTime + PendingRecord.llTriggerTime, PendingRecord.llTriggerTime);
+         RaceHandler._QueuePush({PendingRecord.iSensorNumber, (RaceHandler.llRaceStartTime + PendingRecord.llTriggerTime), PendingRecord.iState});
+         // And increase pending record
+         _iDataPos++;
+         PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
+      }
+   }
+}
+
+void SimulatorClass::ChangeSimulatedRaceID(uint iSimulatedRaceID)
+{
+   if (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)
+   {
+      _iDataStartPos = 60 * iSimulatedRaceID;
+      _iDataPos = _iDataStartPos;
+      PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
+      log_i("Simulated Race %i selected!", iSimulatedRaceID);
+   }
+   return;
+}
+
 /// <summary>
 ///   Program the interrupt triggers which should be simulated here. See end of file for a collection of records from actual races.
 /// </summary>
@@ -2940,73 +3009,6 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {0, 0, 0},
    {0, 0, 0}
 };
-/// <summary>
-///   Initialises this object.
-/// </summary>
-///
-/// <param name="iS1Pin">  Zero-based index of the S1 pin. </param>
-/// <param name="iS2Pin">  Zero-based index of the S2 pin. </param>
-void SimulatorClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
-{
-   _iS1Pin = iS1Pin;
-   // pinMode(_iS1Pin, OUTPUT);
-   // digitalWrite(_iS1Pin, LOW);
-   _iS2Pin = iS2Pin;
-   // pinMode(_iS2Pin, OUTPUT);
-   // digitalWrite(_iS2Pin, LOW);
-   _iDataPos = 0;
-   _iDataStartPos = 0;
-   PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
-   log_i("Simulated Race 0 selected!");
-}
-
-/// <summary>
-///   Main entry-point for this application. Should be called every main loop cycle if simulation is wished.
-/// </summary>
-void SimulatorClass::Main()
-{
-   if (RaceHandler.RaceState == RaceHandler.RESET)
-   {
-      if (_iDataPos != _iDataStartPos)
-      {
-         // We've reset a race, reset data position to 0
-         _iDataPos = _iDataStartPos;
-         PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
-      }
-      return;
-   }
-   if (PendingRecord.llTriggerTime == 0)
-   {
-      // Pending record doesn't contain valid data, this means we've reched the end of our queue
-      return;
-   }
-
-   // Simulate sensors
-   if(RaceHandler.RaceState == RaceHandler.STARTING || RaceHandler.RaceState == RaceHandler.RUNNING || (RaceHandler.RaceState == RaceHandler.STOPPED && GET_MICROS <= RaceHandler._llRaceEndTime + 1000000))
-   {
-      while (PendingRecord.llTriggerTime != 0 && PendingRecord.llTriggerTime <= (long long)(GET_MICROS - (RaceHandler.llRaceStartTime) + 0)) // 0ms advance added
-      {
-         log_v("Pending record");
-         // log_d("Pending record S%d TriggerTime %lld | %lld", PendingRecord.iSensorNumber, RaceHandler.llRaceStartTime + PendingRecord.llTriggerTime, PendingRecord.llTriggerTime);
-         RaceHandler._QueuePush({PendingRecord.iSensorNumber, (RaceHandler.llRaceStartTime + PendingRecord.llTriggerTime), PendingRecord.iState});
-         // And increase pending record
-         _iDataPos++;
-         PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
-      }
-   }
-}
-
-void SimulatorClass::ChangeSimulatedRaceID(uint iSimulatedRaceID)
-{
-   if (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)
-   {
-      _iDataStartPos = 60 * iSimulatedRaceID;
-      _iDataPos = _iDataStartPos;
-      PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
-      log_i("Simulated Race %i selected!", iSimulatedRaceID);
-   }
-   return;
-}
 /// <summary>
 ///   The simulator class object.
 /// </summary>

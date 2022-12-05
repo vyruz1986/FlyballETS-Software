@@ -4,6 +4,98 @@
 #include "WebHandler.h"
 #include <AsyncElegantOTA.h>
 
+void WebHandlerClass::init(int webPort)
+{
+
+   // Populate the last modification date based on build datetime
+   // sprintf(_last_modified, "%s %s GMT", __DATE__, __TIME__);
+   snprintf_P(_last_modified, sizeof(_last_modified), PSTR("%s %s GMT"), __DATE__, __TIME__);
+
+   _server = new AsyncWebServer(webPort);
+   _ws = new AsyncWebSocket("/ws");
+   _wsa = new AsyncWebSocket("/wsa");
+
+   _lWebSocketReceivedTime = 0;
+
+   _ws->onEvent(std::bind(&WebHandlerClass::_WsEvent, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5, std::placeholders::_6));
+   _wsa->onEvent(std::bind(&WebHandlerClass::_WsEvent, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5, std::placeholders::_6));
+
+   _server->addHandler(_ws);
+   _server->addHandler(_wsa);
+
+   _server->onNotFound([](AsyncWebServerRequest *request){
+      log_e("Not found: %s!", request->url().c_str());
+      request->send(404); });
+
+   // Rewrites
+   _server->rewrite("/", "/index.html");
+#ifdef WebUIonSDcard
+   _server->serveStatic("/", SD_MMC, "/");
+#endif
+
+   // Serve home (basic authentication protection)
+   _server->on("/index.html", HTTP_GET, std::bind(&WebHandlerClass::_onHome, this, std::placeholders::_1));
+
+   // Authentication handler
+   _server->on("/auth", HTTP_GET, std::bind(&WebHandlerClass::_onAuth, this, std::placeholders::_1));
+
+   // Favicon handler
+   _server->on("/favicon.ico", HTTP_GET, std::bind(&WebHandlerClass::_onFavicon, this, std::placeholders::_1));
+
+   String password = SettingsManager.getSetting("AdminPass");
+   char httpPassword[password.length() + 1];
+   password.toCharArray(httpPassword, password.length() + 1);
+   AsyncElegantOTA.begin(_server, "Admin", httpPassword); // Start ElegantOTA
+
+   _server->begin();
+
+   _lLastRaceDataBroadcast = 0;
+   _lRaceDataBroadcastInterval = 750;
+
+   _lLastSystemDataBroadcast = 0;
+   _lSystemDataBroadcastInterval = 3500;
+
+   _lLastPingBroadcast = 0;
+   _lPingBroadcastInterval = 30000;
+
+   _lLastBroadcast = 0;
+
+   _SystemData.PwrOnTag = SDcardController.iTagValue;
+
+   for (bool &bIsConsumer : _bIsConsumerArray)
+   {
+      bIsConsumer = false;
+   }
+
+   _iNumOfConsumers = 0;
+}
+
+void WebHandlerClass::loop()
+{
+   unsigned long lCurrentUpTime = GET_MICROS / 1000;
+   // log_d("bSendRaceData: %i, bUpdateLights: %i, since LastBroadcast: %ul, since WS received: %ul", bSendRaceData, bUpdateLights, (lCurrentUpTime - _lLastBroadcast), (lCurrentUpTime - _lWebSocketReceivedTime));
+   if ((lCurrentUpTime - _lLastBroadcast > 100) && (lCurrentUpTime - _lWebSocketReceivedTime > 50))
+   {
+      if (bUpdateLights)
+         _SendLightsData();
+      else if (bSendRaceData || ((RaceHandler.RaceState == RaceHandler.RUNNING || (RaceHandler.RaceState == RaceHandler.STOPPED && (GET_MICROS - RaceHandler._llRaceEndTime) / 1000 < 1500)) && (lCurrentUpTime - _lLastRaceDataBroadcast > _lRaceDataBroadcastInterval)))
+         _SendRaceData(RaceHandler.iCurrentRaceId, -1);
+      else if (RaceHandler.RaceState == RaceHandler.RESET || (RaceHandler.RaceState == RaceHandler.STOPPED && (GET_MICROS - RaceHandler._llRaceEndTime) / 1000 > 1500))
+      {
+         if (lCurrentUpTime - _lLastSystemDataBroadcast > _lSystemDataBroadcastInterval)
+            _SendSystemData();
+         if (lCurrentUpTime - _lLastPingBroadcast > _lPingBroadcastInterval)
+         {
+            //_ws->pingAll();
+            _ws->cleanupClients();
+            log_d("Have %i clients, %i consumers", _ws->count(), _iNumOfConsumers);
+            //_lLastBroadcast = GET_MICROS / 1000;
+            _lLastPingBroadcast = GET_MICROS / 1000;
+         }
+      }
+   }
+}
+
 void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
 {
    bool isAdmin = String("/wsa").equals(server->url());
@@ -178,99 +270,6 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
          serializeJson(jsonResponseDoc, (char *)wsBuffer->get(), len + 1);
          // log_d("wsBuffer to send: %s", (char *)wsBuffer->get());
          client->text(wsBuffer);
-      }
-   }
-}
-
-void WebHandlerClass::init(int webPort)
-{
-
-   // Populate the last modification date based on build datetime
-   // sprintf(_last_modified, "%s %s GMT", __DATE__, __TIME__);
-   snprintf_P(_last_modified, sizeof(_last_modified), PSTR("%s %s GMT"), __DATE__, __TIME__);
-
-   _server = new AsyncWebServer(webPort);
-   _ws = new AsyncWebSocket("/ws");
-   _wsa = new AsyncWebSocket("/wsa");
-
-   _lWebSocketReceivedTime = 0;
-
-   _ws->onEvent(std::bind(&WebHandlerClass::_WsEvent, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5, std::placeholders::_6));
-   _wsa->onEvent(std::bind(&WebHandlerClass::_WsEvent, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5, std::placeholders::_6));
-
-   _server->addHandler(_ws);
-   _server->addHandler(_wsa);
-
-   _server->onNotFound([](AsyncWebServerRequest *request)
-                       {
-      log_e("Not found: %s!", request->url().c_str());
-      request->send(404); });
-
-   // Rewrites
-   _server->rewrite("/", "/index.html");
-#ifdef WebUIonSDcard
-   _server->serveStatic("/", SD_MMC, "/");
-#endif
-
-   // Serve home (basic authentication protection)
-   _server->on("/index.html", HTTP_GET, std::bind(&WebHandlerClass::_onHome, this, std::placeholders::_1));
-
-   // Authentication handler
-   _server->on("/auth", HTTP_GET, std::bind(&WebHandlerClass::_onAuth, this, std::placeholders::_1));
-
-   // Favicon handler
-   _server->on("/favicon.ico", HTTP_GET, std::bind(&WebHandlerClass::_onFavicon, this, std::placeholders::_1));
-
-   String password = SettingsManager.getSetting("AdminPass");
-   char httpPassword[password.length() + 1];
-   password.toCharArray(httpPassword, password.length() + 1);
-   AsyncElegantOTA.begin(_server, "Admin", httpPassword); // Start ElegantOTA
-
-   _server->begin();
-
-   _lLastRaceDataBroadcast = 0;
-   _lRaceDataBroadcastInterval = 750;
-
-   _lLastSystemDataBroadcast = 0;
-   _lSystemDataBroadcastInterval = 3500;
-
-   _lLastPingBroadcast = 0;
-   _lPingBroadcastInterval = 30000;
-
-   _lLastBroadcast = 0;
-
-   _SystemData.PwrOnTag = SDcardController.iTagValue;
-
-   for (bool &bIsConsumer : _bIsConsumerArray)
-   {
-      bIsConsumer = false;
-   }
-
-   _iNumOfConsumers = 0;
-}
-
-void WebHandlerClass::loop()
-{
-   unsigned long lCurrentUpTime = GET_MICROS / 1000;
-   // log_d("bSendRaceData: %i, bUpdateLights: %i, since LastBroadcast: %ul, since WS received: %ul", bSendRaceData, bUpdateLights, (lCurrentUpTime - _lLastBroadcast), (lCurrentUpTime - _lWebSocketReceivedTime));
-   if ((lCurrentUpTime - _lLastBroadcast > 100) && (lCurrentUpTime - _lWebSocketReceivedTime > 50))
-   {
-      if (bUpdateLights)
-         _SendLightsData();
-      else if (bSendRaceData || ((RaceHandler.RaceState == RaceHandler.RUNNING || (RaceHandler.RaceState == RaceHandler.STOPPED && (GET_MICROS - RaceHandler._llRaceEndTime) / 1000 < 1500)) && (lCurrentUpTime - _lLastRaceDataBroadcast > _lRaceDataBroadcastInterval)))
-         _SendRaceData(RaceHandler.iCurrentRaceId, -1);
-      else if (RaceHandler.RaceState == RaceHandler.RESET || (RaceHandler.RaceState == RaceHandler.STOPPED && (GET_MICROS - RaceHandler._llRaceEndTime) / 1000 > 1500))
-      {
-         if (lCurrentUpTime - _lLastSystemDataBroadcast > _lSystemDataBroadcastInterval)
-            _SendSystemData();
-         if (lCurrentUpTime - _lLastPingBroadcast > _lPingBroadcastInterval)
-         {
-            //_ws->pingAll();
-            _ws->cleanupClients();
-            log_d("Have %i clients, %i consumers", _ws->count(), _iNumOfConsumers);
-            //_lLastBroadcast = GET_MICROS / 1000;
-            _lLastPingBroadcast = GET_MICROS / 1000;
-         }
       }
    }
 }
