@@ -357,8 +357,8 @@ void SDcardControllerClass::testFileIO(fs::FS &fs, const char *path)
    File file = fs.open(path);
    static uint8_t buf[512];
    size_t len = 0;
-   uint32_t start = millis();
-   uint32_t end = start;
+   uint64_t start = millis();
+   uint64_t end = start;
    if (file)
    {
       len = file.size();

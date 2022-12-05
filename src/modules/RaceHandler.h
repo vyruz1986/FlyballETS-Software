@@ -32,7 +32,7 @@ public:
    uint8_t iDogRunCounters[4]; // Number of (re-)runs for each dog
    long long llRaceStartTime;
    long long llRaceTime;
-   int iCurrentRaceId = -1;
+   uint16_t iCurrentRaceId = 0;
    char *cRaceStartTimestamp;
    bool bRerunsOff = false;
    bool bRunDirectionInverted = false;
@@ -41,7 +41,6 @@ public:
    volatile bool bExecuteStartRaceTimer;
 
    void Main();
-   void ChangeRaceStateToRunning();
    void StartRaceTimer();
    void StopRace();
    void StopRace(long long llStopTime);

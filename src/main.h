@@ -116,13 +116,10 @@ IPAddress ipTocheck;                 // IP address of disconnected WiFi user
 
 unsigned int uiLastProgress = 0;     // last % OTA progress value
 
-long long llHeapPreviousMillis = 0;  // last Heap check timestamp
-long long llHeapInterval = 5000;     // Heap check interval
-
 uint16_t iBatteryVoltage = 0;        // Battery voltage
 long long llLastBatteryLCDupdate = -25000; // Initial offset for battery value upate on LCD
 
-uint8_t iLaserOnTime = 60;           // initial value of laser diode on time
+uint16_t iLaserOnTime = 180;         // initial value of laser diode on time
 bool bLaserActive = false;           // laser diode state
 
 // variables for handling 74HC166
@@ -137,7 +134,7 @@ const uint16_t DEBOUNCE_DELAY = 30;    // in ms
 const uint16_t SHORT_PRESS_TIME = 700; // in ms
 
 // String for serial comms storage
-unsigned long lLastSerialOutput = 0;
+unsigned long ulLastSerialOutput = 0;
 String strSerialData;
 byte bySerialIndex = 0;
 bool bSerialStringComplete = false;

@@ -13,16 +13,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>
 
-#ifdef ESP32
-#define GET_MICROS esp_timer_get_time()
-#else
-#define GET_MICROS micros()
-#endif
+#define MICROS esp_timer_get_time()
 
 #ifndef GLOBALVAR_H
 #define GLOBALVAR_H
 
-#define FW_VER "1.10.8"          // Flyball ETS firmware version
+#define FW_VER "1.10.9"          // Flyball ETS firmware version
 
 
 #define Simulate true            // Set to true to enable race simulation (see Simulator.h/.cpp)

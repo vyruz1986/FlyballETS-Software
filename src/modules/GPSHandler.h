@@ -17,7 +17,7 @@ protected:
    HardwareSerial* _SerialPort;
    TinyGPSPlus _Tgps;
    void _HandleSerialPort();
-   void _FormatTime(); 
+   void _FormatTime();
    char _cUTCTime[25];
    char _cLocalDateAndTime[25];
    char _cLocalTimestamp[9];
@@ -27,9 +27,9 @@ protected:
 public:
    void init(uint8_t _iGPSrxPin, uint8_t _iGPStxPin);
    void loop();
-   char* GetUtcDateAndTime();
-   char* GetLocalTimestamp();
-   char* GetDate();
+   char *GetUtcDateAndTime();
+   char *GetLocalTimestamp();
+   char *GetDate();
    time_t timeLocal;
 };
 extern GPSHandlerClass GPSHandler;

@@ -14,7 +14,7 @@ protected:
 
 
 public:
-   void init(uint8_t iS1Pin, uint8_t iS2Pin);
+   void init();
    void ChangeSimulatedRaceID(uint iSimulatedRaceID);
    void Main();
 

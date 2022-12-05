@@ -48,11 +48,11 @@ protected:
    void _onFavicon(AsyncWebServerRequest *request);
 
    unsigned long _lLastRaceDataBroadcast;
-   unsigned long _lRaceDataBroadcastInterval;
+   const uint16_t _iRaceDataBroadcastInterval = 750;
    unsigned long _lLastSystemDataBroadcast;
-   unsigned long _lSystemDataBroadcastInterval;
+   const uint16_t _iSystemDataBroadcastInterval = 3500;
    unsigned long _lLastPingBroadcast;
-   unsigned long _lPingBroadcastInterval;
+   const uint16_t _iPingBroadcastInterval = 30000;
    unsigned long _lWebSocketReceivedTime;
    unsigned long _lLastBroadcast;
    stSystemData _SystemData;

@@ -57,7 +57,7 @@ void LightsControllerClass::init(NeoPixelBus<NeoRgbFeature, WS_METHOD> *LightsSt
 /// </summary>
 void LightsControllerClass::Main()
 {
-      if (bExecuteRaceReadyFaultON)
+   if (bExecuteRaceReadyFaultON)
    {
       ReaceReadyFault(LightsController.ON);
       bExecuteRaceReadyFaultON = false;
@@ -74,16 +74,16 @@ void LightsControllerClass::Main()
       ResetLights();
       bExecuteResetLights = false;
    }
-   
+
    // Check if we have to toggle any lights
    for (int i = 0; i < 8; i++)
    {
-      if (GET_MICROS / 1000 > _lLightsOnSchedule[i] && _lLightsOnSchedule[i] != 0)
+      if (millis() > _lLightsOnSchedule[i] && _lLightsOnSchedule[i] != 0)
       {
          ToggleLightState(_byLightsArray[i], ON);
          _lLightsOnSchedule[i] = 0; // Delete schedule
       }
-      if (GET_MICROS / 1000 > _lLightsOutSchedule[i] && _lLightsOutSchedule[i] != 0)
+      if (millis() > _lLightsOutSchedule[i] && _lLightsOutSchedule[i] != 0)
       {
          ToggleLightState(_byLightsArray[i], OFF);
          _lLightsOutSchedule[i] = 0; // Delete schedule
@@ -118,24 +118,24 @@ void LightsControllerClass::WarningStartSequence()
 {
    unsigned long lOffset = 10000; // Offset of 10ms introduced to assure proper synchronization
    // Set schedule for GREEN4 light
-   _lLightsOnSchedule[7] = (GET_MICROS + lOffset) / 1000;        // Turn on "NOW"
-   _lLightsOutSchedule[7] = (GET_MICROS + lOffset) / 1000 + 150; // Turn off after 200ms
+   _lLightsOnSchedule[7] = (MICROS + lOffset) / 1000;        // Turn on "NOW"
+   _lLightsOutSchedule[7] = (MICROS + lOffset) / 1000 + 150; // Turn off after 150ms
 
    // Set schedule for YELLOW3 light
-   _lLightsOnSchedule[6] = (GET_MICROS + lOffset) / 1000 + 150;  // Turn on after 200ms
-   _lLightsOutSchedule[6] = (GET_MICROS + lOffset) / 1000 + 300; // Turn off after 400ms
+   _lLightsOnSchedule[6] = (MICROS + lOffset) / 1000 + 150;  // Turn on after 150ms
+   _lLightsOutSchedule[6] = (MICROS + lOffset) / 1000 + 300; // Turn off after 300ms
 
    // Set schedule for YELLOW2 light
-   _lLightsOnSchedule[4] = (GET_MICROS + lOffset) / 1000 + 300;  // Turn on after 400ms
-   _lLightsOutSchedule[4] = (GET_MICROS + lOffset) / 1000 + 450; // Turn off after 600ms
+   _lLightsOnSchedule[4] = (MICROS + lOffset) / 1000 + 300;  // Turn on after 300ms
+   _lLightsOutSchedule[4] = (MICROS + lOffset) / 1000 + 450; // Turn off after 450ms
 
    // Set schedule for YELLOW1 light
-   _lLightsOnSchedule[2] = (GET_MICROS + lOffset) / 1000 + 450;  // Turn on after 600ms
-   _lLightsOutSchedule[2] = (GET_MICROS + lOffset) / 1000 + 600; // Turn on after 800ms
+   _lLightsOnSchedule[2] = (MICROS + lOffset) / 1000 + 450;  // Turn on after 450ms
+   _lLightsOutSchedule[2] = (MICROS + lOffset) / 1000 + 600; // Turn on after 600ms
 
    // Set schedule for RED0 light
-   _lLightsOnSchedule[1] = (GET_MICROS + lOffset) / 1000 + 600;  // Turn on after 800ms
-   _lLightsOutSchedule[1] = (GET_MICROS + lOffset) / 1000 + 750; // Turn on after 1 second
+   _lLightsOnSchedule[1] = (MICROS + lOffset) / 1000 + 600;  // Turn on after 600ms
+   _lLightsOutSchedule[1] = (MICROS + lOffset) / 1000 + 750; // Turn on after 750ms
 
    byOverallState = WARNING;
 }
@@ -150,39 +150,39 @@ void LightsControllerClass::InitiateStartSequence()
    {
       unsigned long lOffset = 1000000; // 1s offset after warning sequence ended
       // Set schedule for YELLOW1 light
-      _lLightsOnSchedule[2] = (GET_MICROS + lOffset) / 1000;         // Turn on
-      _lLightsOutSchedule[2] = (GET_MICROS + lOffset) / 1000 + 1000; // Turn off after 1 seconds
+      _lLightsOnSchedule[2] = (MICROS + lOffset) / 1000;         // Turn on
+      _lLightsOutSchedule[2] = (MICROS + lOffset) / 1000 + 1000; // Turn off after 1 seconds
 
       // Set schedule for YELLOW2 light
-      _lLightsOnSchedule[4] = (GET_MICROS + lOffset) / 1000 + 1000;  // Turn on after 1 second
-      _lLightsOutSchedule[4] = (GET_MICROS + lOffset) / 1000 + 2000; // Turn off after 2 seconds
+      _lLightsOnSchedule[4] = (MICROS + lOffset) / 1000 + 1000;  // Turn on after 1 second
+      _lLightsOutSchedule[4] = (MICROS + lOffset) / 1000 + 2000; // Turn off after 2 seconds
 
       // Set schedule for YELLOW3 light
-      _lLightsOnSchedule[6] = (GET_MICROS + lOffset) / 1000 + 2000;  // Turn on after 2 seconds
-      _lLightsOutSchedule[6] = (GET_MICROS + lOffset) / 1000 + 3000; // Turn off after 3 seconds
+      _lLightsOnSchedule[6] = (MICROS + lOffset) / 1000 + 2000;  // Turn on after 2 seconds
+      _lLightsOutSchedule[6] = (MICROS + lOffset) / 1000 + 3000; // Turn off after 3 seconds
 
       // Set schedule for GREEN4 light
-      _lLightsOnSchedule[7] = (GET_MICROS + lOffset) / 1000 + 3000;  // Turn on after 3 seconds
-      _lLightsOutSchedule[7] = (GET_MICROS + lOffset) / 1000 + 4000; // Turn off after 4 seconds
+      _lLightsOnSchedule[7] = (MICROS + lOffset) / 1000 + 3000;  // Turn on after 3 seconds
+      _lLightsOutSchedule[7] = (MICROS + lOffset) / 1000 + 4000; // Turn off after 4 seconds
    }
    else
    {
       unsigned long lOffset = 10000; // Offset of 10ms introduced to assure proper synchronization
       // Set schedule for RED1 light
-      _lLightsOnSchedule[3] = (GET_MICROS + lOffset) / 1000;         // Turn on
-      _lLightsOutSchedule[3] = (GET_MICROS + lOffset) / 1000 + 1000; // keep on for 1 second
+      _lLightsOnSchedule[3] = (MICROS + lOffset) / 1000;         // Turn on
+      _lLightsOutSchedule[3] = (MICROS + lOffset) / 1000 + 1000; // keep on for 1 second
 
       // Set schedule for YELLOW2 light
-      _lLightsOnSchedule[4] = (GET_MICROS + lOffset) / 1000 + 1000;  // Turn on after 1 second
-      _lLightsOutSchedule[4] = (GET_MICROS + lOffset) / 1000 + 2000; // Turn off after 2 seconds
+      _lLightsOnSchedule[4] = (MICROS + lOffset) / 1000 + 1000;  // Turn on after 1 second
+      _lLightsOutSchedule[4] = (MICROS + lOffset) / 1000 + 2000; // Turn off after 2 seconds
 
       // Set schedule for YELLOW3 light
-      _lLightsOnSchedule[6] = (GET_MICROS + lOffset) / 1000 + 2000;  // Turn on after 2 seconds
-      _lLightsOutSchedule[6] = (GET_MICROS + lOffset) / 1000 + 3000; // Turn off after 3 seconds
+      _lLightsOnSchedule[6] = (MICROS + lOffset) / 1000 + 2000;  // Turn on after 2 seconds
+      _lLightsOutSchedule[6] = (MICROS + lOffset) / 1000 + 3000; // Turn off after 3 seconds
 
       // Set schedule for GREEN4 light
-      _lLightsOnSchedule[7] = (GET_MICROS + lOffset) / 1000 + 3000;  // Turn on after 3 seconds
-      _lLightsOutSchedule[7] = (GET_MICROS + lOffset) / 1000 + 4000; // Turn off after 4 seconds
+      _lLightsOnSchedule[7] = (MICROS + lOffset) / 1000 + 3000;  // Turn on after 3 seconds
+      _lLightsOutSchedule[7] = (MICROS + lOffset) / 1000 + 4000; // Turn off after 4 seconds
    }
    byOverallState = INITIATED;
 }
@@ -213,8 +213,8 @@ void LightsControllerClass::DeleteSchedules()
       _lLightsOutSchedule[i] = 0; // Delete schedule
    }
    // Blink WHITE light to indicate manual STOP or RESET execution
-   _lLightsOnSchedule[0] = GET_MICROS / 1000;        // Turn on NOW
-   _lLightsOutSchedule[0] = GET_MICROS / 1000 + 100; // keep on for 100ms
+   _lLightsOnSchedule[0] = millis();        // Turn on NOW
+   _lLightsOutSchedule[0] = millis() + 100; // keep on for 100ms
 }
 
 /// <summary>
@@ -251,14 +251,13 @@ void LightsControllerClass::ToggleLightState(Lights byLight, LightStates byLight
       //  If start sequence is initiated and we're going to turn on RED light we need to start race timer
       if (byOverallState == INITIATED && LightConfig.iPixelNumber == 1)
       {
-         RaceHandler.StartRaceTimer();
+         RaceHandler.bExecuteStartRaceTimer = true;
          byOverallState = STARTING;
       }
 
       // If start sequence is in progress and we're going to trun on GREEN light we need to change race state to RUNNING
       if (byOverallState == STARTING && LightConfig.iPixelNumber == 4)
       {
-         RaceHandler.ChangeRaceStateToRunning();
          byOverallState = STARTED;
       }
    }
@@ -296,13 +295,13 @@ void LightsControllerClass::ToggleFaultLight(uint8_t DogNumber, LightStates byLi
       // Set schedule for FAULT light
       if (bModeNAFA)
       {
-         _lLightsOnSchedule[1] = GET_MICROS / 1000;         // Turn on NOW
-         _lLightsOutSchedule[1] = GET_MICROS / 1000 + 1000; // keep on for 1 second
+         _lLightsOnSchedule[1] = millis();         // Turn on NOW
+         _lLightsOutSchedule[1] = millis() + 1000; // keep on for 1 second
       }
       else
       {
-         _lLightsOnSchedule[0] = GET_MICROS / 1000;         // Turn on NOW
-         _lLightsOutSchedule[0] = GET_MICROS / 1000 + 1000; // keep on for 1 second
+         _lLightsOnSchedule[0] = millis();         // Turn on NOW
+         _lLightsOutSchedule[0] = millis() + 1000; // keep on for 1 second
       }
    }
    ToggleLightState(byLight, byLightState);

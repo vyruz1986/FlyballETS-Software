@@ -172,13 +172,13 @@ void LCDControllerClass::FirmwareUpdateError()
 void LCDControllerClass::Main()
 {
    // This is the main loop which handles LCD updates
-   if ((GET_MICROS / 1000 - _lLastLCDUpdate) > _lLCDUpdateInterval)
+   if ((millis() - _ulLastLCDUpdate) > _iLCDUpdateInterval)
    {
       for (const SLCDField &lcdField : _SlcdfieldFields)
       {
          _UpdateLCD(lcdField.iLine, lcdField.iStartingPosition, lcdField.strText, lcdField.iFieldLength);
       }
-      _lLastLCDUpdate = GET_MICROS / 1000;
+      _ulLastLCDUpdate = millis();
    }
 }
 

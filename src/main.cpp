@@ -132,7 +132,7 @@ void setup()
 
    // Initialize simulatorclass pins if applicable
 #if Simulate
-   Simulator.init(iS1Pin, iS2Pin);
+   Simulator.init();
 #endif
 
 #ifdef WiFiON
@@ -153,7 +153,8 @@ void setup()
    // OTA setup
    ArduinoOTA.setPassword(strAPPass.c_str());
    ArduinoOTA.setPort(3232);
-   ArduinoOTA.onStart([](){
+   ArduinoOTA.onStart([]()
+                      {
       String type;
       if (ArduinoOTA.getCommand() == U_FLASH)
          type = "Firmware";
@@ -161,10 +162,12 @@ void setup()
          type = "Filesystem";
       Serial.println("\n" + type + " update initiated.");
       LCDController.FirmwareUpdateInit(); });
-   ArduinoOTA.onEnd([](){ 
+   ArduinoOTA.onEnd([]()
+                    { 
       Serial.println("\nUpdate completed.\r\n");
       LCDController.FirmwareUpdateSuccess(); });
-   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total){
+   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total)
+                         {
       uint16_t iProgressPercentage = (progress / (total / 100));
       if (uiLastProgress != iProgressPercentage)
       {
@@ -175,7 +178,8 @@ void setup()
          LCDController.FirmwareUpdateProgress(sProgressPercentage);
          uiLastProgress = iProgressPercentage;
       } });
-   ArduinoOTA.onError([](ota_error_t error){
+   ArduinoOTA.onError([](ota_error_t error)
+                      {
       Serial.printf("Error[%u]: ", error);
       LCDController.FirmwareUpdateError();
       if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
@@ -263,7 +267,7 @@ void loop()
       bRaceSummaryPrinted = false;
    }
 
-   if (RaceHandler.RaceState == RaceHandler.STOPPED && ((GET_MICROS - (RaceHandler.llRaceStartTime + RaceHandler.llRaceTime)) / 1000 > 500) && !bRaceSummaryPrinted)
+   if (RaceHandler.RaceState == RaceHandler.STOPPED && ((MICROS - (RaceHandler.llRaceStartTime + RaceHandler.llRaceTime)) / 1000 > 500) && !bRaceSummaryPrinted)
    {
       // Race has been stopped 0.5 second ago: print race summary to console
       for (uint8_t i = 0; i < RaceHandler.iNumberOfRacingDogs; i++)
@@ -336,7 +340,7 @@ void Sensor1Wrapper()
 void StartRaceMain()
 {
    if (RaceHandler.RaceState != RaceHandler.RESET)
-   return;
+      return;
    if (LightsController.bModeNAFA)
       LightsController.WarningStartSequence();
    else
@@ -439,10 +443,10 @@ void mdnsServerSetup()
 void HandleSerialCommands()
 {
    // Race start
-   if (strSerialData == "start" && (RaceHandler.RaceState == RaceHandler.RESET))
+   if (strSerialData == "start")
       StartRaceMain();
    // Race stop
-   if (strSerialData == "stop" && ((RaceHandler.RaceState == RaceHandler.STARTING) || (RaceHandler.RaceState == RaceHandler.RUNNING)))
+   if (strSerialData == "stop")
       StopRaceMain();
    // Race reset button
    if (strSerialData == "reset")
@@ -589,8 +593,8 @@ void HandleLCDUpdates()
    }
 
    // Update battery percentage
-   if ((GET_MICROS / 1000 < 2000 || ((GET_MICROS / 1000 - llLastBatteryLCDupdate) > 30000)) //
-         && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
+   if ((millis() < 2000 || ((millis() - llLastBatteryLCDupdate) > 30000)) //
+       && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
    {
       iBatteryVoltage = BatterySensor.GetBatteryVoltage();
       uint16_t iBatteryPercentage = BatterySensor.GetBatteryPercentage();
@@ -614,7 +618,7 @@ void HandleLCDUpdates()
          sBatteryPercentage = " " + sBatteryPercentage;
       LCDController.UpdateField(LCDController.BattLevel, sBatteryPercentage);
       // log_d("Battery: analog: %i ,voltage: %i, level: %i%%", BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
-      llLastBatteryLCDupdate = GET_MICROS / 1000;
+      llLastBatteryLCDupdate = millis();
    }
 }
 
@@ -641,11 +645,11 @@ void HandleRemoteAndButtons()
    if (byDataIn != byLastFlickerableState)
    {
       // reset the debouncing timer
-      llLastDebounceTime = GET_MICROS / 1000;
+      llLastDebounceTime = millis();
       // save the the last flickerable state
       byLastFlickerableState = byDataIn;
    }
-   if ((byLastStadyState != byDataIn) && ((GET_MICROS / 1000 - llLastDebounceTime) > DEBOUNCE_DELAY))
+   if ((byLastStadyState != byDataIn) && ((millis() - llLastDebounceTime) > DEBOUNCE_DELAY))
    {
       if (byDataIn != 0)
       {
@@ -657,12 +661,12 @@ void HandleRemoteAndButtons()
       // if the button state has changed:
       if (bitRead(byLastStadyState, iLastActiveBit) == LOW && bitRead(byDataIn, iLastActiveBit) == HIGH)
       {
-         llPressedTime[iLastActiveBit] = GET_MICROS / 1000;
+         llPressedTime[iLastActiveBit] = millis();
          // log_d("The button is pressed: %lld", llPressedTime[iLastActiveBit]);
       }
       else if (bitRead(byLastStadyState, iLastActiveBit) == HIGH && bitRead(byDataIn, iLastActiveBit) == LOW)
       {
-         llReleasedTime[iLastActiveBit] = GET_MICROS / 1000;
+         llReleasedTime[iLastActiveBit] = millis();
          // log_d("The button is released: %lld", llReleasedTime[iLastActiveBit]);
       }
       // save the the last state
@@ -724,7 +728,7 @@ void HandleRemoteAndButtons()
       }
    }
    // Laser deativation
-   if ((bLaserActive) && ((GET_MICROS / 1000 - llReleasedTime[7] > iLaserOnTime * 1000) || RaceHandler.RaceState == RaceHandler.STARTING || RaceHandler.RaceState == RaceHandler.RUNNING))
+   if ((bLaserActive) && ((millis() - llReleasedTime[7] > iLaserOnTime * 1000) || RaceHandler.RaceState == RaceHandler.STARTING || RaceHandler.RaceState == RaceHandler.RUNNING))
    {
       digitalWrite(iLaserOutputPin, LOW);
       bLaserActive = false;
@@ -772,11 +776,10 @@ String GetButtonString(uint8_t _iActiveBit)
    return strButton;
 }
 
-
 void Core1Race(void *parameter)
 {
 #if Simulate
-   Simulator.init(iS1Pin, iS2Pin);
+   Simulator.init();
 #endif
    RaceHandler.init(iS1Pin, iS2Pin);
    for (;;)

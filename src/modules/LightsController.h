@@ -35,7 +35,7 @@ public:
    volatile bool bExecuteRaceReadyFaultOFF;
    volatile bool bExecuteResetLights;
 
-   //Overal state of this class
+   // Overal state of this class
    enum OverallStates
    {
       WARNING,
@@ -47,7 +47,7 @@ public:
    
    OverallStates byOverallState = RESET;
 
-   //Possible pixel colors (unique names needed)
+   // Possible pixel colors (unique names needed)
    enum Lights
    {
       WHITE0, // pixel 0
@@ -82,11 +82,11 @@ public:
    stLightsState GetLightsState();
 
 private:
-   //Neopixel object
-   //Adafruit_NeoPixel _LightsStrip;
+   // Neopixel object
+   // Adafruit_NeoPixel _LightsStrip;
    NeoPixelBus<NeoRgbFeature, WS_METHOD> *_LightsStrip;
 
-   //This byte contains the combined states of all ligths at any given time
+   // This byte contains the combined states of all ligths at any given time
    byte _byCurrentLightsState = 255;
    byte _byNewLightsState = 0;
 
