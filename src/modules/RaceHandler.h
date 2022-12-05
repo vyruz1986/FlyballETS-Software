@@ -36,6 +36,9 @@ public:
    char *cRaceStartTimestamp;
    bool bRerunsOff = false;
    bool bRunDirectionInverted = false;
+   volatile bool bExecuteStopRace;
+   volatile bool bExecuteResetRace;
+   volatile bool bExecuteStartRaceTimer;
 
    void Main();
    void ChangeRaceStateToRunning();
@@ -43,8 +46,6 @@ public:
    void StopRace();
    void StopRace(long long llStopTime);
    void ResetRace();
-   void PrintRaceTriggerRecords();
-   void PrintRaceTriggerRecordsToFile();
    void TriggerSensor1();
    void TriggerSensor2();
 
@@ -120,6 +121,7 @@ private:
    bool _bPotentialNegativeCrossDetected;
    bool _bRaceReadyFaultON;
    bool _bRaceReadyFaultOFF;
+   bool _bRaceSummaryPrinted = false; // race summary printed indicator
    long long _llLastDogTimeReturnTimeStamp[4];
    int8_t _iLastReturnedRunNumber[4];
    long long _llDogEnterTimes[5];
@@ -146,6 +148,9 @@ private:
    STriggerRecord _QueuePop();
    bool _QueueEmpty();
    void _AddToTransitionString(STriggerRecord _InterruptTrigger);
+   void _PrintRaceSummary();
+   void _PrintRaceTriggerRecords();
+   void _PrintRaceTriggerRecordsToFile();
 };
 
 extern RaceHandlerClass RaceHandler;

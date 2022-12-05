@@ -31,6 +31,9 @@ public:
    void init(NeoPixelBus<NeoRgbFeature, WS_METHOD> *LightsStrip);
 
    bool bModeNAFA = false;
+   volatile bool bExecuteRaceReadyFaultON;
+   volatile bool bExecuteRaceReadyFaultOFF;
+   volatile bool bExecuteResetLights;
 
    //Overal state of this class
    enum OverallStates

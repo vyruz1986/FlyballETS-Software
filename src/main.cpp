@@ -88,9 +88,25 @@ void setup()
 
    // Initialize LightsController class
    LightsController.init(&LightsStrip);
+   /*xTaskCreatePinnedToCore(
+      Core1Lights,
+      "Lights",
+      8192,
+      NULL,
+      1,
+      &taskLights,
+      1);*/
 
    // Initialize LCDController class with lcd1 and lcd2 objects
    LCDController.init(&lcd, &lcd2);
+   /*xTaskCreatePinnedToCore(
+      Core1LCD,
+      "LCD",
+      8192,
+      NULL,
+      1,
+      &taskLCD,
+      1);*/
 
    strSerialData[0] = 0;
 
@@ -105,6 +121,14 @@ void setup()
 
    // Initialize RaceHandler class with S1 and S2 pins
    RaceHandler.init(iS1Pin, iS2Pin);
+   /*xTaskCreatePinnedToCore(
+      Core1Race,
+      "Race",
+      16384,
+      NULL,
+      1,
+      &taskRace,
+      1);*/
 
    // Initialize simulatorclass pins if applicable
 #if Simulate
@@ -232,7 +256,7 @@ void loop()
    WebHandler.loop();
 #endif
 
-   // Reset variables when state RESET
+   /*// Reset variables when state RESET
    if (RaceHandler.RaceState == RaceHandler.RESET)
    {
       iCurrentDog = RaceHandler.iCurrentDog;
@@ -268,7 +292,7 @@ void loop()
    }
 
    // Cleanup variables used for checking if something changed
-   iCurrentDog = RaceHandler.iCurrentDog;
+   iCurrentDog = RaceHandler.iCurrentDog;*/
 }
 
 void serialEvent()
@@ -311,6 +335,8 @@ void Sensor1Wrapper()
 /// </summary>
 void StartRaceMain()
 {
+   if (RaceHandler.RaceState != RaceHandler.RESET)
+   return;
    if (LightsController.bModeNAFA)
       LightsController.WarningStartSequence();
    else
@@ -322,7 +348,9 @@ void StartRaceMain()
 /// </summary>
 void StopRaceMain()
 {
-   RaceHandler.StopRace();
+   if (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)
+      return;
+   RaceHandler.bExecuteStopRace = true;
    LightsController.DeleteSchedules();
 }
 
@@ -344,8 +372,8 @@ void ResetRace()
 {
    if (RaceHandler.RaceState != RaceHandler.STOPPED) // Only allow reset when race is stopped first
       return;
-   RaceHandler.ResetRace();
-   LightsController.ResetLights();
+   RaceHandler.bExecuteResetRace = true;
+   LightsController.bExecuteResetLights = true;
 }
 
 #ifdef WiFiON
@@ -742,4 +770,40 @@ String GetButtonString(uint8_t _iActiveBit)
    }
 
    return strButton;
+}
+
+
+void Core1Race(void *parameter)
+{
+#if Simulate
+   Simulator.init(iS1Pin, iS2Pin);
+#endif
+   RaceHandler.init(iS1Pin, iS2Pin);
+   for (;;)
+   {
+#if Simulate
+      Simulator.Main();
+#endif
+      RaceHandler.Main();
+   }
+}
+
+void Core1Lights(void *parameter)
+{
+   LightsController.init(&LightsStrip);
+   for (;;)
+   {
+      LightsController.Main();
+   }
+}
+
+void Core1LCD(void *parameter)
+{
+   LCDController.init(&lcd, &lcd2);
+   for (;;)
+   {
+      LCDController.Main();
+      vTaskDelay(5);
+      HandleLCDUpdates();
+   }
 }

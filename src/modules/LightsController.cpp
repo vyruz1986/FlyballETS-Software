@@ -57,6 +57,24 @@ void LightsControllerClass::init(NeoPixelBus<NeoRgbFeature, WS_METHOD> *LightsSt
 /// </summary>
 void LightsControllerClass::Main()
 {
+      if (bExecuteRaceReadyFaultON)
+   {
+      ReaceReadyFault(LightsController.ON);
+      bExecuteRaceReadyFaultON = false;
+   }
+
+   if (bExecuteRaceReadyFaultOFF)
+   {
+      ReaceReadyFault(LightsController.OFF);
+      bExecuteRaceReadyFaultOFF = false;
+   }
+
+   if (bExecuteResetLights)
+   {
+      ResetLights();
+      bExecuteResetLights = false;
+   }
+   
    // Check if we have to toggle any lights
    for (int i = 0; i < 8; i++)
    {

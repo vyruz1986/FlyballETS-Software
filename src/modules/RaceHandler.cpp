@@ -129,14 +129,32 @@ void RaceHandlerClass::Main()
 
    if (_bRaceReadyFaultON)
    {
-      LightsController.ReaceReadyFault(LightsController.ON);
+      LightsController.bExecuteRaceReadyFaultON = true;
       _bRaceReadyFaultON = false;
    }
 
    if (_bRaceReadyFaultOFF)
    {
-      LightsController.ReaceReadyFault(LightsController.OFF);
+      LightsController.bExecuteRaceReadyFaultOFF = true;
       _bRaceReadyFaultOFF = false;
+   }
+
+   if (bExecuteStopRace)
+   {
+      StopRace();
+      bExecuteStopRace = false;
+   }
+
+   if (bExecuteResetRace)
+   {
+      ResetRace();
+      bExecuteResetRace = false;
+   }
+
+   if (bExecuteStartRaceTimer)
+   {
+      StartRaceTimer();
+      bExecuteStartRaceTimer = false;
    }
 
    if (!_QueueEmpty()) // If queue is not empty, we have work to do
@@ -668,6 +686,12 @@ void RaceHandlerClass::Main()
          break;
       }
    }
+   
+   if (RaceState == STOPPED && ((GET_MICROS - (llRaceStartTime + llRaceTime)) / 1000 > 500) && !_bRaceSummaryPrinted)
+   {
+      _PrintRaceSummary();
+      _bRaceSummaryPrinted = true;
+   }
 }
 
 /// <summary>
@@ -815,6 +839,7 @@ void RaceHandlerClass::ResetRace()
       for (auto &iCounter : _iLastReturnedRunNumber)
          iCounter = 0;
       _ChangeRaceState(RESET);
+      _bRaceSummaryPrinted = false;
    }
 
    if (iCurrentRaceId == 999)
@@ -832,10 +857,32 @@ void RaceHandlerClass::ResetRace()
 #endif
 }
 
+void RaceHandlerClass::_PrintRaceSummary()
+{
+   log_v("RaceState: %i, MICROS: %lld, _llRaceEndTime: %lld, Delta: %lld, _bRaceSummaryPrinted: %i", RaceState, GET_MICROS, _llRaceEndTime, GET_MICROS - _llRaceEndTime, _bRaceSummaryPrinted);
+   // Race has been stopped 0.5 second ago: print race summary to console
+   for (uint8_t i = 0; i < iNumberOfRacingDogs; i++)
+   {
+      // log_d("Dog %i -> %i run(s).", i + 1, iDogRunCounters[i] + 1);
+      for (uint8_t i2 = 0; i2 < (iDogRunCounters[i] + 1); i2++)
+         log_i("Dog %i: %s | CR: %s", i + 1, GetStoredDogTimes(i, i2), TransformCrossingTime(i, i2));
+   }
+   log_i(" Team: %s", GetRaceTime());
+   log_i("   CT: %s", GetCleanTime());
+   if (SDcardController.bSDCardDetected)
+      SDcardController.SaveRaceDataToFile();
+#if !Simulate
+   if (CORE_DEBUG_LEVEL >= ESP_LOG_DEBUG)
+      _PrintRaceTriggerRecords();
+   if (SDcardController.bSDCardDetected)
+      _PrintRaceTriggerRecordsToFile();
+#endif
+}
+
 /// <summary>
 ///   After race is ended/stopped print trigger records to console
 /// </summary>
-void RaceHandlerClass::PrintRaceTriggerRecords()
+void RaceHandlerClass::_PrintRaceTriggerRecords()
 {
    uint8_t iRecordToPrintIndex = 0;
    while (iRecordToPrintIndex < _iInputQueueWriteIndex)
@@ -854,7 +901,7 @@ void RaceHandlerClass::PrintRaceTriggerRecords()
 /// <summary>
 ///   If SD card is present, after race is ended/stopped print trigger records to file
 /// </summary>
-void RaceHandlerClass::PrintRaceTriggerRecordsToFile()
+void RaceHandlerClass::_PrintRaceTriggerRecordsToFile()
 {
    File rawSensorsReadingFile;
    String rawSensorsReadingFileName = "/SENSORS_DATA/" + SDcardController.sTagValue + "_SensorsData" + ".txt";

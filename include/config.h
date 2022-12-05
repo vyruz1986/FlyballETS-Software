@@ -22,7 +22,7 @@
 #ifndef GLOBALVAR_H
 #define GLOBALVAR_H
 
-#define FW_VER "1.10.7"          // Flyball ETS firmware version
+#define FW_VER "1.10.8"          // Flyball ETS firmware version
 
 
 #define Simulate true            // Set to true to enable race simulation (see Simulator.h/.cpp)

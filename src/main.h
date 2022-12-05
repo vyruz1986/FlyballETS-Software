@@ -53,6 +53,9 @@ void HandleSerialCommands();
 void HandleRemoteAndButtons();
 void HandleLCDUpdates();
 void ToggleWifi();
+void Core1Race(void *parameter);
+void Core1Lights(void *parameter);
+void Core1LCD(void *parameter);
 String GetButtonString(uint8_t _iActiveBit);
 #ifdef WiFiON
 void WiFiEvent(arduino_event_id_t event);
@@ -108,9 +111,6 @@ const uint8_t iLightsDataPin = 21;    // WS2811B lights data
 // 3: free/RX
 
 // Global variables
-uint8_t iCurrentDog;                 // currently running dog
-
-bool bRaceSummaryPrinted = false;    // race summary printed indicator
 bool bCheckWsClinetStatus = false;   // flag to check if WS client should be disconnected
 IPAddress ipTocheck;                 // IP address of disconnected WiFi user
 
@@ -141,3 +141,7 @@ unsigned long lLastSerialOutput = 0;
 String strSerialData;
 byte bySerialIndex = 0;
 bool bSerialStringComplete = false;
+
+TaskHandle_t taskRace;
+TaskHandle_t taskLights;
+TaskHandle_t taskLCD;
