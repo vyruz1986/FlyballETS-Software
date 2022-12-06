@@ -89,13 +89,13 @@ void setup()
    // Initialize LightsController class
    // LightsController.init(&LightsStrip);
    xTaskCreatePinnedToCore(
-      Core1Lights,
-      "Lights",
-      8192,
-      NULL,
-      1,
-      &taskLights,
-      1);
+       Core1Lights,
+       "Lights",
+       8192,
+       NULL,
+       1,
+       &taskLights,
+       1);
 
    // Initialize LCDController class with lcd1 and lcd2 objects
    LCDController.init(&lcd, &lcd2);
@@ -122,18 +122,18 @@ void setup()
    // Initialize RaceHandler class with S1 and S2 pins
    // RaceHandler.init(iS1Pin, iS2Pin);
    xTaskCreatePinnedToCore(
-      Core1Race,
-      "Race",
-      16384,
-      NULL,
-      1,
-      &taskRace,
-      1);
+       Core1Race,
+       "Race",
+       16384,
+       NULL,
+       1,
+       &taskRace,
+       1);
 
    // Initialize simulatorclass pins if applicable
-/*#if Simulate
-   Simulator.init();
-#endif*/
+   /*#if Simulate
+      Simulator.init();
+   #endif*/
 
 #ifdef WiFiON
    // Setup AP
@@ -153,7 +153,8 @@ void setup()
    // OTA setup
    ArduinoOTA.setPassword(strAPPass.c_str());
    ArduinoOTA.setPort(3232);
-   ArduinoOTA.onStart([](){
+   ArduinoOTA.onStart([]()
+                      {
       String type;
       if (ArduinoOTA.getCommand() == U_FLASH)
          type = "Firmware";
@@ -161,10 +162,12 @@ void setup()
          type = "Filesystem";
       Serial.println("\n" + type + " update initiated.");
       LCDController.FirmwareUpdateInit(); });
-   ArduinoOTA.onEnd([](){ 
+   ArduinoOTA.onEnd([]()
+                    { 
       Serial.println("\nUpdate completed.\r\n");
       LCDController.FirmwareUpdateSuccess(); });
-   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total){
+   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total)
+                         {
       uint16_t iProgressPercentage = (progress / (total / 100));
       if (uiLastProgress != iProgressPercentage)
       {
@@ -175,7 +178,8 @@ void setup()
          LCDController.FirmwareUpdateProgress(sProgressPercentage);
          uiLastProgress = iProgressPercentage;
       } });
-   ArduinoOTA.onError([](ota_error_t error){
+   ArduinoOTA.onError([](ota_error_t error)
+                      {
       Serial.printf("Error[%u]: ", error);
       LCDController.FirmwareUpdateError();
       if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
@@ -236,10 +240,10 @@ void loop()
    // Handle lights main processing
    // LightsController.Main();
 
-/*#if Simulate
-   // Run simulator
-   Simulator.Main();
-#endif*/
+   /*#if Simulate
+      // Run simulator
+      Simulator.Main();
+   #endif*/
 
    // Handle Race main processing
    // RaceHandler.Main();
@@ -451,12 +455,13 @@ void HandleSerialCommands()
    if (strSerialData.startsWith("race"))
    {
       strSerialData.remove(0, 5);
-      uint iSimulatedRaceID = strSerialData.toInt();
-      if (iSimulatedRaceID < 0 || iSimulatedRaceID >= NumSimulatedRaces)
+      Simulator.iSimulatedRaceID = strSerialData.toInt();
+      if (Simulator.iSimulatedRaceID < 0 || Simulator.iSimulatedRaceID >= NumSimulatedRaces)
       {
-         iSimulatedRaceID = 0;
+         Simulator.iSimulatedRaceID = 0;
       }
-      Simulator.ChangeSimulatedRaceID(iSimulatedRaceID);
+      // Simulator.ChangeSimulatedRaceID(iSimulatedRaceID);
+      Simulator.bExecuteSimRaceChange = true;
    }
 #endif
    // Dog 1 fault
@@ -550,7 +555,7 @@ void HandleLCDUpdates()
    }
 
    // Update battery percentage
-   if ((millis() < 2000 || ((millis() - llLastBatteryLCDupdate) > 30000)) //
+   if ((millis() < 2000 || ((millis() - lLastBatteryLCDupdate) > 30000)) //
        && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
    {
       iBatteryVoltage = BatterySensor.GetBatteryVoltage();
@@ -575,7 +580,7 @@ void HandleLCDUpdates()
          sBatteryPercentage = " " + sBatteryPercentage;
       LCDController.UpdateField(LCDController.BattLevel, sBatteryPercentage);
       // log_d("Battery: analog: %i ,voltage: %i, level: %i%%", BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
-      llLastBatteryLCDupdate = millis();
+      lLastBatteryLCDupdate = millis();
    }
 }
 
@@ -602,11 +607,11 @@ void HandleRemoteAndButtons()
    if (byDataIn != byLastFlickerableState)
    {
       // reset the debouncing timer
-      llLastDebounceTime = millis();
+      ulLastDebounceTime = millis();
       // save the the last flickerable state
       byLastFlickerableState = byDataIn;
    }
-   if ((byLastStadyState != byDataIn) && ((millis() - llLastDebounceTime) > DEBOUNCE_DELAY))
+   if ((byLastStadyState != byDataIn) && ((millis() - ulLastDebounceTime) > DEBOUNCE_DELAY))
    {
       if (byDataIn != 0)
       {

@@ -437,7 +437,7 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
    }
 }
 
-void WebHandlerClass::_SendLightsData()
+void WebHandlerClass::_SendLightsData(int8_t iClientId)
 {
    stLightsState LightStates = LightsController.GetLightsState();
    StaticJsonDocument<96> jsonLightsDoc;
@@ -452,23 +452,40 @@ void WebHandlerClass::_SendLightsData()
    {
       serializeJson(jsonLightsDoc, (char *)wsBuffer->get(), len + 1);
       // log_d("LightsData wsBuffer to send: %s. No of ws clients is: %i", (char *)wsBuffer->get(), _ws->count());
-      _ws->textAll(wsBuffer);
+      if (iClientId == -1)
+      {
+         _ws->textAll(wsBuffer);
+         /*uint8_t iId = 0;
+         for (auto &isConsumer : _bIsConsumerArray)
+         {
+            if (isConsumer)
+            {
+               // log_d("Getting client obj for id %i", iId);
+               AsyncWebSocketClient *client = _ws->client(iId);
+               if (client->queueIsFull())
+               {
+                  log_d("Deactivating consumer %i", iId);
+                  _ws->close(iId);
+                  _iNumOfConsumers--;
+                  _bIsConsumerArray[client->id()] = false;
+               }
+               else if (client && client->status() == WS_CONNECTED)
+               {
+                  // log_d("Generic Race Data update. Sending to client %i", iId);
+                  client->text(wsBuffer);
+               }
+            }
+            iId++;
+         }*/
+      }
+      else
+      {
+         // log_d("Specific update. Sending to client %i", iClientId);
+         AsyncWebSocketClient *client = _ws->client(iClientId);
+         client->text(wsBuffer);
+      }
       _lLastBroadcast = millis();
       bUpdateLights = false;
-      /*uint8_t iId = 0;
-      for (auto &isConsumer : _bIsConsumerArray)
-      {
-         if (isConsumer)
-         {
-            AsyncWebSocketClient *client = _ws->client(iId);
-            if (client && client->status() == WS_CONNECTED)
-            {
-               //log_d("Ligts update to client %i", iId);
-               client->text(wsBuffer);
-            }
-         }
-         iId++;
-      }*/
    }
 }
 
@@ -527,11 +544,18 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
             {
                if (isConsumer)
                {
-                  //log_d("Getting client obj for id %i", iId);
+                  // log_d("Getting client obj for id %i", iId);
                   AsyncWebSocketClient *client = _ws->client(iId);
-                  if (client && client->status() == WS_CONNECTED)
+                  if (client->queueIsFull())
                   {
-                     //log_d("Generic update. Sending to client %i", iId);
+                     log_d("Deactivating consumer %i", iId);
+                     _ws->close(iId);
+                     _iNumOfConsumers--;
+                     _bIsConsumerArray[client->id()] = false;
+                  }
+                  else if (client && client->status() == WS_CONNECTED)
+                  {
+                     // log_d("Generic Race Data update. Sending to client %i", iId);
                      client->text(wsBuffer);
                   }
                }
@@ -666,11 +690,18 @@ void WebHandlerClass::_SendSystemData(int8_t iClientId)
             {
                if (isConsumer)
                {
-                  //log_d("Getting client obj for id %i", iId);
+                  // log_d("Getting client obj for id %i", iId);
                   AsyncWebSocketClient *client = _ws->client(iId);
-                  if (client && client->status() == WS_CONNECTED)
+                  if (client->queueIsFull())
                   {
-                     //log_d("Generic update. Sending to client %i", iId);
+                     log_d("Deactivating consumer %i", iId);
+                     _ws->close(iId);
+                     _iNumOfConsumers--;
+                     _bIsConsumerArray[client->id()] = false;
+                  }
+                  else if (client && client->status() == WS_CONNECTED)
+                  {
+                     // log_d("Generic System Data update. Sending to client %i", iId);
                      client->text(wsBuffer);
                   }
                }

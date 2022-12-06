@@ -34,7 +34,7 @@ protected:
    void _WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
    bool _DoAction(JsonObject ActionObj, String *ReturnError, AsyncWebSocketClient *Client);
    void _SendRaceData(int iRaceId, int8_t iClientId);
-   void _SendLightsData();
+   void _SendLightsData(int8_t iClientId = -1);
 
    bool _ProcessConfig(JsonArray newConfig, String *ReturnError);
 

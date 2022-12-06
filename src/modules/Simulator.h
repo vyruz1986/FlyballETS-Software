@@ -11,12 +11,15 @@ protected:
 
 public:
    void init();
-   void ChangeSimulatedRaceID(uint iSimulatedRaceID);
    void Main();
+   uint iSimulatedRaceID = 0;
+   bool bExecuteSimRaceReset = false;
+   bool bExecuteSimRaceChange = false;
 
 private:
    unsigned int _iDataPos;
    unsigned int _iDataStartPos;
+   bool _bNoMoreValidTriggers = false;
    typedef struct SimulatorRecord
    {
       uint8_t iSimSensorNumber;

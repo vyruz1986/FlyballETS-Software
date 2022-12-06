@@ -5,6 +5,9 @@
 #include "Structs.h"
 #include "Arduino.h"
 #include "config.h"
+#if Simulate
+#include "Simulator.h"
+#endif
 
 class RaceHandlerClass
 {

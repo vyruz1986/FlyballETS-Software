@@ -785,6 +785,9 @@ void RaceHandlerClass::ResetRace()
       _llS2CrossedUnsafeGetMicrosTime = 0;
       _byDogState = GOINGIN;
       _ChangeDogNumber(0);
+   #if Simulate
+      Simulator.bExecuteSimRaceReset = true;
+   #endif
       _bFault = false;
       _bRerunBusy = false;
       _iOutputQueueReadIndex = 0;
