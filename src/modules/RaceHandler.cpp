@@ -1090,15 +1090,15 @@ int8_t RaceHandlerClass::SelectRunNumber(uint8_t iDogNumber, int8_t iRunNumber)
       // if run number is -1 (unspecified), we have to cycle throug them
       if (iRunNumber == -1)
       {
-         auto &llLastReturnedTimeStamp = _llLastDogTimeReturnTimeStamp[iDogNumber];
+         auto &ulLastReturnedTimeStamp = _llLastDogTimeReturnTimeStamp[iDogNumber];
          iRunNumber = _iLastReturnedRunNumber[iDogNumber];
-         if ((millis() - llLastReturnedTimeStamp) > 2000)
+         if ((millis() - ulLastReturnedTimeStamp) > 2000)
          {
             if (iRunNumber == iDogRunCounters[iDogNumber])
                iRunNumber = 0;
             else
                iRunNumber++;
-            llLastReturnedTimeStamp = millis();
+            ulLastReturnedTimeStamp = millis();
          }
          _iLastReturnedRunNumber[iDogNumber] = iRunNumber;
       }
@@ -1579,51 +1579,24 @@ void RaceHandlerClass::_QueuePush(RaceHandlerClass::STriggerRecord _InterruptTri
 void RaceHandlerClass::_QueueFilter()
 {
    STriggerRecord _CurrentRecord = _InputTriggerQueue[_iInputQueueReadIndex];
+   STriggerRecord _NextRecord = _InputTriggerQueue[_iInputQueueReadIndex + 1];
 
-   if (_iInputQueueReadIndex <= _iInputQueueWriteIndex - 2)
+   // If there are 2 records from the same sensors line and delta time is below 6ms ignore both
+   if ((_iInputQueueReadIndex <= _iInputQueueWriteIndex - 2) && (_CurrentRecord.iSensorNumber == _NextRecord.iSensorNumber && _NextRecord.llTriggerTime - _CurrentRecord.llTriggerTime <= 6000))
    {
-      STriggerRecord _NextRecord = _InputTriggerQueue[_iInputQueueReadIndex + 1];
+      // log_d("Next record %lld - Current record %lld = %lld < 6ms.", _NextRecord.llTriggerTime, _CurrentRecord.llTriggerTime, _NextRecord.llTriggerTime - _CurrentRecord.llTriggerTime);
+      log_d("S%i | TT:%lld | T:%lld | St:%i | IGNORED", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime,
+            _CurrentRecord.llTriggerTime - llRaceStartTime, _CurrentRecord.iSensorState);
+      log_d("S%i | TT:%lld | T:%lld | St:%i | IGNORED < 6ms", _NextRecord.iSensorNumber, _NextRecord.llTriggerTime,
+            _NextRecord.llTriggerTime - llRaceStartTime, _NextRecord.iSensorState);
 
-      // If 2 records are from the same sensors line and delta time is below 6ms ignore both
-      if (_CurrentRecord.iSensorNumber == _NextRecord.iSensorNumber && _NextRecord.llTriggerTime - _CurrentRecord.llTriggerTime <= 6000)
-      {
-         // log_d("Next record %lld - Current record %lld = %lld < 6ms.", _NextRecord.llTriggerTime, _CurrentRecord.llTriggerTime, _NextRecord.llTriggerTime - _CurrentRecord.llTriggerTime);
-         log_d("S%i | TT:%lld | T:%lld | St:%i | IGNORED", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime,
-               _CurrentRecord.llTriggerTime - llRaceStartTime, _CurrentRecord.iSensorState);
-         log_d("S%i | TT:%lld | T:%lld | St:%i | IGNORED < 6ms", _NextRecord.iSensorNumber, _NextRecord.llTriggerTime,
-               _NextRecord.llTriggerTime - llRaceStartTime, _NextRecord.iSensorState);
-
-         // Input Read index has to be increased, check it we should wrap-around
-         if (_iInputQueueReadIndex == TRIGGER_QUEUE_LENGTH - 2)
-            // Input Read index has reached end of array, start at 0 again
-            _iInputQueueReadIndex = 0;
-         else
-            // End of array not yet reached, increase index by 2
-            _iInputQueueReadIndex = _iInputQueueReadIndex + 2;
-      }
+      // Input Read index has to be increased, check it we should wrap-around
+      if (_iInputQueueReadIndex == TRIGGER_QUEUE_LENGTH - 2)
+         // Input Read index has reached end of array, start at 0 again
+         _iInputQueueReadIndex = 0;
       else
-      {
-         // Next record is for different sensor line or delta time is higher than 6ms. Push Current record Output Queue.
-         // log_d("Next record > 6ms or for different sensors line. Push Current S%i record %lld to Output Queue.", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime);
-         // This function copy current record to common interrupt queue
-         _OutputTriggerQueue[_iOutputQueueWriteIndex] = _InputTriggerQueue[_iInputQueueReadIndex];
-
-         // Input Read index has to be increased, check it we should wrap-around
-         if (_iInputQueueReadIndex == TRIGGER_QUEUE_LENGTH - 1)
-            // Input Read index has reached end of array, start at 0 again
-            _iInputQueueReadIndex = 0;
-         else
-            // End of array not yet reached, increase index by 1
-            _iInputQueueReadIndex++;
-
-         // Output Write index has to be increased, check it we should wrap-around
-         if (_iOutputQueueWriteIndex == TRIGGER_QUEUE_LENGTH - 1)
-            // Output Write index has reached end of array, start at 0 again
-            _iOutputQueueWriteIndex = 0;
-         else
-            // End of array not yet reached, increase index by 1
-            _iOutputQueueWriteIndex++;
-      }
+         // End of array not yet reached, increase index by 2
+         _iInputQueueReadIndex = _iInputQueueReadIndex + 2;
    }
    else
    {

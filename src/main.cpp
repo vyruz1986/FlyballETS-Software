@@ -561,7 +561,7 @@ void HandleLCDUpdates()
          sBatteryPercentage = "!!!";
          LCDController.UpdateField(LCDController.BattLevel, sBatteryPercentage);
          LightsController.bExecuteResetLights = true;
-         delay(3000);
+         vTaskDelay(3000);
          esp_deep_sleep_start();
       }
       else if (iBatteryPercentage == 9911)

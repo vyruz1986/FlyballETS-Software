@@ -41,7 +41,7 @@ void LCDControllerClass::init(LiquidCrystal *Clcd1, LiquidCrystal *Clcd2)
    _UpdateLCD(2, 0, String("   Flyball Electronic Training System   "), 40);
    _UpdateLCD(3, 0, String("            ver.        rev.S           "), 40);
    _UpdateLCD(3, 17, String(FW_VER), 6);
-   delay(1500);
+   vTaskDelay(1500);
    _UpdateLCD(1, 0, String("1:   0.000  +  0.000    |   WELCOME  000"), 40);
    _UpdateLCD(2, 0, String("2:   0.000  +  0.000    | Team:    0.000"), 40);
    _UpdateLCD(3, 0, String("3:   0.000  +  0.000    |   CT:    0.000"), 40);
@@ -83,12 +83,12 @@ void LCDControllerClass::reInit()
    if (!LightsController.bModeNAFA)
    {
       _UpdateLCD(3, 0, String("                  FCI                   "), 40);
-      delay(500);
+      vTaskDelay(500);
    }
    else
    {
       _UpdateLCD(3, 0, String("                 NAFA                   "), 40);
-      delay(500);
+      vTaskDelay(500);
    }
    _UpdateLCD(1, 0, String("1:                      |               "), 40);
    _UpdateLCD(2, 0, String("2:                      | Team:         "), 40);

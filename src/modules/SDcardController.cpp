@@ -78,7 +78,7 @@ void SDcardControllerClass::init()
          File tagfile = SD_MMC.open("/tag.txt");
          if (!tagfile)
          {
-            delay(50);
+            vTaskDelay(50);
             writeFile(SD_MMC, "/tag.txt", "0\r\n");
             tagfile.close();
             iTagValue = 1;
@@ -199,13 +199,13 @@ void SDcardControllerClass::CheckSDcardSlot(uint8_t iSDdetectPin)
    if (bSDCardDetected && _iSDdetectPinStatus == HIGH)
    {
       log_w("SD Card plugged out - rebooting!");
-      delay(500);
+      vTaskDelay(500);
       ESP.restart();
    }
    if (!bSDCardDetected && _iSDdetectPinStatus == LOW)
    {
       log_w("SD Card plugged in - rebooting!");
-      delay(500);
+      vTaskDelay(500);
       ESP.restart();
    }
 }

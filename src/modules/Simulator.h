@@ -8,6 +8,7 @@
 class SimulatorClass
 {
 protected:
+
 public:
    void init();
    void ChangeSimulatedRaceID(uint iSimulatedRaceID);

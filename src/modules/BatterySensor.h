@@ -34,7 +34,7 @@ private:
    uint8_t _iBatterySensorPin;
 
    int _iBatteryReadings[10];
-   int _iNumberOfBatteryReadings = 0;
+   uint8_t _iNumberOfBatteryReadings = 0;
    uint16_t _iBatteryVoltage = 0;
    uint16_t _iAverageBatteryReading;  
 };
