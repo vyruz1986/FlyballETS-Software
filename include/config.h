@@ -18,8 +18,7 @@
 
 #define MICROS esp_timer_get_time()
 
-#define FW_VER "1.10.11"          // Flyball ETS firmware version
-
+#define FW_VER "1.10.12"         // Flyball ETS firmware version
 
 #define Simulate true            // Set to true to enable race simulation (see Simulator.h/.cpp)
 #define NumSimulatedRaces 48     // Number of prepeared simulated races. Sererial interface command to change interface: e.g. "race 1"
