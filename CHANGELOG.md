@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 - timeout support in testETS (1.0.1)
 - uptime command for testETS (1.1.0)
 - support for WebUI "up time" higher than 10h (stability tests)
+- simple unresponsive websocket clients mutting
 
 ### Changed
 - testETS scripts corrections and small refactoring (1.0.0)

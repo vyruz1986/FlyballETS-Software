@@ -89,13 +89,13 @@ void setup()
    // Initialize LightsController class
    // LightsController.init(&LightsStrip);
    xTaskCreatePinnedToCore(
-       Core1Lights,
-       "Lights",
-       8192,
-       NULL,
-       1,
-       &taskLights,
-       1);
+      Core1Lights,
+      "Lights",
+      8192,
+      NULL,
+      1,
+      &taskLights,
+      1);
 
    // Initialize LCDController class with lcd1 and lcd2 objects
    LCDController.init(&lcd, &lcd2);
@@ -122,13 +122,13 @@ void setup()
    // Initialize RaceHandler class with S1 and S2 pins
    // RaceHandler.init(iS1Pin, iS2Pin);
    xTaskCreatePinnedToCore(
-       Core1Race,
-       "Race",
-       16384,
-       NULL,
-       1,
-       &taskRace,
-       1);
+      Core1Race,
+      "Race",
+      16384,
+      NULL,
+      1,
+      &taskRace,
+      1);
 
    // Initialize simulatorclass pins if applicable
    /*#if Simulate
@@ -153,8 +153,7 @@ void setup()
    // OTA setup
    ArduinoOTA.setPassword(strAPPass.c_str());
    ArduinoOTA.setPort(3232);
-   ArduinoOTA.onStart([]()
-                      {
+   ArduinoOTA.onStart([](){
       String type;
       if (ArduinoOTA.getCommand() == U_FLASH)
          type = "Firmware";
@@ -162,12 +161,10 @@ void setup()
          type = "Filesystem";
       Serial.println("\n" + type + " update initiated.");
       LCDController.FirmwareUpdateInit(); });
-   ArduinoOTA.onEnd([]()
-                    { 
+   ArduinoOTA.onEnd([](){ 
       Serial.println("\nUpdate completed.\r\n");
       LCDController.FirmwareUpdateSuccess(); });
-   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total)
-                         {
+   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total){
       uint16_t iProgressPercentage = (progress / (total / 100));
       if (uiLastProgress != iProgressPercentage)
       {
@@ -178,8 +175,7 @@ void setup()
          LCDController.FirmwareUpdateProgress(sProgressPercentage);
          uiLastProgress = iProgressPercentage;
       } });
-   ArduinoOTA.onError([](ota_error_t error)
-                      {
+   ArduinoOTA.onError([](ota_error_t error){
       Serial.printf("Error[%u]: ", error);
       LCDController.FirmwareUpdateError();
       if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
