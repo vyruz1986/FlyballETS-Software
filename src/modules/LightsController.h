@@ -44,22 +44,22 @@ public:
       STARTING,
       STARTED
    };
-   
+
    OverallStates byOverallState = RESET;
 
    // Possible pixel colors (unique names needed)
    enum Lights
    {
-      WHITE0, // pixel 0
-      RED0,   // pixel 0
-      YELLOW1,// pixel 1
-      RED1,   // pixel 1
-      YELLOW2,// pixel 2
-      BLUE2,  // pixel 2
-      YELLOW3,// pixel 3
-      GREEN4  // pixel 4
+      WHITE0,  // pixel 0
+      RED0,    // pixel 0
+      YELLOW1, // pixel 1
+      RED1,    // pixel 1
+      YELLOW2, // pixel 2
+      BLUE2,   // pixel 2
+      YELLOW3, // pixel 3
+      GREEN4   // pixel 4
    };
-   
+
    enum LightStates
    {
       OFF,
@@ -94,14 +94,14 @@ private:
    unsigned long _lLightsOutSchedule[8];
 
    Lights _byLightsArray[8] = {
-      WHITE0, // 0
-      RED0,   // 1
-      YELLOW1,// 2
-      RED1,   // 3
-      YELLOW2,// 4
-      BLUE2,  // 5
-      YELLOW3,// 6
-      GREEN4};// 7
+      WHITE0,  // 0
+      RED0,    // 1
+      YELLOW1, // 2
+      RED1,    // 3
+      YELLOW2, // 4
+      BLUE2,   // 5
+      YELLOW3, // 6
+      GREEN4}; // 7
 
    Lights _byDogErrorLigths[4] = {
       RED1,

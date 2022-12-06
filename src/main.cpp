@@ -560,7 +560,7 @@ void HandleLCDUpdates()
       {
          sBatteryPercentage = "!!!";
          LCDController.UpdateField(LCDController.BattLevel, sBatteryPercentage);
-         LightsController.ResetLights();
+         LightsController.bExecuteResetLights = true;
          delay(3000);
          esp_deep_sleep_start();
       }
@@ -675,7 +675,7 @@ void HandleRemoteAndButtons()
             log_d("%s LONG press detected: %lldms", GetButtonString(iLastActiveBit).c_str(), llPressDuration);
             if (iLastActiveBit == 3) // Dog 1 fault RC button - toggling reruns off/on
                RaceHandler.ToggleRerunsOffOn(2);
-            if (iLastActiveBit == 6 && RaceHandler.RaceState == RaceHandler.RESET) // Dog 2 fault RC button - toggling starting sequence NAFA / FCI
+            else if (iLastActiveBit == 6 && RaceHandler.RaceState == RaceHandler.RESET) // Dog 2 fault RC button - toggling starting sequence NAFA / FCI
                LightsController.ToggleStartingSequence();
             else if (iLastActiveBit == 0) // Mode button - side switch
                RaceHandler.ToggleRunDirection();

@@ -1,5 +1,5 @@
 # test ESP32
-# v1.0.2
+# v1.1.0
 from genericpath import isfile
 import os
 import serial
@@ -214,6 +214,7 @@ for stabilityLoopIndex in range(numberOfStabilityLoops):
                             print(consoleProgressPrint, end='')
                         notOKcount = 10
                         testcaseOutputFile.write(decodedLine.encode('utf-8') + b'  TIMEOUT\n')
+
                 if debugmode:
                     print("\r", end='')
 

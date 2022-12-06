@@ -257,9 +257,7 @@ void LightsControllerClass::ToggleLightState(Lights byLight, LightStates byLight
 
       // If start sequence is in progress and we're going to trun on GREEN light we need to change race state to RUNNING
       if (byOverallState == STARTING && LightConfig.iPixelNumber == 4)
-      {
          byOverallState = STARTED;
-      }
    }
 
    for (int lightschain = 0; lightschain < LIGHTSCHAINS; lightschain++)

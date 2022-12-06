@@ -3,17 +3,13 @@
 // summary:	Implements the simulator class. Since this class is memory intensive, it should only be
 // included if actual simulation is wished.
 #include "Simulator.h"
-#include "config.h"
 #include "RaceHandler.h"
 #include "PROGMEM_readAnything.h"
-//#include <avr/pgmspace.h>
 
 /// <summary>
 ///   Initialises this object.
 /// </summary>
 ///
-/// <param name="iS1Pin">  Zero-based index of the S1 pin. </param>
-/// <param name="iS2Pin">  Zero-based index of the S2 pin. </param>
 void SimulatorClass::init()
 {
    _iDataPos = 0;
@@ -37,7 +33,7 @@ void SimulatorClass::Main()
       }
       return;
    }
-   if (PendingRecord.llTriggerTime == 0)
+   if (PendingRecord.llSimTriggerTime == 0)
    {
       // Pending record doesn't contain valid data, this means we've reched the end of our queue
       return;
@@ -46,11 +42,11 @@ void SimulatorClass::Main()
    // Simulate sensors
    if (RaceHandler.RaceState != RaceHandler.RESET && !RaceHandler.bIgnoreSensors)
    {
-      while (PendingRecord.llTriggerTime != 0 && PendingRecord.llTriggerTime <= (long long)(MICROS - (RaceHandler.llRaceStartTime) + 0)) // 0ms advance added
+      while (PendingRecord.llSimTriggerTime != 0 && PendingRecord.llSimTriggerTime <= (long long)(MICROS - (RaceHandler.llRaceStartTime) + 0)) // 0ms advance added
       {
          log_v("Pending record");
-         // log_d("Pending record S%d TriggerTime %lld | %lld", PendingRecord.iSensorNumber, RaceHandler.llRaceStartTime + PendingRecord.llTriggerTime, PendingRecord.llTriggerTime);
-         RaceHandler._QueuePush({PendingRecord.iSensorNumber, (RaceHandler.llRaceStartTime + PendingRecord.llTriggerTime), PendingRecord.iState});
+         // log_d("Pending record S%d TriggerTime %lld | %lld", PendingRecord.iSimSensorNumber, RaceHandler.llRaceStartTime + PendingRecord.llSimTriggerTime, PendingRecord.llSimTriggerTime);
+         RaceHandler._QueuePush({PendingRecord.iSimSensorNumber, (RaceHandler.llRaceStartTime + PendingRecord.llSimTriggerTime), PendingRecord.iSimState});
          // And increase pending record
          _iDataPos++;
          PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);

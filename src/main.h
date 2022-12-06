@@ -1,10 +1,10 @@
 #include "Arduino.h"
 
-//Includes
+// Includes
 #include <Structs.h>
 #include <config.h>
 
-//Public libs
+// Public libs
 #include <LiquidCrystal.h>
 #ifdef WiFiON
 #include <WiFi.h>
@@ -19,7 +19,7 @@
 #include <ESPmDNS.h>
 //#include <time.h>
 
-//Private libs
+// Private libs
 #include "GPSHandler.h"
 #include "SettingsManager.h"
 #ifdef WiFiON
@@ -34,12 +34,12 @@
 //#include "SlaveHandler.h"
 //#include "WifiManager.h"
 
-//Set simulate to true to enable simulator class (see Simulator.cpp/h)
+// Set simulate to true to enable simulator class (see Simulator.cpp/h)
 #if Simulate
 #include "Simulator.h"
 #endif
 
-//Function prototypes
+// Function prototypes
 void Sensor1Wrapper();
 void Sensor2Wrapper();
 void ResetRace();

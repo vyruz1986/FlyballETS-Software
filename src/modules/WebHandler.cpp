@@ -73,9 +73,9 @@ void WebHandlerClass::loop()
    {
       if (bUpdateLights)
          _SendLightsData();
-      else if (bSendRaceData || ((RaceHandler.RaceState == RaceHandler.RUNNING || (RaceHandler.RaceState == RaceHandler.STOPPED && (MICROS - RaceHandler._llRaceEndTime) / 1000 < 1500)) && (lCurrentUpTime - _lLastRaceDataBroadcast > _iRaceDataBroadcastInterval)))
+      else if (bSendRaceData || ((RaceHandler.RaceState == RaceHandler.RUNNING || (RaceHandler.RaceState == RaceHandler.STOPPED && !RaceHandler.bIgnoreSensors)) && (lCurrentUpTime - _lLastRaceDataBroadcast > _iRaceDataBroadcastInterval)))
          _SendRaceData(RaceHandler.iCurrentRaceId, -1);
-      else if (RaceHandler.RaceState == RaceHandler.RESET || (RaceHandler.RaceState == RaceHandler.STOPPED && (MICROS - RaceHandler._llRaceEndTime) / 1000 > 1500))
+      else if (RaceHandler.RaceState == RaceHandler.RESET || (RaceHandler.RaceState == RaceHandler.STOPPED && !RaceHandler.bIgnoreSensors))
       {
          if (lCurrentUpTime - _lLastSystemDataBroadcast > _iSystemDataBroadcastInterval)
             _SendSystemData();
@@ -269,41 +269,6 @@ void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *cli
    }
 }
 
-void WebHandlerClass::_SendLightsData()
-{
-   stLightsState LightStates = LightsController.GetLightsState();
-   StaticJsonDocument<96> jsonLightsDoc;
-   JsonObject JsonRoot = jsonLightsDoc.to<JsonObject>();
-
-   JsonArray JsonLightsData = JsonRoot.createNestedArray("LightsData");
-   copyArray(LightStates.State, JsonLightsData);
-
-   size_t len = measureJson(jsonLightsDoc);
-   AsyncWebSocketMessageBuffer *wsBuffer = _ws->makeBuffer(len);
-   if (wsBuffer)
-   {
-      serializeJson(jsonLightsDoc, (char *)wsBuffer->get(), len + 1);
-      // log_d("LightsData wsBuffer to send: %s. No of ws clients is: %i", (char *)wsBuffer->get(), _ws->count());
-      _ws->textAll(wsBuffer);
-      _lLastBroadcast = millis();
-      bUpdateLights = false;
-      /*uint8_t iId = 0;
-      for (auto &isConsumer : _bIsConsumerArray)
-      {
-         if (isConsumer)
-         {
-            AsyncWebSocketClient *client = _ws->client(iId);
-            if (client && client->status() == WS_CONNECTED)
-            {
-               //log_d("Ligts update to client %i", iId);
-               client->text(wsBuffer);
-            }
-         }
-         iId++;
-      }*/
-   }
-}
-
 bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, AsyncWebSocketClient *Client)
 {
    String ActionType = ActionObj["actionType"];
@@ -472,6 +437,41 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
    }
 }
 
+void WebHandlerClass::_SendLightsData()
+{
+   stLightsState LightStates = LightsController.GetLightsState();
+   StaticJsonDocument<96> jsonLightsDoc;
+   JsonObject JsonRoot = jsonLightsDoc.to<JsonObject>();
+
+   JsonArray JsonLightsData = JsonRoot.createNestedArray("LightsData");
+   copyArray(LightStates.State, JsonLightsData);
+
+   size_t len = measureJson(jsonLightsDoc);
+   AsyncWebSocketMessageBuffer *wsBuffer = _ws->makeBuffer(len);
+   if (wsBuffer)
+   {
+      serializeJson(jsonLightsDoc, (char *)wsBuffer->get(), len + 1);
+      // log_d("LightsData wsBuffer to send: %s. No of ws clients is: %i", (char *)wsBuffer->get(), _ws->count());
+      _ws->textAll(wsBuffer);
+      _lLastBroadcast = millis();
+      bUpdateLights = false;
+      /*uint8_t iId = 0;
+      for (auto &isConsumer : _bIsConsumerArray)
+      {
+         if (isConsumer)
+         {
+            AsyncWebSocketClient *client = _ws->client(iId);
+            if (client && client->status() == WS_CONNECTED)
+            {
+               //log_d("Ligts update to client %i", iId);
+               client->text(wsBuffer);
+            }
+         }
+         iId++;
+      }*/
+   }
+}
+
 void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
 {
    if (_iNumOfConsumers == 0)
@@ -490,7 +490,7 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
       JsonRaceData["endTime"] = RequestedRaceData.EndTime;
       JsonRaceData["elapsedTime"] = RequestedRaceData.ElapsedTime;
       JsonRaceData["cleanTime"] = RequestedRaceData.CleanTime;
-      JsonRaceData["raceState"] = RequestedRaceData.RaceState;
+      JsonRaceData["raceState"] = RequestedRaceData.raceState;
       JsonRaceData["racingDogs"] = RequestedRaceData.RacingDogs;
       JsonRaceData["rerunsOff"] = RequestedRaceData.RerunsOff;
 

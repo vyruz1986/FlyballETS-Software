@@ -629,7 +629,7 @@ void RaceHandlerClass::Main()
       // If race last for 10 minutes race will be stopped
       if (llRaceTime > 600000000)
       {
-         log_w("Race TIEOUT!!!");
+         log_w("Race TIMEOUT!!!");
          StopRace(llRaceTime);
       }
    }
@@ -654,8 +654,8 @@ void RaceHandlerClass::_ChangeRaceState(RaceStates byNewRaceState)
    RaceState = byNewRaceState;
    switch (RaceState)
    {
-   case RaceHandlerClass::STOPPED:
-      strRaceState = " STOP  ";
+   case RaceHandlerClass::RESET:
+      strRaceState = " READY ";
       break;
    case RaceHandlerClass::STARTING:
       strRaceState = " START ";
@@ -663,8 +663,8 @@ void RaceHandlerClass::_ChangeRaceState(RaceStates byNewRaceState)
    case RaceHandlerClass::RUNNING:
       strRaceState = "RUNNING";
       break;
-   case RaceHandlerClass::RESET:
-      strRaceState = " READY ";
+   case RaceHandlerClass::STOPPED:
+      strRaceState = " STOP  ";
       break;
    default:
       break;
@@ -780,6 +780,7 @@ void RaceHandlerClass::ResetRace()
       llRaceTime = 0;
       _llRaceElapsedTime = 0;
       _llLastDogExitTime = 0;
+      _llS2CrossedSafeTime = 0;
       _llS2CrossedUnsafeTriggerTime = 0;
       _llS2CrossedUnsafeGetMicrosTime = 0;
       _byDogState = GOINGIN;
@@ -1406,8 +1407,6 @@ String RaceHandlerClass::GetRerunInfo(uint8_t iDogNumber)
 String RaceHandlerClass::GetCleanTime()
 {
    String strCleanTime;
-   if (_bFault)
-      _bNoValidCleanTime = true;
    if (!_bNoValidCleanTime)
    {
       long long llTotalNetTime = 0;
@@ -1454,7 +1453,7 @@ stRaceData RaceHandlerClass::GetRaceData()
    RequestedRaceData.EndTime = _llRaceEndTime / 1000;
    RequestedRaceData.ElapsedTime = GetRaceTime();
    RequestedRaceData.CleanTime = GetCleanTime();
-   RequestedRaceData.RaceState = RaceState;
+   RequestedRaceData.raceState = RaceState;
    RequestedRaceData.RacingDogs = iNumberOfRacingDogs;
    RequestedRaceData.RerunsOff = bRerunsOff;
 
@@ -1519,21 +1518,26 @@ void RaceHandlerClass::ToggleAccuracy()
 /// </summary>
 void RaceHandlerClass::ToggleRerunsOffOn(uint8_t _iState)
 {
-   if (_iState == 2)
-      bRerunsOff = !bRerunsOff;
-   else if (_iState == 1)
-      bRerunsOff = true;
-   else if (_iState == 0)
-      bRerunsOff = false;
+   if (RaceState == STOPPED || RaceState == RESET)
+   {
+      if (_iState == 2)
+         bRerunsOff = !bRerunsOff;
+      else if (_iState == 1)
+         bRerunsOff = true;
+      else if (_iState == 0)
+         bRerunsOff = false;
 
-   if (bRerunsOff)
-      log_i("Reruns turned off.");
-   else
-      log_i("Reruns turned on.");
+      if (bRerunsOff)
+         log_i("Reruns turned off.");
+      else
+         log_i("Reruns turned on.");
 
 #ifdef WiFiON
-   WebHandler.bSendRaceData = true;
+      WebHandler.bSendRaceData = true;
 #endif
+   }
+   else
+      return;
 }
 
 /// <summary>
@@ -1623,7 +1627,7 @@ void RaceHandlerClass::_QueueFilter()
    }
    else
    {
-      // Only one record available in the Input Queue. Push it to Output Queue.
+      // Only one record available or next record is for different line or next record is for same line, but delta is above 6ms. Push record to Output Queue.
       // log_d("One record in the Input Queue. Push S%i record %lld to Output Queue.", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime);
       // This function copy current record to common interrupt queue
       _OutputTriggerQueue[_iOutputQueueWriteIndex] = _InputTriggerQueue[_iInputQueueReadIndex];

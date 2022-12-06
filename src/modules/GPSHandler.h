@@ -14,7 +14,7 @@ private:
    bool _bGSPconnected = false;
 
 protected:
-   HardwareSerial* _SerialPort;
+   HardwareSerial *_SerialPort;
    TinyGPSPlus _Tgps;
    void _HandleSerialPort();
    void _FormatTime();
@@ -34,4 +34,3 @@ public:
 };
 extern GPSHandlerClass GPSHandler;
 #endif
-

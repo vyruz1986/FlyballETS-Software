@@ -193,7 +193,8 @@ void LCDControllerClass::UpdateField(LCDFields lcdfieldField, String strNewValue
    if (_SlcdfieldFields[lcdfieldField].iFieldLength < strNewValue.length())
    {
       // The new value will not fit into the new field!
-      log_e("[LCD Controller] Field (%i) received value that was too long (%i): %s", lcdfieldField, strNewValue.length(), strNewValue.c_str());
+      log_e("[LCD Controller] Field (%i) has %i characters. Received string '%s' has %i characters",
+            lcdfieldField, _SlcdfieldFields[lcdfieldField].iFieldLength, strNewValue.c_str(), strNewValue.length());
       return;
    }
    _SlcdfieldFields[lcdfieldField].strText = strNewValue;
