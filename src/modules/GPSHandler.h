@@ -22,7 +22,7 @@ protected:
    char _cLocalDateAndTime[25];
    char _cLocalTimestamp[9];
    char _cDate[11];
-   unsigned long ulLastGPSRead = 0;
+   unsigned long long llLastGPSRead = 0;
 
 public:
    void init(uint8_t _iGPSrxPin, uint8_t _iGPStxPin);

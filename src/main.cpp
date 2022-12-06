@@ -555,7 +555,7 @@ void HandleLCDUpdates()
    }
 
    // Update battery percentage
-   if ((millis() < 2000 || ((millis() - lLastBatteryLCDupdate) > 30000)) //
+   if ((millis() < 2000 || ((millis() - llLastBatteryLCDupdate) > 30000)) //
        && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
    {
       iBatteryVoltage = BatterySensor.GetBatteryVoltage();
@@ -580,7 +580,7 @@ void HandleLCDUpdates()
          sBatteryPercentage = " " + sBatteryPercentage;
       LCDController.UpdateField(LCDController.BattLevel, sBatteryPercentage);
       // log_d("Battery: analog: %i ,voltage: %i, level: %i%%", BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
-      lLastBatteryLCDupdate = millis();
+      llLastBatteryLCDupdate = millis();
    }
 }
 
@@ -607,11 +607,11 @@ void HandleRemoteAndButtons()
    if (byDataIn != byLastFlickerableState)
    {
       // reset the debouncing timer
-      ulLastDebounceTime = millis();
+      llLastDebounceTime = millis();
       // save the the last flickerable state
       byLastFlickerableState = byDataIn;
    }
-   if ((byLastStadyState != byDataIn) && ((millis() - ulLastDebounceTime) > DEBOUNCE_DELAY))
+   if ((byLastStadyState != byDataIn) && ((millis() - llLastDebounceTime) > DEBOUNCE_DELAY))
    {
       if (byDataIn != 0)
       {

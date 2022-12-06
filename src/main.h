@@ -116,13 +116,13 @@ IPAddress ipTocheck;               // IP address of disconnected WiFi user
 unsigned int uiLastProgress = 0; // last % OTA progress value
 
 uint16_t iBatteryVoltage = 0;        // Battery voltage
-long lLastBatteryLCDupdate = -25000; // Initial offset for battery value upate on LCD
+long long llLastBatteryLCDupdate = -25000; // Initial offset for battery value upate on LCD
 
 uint16_t iLaserOnTime = 180; // initial value of laser diode on time
 bool bLaserActive = false;   // laser diode state
 
 // variables for handling 74HC166
-unsigned long ulLastDebounceTime = 0;
+unsigned long long llLastDebounceTime = 0;
 unsigned long long llPressedTime[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 unsigned long long llReleasedTime[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 uint8_t iLastActiveBit = 0;

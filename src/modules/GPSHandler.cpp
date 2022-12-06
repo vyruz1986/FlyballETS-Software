@@ -30,10 +30,10 @@ void GPSHandlerClass::init(uint8_t _iGPSrxPin, uint8_t _iGPStxPin)
 
 void GPSHandlerClass::loop()
 {
-   if ((millis() - ulLastGPSRead) > 10000)
+   if ((millis() - llLastGPSRead) > 10000)
    {
       _HandleSerialPort();
-      ulLastGPSRead = millis();
+      llLastGPSRead = millis();
       if (_Tgps.time.isUpdated() && (_Tgps.date.year() != 2000))
       {
          _FormatTime();
