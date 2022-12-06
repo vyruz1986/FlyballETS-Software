@@ -530,7 +530,10 @@ void RaceHandlerClass::Main()
                log_d("New dog state: GOINGING.");
             }
             else if (RaceState == STOPPED) // Last returning dog
+            {
                log_d("Last dog came back.");
+               bIgnoreSensors = true;
+            }
             else // So called "uncertain Tstring"
             {
                // If Transition string indicated something else and we expect returning dog, it means 2 dogs must have passed
@@ -596,6 +599,7 @@ void RaceHandlerClass::Main()
       {
          // At least one dog with fault has been found, set general fault value to true
          _bFault = true;
+         _bNoValidCleanTime = true;
          break;
       }
    }
@@ -605,6 +609,7 @@ void RaceHandlerClass::Main()
       {
          // At least one dog with manual fault has been found, set general fault value to true
          _bFault = true;
+         _bNoValidCleanTime = true;
          break;
       }
    }
@@ -629,7 +634,10 @@ void RaceHandlerClass::Main()
       }
    }
 
-   if (RaceState == STOPPED && ((MICROS - (llRaceStartTime + llRaceTime)) / 1000 > 400) && !_bRaceSummaryPrinted)
+   if (!bIgnoreSensors && RaceState == STOPPED && (MICROS - _llRaceEndTime) > 400000)
+      bIgnoreSensors = true;
+
+   if (bIgnoreSensors && !_bRaceSummaryPrinted)
    {
       _PrintRaceSummary();
       _bRaceSummaryPrinted = true;
@@ -643,7 +651,6 @@ void RaceHandlerClass::Main()
 /// <param name="byNewRaceState">   New race state. </param>
 void RaceHandlerClass::_ChangeRaceState(RaceStates byNewRaceState)
 {
-   PreviousRaceState = RaceState;
    RaceState = byNewRaceState;
    switch (RaceState)
    {
@@ -691,6 +698,11 @@ void RaceHandlerClass::_ChangeDogNumber(uint8_t iNewDogNumber)
       iPreviousDog = iCurrentDog;
       iCurrentDog = iNewDogNumber;
       log_d("Dog:%i|ENT:%lld|EXIT:%lld|TOT:%lld", iPreviousDog + 1, _llDogEnterTimes[iPreviousDog], _llLastDogExitTime, _llDogTimes[iPreviousDog][iDogRunCounters[iPreviousDog]]);
+      if (RaceState == RUNNING)
+      {
+         log_i("Dog %i: %s | CR: %s", iPreviousDog + 1, GetDogTime(iPreviousDog, -2), GetCrossingTime(iPreviousDog, -2).c_str());
+         log_d("Running dog: %i.", iCurrentDog + 1);
+      }
    }
 }
 
@@ -730,13 +742,24 @@ void RaceHandlerClass::StopRace(long long llStopTime)
       // Race is running, so we have to record the EndTime
       _llRaceEndTime = llStopTime;
       llRaceTime = _llRaceEndTime - llRaceStartTime;
+      _ChangeRaceState(STOPPED);
+#ifdef WiFiON
+      // Send updated racedata to any web clients
+      WebHandler.bSendRaceData = true;
+#endif
    }
-   else // RaceState is RUNNING
+   else if (RaceState == STARTING)
    {
       _llRaceEndTime = llStopTime;
       llRaceTime = 0;
+      _ChangeRaceState(STOPPED);
+#ifdef WiFiON
+      // Send updated racedata to any web clients
+      WebHandler.bSendRaceData = true;
+#endif
    }
-   _ChangeRaceState(STOPPED);
+   else
+      return;
 }
 
 /// <summary>
@@ -752,8 +775,8 @@ void RaceHandlerClass::ResetRace()
       iCurrentDog = 0;
       iNextDog = 1;
       iPreviousDog = 0;
-      llRaceStartTime = 0;
-      _llRaceEndTime = 0;
+      llRaceStartTime = MICROS;
+      _llRaceEndTime = MICROS;
       llRaceTime = 0;
       _llRaceElapsedTime = 0;
       _llLastDogExitTime = 0;
@@ -833,6 +856,7 @@ void RaceHandlerClass::ResetRace()
       for (auto &iCounter : _iLastReturnedRunNumber)
          iCounter = 0;
       _ChangeRaceState(RESET);
+      bIgnoreSensors = false;
       _bRaceSummaryPrinted = false;
 
       if (iCurrentRaceId == 999)
@@ -964,6 +988,7 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
       // If fault is true, set light to on and set general value fault variable to true
       LightsController.ToggleFaultLight(iDogNumber, LightsController.ON);
       _bFault = true;
+      _bNoValidCleanTime = true;
       log_i("Dog %i fault ON", iDogNumber + 1);
    }
    else
@@ -981,7 +1006,7 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
 /// </summary>
 void RaceHandlerClass::TriggerSensor1()
 {
-   if (RaceState == STOPPED && MICROS > (_llRaceEndTime + 500000))
+   if (bIgnoreSensors)
       return;
    else if (RaceState == RESET)
    {
@@ -1002,7 +1027,7 @@ void RaceHandlerClass::TriggerSensor1()
 /// </summary>
 void RaceHandlerClass::TriggerSensor2()
 {
-   if (RaceState == STOPPED && MICROS > (_llRaceEndTime + 500000))
+   if (bIgnoreSensors)
       return;
    else if (RaceState == RESET)
    {
@@ -1454,18 +1479,23 @@ stRaceData RaceHandlerClass::GetRaceData()
 /// </summary>
 void RaceHandlerClass::ToggleRunDirection()
 {
-   bRunDirectionInverted = !bRunDirectionInverted;
-   SettingsManager.setSetting("RunDirectionInverted", String(bRunDirectionInverted));
-   if (bRunDirectionInverted)
+   if (RaceState == STOPPED || RaceState == RESET)
    {
-      LCDController.UpdateField(LCDController.BoxDirection, "<");
-      log_i("Run direction changed to: inverted");
+      bRunDirectionInverted = !bRunDirectionInverted;
+      SettingsManager.setSetting("RunDirectionInverted", String(bRunDirectionInverted));
+      if (bRunDirectionInverted)
+      {
+         LCDController.UpdateField(LCDController.BoxDirection, "<");
+         log_i("Run direction changed to: inverted");
+      }
+      else
+      {
+         LCDController.UpdateField(LCDController.BoxDirection, ">");
+         log_i("Run direction changed to: normal");
+      }
    }
    else
-   {
-      LCDController.UpdateField(LCDController.BoxDirection, ">");
-      log_i("Run direction changed to: normal");
-   }
+      return;
 }
 
 /// <summary>
@@ -1504,18 +1534,6 @@ void RaceHandlerClass::ToggleRerunsOffOn(uint8_t _iState)
 #ifdef WiFiON
    WebHandler.bSendRaceData = true;
 #endif
-}
-
-/// <summary>
-///   Returns the run direction
-/// </summary>
-/// <returns>
-///   false means normal direction (box to right)
-///   true means inverted direction (box to left)
-/// </returns>
-bool RaceHandlerClass::GetRunDirection()
-{
-   return bRunDirectionInverted;
 }
 
 /// <summary>

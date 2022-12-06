@@ -44,7 +44,7 @@ void SimulatorClass::Main()
    }
 
    // Simulate sensors
-   if (RaceHandler.RaceState == RaceHandler.STARTING || RaceHandler.RaceState == RaceHandler.RUNNING || (RaceHandler.RaceState == RaceHandler.STOPPED && MICROS <= RaceHandler._llRaceEndTime + 400000))
+   if (RaceHandler.RaceState != RaceHandler.RESET && !RaceHandler.bIgnoreSensors)
    {
       while (PendingRecord.llTriggerTime != 0 && PendingRecord.llTriggerTime <= (long long)(MICROS - (RaceHandler.llRaceStartTime) + 0)) // 0ms advance added
       {

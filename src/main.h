@@ -48,7 +48,6 @@ void StartRaceMain();
 void StopRaceMain();
 void mdnsServerSetup();
 void serialEvent();
-//void Core0Loop(void *parameter);
 void HandleSerialCommands();
 void HandleRemoteAndButtons();
 void HandleLCDUpdates();
@@ -134,7 +133,6 @@ const uint16_t DEBOUNCE_DELAY = 30;    // in ms
 const uint16_t SHORT_PRESS_TIME = 700; // in ms
 
 // String for serial comms storage
-unsigned long ulLastSerialOutput = 0;
 String strSerialData;
 byte bySerialIndex = 0;
 bool bSerialStringComplete = false;

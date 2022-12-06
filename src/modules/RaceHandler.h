@@ -22,7 +22,6 @@ public:
       STOPPED
    };
    RaceStates RaceState = RESET;
-   RaceStates PreviousRaceState = RESET;
    String strRaceState;
 
    uint8_t iCurrentDog;
@@ -36,6 +35,7 @@ public:
    char *cRaceStartTimestamp;
    bool bRerunsOff = false;
    bool bRunDirectionInverted = false;
+   bool bIgnoreSensors = false;
    volatile bool bExecuteStopRace;
    volatile bool bExecuteResetRace;
    volatile bool bExecuteStartRaceTimer;
@@ -66,7 +66,6 @@ public:
    String GetCleanTime();
 
    stRaceData GetRaceData();
-   bool GetRunDirection();
    void ToggleRunDirection();
    void ToggleAccuracy();
    void ToggleRerunsOffOn(uint8_t _iState);

@@ -153,8 +153,7 @@ void setup()
    // OTA setup
    ArduinoOTA.setPassword(strAPPass.c_str());
    ArduinoOTA.setPort(3232);
-   ArduinoOTA.onStart([]()
-                      {
+   ArduinoOTA.onStart([](){
       String type;
       if (ArduinoOTA.getCommand() == U_FLASH)
          type = "Firmware";
@@ -162,12 +161,10 @@ void setup()
          type = "Filesystem";
       Serial.println("\n" + type + " update initiated.");
       LCDController.FirmwareUpdateInit(); });
-   ArduinoOTA.onEnd([]()
-                    { 
+   ArduinoOTA.onEnd([](){ 
       Serial.println("\nUpdate completed.\r\n");
       LCDController.FirmwareUpdateSuccess(); });
-   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total)
-                         {
+   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total){
       uint16_t iProgressPercentage = (progress / (total / 100));
       if (uiLastProgress != iProgressPercentage)
       {
@@ -178,8 +175,7 @@ void setup()
          LCDController.FirmwareUpdateProgress(sProgressPercentage);
          uiLastProgress = iProgressPercentage;
       } });
-   ArduinoOTA.onError([](ota_error_t error)
-                      {
+   ArduinoOTA.onError([](ota_error_t error){
       Serial.printf("Error[%u]: ", error);
       LCDController.FirmwareUpdateError();
       if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
@@ -215,7 +211,6 @@ void loop()
          log_i("IP to check: %s", ipTocheck.toString().c_str());
          WebHandler.disconnectWsClient(ipTocheck);
       }
-
 #endif
 
       // Handle GPS
@@ -259,44 +254,6 @@ void loop()
    // Handle WebSocket server
    WebHandler.loop();
 #endif
-
-   /*// Reset variables when state RESET
-   if (RaceHandler.RaceState == RaceHandler.RESET)
-   {
-      iCurrentDog = RaceHandler.iCurrentDog;
-      bRaceSummaryPrinted = false;
-   }
-
-   if (RaceHandler.RaceState == RaceHandler.STOPPED && ((MICROS - (RaceHandler.llRaceStartTime + RaceHandler.llRaceTime)) / 1000 > 500) && !bRaceSummaryPrinted)
-   {
-      // Race has been stopped 0.5 second ago: print race summary to console
-      for (uint8_t i = 0; i < RaceHandler.iNumberOfRacingDogs; i++)
-      {
-         // log_d("Dog %i -> %i run(s).", i + 1, RaceHandler.iDogRunCounters[i] + 1);
-         for (uint8_t i2 = 0; i2 < (RaceHandler.iDogRunCounters[i] + 1); i2++)
-            log_i("Dog %i: %s | CR: %s", i + 1, RaceHandler.GetStoredDogTimes(i, i2), RaceHandler.TransformCrossingTime(i, i2));
-      }
-      log_i(" Team: %s", RaceHandler.GetRaceTime());
-      log_i("   CT: %s", RaceHandler.GetCleanTime());
-      if (SDcardController.bSDCardDetected)
-         SDcardController.SaveRaceDataToFile();
-#if !Simulate
-      if (CORE_DEBUG_LEVEL >= ESP_LOG_DEBUG)
-         RaceHandler.PrintRaceTriggerRecords();
-      if (SDcardController.bSDCardDetected)
-         RaceHandler.PrintRaceTriggerRecordsToFile();
-#endif
-      bRaceSummaryPrinted = true;
-   }
-
-   if (RaceHandler.iCurrentDog != iCurrentDog && RaceHandler.RaceState == RaceHandler.RUNNING)
-   {
-      log_i("Dog %i: %s | CR: %s", RaceHandler.iPreviousDog + 1, RaceHandler.GetDogTime(RaceHandler.iPreviousDog, -2), RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
-      log_d("Running dog: %i.", RaceHandler.iCurrentDog + 1);
-   }
-
-   // Cleanup variables used for checking if something changed
-   iCurrentDog = RaceHandler.iCurrentDog;*/
 }
 
 void serialEvent()
@@ -515,7 +472,7 @@ void HandleSerialCommands()
    if (strSerialData == "d4f")
       RaceHandler.SetDogFault(3);
    // Toggle race direction
-   if (strSerialData == "direction" && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
+   if (strSerialData == "direction")
       RaceHandler.ToggleRunDirection();
    // Set explicitly number of racing dogs
    if (strSerialData.startsWith("setdogs") && RaceHandler.RaceState == RaceHandler.RESET)
@@ -716,11 +673,11 @@ void HandleRemoteAndButtons()
          else if (llPressDuration > SHORT_PRESS_TIME)
          {
             log_d("%s LONG press detected: %lldms", GetButtonString(iLastActiveBit).c_str(), llPressDuration);
-            if (iLastActiveBit == 3 && RaceHandler.RaceState == RaceHandler.RESET) // Dog 1 fault RC button - toggling reruns off/on
+            if (iLastActiveBit == 3) // Dog 1 fault RC button - toggling reruns off/on
                RaceHandler.ToggleRerunsOffOn(2);
             if (iLastActiveBit == 6 && RaceHandler.RaceState == RaceHandler.RESET) // Dog 2 fault RC button - toggling starting sequence NAFA / FCI
                LightsController.ToggleStartingSequence();
-            else if (iLastActiveBit == 0 && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)) // Mode button - side switch
+            else if (iLastActiveBit == 0) // Mode button - side switch
                RaceHandler.ToggleRunDirection();
             else if (iLastActiveBit == 7 && RaceHandler.RaceState == RaceHandler.RESET) // Laster button - Wifi Off
                ToggleWifi();
