@@ -87,15 +87,15 @@ void setup()
    BatterySensor.init(iBatterySensorPin);
 
    // Initialize LightsController class
-   LightsController.init(&LightsStrip);
-   /*xTaskCreatePinnedToCore(
+   // LightsController.init(&LightsStrip);
+   xTaskCreatePinnedToCore(
       Core1Lights,
       "Lights",
       8192,
       NULL,
       1,
       &taskLights,
-      1);*/
+      1);
 
    // Initialize LCDController class with lcd1 and lcd2 objects
    LCDController.init(&lcd, &lcd2);
@@ -120,20 +120,20 @@ void setup()
       Serial.println("SD Card not inserted!\r\n");
 
    // Initialize RaceHandler class with S1 and S2 pins
-   RaceHandler.init(iS1Pin, iS2Pin);
-   /*xTaskCreatePinnedToCore(
+   // RaceHandler.init(iS1Pin, iS2Pin);
+   xTaskCreatePinnedToCore(
       Core1Race,
       "Race",
       16384,
       NULL,
       1,
       &taskRace,
-      1);*/
+      1);
 
    // Initialize simulatorclass pins if applicable
-#if Simulate
+/*#if Simulate
    Simulator.init();
-#endif
+#endif*/
 
 #ifdef WiFiON
    // Setup AP
@@ -234,15 +234,15 @@ void loop()
    HandleRemoteAndButtons();
 
    // Handle lights main processing
-   LightsController.Main();
+   // LightsController.Main();
 
-#if Simulate
+/*#if Simulate
    // Run simulator
    Simulator.Main();
-#endif
+#endif*/
 
    // Handle Race main processing
-   RaceHandler.Main();
+   // RaceHandler.Main();
 
    // Handle LCD data updates
    HandleLCDUpdates();
