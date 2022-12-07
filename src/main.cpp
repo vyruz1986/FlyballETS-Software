@@ -117,7 +117,7 @@ void setup()
    if (digitalRead(iSDdetectPin) == LOW)
       SDcardController.init();
    else
-      Serial.println("SD Card not inserted!\r\n");
+      Serial.println("SD Card not inserted!");
 
    // Initialize RaceHandler class with S1 and S2 pins
    // RaceHandler.init(iS1Pin, iS2Pin);
