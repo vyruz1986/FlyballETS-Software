@@ -70,8 +70,8 @@ void setup()
 
    // Set ISR's with wrapper functions
 #if !Simulate
-   attachInterrupt(digitalPinToInterrupt(iS2Pin), Sensor2Wrapper, CHANGE);
    attachInterrupt(digitalPinToInterrupt(iS1Pin), Sensor1Wrapper, CHANGE);
+   attachInterrupt(digitalPinToInterrupt(iS2Pin), Sensor2Wrapper, CHANGE);
 #endif
 
    // Configure Laser output pin
@@ -280,17 +280,17 @@ void serialEvent()
 /// <summary>
 ///   These are wrapper functions which are necessary because it's not allowed to use a class member function directly as an ISR
 /// </summary>
-void Sensor2Wrapper()
+void IRAM_ATTR Sensor1Wrapper()
 {
-   RaceHandler.TriggerSensor2();
+   RaceHandler.TriggerSensor1();
 }
 
 /// <summary>
 ///   These are wrapper functions which are necessary because it's not allowed to use a class member function directly as an ISR
 /// </summary>
-void Sensor1Wrapper()
+void IRAM_ATTR Sensor2Wrapper()
 {
-   RaceHandler.TriggerSensor1();
+   RaceHandler.TriggerSensor2();
 }
 
 /// <summary>

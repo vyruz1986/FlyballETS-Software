@@ -40,8 +40,8 @@
 #endif
 
 // Function prototypes
-void Sensor1Wrapper();
-void Sensor2Wrapper();
+void IRAM_ATTR Sensor1Wrapper();
+void IRAM_ATTR Sensor2Wrapper();
 void ResetRace();
 void StartStopRace();
 void StartRaceMain();
