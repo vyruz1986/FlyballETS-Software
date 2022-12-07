@@ -454,8 +454,8 @@ void WebHandlerClass::_SendLightsData(int8_t iClientId)
       // log_d("LightsData wsBuffer to send: %s. No of ws clients is: %i", (char *)wsBuffer->get(), _ws->count());
       if (iClientId == -1)
       {
-         //_ws->textAll(wsBuffer);
-         uint8_t iId = 0;
+         _ws->textAll(wsBuffer);
+         /*uint8_t iId = 0;
          for (auto &isConsumer : _bIsConsumerArray)
          {
             if (isConsumer)
@@ -476,7 +476,7 @@ void WebHandlerClass::_SendLightsData(int8_t iClientId)
                }
             }
             iId++;
-         }
+         }*/
       }
       else
       {
@@ -538,8 +538,8 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
          // log_d("RaceData wsBuffer to send: %s", (char *)wsBuffer->get());
          if (iClientId == -1)
          {
-            //_ws->textAll(wsBuffer);
-            uint8_t iId = 0;
+            _ws->textAll(wsBuffer);
+            /*uint8_t iId = 0;
             for (auto &isConsumer : _bIsConsumerArray)
             {
                if (isConsumer)
@@ -560,7 +560,7 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
                   }
                }
                iId++;
-            }
+            }*/
          }
          else
          {
@@ -684,8 +684,8 @@ void WebHandlerClass::_SendSystemData(int8_t iClientId)
          serializeJson(JsonSystemDataDoc, (char *)wsBuffer->get(), len + 1);
          if (iClientId == -1)
          {
-            //_ws->textAll(wsBuffer);
-            uint8_t iId = 0;
+            _ws->textAll(wsBuffer);
+            /*uint8_t iId = 0;
             for (auto &isConsumer : _bIsConsumerArray)
             {
                if (isConsumer)
@@ -706,7 +706,7 @@ void WebHandlerClass::_SendSystemData(int8_t iClientId)
                   }
                }
                iId++;
-            }
+            }*/
          }
          else
          {

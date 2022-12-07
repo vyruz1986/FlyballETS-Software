@@ -233,16 +233,18 @@ void loop()
    // Handle remote control and buttons states
    HandleRemoteAndButtons();
 
+   /*
    // Handle lights main processing
-   // LightsController.Main();
+   LightsController.Main();
 
-   /*#if Simulate
+   #if Simulate
       // Run simulator
       Simulator.Main();
-   #endif*/
+   #endif
 
    // Handle Race main processing
-   // RaceHandler.Main();
+   RaceHandler.Main();
+   */
 
    // Handle LCD data updates
    HandleLCDUpdates();
@@ -742,9 +744,9 @@ void Core1Race(void *parameter)
    RaceHandler.init(iS1Pin, iS2Pin);
    for (;;)
    {
-#if Simulate
+   #if Simulate
       Simulator.Main();
-#endif
+   #endif
       RaceHandler.Main();
    }
 }
@@ -758,7 +760,7 @@ void Core1Lights(void *parameter)
    }
 }
 
-void Core1LCD(void *parameter)
+/*void Core1LCD(void *parameter)
 {
    LCDController.init(&lcd, &lcd2);
    for (;;)
@@ -767,4 +769,4 @@ void Core1LCD(void *parameter)
       vTaskDelay(5);
       HandleLCDUpdates();
    }
-}
+}*/

@@ -7,7 +7,7 @@
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
@@ -18,7 +18,7 @@
 
 #define MICROS esp_timer_get_time()
 
-#define FW_VER "1.11.3"          // Flyball ETS firmware version
+#define FW_VER "1.11.4"          // Flyball ETS firmware version
 
 #define Simulate true            // Set to true to enable race simulation (see Simulator.h/.cpp)
 #define NumSimulatedRaces 48     // Number of prepeared simulated races. Sererial interface command to change interface: e.g. "race 1"
