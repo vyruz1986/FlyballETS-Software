@@ -120,8 +120,6 @@ private:
    bool _bS1StillSafe;
    bool _bNegativeCrossDetected;
    bool _bPotentialNegativeCrossDetected;
-   bool _bRaceReadyFaultON;
-   bool _bRaceReadyFaultOFF;
    bool _bRaceSummaryPrinted = false; // race summary printed indicator
    long long _llLastDogTimeReturnTimeStamp[4];
    int8_t _iLastReturnedRunNumber[4];

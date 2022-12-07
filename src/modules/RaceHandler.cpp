@@ -68,18 +68,6 @@ void RaceHandlerClass::Main()
       _QueueFilter();
    }
 
-   if (_bRaceReadyFaultON)
-   {
-      LightsController.bExecuteRaceReadyFaultON = true;
-      _bRaceReadyFaultON = false;
-   }
-
-   if (_bRaceReadyFaultOFF)
-   {
-      LightsController.bExecuteRaceReadyFaultOFF = true;
-      _bRaceReadyFaultOFF = false;
-   }
-
    if (bExecuteStopRace)
    {
       StopRace();
@@ -1015,11 +1003,9 @@ void RaceHandlerClass::TriggerSensor1()
    else if (RaceState == RESET)
    {
       if (digitalRead(_iS1Pin) == 1)
-         _bRaceReadyFaultON = true;
-      // LightsController.ReaceReadyFault(LightsController.ON);
+         LightsController.bExecuteRaceReadyFaultON = true;
       else
-         _bRaceReadyFaultOFF = true;
-      // LightsController.ReaceReadyFault(LightsController.OFF);
+         LightsController.bExecuteRaceReadyFaultOFF = true;
    }
    else
       _QueuePush({bRunDirectionInverted ? 2 : 1, MICROS, digitalRead(_iS1Pin)});
@@ -1036,11 +1022,9 @@ void RaceHandlerClass::TriggerSensor2()
    else if (RaceState == RESET)
    {
       if (digitalRead(_iS2Pin) == 1)
-         _bRaceReadyFaultON = true;
-      // LightsController.ReaceReadyFault(LightsController.ON);
+         LightsController.bExecuteRaceReadyFaultON = true;
       else
-         _bRaceReadyFaultOFF = true;
-      // LightsController.ReaceReadyFault(LightsController.OFF);
+         LightsController.bExecuteRaceReadyFaultOFF = true;
    }
    else
       _QueuePush({bRunDirectionInverted ? 1 : 2, MICROS, digitalRead(_iS2Pin)});
