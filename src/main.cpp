@@ -205,12 +205,12 @@ void loop()
 #ifdef WiFiON
       // Handle OTA update if incoming
       ArduinoOTA.handle();
-      if (bCheckWsClinetStatus)
+      /*if (bCheckWsClinetStatus)
       {
          bCheckWsClinetStatus = false;
          log_i("IP to check: %s", ipTocheck.toString().c_str());
          WebHandler.disconnectWsClient(ipTocheck);
-      }
+      }*/
 #endif
 
       // Handle GPS

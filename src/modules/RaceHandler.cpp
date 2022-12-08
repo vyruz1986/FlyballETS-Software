@@ -61,6 +61,26 @@ void RaceHandlerClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
 /// </summary>
 void RaceHandlerClass::Main()
 {
+   // Check if race state should be changed to RUNNING
+   if (RaceState == STARTING && MICROS >= llRaceStartTime)
+   {
+      _ChangeRaceState(RUNNING);
+      // log_d("GREEN light is ON!");
+   }
+
+   // Update racetime
+   if (RaceState == RUNNING)
+   {
+      if (MICROS > llRaceStartTime)
+         llRaceTime = MICROS - llRaceStartTime;
+      // If race last for 10 minutes race will be stopped
+      if (llRaceTime > 600000000)
+      {
+         log_w("Race TIMEOUT!!!");
+         StopRace(llRaceTime);
+      }
+   }
+
    // Trigger filterring of sensors interrupts if new records available and 12ms waiting time passed
    while ((_iInputQueueReadIndex != _iInputQueueWriteIndex) && ((MICROS - _InputTriggerQueue[_iInputQueueWriteIndex - 1].llTriggerTime) > 12000))
    {
@@ -599,26 +619,6 @@ void RaceHandlerClass::Main()
          _bFault = true;
          _bNoValidCleanTime = true;
          break;
-      }
-   }
-
-   // Check if race state should be changed to RUNNING
-   if (RaceState == STARTING && MICROS >= llRaceStartTime)
-   {
-      _ChangeRaceState(RUNNING);
-      // log_d("GREEN light is ON!");
-   }
-
-   // Update racetime
-   if (RaceState == RUNNING)
-   {
-      if (MICROS > llRaceStartTime)
-         llRaceTime = MICROS - llRaceStartTime;
-      // If race last for 10 minutes race will be stopped
-      if (llRaceTime > 600000000)
-      {
-         log_w("Race TIMEOUT!!!");
-         StopRace(llRaceTime);
       }
    }
 
