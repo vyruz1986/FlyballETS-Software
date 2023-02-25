@@ -564,15 +564,15 @@ void RaceHandlerClass::Main()
                      _bS1StillSafe = false;
                      _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = 0;
                      _llDogEnterTimes[iCurrentDog] = _llDogExitTimes[iPreviousDog];
-                     if (_strTransition == "BAab" || _strTransition == "BAba") // Big OK cross
+                     if (_strTransition == "BAab" || _strTransition == "BAba" || _strTransition == "BbABab" || _strTransition == "BbABba") // Big OK cross
                      {
                         _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
-                        log_d("Unmeasurable OK crossing for dog %i. BAab or BAba", iCurrentDog + 1);
+                        log_d("Unmeasurable 'OK' crossing for dog %i.", iCurrentDog + 1);
                      }
                      else
                      {
                         _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
-                        log_d("Unmeasurable ok crossing for dog %i.", iCurrentDog + 1);
+                        log_d("Unmeasurable 'ok' crossing for dog %i.", iCurrentDog + 1);
                      }
                   }
                }
@@ -1565,16 +1565,19 @@ void RaceHandlerClass::_QueuePush(RaceHandlerClass::STriggerRecord _InterruptTri
 /// </summary>
 void RaceHandlerClass::_QueueFilter()
 {
+   
+   STriggerRecord _PreviousRecord = _InputTriggerQueue[_iInputQueueReadIndex - 1]; //fix for Ultra 15-22
    STriggerRecord _CurrentRecord = _InputTriggerQueue[_iInputQueueReadIndex];
    STriggerRecord _NextRecord = _InputTriggerQueue[_iInputQueueReadIndex + 1];
 
    // If there are 2 records from the same sensors line and delta time is below 6ms ignore both
-   if ((_iInputQueueReadIndex <= _iInputQueueWriteIndex - 2) && (_CurrentRecord.iSensorNumber == _NextRecord.iSensorNumber && _NextRecord.llTriggerTime - _CurrentRecord.llTriggerTime <= 6000))
+   if ((_iInputQueueReadIndex <= _iInputQueueWriteIndex - 2) && (_CurrentRecord.llTriggerTime - _PreviousRecord.llTriggerTime <= 200000)//
+      && (_CurrentRecord.iSensorNumber == _NextRecord.iSensorNumber && _NextRecord.llTriggerTime - _CurrentRecord.llTriggerTime <= 6000))
    {
       // log_d("Next record %lld - Current record %lld = %lld < 6ms.", _NextRecord.llTriggerTime, _CurrentRecord.llTriggerTime, _NextRecord.llTriggerTime - _CurrentRecord.llTriggerTime);
-      log_d("S%i | TT:%lld | T:%lld | St:%i | IGNORED", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime,
+      log_d("S%i | TT:%lld | T:%lld | St:%i | IGNORED-1", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime,
             _CurrentRecord.llTriggerTime - llRaceStartTime, _CurrentRecord.iSensorState);
-      log_d("S%i | TT:%lld | T:%lld | St:%i | IGNORED < 6ms", _NextRecord.iSensorNumber, _NextRecord.llTriggerTime,
+      log_d("S%i | TT:%lld | T:%lld | St:%i | IGNORED-2", _NextRecord.iSensorNumber, _NextRecord.llTriggerTime,
             _NextRecord.llTriggerTime - llRaceStartTime, _NextRecord.iSensorState);
 
       // Input Read index has to be increased, check it we should wrap-around

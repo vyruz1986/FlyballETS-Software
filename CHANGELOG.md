@@ -3,6 +3,7 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+- fix for false cross fault detection in Ultra 15-22 race
 
 ### Added
 - timeout support in testETS (1.0.1)
