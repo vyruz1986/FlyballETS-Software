@@ -50,7 +50,6 @@ void mdnsServerSetup();
 void serialEvent();
 void HandleSerialCommands();
 void HandleRemoteAndButtons();
-void HandleLCDUpdates();
 void ToggleWifi();
 void Core1Race(void *parameter);
 void Core1Lights(void *parameter);
@@ -114,9 +113,6 @@ bool bCheckWsClinetStatus = false; // flag to check if WS client should be disco
 IPAddress ipTocheck;               // IP address of disconnected WiFi user
 
 unsigned int uiLastProgress = 0; // last % OTA progress value
-
-uint16_t iBatteryVoltage = 0;        // Battery voltage
-long long llLastBatteryLCDupdate = -25000; // Initial offset for battery value upate on LCD
 
 uint16_t iLaserOnTime = 180; // initial value of laser diode on time
 bool bLaserActive = false;   // laser diode state

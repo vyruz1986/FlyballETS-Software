@@ -39,6 +39,7 @@ void RaceHandlerClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
    {
       bRunDirectionInverted = true;
       LCDController.UpdateField(LCDController.BoxDirection, "<");
+      LCDController.bExecuteLCDUpdate = true;
       log_i("Run direction from settings: inverted");
    }
    else
@@ -51,6 +52,8 @@ void RaceHandlerClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
    }
    else
       log_i("Accuracy from settings: 2 digits");
+   LCDController.bUpdateAccuracyOnLCD = true;
+   LCDController.bExecuteLCDUpdate = true;
 }
 
 /// <summary>
@@ -705,6 +708,7 @@ void RaceHandlerClass::StartRaceTimer()
    log_i("STARTING! Tag: %i, Race ID: %i.", SDcardController.iTagValue, iCurrentRaceId + 1);
    cRaceStartTimestamp = GPSHandler.GetLocalTimestamp();
    log_i("Timestamp: %s", cRaceStartTimestamp);
+      LCDController.iLCDUpdateIntervalMultiplier = 5;
 #ifdef WiFiON
    // Send updated racedata to all web clients
    WebHandler.bSendRaceData = true;
@@ -725,29 +729,23 @@ void RaceHandlerClass::StopRace()
 /// <param name="StopTime">   The time in microseconds at which the race stopped. </param>
 void RaceHandlerClass::StopRace(long long llStopTime)
 {
-   if (RaceState == RUNNING)
+   if (RaceState == STOPPED || RaceState == RESET)
+      return;
+   else
    {
       // Race is running, so we have to record the EndTime
       _llRaceEndTime = llStopTime;
-      llRaceTime = _llRaceEndTime - llRaceStartTime;
+      if (RaceState == RUNNING)
+         llRaceTime = _llRaceEndTime - llRaceStartTime;
+      else
+         llRaceTime = 0;
       _ChangeRaceState(STOPPED);
-#ifdef WiFiON
+      LCDController.iLCDUpdateIntervalMultiplier = 1;
+   #ifdef WiFiON
       // Send updated racedata to any web clients
       WebHandler.bSendRaceData = true;
-#endif
+   #endif
    }
-   else if (RaceState == STARTING)
-   {
-      _llRaceEndTime = llStopTime;
-      llRaceTime = 0;
-      _ChangeRaceState(STOPPED);
-#ifdef WiFiON
-      // Send updated racedata to any web clients
-      WebHandler.bSendRaceData = true;
-#endif
-   }
-   else
-      return;
 }
 
 /// <summary>
@@ -1136,6 +1134,7 @@ String RaceHandlerClass::GetDogTime(uint8_t iDogNumber, int8_t iRunNumber)
    // If next dog didn't enter yet (e.g. positive cross) just show zero
    else if (_llDogTimes[iDogNumber][iRunNumber] == 0)
       ulDogTimeMillis = 0;
+   
    if (!_bAccuracy3digits)
    {
       dDogTime = ((unsigned long)(ulDogTimeMillis + 5) / 10) / 100.0;
@@ -1146,6 +1145,7 @@ String RaceHandlerClass::GetDogTime(uint8_t iDogNumber, int8_t iRunNumber)
       dDogTime = ulDogTimeMillis / 1000.0;
       dtostrf(dDogTime, 7, 3, cDogTime);
    }
+   
    if (_bDogMissedGateGoingin[iDogNumber][iRunNumber])
       strDogTime = " run in";
    else if (_bDogMissedGateComingback[iDogNumber][iRunNumber])
@@ -1472,11 +1472,13 @@ void RaceHandlerClass::ToggleRunDirection()
       if (bRunDirectionInverted)
       {
          LCDController.UpdateField(LCDController.BoxDirection, "<");
+         LCDController.bExecuteLCDUpdate = true;
          log_i("Run direction changed to: inverted");
       }
       else
       {
          LCDController.UpdateField(LCDController.BoxDirection, ">");
+         LCDController.bExecuteLCDUpdate = true;
          log_i("Run direction changed to: normal");
       }
    }
@@ -1491,6 +1493,7 @@ void RaceHandlerClass::ToggleAccuracy()
 {
    _bAccuracy3digits = !_bAccuracy3digits;
    SettingsManager.setSetting("Accuracy3digits", String(_bAccuracy3digits));
+   LCDController.bUpdateAccuracyOnLCD = true;
    if (_bAccuracy3digits)
       log_i("Accuracy switched to 3 digits");
    else

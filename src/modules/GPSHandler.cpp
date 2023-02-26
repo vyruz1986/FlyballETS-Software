@@ -38,6 +38,7 @@ void GPSHandlerClass::loop()
       {
          _FormatTime();
          LCDController.UpdateField(LCDController.GpsState, "G");
+         LCDController.bExecuteLCDUpdate = true;
          if (!_bGSPconnected)
          {
             log_i("GPS connected. Updated UTC time: %s. Updated local time: %s", _cUTCTime, _cLocalDateAndTime);

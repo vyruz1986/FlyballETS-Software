@@ -20,11 +20,16 @@
 #include <Arduino.h>
 #include <LiquidCrystal.h>
 #include "LightsController.h"
+#include "RaceHandler.h"
+#include "BatterySensor.h"
 
 class LCDControllerClass
 {
 protected:
 public:
+   uint8_t iLCDUpdateIntervalMultiplier = 1; // 100ms is base LCD update interval
+   bool bUpdateAccuracyOnLCD = false;
+   bool bExecuteLCDUpdate;
    void init(LiquidCrystal *Clcd1, LiquidCrystal *Clcd2);
    void reInit();
    void FirmwareUpdateInit();
@@ -35,43 +40,47 @@ public:
    void Main();
    enum LCDFields
    {
-      D1Time,
-      D2Time,
-      D3Time,
-      D4Time,
-      D1CrossTime,
-      D2CrossTime,
-      D3CrossTime,
-      D4CrossTime,
-      D1RerunInfo,
-      D2RerunInfo,
-      D3RerunInfo,
-      D4RerunInfo,
-      RaceState,
-      RaceID,
-      BattLevel,
-      TeamTime,
-      CleanTime,
-      WifiState,
-      GpsState,
-      SDcardState,
-      BoxDirection
+      D1Time,        // 0
+      D2Time,        // 1
+      D3Time,        // 2
+      D4Time,        // 3
+      D1CrossTime,   // 4
+      D2CrossTime,   // 5
+      D3CrossTime,   // 6
+      D4CrossTime,   // 7
+      D1RerunInfo,   // 8
+      D2RerunInfo,   // 9
+      D3RerunInfo,   // 10
+      D4RerunInfo,   // 11
+      TeamTime,      // 12
+      CleanTime,     // 13      
+      RaceState,     // 14
+      RaceID,        // 15
+      BattLevel,     // 16
+      WifiState,     // 17
+      GpsState,      // 18
+      SDcardState,   // 19
+      BoxDirection   // 20
    };
 
    void UpdateField(LCDFields lcdfieldField, String strNewValue);
 
 private:
    void _UpdateLCD(int iLine, int iPosition, String strText, int iFieldLength);
+   void _HandleLCDUpdates();
    LiquidCrystal *_Clcd1;
    LiquidCrystal *_Clcd2;
    unsigned long _ulLastLCDUpdate = 0;
-   const uint16_t _iLCDUpdateInterval = 500; // 500ms update interval
+   unsigned long _ulLastLCDUpdateWithTimes = 0;
+   long long llLastBatteryLCDupdate = -25000; // Initial offset for battery value upate on LCD
+   bool bLCDRefresh = false;
 
    struct SLCDField
    {
-      int iLine;
-      int iStartingPosition;
-      int iFieldLength;
+      bool bUpdateFlag;
+      u_int8_t iLine;
+      u_int8_t iStartingPosition;
+      u_int8_t iFieldLength;
       String strText;
    };
    struct SLCDField _SlcdfieldFields[21];

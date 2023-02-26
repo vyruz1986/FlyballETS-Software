@@ -246,9 +246,6 @@ void loop()
    RaceHandler.Main();
    */
 
-   // Handle LCD data updates
-   HandleLCDUpdates();
-
    // Handle LCD processing
    LCDController.Main();
 
@@ -381,12 +378,14 @@ void ToggleWifi()
    {
       WiFi.mode(WIFI_OFF);
       LCDController.UpdateField(LCDController.WifiState, " ");
+      LCDController.bExecuteLCDUpdate = true;
       log_i("WiFi OFF");
    }
    else
    {
       WiFi.mode(WIFI_AP);
       LCDController.UpdateField(LCDController.WifiState, "W");
+      LCDController.bExecuteLCDUpdate = true;
       log_i("WiFi ON");
    }
 }
@@ -518,67 +517,6 @@ void HandleSerialCommands()
    {
       strSerialData = "";
       bSerialStringComplete = false;
-   }
-}
-
-void HandleLCDUpdates()
-{
-   // Update team time
-   LCDController.UpdateField(LCDController.TeamTime, RaceHandler.GetRaceTime());
-
-   // Update team clean time
-   LCDController.UpdateField(LCDController.CleanTime, RaceHandler.GetCleanTime());
-
-   // Handle individual dog info
-   LCDController.UpdateField(LCDController.D1Time, RaceHandler.GetDogTime(0));
-   LCDController.UpdateField(LCDController.D1CrossTime, RaceHandler.GetCrossingTime(0));
-   LCDController.UpdateField(LCDController.D1RerunInfo, RaceHandler.GetRerunInfo(0));
-   if (RaceHandler.iNumberOfRacingDogs > 1)
-   {
-      LCDController.UpdateField(LCDController.D2Time, RaceHandler.GetDogTime(1));
-      LCDController.UpdateField(LCDController.D2CrossTime, RaceHandler.GetCrossingTime(1));
-      LCDController.UpdateField(LCDController.D2RerunInfo, RaceHandler.GetRerunInfo(1));
-   }
-   if (RaceHandler.iNumberOfRacingDogs > 2)
-   {
-      LCDController.UpdateField(LCDController.D3Time, RaceHandler.GetDogTime(2));
-      LCDController.UpdateField(LCDController.D3CrossTime, RaceHandler.GetCrossingTime(2));
-      LCDController.UpdateField(LCDController.D3RerunInfo, RaceHandler.GetRerunInfo(2));
-   }
-   if (RaceHandler.iNumberOfRacingDogs > 3)
-   {
-      LCDController.UpdateField(LCDController.D4Time, RaceHandler.GetDogTime(3));
-      LCDController.UpdateField(LCDController.D4CrossTime, RaceHandler.GetCrossingTime(3));
-      LCDController.UpdateField(LCDController.D4RerunInfo, RaceHandler.GetRerunInfo(3));
-   }
-
-   // Update battery percentage
-   if ((millis() < 2000 || ((millis() - llLastBatteryLCDupdate) > 30000)) //
-      && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
-   {
-      iBatteryVoltage = BatterySensor.GetBatteryVoltage();
-      uint16_t iBatteryPercentage = BatterySensor.GetBatteryPercentage();
-      String sBatteryPercentage;
-      if (iBatteryPercentage == 9999)
-      {
-         sBatteryPercentage = "!!!";
-         LCDController.UpdateField(LCDController.BattLevel, sBatteryPercentage);
-         LightsController.bExecuteResetLights = true;
-         vTaskDelay(3000);
-         esp_deep_sleep_start();
-      }
-      else if (iBatteryPercentage == 9911)
-         sBatteryPercentage = "USB";
-      else if (iBatteryPercentage == 0)
-         sBatteryPercentage = "LOW";
-      else
-         sBatteryPercentage = String(iBatteryPercentage);
-
-      while (sBatteryPercentage.length() < 3)
-         sBatteryPercentage = " " + sBatteryPercentage;
-      LCDController.UpdateField(LCDController.BattLevel, sBatteryPercentage);
-      // log_d("Battery: analog: %i ,voltage: %i, level: %i%%", BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
-      llLastBatteryLCDupdate = millis();
    }
 }
 

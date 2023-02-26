@@ -3,18 +3,19 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
-- fix for false cross fault detection in Ultra 15-22 race
 
 ### Added
 - timeout support in testETS (1.0.1)
 - uptime command for testETS (1.1.0)
 - support for WebUI "up time" higher than 10h (stability tests)
-- simple unresponsive websocket clients mutting
+- removed old TC 43 and added new TC 46
 
 ### Changed
+- fix for false cross fault detection in Ultra 15-22 race (TC 46)
 - testETS scripts corrections and small refactoring (1.0.0)
 - pre-filtering waiting time changed from 15ms to 12ms
 - optimization of main program loop
+- optimization of LCD refresh
 - fixed WebUI time in case of no GPS connection
 - removed unused historical races data (fix for stability tests)
 - max number of races changed from 100 to 1000 (fix for stability tests)

@@ -66,6 +66,7 @@ void SDcardControllerClass::init()
       if (bSDCardDetected)
       {
          LCDController.UpdateField(LCDController.SDcardState, "sd");
+         LCDController.bExecuteLCDUpdate = true;
          log_i("SD_MMC Card Size: %lluMB", SD_MMC.cardSize() / (1024 * 1024));
          log_i("Free space: %lluMB", (SD_MMC.totalBytes() - SD_MMC.usedBytes()) / (1024 * 1024));
          if (!SD_MMC.exists("/SENSORS_DATA"))
