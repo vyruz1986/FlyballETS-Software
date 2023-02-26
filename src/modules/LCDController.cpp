@@ -89,7 +89,7 @@ void LCDControllerClass::Main()
    {
       // Handle LCD data updates
       _HandleLCDUpdates();
-      u_int8_t iLoopCounter = 0;
+      uint8_t iLoopCounter = 0;
       for (const SLCDField &lcdField : _SlcdfieldFields)
       {
          log_v("lcdField: %i, UpdateFlag: %i", iLoopCounter, lcdField.bUpdateFlag);
@@ -219,13 +219,13 @@ void LCDControllerClass::_HandleLCDUpdates()
    if (bUpdateNonTimerLCDdata)
    {
       bUpdateNonTimerLCDdata = false;
-      for (u_int8_t i = 14; i < 21; i++)
+      for (uint8_t i = 14; i < 21; i++)
          _SlcdfieldFields[i].bUpdateFlag = true;
    }
 
    // Update battery percentage
    if ((millis() < 2000 || ((millis() - llLastBatteryLCDupdate) > 30000)) //
-       && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
+      && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
    {
       uint16_t iBatteryVoltage = BatterySensor.GetBatteryVoltage();
       uint16_t iBatteryPercentage = BatterySensor.GetBatteryPercentage();

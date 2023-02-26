@@ -27,7 +27,7 @@ class LCDControllerClass
 {
 protected:
 public:
-   uint8_t iLCDUpdateInterval = 500; // 500ms is LCD update interval
+   uint16_t iLCDUpdateInterval = 500; // 500ms is LCD update interval
    bool bUpdateTimerLCDdata = false;
    bool bExecuteLCDUpdate;
    bool bUpdateNonTimerLCDdata = false;
@@ -79,9 +79,9 @@ private:
    struct SLCDField
    {
       bool bUpdateFlag;
-      u_int8_t iLine;
-      u_int8_t iStartingPosition;
-      u_int8_t iFieldLength;
+      uint8_t iLine;
+      uint8_t iStartingPosition;
+      uint8_t iFieldLength;
       String strText;
    };
    struct SLCDField _SlcdfieldFields[21];
