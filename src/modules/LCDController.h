@@ -27,9 +27,10 @@ class LCDControllerClass
 {
 protected:
 public:
-   uint8_t iLCDUpdateIntervalMultiplier = 1; // 100ms is base LCD update interval
-   bool bUpdateAccuracyOnLCD = false;
+   uint8_t iLCDUpdateInterval = 500; // 500ms is LCD update interval
+   bool bUpdateTimerLCDdata = false;
    bool bExecuteLCDUpdate;
+   bool bUpdateNonTimerLCDdata = false;
    void init(LiquidCrystal *Clcd1, LiquidCrystal *Clcd2);
    void reInit();
    void FirmwareUpdateInit();
@@ -40,27 +41,27 @@ public:
    void Main();
    enum LCDFields
    {
-      D1Time,        // 0
-      D2Time,        // 1
-      D3Time,        // 2
-      D4Time,        // 3
-      D1CrossTime,   // 4
-      D2CrossTime,   // 5
-      D3CrossTime,   // 6
-      D4CrossTime,   // 7
-      D1RerunInfo,   // 8
-      D2RerunInfo,   // 9
-      D3RerunInfo,   // 10
-      D4RerunInfo,   // 11
-      TeamTime,      // 12
-      CleanTime,     // 13      
-      RaceState,     // 14
-      RaceID,        // 15
-      BattLevel,     // 16
-      WifiState,     // 17
-      GpsState,      // 18
-      SDcardState,   // 19
-      BoxDirection   // 20
+      D1Time,      // 0
+      D2Time,      // 1
+      D3Time,      // 2
+      D4Time,      // 3
+      D1CrossTime, // 4
+      D2CrossTime, // 5
+      D3CrossTime, // 6
+      D4CrossTime, // 7
+      D1RerunInfo, // 8
+      D2RerunInfo, // 9
+      D3RerunInfo, // 10
+      D4RerunInfo, // 11
+      TeamTime,    // 12
+      CleanTime,   // 13
+      RaceState,   // 14
+      RaceID,      // 15
+      BattLevel,   // 16
+      WifiState,   // 17
+      GpsState,    // 18
+      SDcardState, // 19
+      BoxDirection // 20
    };
 
    void UpdateField(LCDFields lcdfieldField, String strNewValue);

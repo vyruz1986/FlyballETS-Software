@@ -52,7 +52,7 @@ void RaceHandlerClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
    }
    else
       log_i("Accuracy from settings: 2 digits");
-   LCDController.bUpdateAccuracyOnLCD = true;
+   LCDController.bUpdateTimerLCDdata = true;
    LCDController.bExecuteLCDUpdate = true;
 }
 
@@ -708,7 +708,6 @@ void RaceHandlerClass::StartRaceTimer()
    log_i("STARTING! Tag: %i, Race ID: %i.", SDcardController.iTagValue, iCurrentRaceId + 1);
    cRaceStartTimestamp = GPSHandler.GetLocalTimestamp();
    log_i("Timestamp: %s", cRaceStartTimestamp);
-      LCDController.iLCDUpdateIntervalMultiplier = 5;
 #ifdef WiFiON
    // Send updated racedata to all web clients
    WebHandler.bSendRaceData = true;
@@ -740,11 +739,10 @@ void RaceHandlerClass::StopRace(long long llStopTime)
       else
          llRaceTime = 0;
       _ChangeRaceState(STOPPED);
-      LCDController.iLCDUpdateIntervalMultiplier = 1;
-   #ifdef WiFiON
+#ifdef WiFiON
       // Send updated racedata to any web clients
       WebHandler.bSendRaceData = true;
-   #endif
+#endif
    }
 }
 
@@ -771,9 +769,9 @@ void RaceHandlerClass::ResetRace()
       _llS2CrossedUnsafeGetMicrosTime = 0;
       _byDogState = GOINGIN;
       _ChangeDogNumber(0);
-   #if Simulate
+#if Simulate
       Simulator.bExecuteSimRaceReset = true;
-   #endif
+#endif
       _bFault = false;
       _bRerunBusy = false;
       _iOutputQueueReadIndex = 0;
@@ -1134,7 +1132,7 @@ String RaceHandlerClass::GetDogTime(uint8_t iDogNumber, int8_t iRunNumber)
    // If next dog didn't enter yet (e.g. positive cross) just show zero
    else if (_llDogTimes[iDogNumber][iRunNumber] == 0)
       ulDogTimeMillis = 0;
-   
+
    if (!_bAccuracy3digits)
    {
       dDogTime = ((unsigned long)(ulDogTimeMillis + 5) / 10) / 100.0;
@@ -1145,7 +1143,7 @@ String RaceHandlerClass::GetDogTime(uint8_t iDogNumber, int8_t iRunNumber)
       dDogTime = ulDogTimeMillis / 1000.0;
       dtostrf(dDogTime, 7, 3, cDogTime);
    }
-   
+
    if (_bDogMissedGateGoingin[iDogNumber][iRunNumber])
       strDogTime = " run in";
    else if (_bDogMissedGateComingback[iDogNumber][iRunNumber])
@@ -1493,7 +1491,8 @@ void RaceHandlerClass::ToggleAccuracy()
 {
    _bAccuracy3digits = !_bAccuracy3digits;
    SettingsManager.setSetting("Accuracy3digits", String(_bAccuracy3digits));
-   LCDController.bUpdateAccuracyOnLCD = true;
+   LCDController.bUpdateTimerLCDdata = true;
+   LCDController.bExecuteLCDUpdate = true;
    if (_bAccuracy3digits)
       log_i("Accuracy switched to 3 digits");
    else
@@ -1568,13 +1567,12 @@ void RaceHandlerClass::_QueuePush(RaceHandlerClass::STriggerRecord _InterruptTri
 /// </summary>
 void RaceHandlerClass::_QueueFilter()
 {
-   
-   STriggerRecord _PreviousRecord = _InputTriggerQueue[_iInputQueueReadIndex - 1]; //fix for Ultra 15-22
+   STriggerRecord _PreviousRecord = _InputTriggerQueue[_iInputQueueReadIndex - 1]; // fix for Ultra 15-22
    STriggerRecord _CurrentRecord = _InputTriggerQueue[_iInputQueueReadIndex];
    STriggerRecord _NextRecord = _InputTriggerQueue[_iInputQueueReadIndex + 1];
 
    // If there are 2 records from the same sensors line and delta time is below 6ms ignore both
-   if ((_iInputQueueReadIndex <= _iInputQueueWriteIndex - 2) && (_CurrentRecord.llTriggerTime - _PreviousRecord.llTriggerTime <= 200000)//
+   if ((_iInputQueueReadIndex <= _iInputQueueWriteIndex - 2) && (_CurrentRecord.llTriggerTime - _PreviousRecord.llTriggerTime <= 200000) //
       && (_CurrentRecord.iSensorNumber == _NextRecord.iSensorNumber && _NextRecord.llTriggerTime - _CurrentRecord.llTriggerTime <= 6000))
    {
       // log_d("Next record %lld - Current record %lld = %lld < 6ms.", _NextRecord.llTriggerTime, _CurrentRecord.llTriggerTime, _NextRecord.llTriggerTime - _CurrentRecord.llTriggerTime);

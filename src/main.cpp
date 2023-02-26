@@ -495,10 +495,7 @@ void HandleSerialCommands()
       SDcardController.ToggleDecimalSeparator();
    // Toggle between modes
    if (strSerialData == "mode")
-   {
       LightsController.ToggleStartingSequence();
-      LCDController.reInit();
-   }
    // Reruns off
    if (strSerialData == "reruns off")
       RaceHandler.ToggleRerunsOffOn(1);

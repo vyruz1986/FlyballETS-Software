@@ -82,9 +82,9 @@ void LCDControllerClass::init(LiquidCrystal *Clcd1, LiquidCrystal *Clcd2)
 void LCDControllerClass::Main()
 {
    // This is the main loop which handles LCD updates
-   if (((millis() - _ulLastLCDUpdate) > (100 * iLCDUpdateIntervalMultiplier)) && !bExecuteLCDUpdate)
+   if (((millis() - _ulLastLCDUpdate) > iLCDUpdateInterval) && !bExecuteLCDUpdate)
       bExecuteLCDUpdate = true;
-   
+
    if (bExecuteLCDUpdate)
    {
       // Handle LCD data updates
@@ -186,7 +186,7 @@ void LCDControllerClass::_HandleLCDUpdates()
       UpdateField(TeamTime, RaceHandler.GetRaceTime());
       UpdateField(D1CrossTime, RaceHandler.GetCrossingTime(0));
    }
-   else if (RaceHandler.RaceState == RaceHandler.RUNNING || RaceHandler.RaceState == RaceHandler.STOPPED || bUpdateAccuracyOnLCD || bLCDRefresh)
+   else if (RaceHandler.RaceState == RaceHandler.RUNNING || RaceHandler.RaceState == RaceHandler.STOPPED || bUpdateTimerLCDdata)
    {
       // Update team time
       UpdateField(TeamTime, RaceHandler.GetRaceTime());
@@ -216,16 +216,16 @@ void LCDControllerClass::_HandleLCDUpdates()
       }
    }
 
-   if (bLCDRefresh)
-      {
-         bLCDRefresh = false;
-         for (u_int8_t i = 14; i < 21; i++)
-            _SlcdfieldFields[i].bUpdateFlag = true;
-      }
+   if (bUpdateNonTimerLCDdata)
+   {
+      bUpdateNonTimerLCDdata = false;
+      for (u_int8_t i = 14; i < 21; i++)
+         _SlcdfieldFields[i].bUpdateFlag = true;
+   }
 
    // Update battery percentage
    if ((millis() < 2000 || ((millis() - llLastBatteryLCDupdate) > 30000)) //
-      && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
+       && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
    {
       uint16_t iBatteryVoltage = BatterySensor.GetBatteryVoltage();
       uint16_t iBatteryPercentage = BatterySensor.GetBatteryPercentage();
@@ -273,12 +273,12 @@ void LCDControllerClass::reInit()
    _UpdateLCD(2, 0, String("2:                      | Team:         "), 40);
    _UpdateLCD(3, 0, String("3:                      |   CT:         "), 40);
    _UpdateLCD(4, 0, String("4:                      |     %         "), 40);
-   bLCDRefresh = true;
+   bUpdateNonTimerLCDdata = true;
 }
 
 void LCDControllerClass::UpdateNumberOfDogsOnLCD(uint8_t iNumberOfDogs)
 {
-   bLCDRefresh = true;
+   bUpdateNonTimerLCDdata = true;
    if (iNumberOfDogs == 3)
    {
       _UpdateLCD(1, 0, String("1:                      |               "), 40);
