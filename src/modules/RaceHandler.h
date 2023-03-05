@@ -5,6 +5,9 @@
 #include "Structs.h"
 #include "Arduino.h"
 #include "config.h"
+#if Simulate
+#include "Simulator.h"
+#endif
 
 class RaceHandlerClass
 {
@@ -22,7 +25,6 @@ public:
       STOPPED
    };
    RaceStates RaceState = RESET;
-   RaceStates PreviousRaceState = RESET;
    String strRaceState;
 
    uint8_t iCurrentDog;
@@ -32,19 +34,20 @@ public:
    uint8_t iDogRunCounters[4]; // Number of (re-)runs for each dog
    long long llRaceStartTime;
    long long llRaceTime;
-   int iCurrentRaceId = -1;
+   uint16_t iCurrentRaceId = 0;
    char *cRaceStartTimestamp;
    bool bRerunsOff = false;
    bool bRunDirectionInverted = false;
+   bool bIgnoreSensors = false;
+   volatile bool bExecuteStopRace;
+   volatile bool bExecuteResetRace;
+   volatile bool bExecuteStartRaceTimer;
 
    void Main();
-   void ChangeRaceStateToRunning();
    void StartRaceTimer();
    void StopRace();
    void StopRace(long long llStopTime);
    void ResetRace();
-   void PrintRaceTriggerRecords();
-   void PrintRaceTriggerRecordsToFile();
    void TriggerSensor1();
    void TriggerSensor2();
 
@@ -66,7 +69,6 @@ public:
    String GetCleanTime();
 
    stRaceData GetRaceData();
-   bool GetRunDirection();
    void ToggleRunDirection();
    void ToggleAccuracy();
    void ToggleRerunsOffOn(uint8_t _iState);
@@ -118,8 +120,7 @@ private:
    bool _bS1StillSafe;
    bool _bNegativeCrossDetected;
    bool _bPotentialNegativeCrossDetected;
-   bool _bRaceReadyFaultON;
-   bool _bRaceReadyFaultOFF;
+   bool _bRaceSummaryPrinted = false; // race summary printed indicator
    long long _llLastDogTimeReturnTimeStamp[4];
    int8_t _iLastReturnedRunNumber[4];
    long long _llDogEnterTimes[5];
@@ -146,6 +147,9 @@ private:
    STriggerRecord _QueuePop();
    bool _QueueEmpty();
    void _AddToTransitionString(STriggerRecord _InterruptTrigger);
+   void _PrintRaceSummary();
+   void _PrintRaceTriggerRecords();
+   void _PrintRaceTriggerRecordsToFile();
 };
 
 extern RaceHandlerClass RaceHandler;

@@ -5,17 +5,28 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
-- timeout support in testETS (1.0.1)
-- support for WebUI "up time" higher than 10h (stability tests)
 
 ### Changed
+
+## [1.11.9] - 2023-03-05
+
+### Added
+- timeout support in testETS (1.0.1)
+- uptime command for testETS (1.1.0)
+- support for WebUI "up time" higher than 10h (stability tests)
+- removed old TC 43 and added new TC 46
+
+### Changed
+- fix for false cross fault detection in Ultra 15-22 race (TC 46)
 - testETS scripts corrections and small refactoring (1.0.0)
 - pre-filtering waiting time changed from 15ms to 12ms
 - optimization of main program loop
+- optimization of LCD refresh
 - fixed WebUI time in case of no GPS connection
 - removed unused historical races data (fix for stability tests)
 - max number of races changed from 100 to 1000 (fix for stability tests)
 - testETS summary closed after each testcase (1.0.2)
+- testETS "stab" migration to "loop"
 
 ## [1.10.2] - 2022-10-27
 
@@ -175,7 +186,8 @@ All notable changes to this project will be documented in this file.
 
 
 
-[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.10.2...HEAD
+[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.11.9...HEAD
+[1.11.9]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.10.2...v1.11.9
 [1.10.2]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.9.0...v1.10.2
 [1.9.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.6.0...v1.9.0
 [1.6.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.5.3...v1.6.0

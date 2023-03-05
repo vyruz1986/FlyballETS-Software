@@ -22,7 +22,7 @@ struct stRaceData
    unsigned long StartTime;
    unsigned long EndTime;
    String ElapsedTime;
-   uint8_t RaceState;
+   uint8_t raceState;
    stDogData DogData[4];
    String CleanTime;
    uint8_t RacingDogs;

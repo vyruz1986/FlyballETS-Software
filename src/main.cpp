@@ -70,8 +70,8 @@ void setup()
 
    // Set ISR's with wrapper functions
 #if !Simulate
-   attachInterrupt(digitalPinToInterrupt(iS2Pin), Sensor2Wrapper, CHANGE);
    attachInterrupt(digitalPinToInterrupt(iS1Pin), Sensor1Wrapper, CHANGE);
+   attachInterrupt(digitalPinToInterrupt(iS2Pin), Sensor2Wrapper, CHANGE);
 #endif
 
    // Configure Laser output pin
@@ -87,10 +87,26 @@ void setup()
    BatterySensor.init(iBatterySensorPin);
 
    // Initialize LightsController class
-   LightsController.init(&LightsStrip);
+   // LightsController.init(&LightsStrip);
+   xTaskCreatePinnedToCore(
+      Core1Lights,
+      "Lights",
+      8192,
+      NULL,
+      1,
+      &taskLights,
+      1);
 
    // Initialize LCDController class with lcd1 and lcd2 objects
    LCDController.init(&lcd, &lcd2);
+   /*xTaskCreatePinnedToCore(
+      Core1LCD,
+      "LCD",
+      8192,
+      NULL,
+      1,
+      &taskLCD,
+      1);*/
 
    strSerialData[0] = 0;
 
@@ -101,15 +117,23 @@ void setup()
    if (digitalRead(iSDdetectPin) == LOW)
       SDcardController.init();
    else
-      Serial.println("SD Card not inserted!\r\n");
+      Serial.println("SD Card not inserted!");
 
    // Initialize RaceHandler class with S1 and S2 pins
-   RaceHandler.init(iS1Pin, iS2Pin);
+   // RaceHandler.init(iS1Pin, iS2Pin);
+   xTaskCreatePinnedToCore(
+      Core1Race,
+      "Race",
+      16384,
+      NULL,
+      1,
+      &taskRace,
+      1);
 
    // Initialize simulatorclass pins if applicable
-#if Simulate
-   Simulator.init(iS1Pin, iS2Pin);
-#endif
+   /*#if Simulate
+      Simulator.init();
+   #endif*/
 
 #ifdef WiFiON
    // Setup AP
@@ -181,13 +205,12 @@ void loop()
 #ifdef WiFiON
       // Handle OTA update if incoming
       ArduinoOTA.handle();
-      if (bCheckWsClinetStatus)
+      /*if (bCheckWsClinetStatus)
       {
          bCheckWsClinetStatus = false;
          log_i("IP to check: %s", ipTocheck.toString().c_str());
          WebHandler.disconnectWsClient(ipTocheck);
-      }
-
+      }*/
 #endif
 
       // Handle GPS
@@ -210,19 +233,18 @@ void loop()
    // Handle remote control and buttons states
    HandleRemoteAndButtons();
 
+   /*
    // Handle lights main processing
    LightsController.Main();
 
-#if Simulate
-   // Run simulator
-   Simulator.Main();
-#endif
+   #if Simulate
+      // Run simulator
+      Simulator.Main();
+   #endif
 
    // Handle Race main processing
    RaceHandler.Main();
-
-   // Handle LCD data updates
-   HandleLCDUpdates();
+   */
 
    // Handle LCD processing
    LCDController.Main();
@@ -231,44 +253,6 @@ void loop()
    // Handle WebSocket server
    WebHandler.loop();
 #endif
-
-   // Reset variables when state RESET
-   if (RaceHandler.RaceState == RaceHandler.RESET)
-   {
-      iCurrentDog = RaceHandler.iCurrentDog;
-      bRaceSummaryPrinted = false;
-   }
-
-   if (RaceHandler.RaceState == RaceHandler.STOPPED && ((GET_MICROS - (RaceHandler.llRaceStartTime + RaceHandler.llRaceTime)) / 1000 > 500) && !bRaceSummaryPrinted)
-   {
-      // Race has been stopped 0.5 second ago: print race summary to console
-      for (uint8_t i = 0; i < RaceHandler.iNumberOfRacingDogs; i++)
-      {
-         // log_d("Dog %i -> %i run(s).", i + 1, RaceHandler.iDogRunCounters[i] + 1);
-         for (uint8_t i2 = 0; i2 < (RaceHandler.iDogRunCounters[i] + 1); i2++)
-            log_i("Dog %i: %s | CR: %s", i + 1, RaceHandler.GetStoredDogTimes(i, i2), RaceHandler.TransformCrossingTime(i, i2));
-      }
-      log_i(" Team: %s", RaceHandler.GetRaceTime());
-      log_i("   CT: %s", RaceHandler.GetCleanTime());
-      if (SDcardController.bSDCardDetected)
-         SDcardController.SaveRaceDataToFile();
-#if !Simulate
-      if (CORE_DEBUG_LEVEL >= ESP_LOG_DEBUG)
-         RaceHandler.PrintRaceTriggerRecords();
-      if (SDcardController.bSDCardDetected)
-         RaceHandler.PrintRaceTriggerRecordsToFile();
-#endif
-      bRaceSummaryPrinted = true;
-   }
-
-   if (RaceHandler.iCurrentDog != iCurrentDog && RaceHandler.RaceState == RaceHandler.RUNNING)
-   {
-      log_i("Dog %i: %s | CR: %s", RaceHandler.iPreviousDog + 1, RaceHandler.GetDogTime(RaceHandler.iPreviousDog, -2), RaceHandler.GetCrossingTime(RaceHandler.iPreviousDog, -2).c_str());
-      log_d("Running dog: %i.", RaceHandler.iCurrentDog + 1);
-   }
-
-   // Cleanup variables used for checking if something changed
-   iCurrentDog = RaceHandler.iCurrentDog;
 }
 
 void serialEvent()
@@ -293,17 +277,17 @@ void serialEvent()
 /// <summary>
 ///   These are wrapper functions which are necessary because it's not allowed to use a class member function directly as an ISR
 /// </summary>
-void Sensor2Wrapper()
+void IRAM_ATTR Sensor1Wrapper()
 {
-   RaceHandler.TriggerSensor2();
+   RaceHandler.TriggerSensor1();
 }
 
 /// <summary>
 ///   These are wrapper functions which are necessary because it's not allowed to use a class member function directly as an ISR
 /// </summary>
-void Sensor1Wrapper()
+void IRAM_ATTR Sensor2Wrapper()
 {
-   RaceHandler.TriggerSensor1();
+   RaceHandler.TriggerSensor2();
 }
 
 /// <summary>
@@ -311,6 +295,8 @@ void Sensor1Wrapper()
 /// </summary>
 void StartRaceMain()
 {
+   if (RaceHandler.RaceState != RaceHandler.RESET)
+      return;
    if (LightsController.bModeNAFA)
       LightsController.WarningStartSequence();
    else
@@ -322,7 +308,9 @@ void StartRaceMain()
 /// </summary>
 void StopRaceMain()
 {
-   RaceHandler.StopRace();
+   if (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)
+      return;
+   RaceHandler.bExecuteStopRace = true;
    LightsController.DeleteSchedules();
 }
 
@@ -344,8 +332,8 @@ void ResetRace()
 {
    if (RaceHandler.RaceState != RaceHandler.STOPPED) // Only allow reset when race is stopped first
       return;
-   RaceHandler.ResetRace();
-   LightsController.ResetLights();
+   RaceHandler.bExecuteResetRace = true;
+   LightsController.bExecuteResetLights = true;
 }
 
 #ifdef WiFiON
@@ -390,12 +378,14 @@ void ToggleWifi()
    {
       WiFi.mode(WIFI_OFF);
       LCDController.UpdateField(LCDController.WifiState, " ");
+      LCDController.bExecuteLCDUpdate = true;
       log_i("WiFi OFF");
    }
    else
    {
       WiFi.mode(WIFI_AP);
       LCDController.UpdateField(LCDController.WifiState, "W");
+      LCDController.bExecuteLCDUpdate = true;
       log_i("WiFi ON");
    }
 }
@@ -411,10 +401,10 @@ void mdnsServerSetup()
 void HandleSerialCommands()
 {
    // Race start
-   if (strSerialData == "start" && (RaceHandler.RaceState == RaceHandler.RESET))
+   if (strSerialData == "start")
       StartRaceMain();
    // Race stop
-   if (strSerialData == "stop" && ((RaceHandler.RaceState == RaceHandler.STARTING) || (RaceHandler.RaceState == RaceHandler.RUNNING)))
+   if (strSerialData == "stop")
       StopRaceMain();
    // Race reset button
    if (strSerialData == "reset")
@@ -422,6 +412,17 @@ void HandleSerialCommands()
    // Print time
    if (strSerialData == "time")
       log_i("System time:  %s", GPSHandler.GetLocalTimestamp());
+   // Print uptime
+   if (strSerialData == "uptime")
+   {
+      uint32_t t = (uint32_t)(millis() / 1000);
+      uint8_t s = t % 60;
+      t = (t - s) / 60;
+      uint8_t m = t % 60;
+      t = (t - m) / 60;
+      uint16_t h = t;
+      log_i("Up time: %i:%i:%i", h, m, s);
+   }
    // Delete tag file
    if (strSerialData == "deltagfile")
       SDcardController.deleteFile(SD_MMC, "/tag.txt");
@@ -451,12 +452,13 @@ void HandleSerialCommands()
    if (strSerialData.startsWith("race"))
    {
       strSerialData.remove(0, 5);
-      uint iSimulatedRaceID = strSerialData.toInt();
-      if (iSimulatedRaceID < 0 || iSimulatedRaceID >= NumSimulatedRaces)
+      Simulator.iSimulatedRaceID = strSerialData.toInt();
+      if (Simulator.iSimulatedRaceID < 0 || Simulator.iSimulatedRaceID >= NumSimulatedRaces)
       {
-         iSimulatedRaceID = 0;
+         Simulator.iSimulatedRaceID = 0;
       }
-      Simulator.ChangeSimulatedRaceID(iSimulatedRaceID);
+      // Simulator.ChangeSimulatedRaceID(iSimulatedRaceID);
+      Simulator.bExecuteSimRaceChange = true;
    }
 #endif
    // Dog 1 fault
@@ -472,7 +474,7 @@ void HandleSerialCommands()
    if (strSerialData == "d4f")
       RaceHandler.SetDogFault(3);
    // Toggle race direction
-   if (strSerialData == "direction" && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
+   if (strSerialData == "direction")
       RaceHandler.ToggleRunDirection();
    // Set explicitly number of racing dogs
    if (strSerialData.startsWith("setdogs") && RaceHandler.RaceState == RaceHandler.RESET)
@@ -493,10 +495,7 @@ void HandleSerialCommands()
       SDcardController.ToggleDecimalSeparator();
    // Toggle between modes
    if (strSerialData == "mode")
-   {
       LightsController.ToggleStartingSequence();
-      LCDController.reInit();
-   }
    // Reruns off
    if (strSerialData == "reruns off")
       RaceHandler.ToggleRerunsOffOn(1);
@@ -515,67 +514,6 @@ void HandleSerialCommands()
    {
       strSerialData = "";
       bSerialStringComplete = false;
-   }
-}
-
-void HandleLCDUpdates()
-{
-   // Update team time
-   LCDController.UpdateField(LCDController.TeamTime, RaceHandler.GetRaceTime());
-
-   // Update team clean time
-   LCDController.UpdateField(LCDController.CleanTime, RaceHandler.GetCleanTime());
-
-   // Handle individual dog info
-   LCDController.UpdateField(LCDController.D1Time, RaceHandler.GetDogTime(0));
-   LCDController.UpdateField(LCDController.D1CrossTime, RaceHandler.GetCrossingTime(0));
-   LCDController.UpdateField(LCDController.D1RerunInfo, RaceHandler.GetRerunInfo(0));
-   if (RaceHandler.iNumberOfRacingDogs > 1)
-   {
-      LCDController.UpdateField(LCDController.D2Time, RaceHandler.GetDogTime(1));
-      LCDController.UpdateField(LCDController.D2CrossTime, RaceHandler.GetCrossingTime(1));
-      LCDController.UpdateField(LCDController.D2RerunInfo, RaceHandler.GetRerunInfo(1));
-   }
-   if (RaceHandler.iNumberOfRacingDogs > 2)
-   {
-      LCDController.UpdateField(LCDController.D3Time, RaceHandler.GetDogTime(2));
-      LCDController.UpdateField(LCDController.D3CrossTime, RaceHandler.GetCrossingTime(2));
-      LCDController.UpdateField(LCDController.D3RerunInfo, RaceHandler.GetRerunInfo(2));
-   }
-   if (RaceHandler.iNumberOfRacingDogs > 3)
-   {
-      LCDController.UpdateField(LCDController.D4Time, RaceHandler.GetDogTime(3));
-      LCDController.UpdateField(LCDController.D4CrossTime, RaceHandler.GetCrossingTime(3));
-      LCDController.UpdateField(LCDController.D4RerunInfo, RaceHandler.GetRerunInfo(3));
-   }
-
-   // Update battery percentage
-   if ((GET_MICROS / 1000 < 2000 || ((GET_MICROS / 1000 - llLastBatteryLCDupdate) > 30000)) //
-         && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
-   {
-      iBatteryVoltage = BatterySensor.GetBatteryVoltage();
-      uint16_t iBatteryPercentage = BatterySensor.GetBatteryPercentage();
-      String sBatteryPercentage;
-      if (iBatteryPercentage == 9999)
-      {
-         sBatteryPercentage = "!!!";
-         LCDController.UpdateField(LCDController.BattLevel, sBatteryPercentage);
-         LightsController.ResetLights();
-         delay(3000);
-         esp_deep_sleep_start();
-      }
-      else if (iBatteryPercentage == 9911)
-         sBatteryPercentage = "USB";
-      else if (iBatteryPercentage == 0)
-         sBatteryPercentage = "LOW";
-      else
-         sBatteryPercentage = String(iBatteryPercentage);
-
-      while (sBatteryPercentage.length() < 3)
-         sBatteryPercentage = " " + sBatteryPercentage;
-      LCDController.UpdateField(LCDController.BattLevel, sBatteryPercentage);
-      // log_d("Battery: analog: %i ,voltage: %i, level: %i%%", BatterySensor.GetLastAnalogRead(), iBatteryVoltage, iBatteryPercentage);
-      llLastBatteryLCDupdate = GET_MICROS / 1000;
    }
 }
 
@@ -602,11 +540,11 @@ void HandleRemoteAndButtons()
    if (byDataIn != byLastFlickerableState)
    {
       // reset the debouncing timer
-      llLastDebounceTime = GET_MICROS / 1000;
+      llLastDebounceTime = millis();
       // save the the last flickerable state
       byLastFlickerableState = byDataIn;
    }
-   if ((byLastStadyState != byDataIn) && ((GET_MICROS / 1000 - llLastDebounceTime) > DEBOUNCE_DELAY))
+   if ((byLastStadyState != byDataIn) && ((millis() - llLastDebounceTime) > DEBOUNCE_DELAY))
    {
       if (byDataIn != 0)
       {
@@ -618,12 +556,12 @@ void HandleRemoteAndButtons()
       // if the button state has changed:
       if (bitRead(byLastStadyState, iLastActiveBit) == LOW && bitRead(byDataIn, iLastActiveBit) == HIGH)
       {
-         llPressedTime[iLastActiveBit] = GET_MICROS / 1000;
+         llPressedTime[iLastActiveBit] = millis();
          // log_d("The button is pressed: %lld", llPressedTime[iLastActiveBit]);
       }
       else if (bitRead(byLastStadyState, iLastActiveBit) == HIGH && bitRead(byDataIn, iLastActiveBit) == LOW)
       {
-         llReleasedTime[iLastActiveBit] = GET_MICROS / 1000;
+         llReleasedTime[iLastActiveBit] = millis();
          // log_d("The button is released: %lld", llReleasedTime[iLastActiveBit]);
       }
       // save the the last state
@@ -673,11 +611,11 @@ void HandleRemoteAndButtons()
          else if (llPressDuration > SHORT_PRESS_TIME)
          {
             log_d("%s LONG press detected: %lldms", GetButtonString(iLastActiveBit).c_str(), llPressDuration);
-            if (iLastActiveBit == 3 && RaceHandler.RaceState == RaceHandler.RESET) // Dog 1 fault RC button - toggling reruns off/on
+            if (iLastActiveBit == 3) // Dog 1 fault RC button - toggling reruns off/on
                RaceHandler.ToggleRerunsOffOn(2);
-            if (iLastActiveBit == 6 && RaceHandler.RaceState == RaceHandler.RESET) // Dog 2 fault RC button - toggling starting sequence NAFA / FCI
+            else if (iLastActiveBit == 6 && RaceHandler.RaceState == RaceHandler.RESET) // Dog 2 fault RC button - toggling starting sequence NAFA / FCI
                LightsController.ToggleStartingSequence();
-            else if (iLastActiveBit == 0 && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)) // Mode button - side switch
+            else if (iLastActiveBit == 0) // Mode button - side switch
                RaceHandler.ToggleRunDirection();
             else if (iLastActiveBit == 7 && RaceHandler.RaceState == RaceHandler.RESET) // Laster button - Wifi Off
                ToggleWifi();
@@ -685,7 +623,7 @@ void HandleRemoteAndButtons()
       }
    }
    // Laser deativation
-   if ((bLaserActive) && ((GET_MICROS / 1000 - llReleasedTime[7] > iLaserOnTime * 1000) || RaceHandler.RaceState == RaceHandler.STARTING || RaceHandler.RaceState == RaceHandler.RUNNING))
+   if ((bLaserActive) && ((millis() - llReleasedTime[7] > iLaserOnTime * 1000) || RaceHandler.RaceState == RaceHandler.STARTING || RaceHandler.RaceState == RaceHandler.RUNNING))
    {
       digitalWrite(iLaserOutputPin, LOW);
       bLaserActive = false;
@@ -732,3 +670,38 @@ String GetButtonString(uint8_t _iActiveBit)
 
    return strButton;
 }
+
+void Core1Race(void *parameter)
+{
+#if Simulate
+   Simulator.init();
+#endif
+   RaceHandler.init(iS1Pin, iS2Pin);
+   for (;;)
+   {
+   #if Simulate
+      Simulator.Main();
+   #endif
+      RaceHandler.Main();
+   }
+}
+
+void Core1Lights(void *parameter)
+{
+   LightsController.init(&LightsStrip);
+   for (;;)
+   {
+      LightsController.Main();
+   }
+}
+
+/*void Core1LCD(void *parameter)
+{
+   LCDController.init(&lcd, &lcd2);
+   for (;;)
+   {
+      LCDController.Main();
+      vTaskDelay(5);
+      HandleLCDUpdates();
+   }
+}*/

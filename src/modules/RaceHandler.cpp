@@ -35,11 +35,11 @@ void RaceHandlerClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
    // Start in ready/reset state
    _iS1Pin = iS1Pin;
    _iS2Pin = iS2Pin;
-   ResetRace();
    if (SettingsManager.getSetting("RunDirectionInverted").equals("1"))
    {
       bRunDirectionInverted = true;
       LCDController.UpdateField(LCDController.BoxDirection, "<");
+      LCDController.bExecuteLCDUpdate = true;
       log_i("Run direction from settings: inverted");
    }
    else
@@ -52,64 +52,8 @@ void RaceHandlerClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
    }
    else
       log_i("Accuracy from settings: 2 digits");
-}
-
-/// <summary>
-///   Changes race state, if byNewRaceState is different from current one.
-/// </summary>
-///
-/// <param name="byNewRaceState">   New race state. </param>
-void RaceHandlerClass::_ChangeRaceState(RaceStates byNewRaceState)
-{
-   PreviousRaceState = RaceState;
-   RaceState = byNewRaceState;
-   switch (RaceState)
-   {
-   case RaceHandlerClass::STOPPED:
-      strRaceState = " STOP  ";
-      break;
-   case RaceHandlerClass::STARTING:
-      strRaceState = " START ";
-      break;
-   case RaceHandlerClass::RUNNING:
-      strRaceState = "RUNNING";
-      break;
-   case RaceHandlerClass::RESET:
-      strRaceState = " READY ";
-      break;
-   default:
-      break;
-   }
-   log_i("RS: %s", strRaceState);
-   LCDController.UpdateField(LCDController.RaceState, strRaceState);
-}
-
-/// <summary>
-///   Change dog state. If byNewDogState is different from current one.
-/// </summary>
-///
-/// <param name="byNewDogState"> State of the new dog. </param>
-void RaceHandlerClass::_ChangeDogState(_byDogStates byNewDogState)
-{
-   if (_byDogState != byNewDogState)
-      _byDogState = byNewDogState;
-   // log_d("DogState: %i", byNewDogState);
-}
-
-/// <summary>
-///   Change dog number, if new dognumber is different from current one.
-/// </summary>
-///
-/// <param name="iNewDogNumber"> Zero-based index of the new dog number. </param>
-void RaceHandlerClass::_ChangeDogNumber(uint8_t iNewDogNumber)
-{
-   // Check if the dog really changed (this function could be called superfluously)
-   if (iNewDogNumber != iCurrentDog)
-   {
-      iPreviousDog = iCurrentDog;
-      iCurrentDog = iNewDogNumber;
-      log_d("Dog:%i|ENT:%lld|EXIT:%lld|TOT:%lld", iPreviousDog + 1, _llDogEnterTimes[iPreviousDog], _llLastDogExitTime, _llDogTimes[iPreviousDog][iDogRunCounters[iPreviousDog]]);
-   }
+   LCDController.bUpdateTimerLCDdata = true;
+   LCDController.bExecuteLCDUpdate = true;
 }
 
 /// <summary>
@@ -120,23 +64,49 @@ void RaceHandlerClass::_ChangeDogNumber(uint8_t iNewDogNumber)
 /// </summary>
 void RaceHandlerClass::Main()
 {
-   // Trigger filterring of sensors interrupts if new records available and 12ms waiting time passed
-   while ((_iInputQueueReadIndex != _iInputQueueWriteIndex) && ((GET_MICROS - _InputTriggerQueue[_iInputQueueWriteIndex - 1].llTriggerTime) > 12000))
+   // Check if race state should be changed to RUNNING
+   if (RaceState == STARTING && MICROS >= llRaceStartTime)
    {
-      log_v("IQRI:%d | IQWI:%d | Delta:%lld | RaceTime:%lld", _iInputQueueReadIndex, _iInputQueueWriteIndex, GET_MICROS - _InputTriggerQueue[_iInputQueueWriteIndex - 1].llTriggerTime, GET_MICROS - llRaceStartTime);
+      _ChangeRaceState(RUNNING);
+      // log_d("GREEN light is ON!");
+   }
+
+   // Update racetime
+   if (RaceState == RUNNING)
+   {
+      if (MICROS > llRaceStartTime)
+         llRaceTime = MICROS - llRaceStartTime;
+      // If race last for 10 minutes race will be stopped
+      if (llRaceTime > 600000000)
+      {
+         log_w("Race TIMEOUT!!!");
+         StopRace(llRaceTime);
+      }
+   }
+
+   // Trigger filterring of sensors interrupts if new records available and 12ms waiting time passed
+   while ((_iInputQueueReadIndex != _iInputQueueWriteIndex) && ((MICROS - _InputTriggerQueue[_iInputQueueWriteIndex - 1].llTriggerTime) > 12000))
+   {
+      log_v("IQRI:%d | IQWI:%d | Delta:%lld | RaceTime:%lld", _iInputQueueReadIndex, _iInputQueueWriteIndex, MICROS - _InputTriggerQueue[_iInputQueueWriteIndex - 1].llTriggerTime, MICROS - llRaceStartTime);
       _QueueFilter();
    }
 
-   if (_bRaceReadyFaultON)
+   if (bExecuteStopRace)
    {
-      LightsController.ReaceReadyFault(LightsController.ON);
-      _bRaceReadyFaultON = false;
+      StopRace();
+      bExecuteStopRace = false;
    }
 
-   if (_bRaceReadyFaultOFF)
+   if (bExecuteResetRace)
    {
-      LightsController.ReaceReadyFault(LightsController.OFF);
-      _bRaceReadyFaultOFF = false;
+      ResetRace();
+      bExecuteResetRace = false;
+   }
+
+   if (bExecuteStartRaceTimer)
+   {
+      StartRaceTimer();
+      bExecuteStartRaceTimer = false;
    }
 
    if (!_QueueEmpty()) // If queue is not empty, we have work to do
@@ -145,8 +115,8 @@ void RaceHandlerClass::Main()
       STriggerRecord STriggerRecord = _QueuePop();
       // If the transition string is not empty and it wasn't updated for 350ms then it was noise and we have to clear it.
       // Forst first entering dog filtering is 750ms to cover scenario from simulated race 39.
-      if (_strTransition.length() != 0 && ((GET_MICROS - _llLastTransitionStringUpdate) > 350000 && (iCurrentDog != 0 || (iCurrentDog == 0 && _bRerunBusy)) //
-                                             || (GET_MICROS - _llLastTransitionStringUpdate) > 750000 && iCurrentDog == 0 && !_bRerunBusy))
+      if (_strTransition.length() != 0 && ((MICROS - _llLastTransitionStringUpdate) > 350000 && (iCurrentDog != 0 || (iCurrentDog == 0 && _bRerunBusy)) //
+                                           || (MICROS - _llLastTransitionStringUpdate) > 750000 && iCurrentDog == 0 && !_bRerunBusy))
       {
          if (_byDogState == GOINGIN)
          {
@@ -188,7 +158,7 @@ void RaceHandlerClass::Main()
       }
 
       // If we have potential negative cross detected on S2, but S1 wasn't crossed for 100ms since then it had to be sensor noise and we need to reset flag
-      if (_bPotentialNegativeCrossDetected && (GET_MICROS - _llS2CrossedUnsafeGetMicrosTime) > 100000)
+      if (_bPotentialNegativeCrossDetected && (MICROS - _llS2CrossedUnsafeGetMicrosTime) > 100000)
       {
          _bPotentialNegativeCrossDetected = false;
          _strTransition = "";
@@ -281,7 +251,7 @@ void RaceHandlerClass::Main()
             // Period between 3.5s and 5.5s is covered and scenario when last dog is running excluded. Fix for simulated race 45 (83-30).
             // log_d("bRerunBusy: %i, _bLastStringBAba: %i, TfromLastDogExit: %lld, iCurrentDog: %i, iNextDog: %i.", _bRerunBusy, _bLastStringBAba, (STriggerRecord.llTriggerTime - _llLastDogExitTime), iCurrentDog + 1, iNextDog + 1);
             if (!_bRerunBusy && _bLastStringBAba && (STriggerRecord.llTriggerTime - _llLastDogExitTime) > 3500000 //
-                  && (STriggerRecord.llTriggerTime - _llLastDogExitTime) < 5500000 && iCurrentDog != iNextDog)
+                && (STriggerRecord.llTriggerTime - _llLastDogExitTime) < 5500000 && iCurrentDog != iNextDog)
             {
                // Calculte times for running invisible dog
                SetDogFault(iNextDog, ON);
@@ -347,7 +317,7 @@ void RaceHandlerClass::Main()
          // Special case after false detection of "ok crossing" --> S1 activated above 100ms after "ok crossing" detection or re-run with next dog = current dog
          else if (_byDogState == COMINGBACK && _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] && !_bS1StillSafe &&
                   (((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) > 100000 && (STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) < 2000000) // filtering changed to < 2s fix for 79-7
-                     || (_bRerunBusy && iCurrentDog == iNextDog)))
+                   || (_bRerunBusy && iCurrentDog == iNextDog)))
          {
             _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] = false;
             _llDogEnterTimes[iCurrentDog] = STriggerRecord.llTriggerTime;
@@ -479,7 +449,7 @@ void RaceHandlerClass::Main()
                {
                   _bPotentialNegativeCrossDetected = true;
                   _llS2CrossedUnsafeTriggerTime = STriggerRecord.llTriggerTime;
-                  _llS2CrossedUnsafeGetMicrosTime = GET_MICROS; // fix for simulated race 35
+                  _llS2CrossedUnsafeGetMicrosTime = MICROS; // fix for simulated race 35
                   log_d("Dog %i potential negative cross detected.", iCurrentDog + 1);
                }
                else
@@ -571,7 +541,10 @@ void RaceHandlerClass::Main()
                log_d("New dog state: GOINGING.");
             }
             else if (RaceState == STOPPED) // Last returning dog
+            {
                log_d("Last dog came back.");
+               bIgnoreSensors = true;
+            }
             else // So called "uncertain Tstring"
             {
                // If Transition string indicated something else and we expect returning dog, it means 2 dogs must have passed
@@ -594,15 +567,15 @@ void RaceHandlerClass::Main()
                      _bS1StillSafe = false;
                      _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = 0;
                      _llDogEnterTimes[iCurrentDog] = _llDogExitTimes[iPreviousDog];
-                     if (_strTransition == "BAab" || _strTransition == "BAba") // Big OK cross
+                     if (_strTransition == "BAab" || _strTransition == "BAba" || _strTransition == "BbABab" || _strTransition == "BbABba") // Big OK cross
                      {
                         _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
-                        log_d("Unmeasurable OK crossing for dog %i. BAab or BAba", iCurrentDog + 1);
+                        log_d("Unmeasurable 'OK' crossing for dog %i.", iCurrentDog + 1);
                      }
                      else
                      {
                         _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
-                        log_d("Unmeasurable ok crossing for dog %i.", iCurrentDog + 1);
+                        log_d("Unmeasurable 'ok' crossing for dog %i.", iCurrentDog + 1);
                      }
                   }
                }
@@ -629,25 +602,6 @@ void RaceHandlerClass::Main()
       }
    }
 
-   /*//Check if race state should be changed to RUNNING
-   if (RaceState == STARTING && GET_MICROS >= llRaceStartTime)
-   {
-      _ChangeRaceState(RUNNING);
-      log_d("GREEN light is ON!");
-   }*/
-
-   // Update racetime
-   if (RaceState == RUNNING)
-   {
-      if (GET_MICROS > llRaceStartTime)
-         llRaceTime = GET_MICROS - llRaceStartTime;
-      if (llRaceTime > 995000000)
-      {
-         log_w("Race TIEOUT!!!");
-         StopRace(llRaceTime);
-      }
-   }
-
    // Check for faults, loop through array of dogs checking for faults
    _bFault = false;
    for (auto bFault : _bDogFaults)
@@ -656,6 +610,7 @@ void RaceHandlerClass::Main()
       {
          // At least one dog with fault has been found, set general fault value to true
          _bFault = true;
+         _bNoValidCleanTime = true;
          break;
       }
    }
@@ -665,17 +620,81 @@ void RaceHandlerClass::Main()
       {
          // At least one dog with manual fault has been found, set general fault value to true
          _bFault = true;
+         _bNoValidCleanTime = true;
          break;
       }
+   }
+
+   if (!bIgnoreSensors && RaceState == STOPPED && (MICROS - _llRaceEndTime) > 400000)
+      bIgnoreSensors = true;
+
+   if (bIgnoreSensors && !_bRaceSummaryPrinted)
+   {
+      _PrintRaceSummary();
+      _bRaceSummaryPrinted = true;
    }
 }
 
 /// <summary>
-///   Change race to RUNNING when GREEN light comes ON during start sequence.
+///   Changes race state, if byNewRaceState is different from current one.
 /// </summary>
-void RaceHandlerClass::ChangeRaceStateToRunning()
+///
+/// <param name="byNewRaceState">   New race state. </param>
+void RaceHandlerClass::_ChangeRaceState(RaceStates byNewRaceState)
 {
-   _ChangeRaceState(RUNNING);
+   RaceState = byNewRaceState;
+   switch (RaceState)
+   {
+   case RaceHandlerClass::RESET:
+      strRaceState = " READY ";
+      break;
+   case RaceHandlerClass::STARTING:
+      strRaceState = " START ";
+      break;
+   case RaceHandlerClass::RUNNING:
+      strRaceState = "RUNNING";
+      break;
+   case RaceHandlerClass::STOPPED:
+      strRaceState = " STOP  ";
+      break;
+   default:
+      break;
+   }
+   log_i("RS: %s", strRaceState);
+   LCDController.UpdateField(LCDController.RaceState, strRaceState);
+}
+
+/// <summary>
+///   Change dog state. If byNewDogState is different from current one.
+/// </summary>
+///
+/// <param name="byNewDogState"> State of the new dog. </param>
+void RaceHandlerClass::_ChangeDogState(_byDogStates byNewDogState)
+{
+   if (_byDogState != byNewDogState)
+      _byDogState = byNewDogState;
+   // log_d("DogState: %i", byNewDogState);
+}
+
+/// <summary>
+///   Change dog number, if new dognumber is different from current one.
+/// </summary>
+///
+/// <param name="iNewDogNumber"> Zero-based index of the new dog number. </param>
+void RaceHandlerClass::_ChangeDogNumber(uint8_t iNewDogNumber)
+{
+   // Check if the dog really changed (this function could be called superfluously)
+   if (iNewDogNumber != iCurrentDog)
+   {
+      iPreviousDog = iCurrentDog;
+      iCurrentDog = iNewDogNumber;
+      log_d("Dog:%i|ENT:%lld|EXIT:%lld|TOT:%lld", iPreviousDog + 1, _llDogEnterTimes[iPreviousDog], _llLastDogExitTime, _llDogTimes[iPreviousDog][iDogRunCounters[iPreviousDog]]);
+      if (RaceState == RUNNING)
+      {
+         log_i("Dog %i: %s | CR: %s", iPreviousDog + 1, GetDogTime(iPreviousDog, -2), GetCrossingTime(iPreviousDog, -2).c_str());
+         log_d("Running dog: %i.", iCurrentDog + 1);
+      }
+   }
 }
 
 /// <summary>
@@ -684,7 +703,7 @@ void RaceHandlerClass::ChangeRaceStateToRunning()
 /// </summary>
 void RaceHandlerClass::StartRaceTimer()
 {
-   llRaceStartTime = GET_MICROS + 3000000;
+   llRaceStartTime = MICROS + 3000000;
    _ChangeRaceState(STARTING);
    log_i("STARTING! Tag: %i, Race ID: %i.", SDcardController.iTagValue, iCurrentRaceId + 1);
    cRaceStartTimestamp = GPSHandler.GetLocalTimestamp();
@@ -700,7 +719,7 @@ void RaceHandlerClass::StartRaceTimer()
 /// </summary>
 void RaceHandlerClass::StopRace()
 {
-   this->StopRace(GET_MICROS);
+   this->StopRace(MICROS);
 }
 
 /// <summary>
@@ -709,18 +728,22 @@ void RaceHandlerClass::StopRace()
 /// <param name="StopTime">   The time in microseconds at which the race stopped. </param>
 void RaceHandlerClass::StopRace(long long llStopTime)
 {
-   if (RaceState == RUNNING)
+   if (RaceState == STOPPED || RaceState == RESET)
+      return;
+   else
    {
       // Race is running, so we have to record the EndTime
       _llRaceEndTime = llStopTime;
-      llRaceTime = _llRaceEndTime - llRaceStartTime;
+      if (RaceState == RUNNING)
+         llRaceTime = _llRaceEndTime - llRaceStartTime;
+      else
+         llRaceTime = 0;
+      _ChangeRaceState(STOPPED);
+#ifdef WiFiON
+      // Send updated racedata to any web clients
+      WebHandler.bSendRaceData = true;
+#endif
    }
-   else // RaceState is RUNNING
-   {
-      _llRaceEndTime = llStopTime;
-      llRaceTime = 0;
-   }
-   _ChangeRaceState(STOPPED);
 }
 
 /// <summary>
@@ -729,20 +752,26 @@ void RaceHandlerClass::StopRace(long long llStopTime)
 /// </summary>
 void RaceHandlerClass::ResetRace()
 {
-   if (RaceState == STOPPED)
+   if (RaceState != STOPPED)
+      return;
+   else
    {
       iCurrentDog = 0;
       iNextDog = 1;
       iPreviousDog = 0;
-      llRaceStartTime = 0;
-      _llRaceEndTime = 0;
+      llRaceStartTime = MICROS;
+      _llRaceEndTime = MICROS;
       llRaceTime = 0;
       _llRaceElapsedTime = 0;
       _llLastDogExitTime = 0;
+      _llS2CrossedSafeTime = 0;
       _llS2CrossedUnsafeTriggerTime = 0;
       _llS2CrossedUnsafeGetMicrosTime = 0;
       _byDogState = GOINGIN;
       _ChangeDogNumber(0);
+#if Simulate
+      Simulator.bExecuteSimRaceReset = true;
+#endif
       _bFault = false;
       _bRerunBusy = false;
       _iOutputQueueReadIndex = 0;
@@ -815,27 +844,51 @@ void RaceHandlerClass::ResetRace()
       for (auto &iCounter : _iLastReturnedRunNumber)
          iCounter = 0;
       _ChangeRaceState(RESET);
-   }
+      bIgnoreSensors = false;
+      _bRaceSummaryPrinted = false;
 
-   if (iCurrentRaceId == 999)
-      iCurrentRaceId = 0;
-   else
-      iCurrentRaceId++;
-   String _sCurrentRaceId = String(iCurrentRaceId + 1);
-   while (_sCurrentRaceId.length() < 3)
-      _sCurrentRaceId = " " + _sCurrentRaceId;
-   LCDController.UpdateField(LCDController.RaceID, _sCurrentRaceId);
-   log_i("Reset Race: DONE");
+      if (iCurrentRaceId == 999)
+         iCurrentRaceId = 0;
+      else
+         iCurrentRaceId++;
+      String _sCurrentRaceId = String(iCurrentRaceId + 1);
+      while (_sCurrentRaceId.length() < 3)
+         _sCurrentRaceId = " " + _sCurrentRaceId;
+      LCDController.UpdateField(LCDController.RaceID, _sCurrentRaceId);
+      log_i("Reset Race: DONE");
 #ifdef WiFiON
-   // Send updated racedata to any web clients
-   WebHandler.bSendRaceData = true;
+      // Send updated racedata to any web clients
+      WebHandler.bSendRaceData = true;
+#endif
+   }
+}
+
+void RaceHandlerClass::_PrintRaceSummary()
+{
+   log_v("RaceState: %i, MICROS: %lld, _llRaceEndTime: %lld, Delta: %lld, _bRaceSummaryPrinted: %i", RaceState, MICROS, _llRaceEndTime, MICROS - _llRaceEndTime, _bRaceSummaryPrinted);
+   // Race has been stopped 0.5 second ago: print race summary to console
+   for (uint8_t i = 0; i < iNumberOfRacingDogs; i++)
+   {
+      // log_d("Dog %i -> %i run(s).", i + 1, iDogRunCounters[i] + 1);
+      for (uint8_t i2 = 0; i2 < (iDogRunCounters[i] + 1); i2++)
+         log_i("Dog %i: %s | CR: %s", i + 1, GetStoredDogTimes(i, i2), TransformCrossingTime(i, i2));
+   }
+   log_i(" Team: %s", GetRaceTime());
+   log_i("   CT: %s", GetCleanTime());
+   if (SDcardController.bSDCardDetected)
+      SDcardController.SaveRaceDataToFile();
+#if !Simulate
+   if (CORE_DEBUG_LEVEL >= ESP_LOG_DEBUG)
+      _PrintRaceTriggerRecords();
+   if (SDcardController.bSDCardDetected)
+      _PrintRaceTriggerRecordsToFile();
 #endif
 }
 
 /// <summary>
 ///   After race is ended/stopped print trigger records to console
 /// </summary>
-void RaceHandlerClass::PrintRaceTriggerRecords()
+void RaceHandlerClass::_PrintRaceTriggerRecords()
 {
    uint8_t iRecordToPrintIndex = 0;
    while (iRecordToPrintIndex < _iInputQueueWriteIndex)
@@ -854,7 +907,7 @@ void RaceHandlerClass::PrintRaceTriggerRecords()
 /// <summary>
 ///   If SD card is present, after race is ended/stopped print trigger records to file
 /// </summary>
-void RaceHandlerClass::PrintRaceTriggerRecordsToFile()
+void RaceHandlerClass::_PrintRaceTriggerRecordsToFile()
 {
    File rawSensorsReadingFile;
    String rawSensorsReadingFileName = "/SENSORS_DATA/" + SDcardController.sTagValue + "_SensorsData" + ".txt";
@@ -923,6 +976,7 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
       // If fault is true, set light to on and set general value fault variable to true
       LightsController.ToggleFaultLight(iDogNumber, LightsController.ON);
       _bFault = true;
+      _bNoValidCleanTime = true;
       log_i("Dog %i fault ON", iDogNumber + 1);
    }
    else
@@ -940,19 +994,17 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
 /// </summary>
 void RaceHandlerClass::TriggerSensor1()
 {
-   if (RaceState == STOPPED && GET_MICROS > (_llRaceEndTime + 500000))
+   if (bIgnoreSensors)
       return;
    else if (RaceState == RESET)
    {
       if (digitalRead(_iS1Pin) == 1)
-         _bRaceReadyFaultON = true;
-      // LightsController.ReaceReadyFault(LightsController.ON);
+         LightsController.bExecuteRaceReadyFaultON = true;
       else
-         _bRaceReadyFaultOFF = true;
-      // LightsController.ReaceReadyFault(LightsController.OFF);
+         LightsController.bExecuteRaceReadyFaultOFF = true;
    }
    else
-      _QueuePush({bRunDirectionInverted ? 2 : 1, GET_MICROS, digitalRead(_iS1Pin)});
+      _QueuePush({bRunDirectionInverted ? 2 : 1, MICROS, digitalRead(_iS1Pin)});
 }
 
 /// <summary>
@@ -961,19 +1013,17 @@ void RaceHandlerClass::TriggerSensor1()
 /// </summary>
 void RaceHandlerClass::TriggerSensor2()
 {
-   if (RaceState == STOPPED && GET_MICROS > (_llRaceEndTime + 500000))
+   if (bIgnoreSensors)
       return;
    else if (RaceState == RESET)
    {
       if (digitalRead(_iS2Pin) == 1)
-         _bRaceReadyFaultON = true;
-      // LightsController.ReaceReadyFault(LightsController.ON);
+         LightsController.bExecuteRaceReadyFaultON = true;
       else
-         _bRaceReadyFaultOFF = true;
-      // LightsController.ReaceReadyFault(LightsController.OFF);
+         LightsController.bExecuteRaceReadyFaultOFF = true;
    }
    else
-      _QueuePush({bRunDirectionInverted ? 1 : 2, GET_MICROS, digitalRead(_iS2Pin)});
+      _QueuePush({bRunDirectionInverted ? 1 : 2, MICROS, digitalRead(_iS2Pin)});
 }
 
 /// <summary>
@@ -1023,15 +1073,15 @@ int8_t RaceHandlerClass::SelectRunNumber(uint8_t iDogNumber, int8_t iRunNumber)
       // if run number is -1 (unspecified), we have to cycle throug them
       if (iRunNumber == -1)
       {
-         auto &llLastReturnedTimeStamp = _llLastDogTimeReturnTimeStamp[iDogNumber];
+         auto &ulLastReturnedTimeStamp = _llLastDogTimeReturnTimeStamp[iDogNumber];
          iRunNumber = _iLastReturnedRunNumber[iDogNumber];
-         if ((GET_MICROS / 1000 - llLastReturnedTimeStamp) > 2000)
+         if ((millis() - ulLastReturnedTimeStamp) > 2000)
          {
             if (iRunNumber == iDogRunCounters[iDogNumber])
                iRunNumber = 0;
             else
                iRunNumber++;
-            llLastReturnedTimeStamp = GET_MICROS / 1000;
+            ulLastReturnedTimeStamp = millis();
          }
          _iLastReturnedRunNumber[iDogNumber] = iRunNumber;
       }
@@ -1078,10 +1128,11 @@ String RaceHandlerClass::GetDogTime(uint8_t iDogNumber, int8_t iRunNumber)
    // and if requested run number is lower then number of times dog has run
    else if ((RaceState == RUNNING && iCurrentDog == iDogNumber && _byDogState == COMINGBACK) && iRunNumber <= iDogRunCounters[iDogNumber] //
             && _llDogEnterTimes[iDogNumber] != 0)
-      ulDogTimeMillis = (GET_MICROS - _llDogEnterTimes[iDogNumber]) / 1000;
+      ulDogTimeMillis = (MICROS - _llDogEnterTimes[iDogNumber]) / 1000;
    // If next dog didn't enter yet (e.g. positive cross) just show zero
    else if (_llDogTimes[iDogNumber][iRunNumber] == 0)
       ulDogTimeMillis = 0;
+
    if (!_bAccuracy3digits)
    {
       dDogTime = ((unsigned long)(ulDogTimeMillis + 5) / 10) / 100.0;
@@ -1092,6 +1143,7 @@ String RaceHandlerClass::GetDogTime(uint8_t iDogNumber, int8_t iRunNumber)
       dDogTime = ulDogTimeMillis / 1000.0;
       dtostrf(dDogTime, 7, 3, cDogTime);
    }
+
    if (_bDogMissedGateGoingin[iDogNumber][iRunNumber])
       strDogTime = " run in";
    else if (_bDogMissedGateComingback[iDogNumber][iRunNumber])
@@ -1190,7 +1242,7 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
    double dCrossingTime;
    char cCrossingTime[8];
    String strCrossingTime;
-   if (((GET_MICROS - _llDogEnterTimes[iDogNumber] > 300000) || (iRunNumber < iDogRunCounters[iDogNumber])) && _llCrossingTimes[iDogNumber][iRunNumber] < 0 && _llDogEnterTimes[iDogNumber] != 0)
+   if (((MICROS - _llDogEnterTimes[iDogNumber] > 300000) || (iRunNumber < iDogRunCounters[iDogNumber])) && _llCrossingTimes[iDogNumber][iRunNumber] < 0 && _llDogEnterTimes[iDogNumber] != 0)
    {
       if ((iDogNumber == 0 && iRunNumber == 0 && _llCrossingTimes[0][0] > -9500) && !_bAccuracy3digits && !bToFile) // If this is first dog false start below 9.5ms
                                                                                                                     // use "ms" accuracy even if 2digits accuracy has been set
@@ -1219,7 +1271,7 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
          strCrossingTime += cCrossingTime;
       }
    }
-   else if (((GET_MICROS - _llDogEnterTimes[iDogNumber] > 300000) || (iRunNumber < iDogRunCounters[iDogNumber])) && _llCrossingTimes[iDogNumber][iRunNumber] > 0 && _llDogEnterTimes[iDogNumber] != 0)
+   else if (((MICROS - _llDogEnterTimes[iDogNumber] > 300000) || (iRunNumber < iDogRunCounters[iDogNumber])) && _llCrossingTimes[iDogNumber][iRunNumber] > 0 && _llDogEnterTimes[iDogNumber] != 0)
    {
       if ((iDogNumber == 0 && iRunNumber == 0 && _llCrossingTimes[0][0] < 9500) && !_bAccuracy3digits && !bToFile) // If this is first dog entry time (start) below 9.5ms
                                                                                                                    // use "ms" accuracy even if 2digits accuracy has been set
@@ -1281,7 +1333,7 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
    }
    // If dog is still running
    else if ((RaceState == RUNNING && iCurrentDog == iDogNumber && _byDogState == COMINGBACK) && iRunNumber <= iDogRunCounters[iDogNumber] //
-            && _llDogEnterTimes[iDogNumber] != 0 && (GET_MICROS - _llDogEnterTimes[iDogNumber]) > 300000)
+            && _llDogEnterTimes[iDogNumber] != 0 && (MICROS - _llDogEnterTimes[iDogNumber]) > 300000)
    {
       if (_bDogFaults[iDogNumber] || _bDogManualFaults[iDogNumber])
       {
@@ -1340,8 +1392,6 @@ String RaceHandlerClass::GetRerunInfo(uint8_t iDogNumber)
 String RaceHandlerClass::GetCleanTime()
 {
    String strCleanTime;
-   if (_bFault)
-      _bNoValidCleanTime = true;
    if (!_bNoValidCleanTime)
    {
       long long llTotalNetTime = 0;
@@ -1388,7 +1438,7 @@ stRaceData RaceHandlerClass::GetRaceData()
    RequestedRaceData.EndTime = _llRaceEndTime / 1000;
    RequestedRaceData.ElapsedTime = GetRaceTime();
    RequestedRaceData.CleanTime = GetCleanTime();
-   RequestedRaceData.RaceState = RaceState;
+   RequestedRaceData.raceState = RaceState;
    RequestedRaceData.RacingDogs = iNumberOfRacingDogs;
    RequestedRaceData.RerunsOff = bRerunsOff;
 
@@ -1413,18 +1463,25 @@ stRaceData RaceHandlerClass::GetRaceData()
 /// </summary>
 void RaceHandlerClass::ToggleRunDirection()
 {
-   bRunDirectionInverted = !bRunDirectionInverted;
-   SettingsManager.setSetting("RunDirectionInverted", String(bRunDirectionInverted));
-   if (bRunDirectionInverted)
+   if (RaceState == STOPPED || RaceState == RESET)
    {
-      LCDController.UpdateField(LCDController.BoxDirection, "<");
-      log_i("Run direction changed to: inverted");
+      bRunDirectionInverted = !bRunDirectionInverted;
+      SettingsManager.setSetting("RunDirectionInverted", String(bRunDirectionInverted));
+      if (bRunDirectionInverted)
+      {
+         LCDController.UpdateField(LCDController.BoxDirection, "<");
+         LCDController.bExecuteLCDUpdate = true;
+         log_i("Run direction changed to: inverted");
+      }
+      else
+      {
+         LCDController.UpdateField(LCDController.BoxDirection, ">");
+         LCDController.bExecuteLCDUpdate = true;
+         log_i("Run direction changed to: normal");
+      }
    }
    else
-   {
-      LCDController.UpdateField(LCDController.BoxDirection, ">");
-      log_i("Run direction changed to: normal");
-   }
+      return;
 }
 
 /// <summary>
@@ -1434,6 +1491,8 @@ void RaceHandlerClass::ToggleAccuracy()
 {
    _bAccuracy3digits = !_bAccuracy3digits;
    SettingsManager.setSetting("Accuracy3digits", String(_bAccuracy3digits));
+   LCDController.bUpdateTimerLCDdata = true;
+   LCDController.bExecuteLCDUpdate = true;
    if (_bAccuracy3digits)
       log_i("Accuracy switched to 3 digits");
    else
@@ -1448,33 +1507,26 @@ void RaceHandlerClass::ToggleAccuracy()
 /// </summary>
 void RaceHandlerClass::ToggleRerunsOffOn(uint8_t _iState)
 {
-   if (_iState == 2)
-      bRerunsOff = !bRerunsOff;
-   else if (_iState == 1)
-      bRerunsOff = true;
-   else if (_iState == 0)
-      bRerunsOff = false;
+   if (RaceState == STOPPED || RaceState == RESET)
+   {
+      if (_iState == 2)
+         bRerunsOff = !bRerunsOff;
+      else if (_iState == 1)
+         bRerunsOff = true;
+      else if (_iState == 0)
+         bRerunsOff = false;
 
-   if (bRerunsOff)
-      log_i("Reruns turned off.");
-   else
-      log_i("Reruns turned on.");
+      if (bRerunsOff)
+         log_i("Reruns turned off.");
+      else
+         log_i("Reruns turned on.");
 
 #ifdef WiFiON
-   WebHandler.bSendRaceData = true;
+      WebHandler.bSendRaceData = true;
 #endif
-}
-
-/// <summary>
-///   Returns the run direction
-/// </summary>
-/// <returns>
-///   false means normal direction (box to right)
-///   true means inverted direction (box to left)
-/// </returns>
-bool RaceHandlerClass::GetRunDirection()
-{
-   return bRunDirectionInverted;
+   }
+   else
+      return;
 }
 
 /// <summary>
@@ -1515,56 +1567,31 @@ void RaceHandlerClass::_QueuePush(RaceHandlerClass::STriggerRecord _InterruptTri
 /// </summary>
 void RaceHandlerClass::_QueueFilter()
 {
+   STriggerRecord _PreviousRecord = _InputTriggerQueue[_iInputQueueReadIndex - 1]; // fix for Ultra 15-22
    STriggerRecord _CurrentRecord = _InputTriggerQueue[_iInputQueueReadIndex];
+   STriggerRecord _NextRecord = _InputTriggerQueue[_iInputQueueReadIndex + 1];
 
-   if (_iInputQueueReadIndex <= _iInputQueueWriteIndex - 2)
+   // If there are 2 records from the same sensors line and delta time is below 6ms ignore both
+   if ((_iInputQueueReadIndex <= _iInputQueueWriteIndex - 2) && (_CurrentRecord.llTriggerTime - _PreviousRecord.llTriggerTime <= 200000) //
+      && (_CurrentRecord.iSensorNumber == _NextRecord.iSensorNumber && _NextRecord.llTriggerTime - _CurrentRecord.llTriggerTime <= 6000))
    {
-      STriggerRecord _NextRecord = _InputTriggerQueue[_iInputQueueReadIndex + 1];
+      // log_d("Next record %lld - Current record %lld = %lld < 6ms.", _NextRecord.llTriggerTime, _CurrentRecord.llTriggerTime, _NextRecord.llTriggerTime - _CurrentRecord.llTriggerTime);
+      log_d("S%i | TT:%lld | T:%lld | St:%i | IGNORED-1", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime,
+            _CurrentRecord.llTriggerTime - llRaceStartTime, _CurrentRecord.iSensorState);
+      log_d("S%i | TT:%lld | T:%lld | St:%i | IGNORED-2", _NextRecord.iSensorNumber, _NextRecord.llTriggerTime,
+            _NextRecord.llTriggerTime - llRaceStartTime, _NextRecord.iSensorState);
 
-      // If 2 records are from the same sensors line and delta time is below 6ms ignore both
-      if (_CurrentRecord.iSensorNumber == _NextRecord.iSensorNumber && _NextRecord.llTriggerTime - _CurrentRecord.llTriggerTime <= 6000)
-      {
-         // log_d("Next record %lld - Current record %lld = %lld < 6ms.", _NextRecord.llTriggerTime, _CurrentRecord.llTriggerTime, _NextRecord.llTriggerTime - _CurrentRecord.llTriggerTime);
-         log_d("S%i | TT:%lld | T:%lld | St:%i | IGNORED", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime,
-               _CurrentRecord.llTriggerTime - llRaceStartTime, _CurrentRecord.iSensorState);
-         log_d("S%i | TT:%lld | T:%lld | St:%i | IGNORED < 6ms", _NextRecord.iSensorNumber, _NextRecord.llTriggerTime,
-               _NextRecord.llTriggerTime - llRaceStartTime, _NextRecord.iSensorState);
-
-         // Input Read index has to be increased, check it we should wrap-around
-         if (_iInputQueueReadIndex == TRIGGER_QUEUE_LENGTH - 2)
-            // Input Read index has reached end of array, start at 0 again
-            _iInputQueueReadIndex = 0;
-         else
-            // End of array not yet reached, increase index by 2
-            _iInputQueueReadIndex = _iInputQueueReadIndex + 2;
-      }
+      // Input Read index has to be increased, check it we should wrap-around
+      if (_iInputQueueReadIndex == TRIGGER_QUEUE_LENGTH - 2)
+         // Input Read index has reached end of array, start at 0 again
+         _iInputQueueReadIndex = 0;
       else
-      {
-         // Next record is for different sensor line or delta time is higher than 6ms. Push Current record Output Queue.
-         // log_d("Next record > 6ms or for different sensors line. Push Current S%i record %lld to Output Queue.", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime);
-         // This function copy current record to common interrupt queue
-         _OutputTriggerQueue[_iOutputQueueWriteIndex] = _InputTriggerQueue[_iInputQueueReadIndex];
-
-         // Input Read index has to be increased, check it we should wrap-around
-         if (_iInputQueueReadIndex == TRIGGER_QUEUE_LENGTH - 1)
-            // Input Read index has reached end of array, start at 0 again
-            _iInputQueueReadIndex = 0;
-         else
-            // End of array not yet reached, increase index by 1
-            _iInputQueueReadIndex++;
-
-         // Output Write index has to be increased, check it we should wrap-around
-         if (_iOutputQueueWriteIndex == TRIGGER_QUEUE_LENGTH - 1)
-            // Output Write index has reached end of array, start at 0 again
-            _iOutputQueueWriteIndex = 0;
-         else
-            // End of array not yet reached, increase index by 1
-            _iOutputQueueWriteIndex++;
-      }
+         // End of array not yet reached, increase index by 2
+         _iInputQueueReadIndex = _iInputQueueReadIndex + 2;
    }
    else
    {
-      // Only one record available in the Input Queue. Push it to Output Queue.
+      // Only one record available or next record is for different line or next record is for same line, but delta is above 6ms. Push record to Output Queue.
       // log_d("One record in the Input Queue. Push S%i record %lld to Output Queue.", _CurrentRecord.iSensorNumber, _CurrentRecord.llTriggerTime);
       // This function copy current record to common interrupt queue
       _OutputTriggerQueue[_iOutputQueueWriteIndex] = _InputTriggerQueue[_iInputQueueReadIndex];
@@ -1642,7 +1669,7 @@ void RaceHandlerClass::_AddToTransitionString(STriggerRecord _InterruptTrigger)
    // A indicates the handlers side, B indicates the boxes side
    // Uppercase indicates a high signal (dog broke beam), lowercase indicates a low signal (dog left beam)
 
-   _llLastTransitionStringUpdate = GET_MICROS;
+   _llLastTransitionStringUpdate = MICROS;
 
    char cTemp;
    switch (_InterruptTrigger.iSensorNumber)

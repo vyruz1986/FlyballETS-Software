@@ -7,25 +7,24 @@
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>
 
-#ifdef ESP32
-#define GET_MICROS esp_timer_get_time()
-#else
-#define GET_MICROS micros()
-#endif
-
 #ifndef GLOBALVAR_H
 #define GLOBALVAR_H
 
-#define FW_VER "1.10.6"          // Flyball ETS firmware version
+#define MICROS esp_timer_get_time()
 
+#undef CONFIG_ESP_COREDUMP_ENABLE_TO_FLASH
+#undef CONFIG_ESP_COREDUMP_CHECK_BOOT
+#define CONFIG_ESP_COREDUMP_ENABLE_TO_UART 1
 
-#define Simulate false           // Set to true to enable race simulation (see Simulator.h/.cpp)
+#define FW_VER "1.11.9"          // Flyball ETS firmware version
+
+#define Simulate true            // Set to true to enable race simulation (see Simulator.h/.cpp)
 #define NumSimulatedRaces 48     // Number of prepeared simulated races. Sererial interface command to change interface: e.g. "race 1"
 #define TRIGGER_QUEUE_LENGTH 60  // Number of triggers in the queue
 

@@ -1,5 +1,5 @@
 # test ESP32
-# v1.0.2
+# v1.1.0
 from genericpath import isfile
 import os
 import serial
@@ -105,17 +105,17 @@ while argument_number < len(sys.argv):
         flatten_listOfRaces = list(flat2gen(listOfRaces))
     elif raceToRun == "-d":
         debugmode = True
-    elif raceToRun == "all" or raceToRun == "stab":
+    elif raceToRun == "all":
         initial_count = 0
-        if raceToRun == "stab":
-            argument_number += 1
-            numberOfStabilityLoops = int(sys.argv[argument_number])
-            if numberOfStabilityLoops < 1:
-                invalidInput = True
         for Path in os.listdir(os.getcwd() + "/testcases"):
             if os.path.isfile(os.path.join(os.getcwd() + "/testcases", Path)):
                 flatten_listOfRaces.append(str(initial_count))
                 initial_count += 1
+    elif raceToRun == "loop":
+        argument_number += 1
+        numberOfStabilityLoops = int(sys.argv[argument_number])
+        if numberOfStabilityLoops < 1:
+            invalidInput = True
     else:
         invalidInput = True
     argument_number += 1
@@ -130,8 +130,12 @@ for stabilityLoopIndex in range(numberOfStabilityLoops):
     loopIndex = 0
     while loopIndex < len(flatten_listOfRaces):
         raceToRun = str(flatten_listOfRaces[loopIndex])
+        ser.write(b"uptime" + b"\n")
+        time.sleep(0.2)
+        ser.write(b"reset" + b"\n")
+        time.sleep(0.2)
         ser.write(b"race " + raceToRun.encode('utf-8') + b"\n")
-        time.sleep(1)
+        time.sleep(0.2)
 
         racefilePATH = os.getcwd() + "/testcases" + "/RACE" + raceToRun + ".txt"
         if os.path.isfile(racefilePATH):
@@ -174,7 +178,7 @@ for stabilityLoopIndex in range(numberOfStabilityLoops):
                 loopIndex = len(flatten_listOfRaces)
             else:
                 raceEND = False
-                ser.flushInput()
+                #ser.flushInput()
                 ser.write(b"start" + b"\n")
                 raceStartTime = int(time.time())
                 time.sleep(0.1)
@@ -211,8 +215,13 @@ for stabilityLoopIndex in range(numberOfStabilityLoops):
                         notOKcount = 10
                         testcaseOutputFile.write(decodedLine.encode('utf-8') + b'  TIMEOUT\n')
 
+                if debugmode:
+                    print("\r", end='')
+
                 while ("CT" not in stopline) & (notOKcount < 10):
                     decodedLine = serialLineDecode()
+                    if debugmode:
+                        print(decodedLine)
                     stopline = decodedLine
                     if ((decodedLine.startswith("Dog ") or decodedLine.startswith(" Team") or decodedLine.startswith("   CT")) and raceEND):
                         #exitfile.write(decodedLine.encode('utf-8') + b'\n')
@@ -237,8 +246,8 @@ for stabilityLoopIndex in range(numberOfStabilityLoops):
                 if fileTestsSummary._checkClosed:
                     fileTestsSummary = open(pathTestsOutputFolder + "/!summary.txt", "ab")
                 if notOKcount == 0:
-                    fileTestsSummary.write(b"Race " + raceToRun.encode('utf-8') + b" PASSED\n")
-                    print("PASSED")
+                    fileTestsSummary.write(b"Race " + raceToRun.encode('utf-8') + b" passed\n")
+                    print("passed")
                 elif notOKcount < 10:
                     fileTestsSummary.write(b"Race " + raceToRun.encode('utf-8') + b" FAIL\n")
                     print("FAIL")
@@ -247,11 +256,9 @@ for stabilityLoopIndex in range(numberOfStabilityLoops):
                     print("TIMEOUT")
                     ser.write(b"stop" + b"\n")
                     time.sleep(2)
-                    ser.flushInput()
 
                 time.sleep(1.5)
-                ser.write(b"reset" + b"\n")
-                time.sleep(0.5)
+                ser.flushInput()
                 loopIndex += 1
                 testcaseInputFile.close()
                 testcaseOutputFile.close()
@@ -265,3 +272,5 @@ except NameError:
     print("Invalid parameters")
 else:
     fileTestsSummary.close()
+time.sleep(0.2)
+ser.write(b"reset" + b"\n")

@@ -62,8 +62,10 @@ Funkcje przycisków pilota:
 - 2 RESET
 - 3, 4, 5, 6 w trakcie biegu -> ręczne oznaczenie błędu psa (odpowiednio 1, 2, 3, 4) np. gdy zostanie upuszczona piłka
 - 3, 4, 5, 6 w trybie gotowości (READY, po resecie) -> wybór, ile psów będzie brało udział w danym biegu
-- długie naciśnięcie (puścić przycisk po ok. 1s) 3 w trybie gotowości (READY) -> włączenie/wyłączenie funkcji "Bez powtórek / Re-runs OFF"
-- długie naciśnięcie (puścić przycisk po ok. 1s) 4 w trybie gotowości (READY) -> przełączenie między sekwencją startową NAFA i FCI (funkcja przycisku "Tryb / Mode" na obudowie przed wersją oprogramowania v1.6.0)
+- długie naciśnięcie (puścić przycisk po ok. 2s) 3 w trybie gotowości (READY) -> włączenie/wyłączenie funkcji "Bez powtórek / Re-runs OFF"
+- długie naciśnięcie (puścić przycisk po ok. 2s) 4 w trybie gotowości (READY) -> przełączenie między sekwencją startową NAFA i FCI (funkcja przycisku "Tryb / Mode" na obudowie przed wersją oprogramowania v1.6.0)
+UWAGA! Sygnał pilota dociera do systemu z opóźnieniem. To znaczy, że krótkie naciśnięcie przycisków nie będzie dawało reakcji (syngał nie dotrze to procesora).
+Dla prawidłowego działania trzeba przytrzymać przycisk pilota przez ok. 0,5s. Można odnieść mylne wrażenie, że mocne przyciskanie "pomaga". To nie jest prawdą. Nie liczy się siła nacisku, a czas jego trwania.
 
 
 ## Przyciski obudowy

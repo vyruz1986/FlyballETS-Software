@@ -17,8 +17,14 @@ python3 testETS.py 4-8 -d
 - run all testcases from 'testcases' folder in normal mode (minimized prints to console):
 python3 testETS.py all
 
-- run all testcases in loop 3 times in normal mode (minimized prints to console):
-python3 testETS.py stab 3
+- run 1-5 testcases in loop 3 times in normal mode (minimized prints to console):
+python3 testETS.py 1-5 loop 3
+[alternative] python3 testETS.py 1,2,3,4,5 loop 3
+
+- run all testcases in loop 2 times in normal mode (minimized prints to console):
+python3 testETS.py all loop 2
+
+[NOTE] When you enter range that is out of range for existing testcase after finishing the last existing testcase the programm will end.
 
 Testcases:
 At the beginning of every testcase file there are "$init" parameters (divided by ";") determining system setup for testcase.

@@ -21,7 +21,7 @@ void GPSHandlerClass::_HandleSerialPort()
 void GPSHandlerClass::init(uint8_t _iGPSrxPin, uint8_t _iGPStxPin)
 {
    GPSSerial.begin(9600, SERIAL_8N1, _iGPSrxPin, _iGPStxPin);
-   // delay(200);
+   // vTaskDelay(200);
    _HandleSerialPort();
    _FormatTime();
    log_i("Initial UTC time:  %s", _cUTCTime);
@@ -30,14 +30,15 @@ void GPSHandlerClass::init(uint8_t _iGPSrxPin, uint8_t _iGPStxPin)
 
 void GPSHandlerClass::loop()
 {
-   if ((GET_MICROS / 1000 - llLastGPSRead) > 10000)
+   if ((millis() - llLastGPSRead) > 10000)
    {
       _HandleSerialPort();
-      llLastGPSRead = GET_MICROS / 1000;
+      llLastGPSRead = millis();
       if (_Tgps.time.isUpdated() && (_Tgps.date.year() != 2000))
       {
          _FormatTime();
          LCDController.UpdateField(LCDController.GpsState, "G");
+         LCDController.bExecuteLCDUpdate = true;
          if (!_bGSPconnected)
          {
             log_i("GPS connected. Updated UTC time: %s. Updated local time: %s", _cUTCTime, _cLocalDateAndTime);

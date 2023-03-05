@@ -34,7 +34,7 @@ protected:
    void _WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
    bool _DoAction(JsonObject ActionObj, String *ReturnError, AsyncWebSocketClient *Client);
    void _SendRaceData(int iRaceId, int8_t iClientId);
-   void _SendLightsData();
+   void _SendLightsData(int8_t iClientId = -1);
 
    bool _ProcessConfig(JsonArray newConfig, String *ReturnError);
 
@@ -48,11 +48,11 @@ protected:
    void _onFavicon(AsyncWebServerRequest *request);
 
    unsigned long _lLastRaceDataBroadcast;
-   unsigned long _lRaceDataBroadcastInterval;
+   const uint16_t _iRaceDataBroadcastInterval = 750;
    unsigned long _lLastSystemDataBroadcast;
-   unsigned long _lSystemDataBroadcastInterval;
+   const uint16_t _iSystemDataBroadcastInterval = 3500;
    unsigned long _lLastPingBroadcast;
-   unsigned long _lPingBroadcastInterval;
+   const uint16_t _iPingBroadcastInterval = 30000;
    unsigned long _lWebSocketReceivedTime;
    unsigned long _lLastBroadcast;
    stSystemData _SystemData;

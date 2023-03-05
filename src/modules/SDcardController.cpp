@@ -66,6 +66,7 @@ void SDcardControllerClass::init()
       if (bSDCardDetected)
       {
          LCDController.UpdateField(LCDController.SDcardState, "sd");
+         LCDController.bExecuteLCDUpdate = true;
          log_i("SD_MMC Card Size: %lluMB", SD_MMC.cardSize() / (1024 * 1024));
          log_i("Free space: %lluMB", (SD_MMC.totalBytes() - SD_MMC.usedBytes()) / (1024 * 1024));
          if (!SD_MMC.exists("/SENSORS_DATA"))
@@ -78,7 +79,7 @@ void SDcardControllerClass::init()
          File tagfile = SD_MMC.open("/tag.txt");
          if (!tagfile)
          {
-            delay(50);
+            vTaskDelay(50);
             writeFile(SD_MMC, "/tag.txt", "0\r\n");
             tagfile.close();
             iTagValue = 1;
@@ -199,13 +200,13 @@ void SDcardControllerClass::CheckSDcardSlot(uint8_t iSDdetectPin)
    if (bSDCardDetected && _iSDdetectPinStatus == HIGH)
    {
       log_w("SD Card plugged out - rebooting!");
-      delay(500);
+      vTaskDelay(500);
       ESP.restart();
    }
    if (!bSDCardDetected && _iSDdetectPinStatus == LOW)
    {
       log_w("SD Card plugged in - rebooting!");
-      delay(500);
+      vTaskDelay(500);
       ESP.restart();
    }
 }
@@ -357,8 +358,8 @@ void SDcardControllerClass::testFileIO(fs::FS &fs, const char *path)
    File file = fs.open(path);
    static uint8_t buf[512];
    size_t len = 0;
-   uint32_t start = millis();
-   uint32_t end = start;
+   uint64_t start = millis();
+   uint64_t end = start;
    if (file)
    {
       len = file.size();

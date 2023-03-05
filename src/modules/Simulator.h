@@ -1,6 +1,3 @@
-//#include <avr/pgmspace.h>
-//#include "PROGMEM_readAnything.h"
-
 // Simulator.h
 #ifndef _SIMULATOR_h
 #define _SIMULATOR_h
@@ -12,23 +9,22 @@ class SimulatorClass
 {
 protected:
 
-
 public:
-   void init(uint8_t iS1Pin, uint8_t iS2Pin);
-   void ChangeSimulatedRaceID(uint iSimulatedRaceID);
+   void init();
    void Main();
-
+   uint iSimulatedRaceID = 0;
+   bool bExecuteSimRaceReset = false;
+   bool bExecuteSimRaceChange = false;
 
 private:
-   uint8_t _iS1Pin;
-   uint8_t _iS2Pin;
    unsigned int _iDataPos;
    unsigned int _iDataStartPos;
+   bool _bNoMoreValidTriggers = false;
    typedef struct SimulatorRecord
    {
-      uint8_t iSensorNumber;
-      long long llTriggerTime;
-      uint8_t iState;
+      uint8_t iSimSensorNumber;
+      long long llSimTriggerTime;
+      uint8_t iSimState;
    } SimulatorRecord;
    static const SimulatorRecord SimulatorQueue[60 * NumSimulatedRaces] PROGMEM;
 
@@ -38,4 +34,3 @@ private:
 extern class SimulatorClass Simulator;
 
 #endif
-

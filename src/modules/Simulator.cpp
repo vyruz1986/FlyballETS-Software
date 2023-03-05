@@ -3,10 +3,74 @@
 // summary:	Implements the simulator class. Since this class is memory intensive, it should only be
 // included if actual simulation is wished.
 #include "Simulator.h"
-#include "config.h"
 #include "RaceHandler.h"
 #include "PROGMEM_readAnything.h"
-//#include <avr/pgmspace.h>
+
+/// <summary>
+///   Initialises this object.
+/// </summary>
+///
+void SimulatorClass::init()
+{
+   _iDataPos = 0;
+   _iDataStartPos = 0;
+   PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
+   log_i("Simulated Race 0 selected!");
+}
+
+/// <summary>
+///   Main entry-point for this application. Should be called every main loop cycle if simulation is wished.
+/// </summary>
+void SimulatorClass::Main()
+{
+   if (bExecuteSimRaceReset)
+   {
+      if (_iDataPos != _iDataStartPos)
+      {
+         // We've reset a race, reset data position to 0
+         _iDataPos = _iDataStartPos;
+         PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
+         _bNoMoreValidTriggers = false;
+      }
+      bExecuteSimRaceReset = false;
+      return;
+   }
+   
+   if (bExecuteSimRaceChange)
+   {
+      if (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)
+      {
+         _iDataStartPos = 60 * iSimulatedRaceID;
+         _iDataPos = _iDataStartPos;
+         PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
+         _bNoMoreValidTriggers = false;
+         log_i("Simulated Race %i selected!", iSimulatedRaceID);
+      }
+      bExecuteSimRaceChange = false;
+      return;
+   }
+
+   if (PendingRecord.llSimTriggerTime == 0)
+   {
+      // Pending record doesn't contain valid data, this means we've reched the end of our queue
+      _bNoMoreValidTriggers = true;
+      return;
+   }
+   // Simulate sensors
+   else if (!_bNoMoreValidTriggers)
+   {
+      while (RaceHandler.RaceState != RaceHandler.RESET && !RaceHandler.bIgnoreSensors && PendingRecord.llSimTriggerTime != 0 && PendingRecord.llSimTriggerTime <= (long)(MICROS - (RaceHandler.llRaceStartTime) + 0)) // 0ms advance added
+      {
+         log_v("Pending record");
+         // log_d("Pending record S%d TriggerTime %lld | %lld", PendingRecord.iSimSensorNumber, RaceHandler.llRaceStartTime + PendingRecord.lSimTriggerTime, PendingRecord.lSimTriggerTime);
+         RaceHandler._QueuePush({PendingRecord.iSimSensorNumber, (long long)(RaceHandler.llRaceStartTime + PendingRecord.llSimTriggerTime), PendingRecord.iSimState});
+         // And increase pending record
+         _iDataPos++;
+         PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
+      }
+   }
+}
+
 /// <summary>
 ///   Program the interrupt triggers which should be simulated here. See end of file for a collection of records from actual races.
 /// </summary>
@@ -2634,68 +2698,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
-   // Testcase 43 ID 81-34 --> S1 noise not detected even < 5ms
-   {1, 884797, 1},
-   {2, 906481, 1},
-   {1, 992375, 0},
-   {2, 1010079, 0},
-   {1, 5608383, 1},
-   {1, 5611976, 0},
-   {2, 5657083, 1},
-   {1, 5679041, 1},
-   {2, 5784719, 0},
-   {1, 5790805, 0},
-   {1, 5797871, 1},
-   {1, 5801423, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   {0, 0, 0},
-   // Testcase 44 ID 81-1 --> Sensors noise: Fake dog 1 time
+   // Testcase 43 ID 81-1 --> Sensors noise: Fake dog 1 time
    {1, 119359, 1},
    {2, 139659, 1},
    {1, 224043, 0},
@@ -2756,7 +2759,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {1, 18837855, 0},
    {0, 0, 0},
    {0, 0, 0},
-   // Testcase 45 ID 83-30 --> Big cross wrongly treated as scenario from race 40
+   // Testcase 44 ID 83-30 --> Big cross wrongly treated as scenario from race 40
    {1, 160901, 1},
    {2, 180778, 1},
    {1, 289954, 0},
@@ -2817,7 +2820,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
-   // Testcase 46 ID 95-14 --> Reruns off and last dog sensors noise after race stopped
+   // Testcase 45 ID 95-14 --> Reruns off and last dog sensors noise after race stopped
    {1, 27718, 1},
    {2, 36780, 1},
    {2, 38603, 0},
@@ -2870,6 +2873,67 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {1, 18511709, 1},
    {2, 18623677, 0},
    {1, 18666207, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   // Testcase 46 ID 15-22 (Ultra) --> False 2nd dog crossing fault
+   {1, 40556, 1},
+   {2, 58434, 1},
+   {1, 137173, 0},
+   {1, 142722, 1},
+   {1, 149728, 0},
+   {2, 153419, 0},
+   {2, 155396, 1},
+   {2, 163370, 0},
+   {2, 4328518, 1},
+   {2, 4333830, 0},
+   {2, 4336381, 1},
+   {2, 4340375, 0},
+   {1, 4342916, 1},
+   {2, 4346198, 1},
+   {1, 4497251, 0},
+   {1, 4499989, 1},
+   {2, 4515278, 0},
+   {2, 4519236, 1},
+   {1, 4529226, 0},
+   {2, 4542661, 0},
+   {2, 4545038, 1},
+   {2, 4549014, 0},
+   {2, 8897359, 1},
+   {1, 8911165, 1},
+   {2, 9014546, 0},
+   {2, 9023020, 1},
+   {2, 9028395, 0},
+   {1, 9031465, 0},
+   {1, 9076608, 1},
+   {2, 9097274, 1},
+   {1, 9151331, 0},
+   {2, 9167333, 0},
+   {2, 9176223, 1},
+   {2, 9186917, 0},
+   {2, 13722936, 1},
+   {1, 13739163, 1},
+   {2, 13810922, 0},
+   {1, 13827081, 0},
+   {1, 14452540, 1},
+   {2, 14467605, 1},
+   {1, 14563307, 0},
+   {1, 14563570, 1},
+   {1, 14574325, 0},
+   {2, 14590554, 0},
+   {2, 18926531, 1},
+   {1, 18942969, 1},
+   {2, 19047105, 0},
+   {1, 19063985, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
+   {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
@@ -2938,75 +3002,7 @@ const SimulatorClass::SimulatorRecord SimulatorClass::SimulatorQueue[60 * NumSim
    {0, 0, 0},
    {0, 0, 0},
    {0, 0, 0},
-   {0, 0, 0}
-};
-/// <summary>
-///   Initialises this object.
-/// </summary>
-///
-/// <param name="iS1Pin">  Zero-based index of the S1 pin. </param>
-/// <param name="iS2Pin">  Zero-based index of the S2 pin. </param>
-void SimulatorClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
-{
-   _iS1Pin = iS1Pin;
-   // pinMode(_iS1Pin, OUTPUT);
-   // digitalWrite(_iS1Pin, LOW);
-   _iS2Pin = iS2Pin;
-   // pinMode(_iS2Pin, OUTPUT);
-   // digitalWrite(_iS2Pin, LOW);
-   _iDataPos = 0;
-   _iDataStartPos = 0;
-   PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
-   log_i("Simulated Race 0 selected!");
-}
-
-/// <summary>
-///   Main entry-point for this application. Should be called every main loop cycle if simulation is wished.
-/// </summary>
-void SimulatorClass::Main()
-{
-   if (RaceHandler.RaceState == RaceHandler.RESET)
-   {
-      if (_iDataPos != _iDataStartPos)
-      {
-         // We've reset a race, reset data position to 0
-         _iDataPos = _iDataStartPos;
-         PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
-      }
-      return;
-   }
-   if (PendingRecord.llTriggerTime == 0)
-   {
-      // Pending record doesn't contain valid data, this means we've reched the end of our queue
-      return;
-   }
-
-   // Simulate sensors
-   if(RaceHandler.RaceState == RaceHandler.STARTING || RaceHandler.RaceState == RaceHandler.RUNNING || (RaceHandler.RaceState == RaceHandler.STOPPED && GET_MICROS <= RaceHandler._llRaceEndTime + 1000000))
-   {
-      while (PendingRecord.llTriggerTime != 0 && PendingRecord.llTriggerTime <= (long long)(GET_MICROS - (RaceHandler.llRaceStartTime) + 0)) // 0ms advance added
-      {
-         log_v("Pending record");
-         // log_d("Pending record S%d TriggerTime %lld | %lld", PendingRecord.iSensorNumber, RaceHandler.llRaceStartTime + PendingRecord.llTriggerTime, PendingRecord.llTriggerTime);
-         RaceHandler._QueuePush({PendingRecord.iSensorNumber, (RaceHandler.llRaceStartTime + PendingRecord.llTriggerTime), PendingRecord.iState});
-         // And increase pending record
-         _iDataPos++;
-         PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
-      }
-   }
-}
-
-void SimulatorClass::ChangeSimulatedRaceID(uint iSimulatedRaceID)
-{
-   if (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)
-   {
-      _iDataStartPos = 60 * iSimulatedRaceID;
-      _iDataPos = _iDataStartPos;
-      PROGMEM_readAnything(&SimulatorQueue[_iDataPos], PendingRecord);
-      log_i("Simulated Race %i selected!", iSimulatedRaceID);
-   }
-   return;
-}
+   {0, 0, 0}};
 /// <summary>
 ///   The simulator class object.
 /// </summary>
