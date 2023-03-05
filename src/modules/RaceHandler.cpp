@@ -78,6 +78,7 @@ void RaceHandlerClass::Main()
       {
          _llRaceTime = MICROS - llRaceStartTime;
          LCDController.bUpdateThisLCDField[LCDController.TeamTime] = true;
+         LCDController.bUpdateThisLCDField[iCurrentDog] = true;
       }
       // If race last for 10 minutes race will be stopped
       if (_llRaceTime > 600000000)
@@ -367,6 +368,7 @@ void RaceHandlerClass::Main()
             if (_bDogFakeTime[iPreviousDog][iDogRunCounters[iPreviousDog]])
             {
                _bDogFakeTime[iPreviousDog][iDogRunCounters[iPreviousDog]] = false;
+               LCDController.bUpdateThisLCDField[iPreviousDog] = true;
                log_d("Fake time flag for dog %i cleared.", iPreviousDog + 1);
             }
             _llRaceElapsedTime = STriggerRecord.llTriggerTime - llRaceStartTime;
@@ -697,15 +699,16 @@ void RaceHandlerClass::_ChangeDogNumber(uint8_t iNewDogNumber)
    // Check if the dog really changed (this function could be called superfluously)
    if (iNewDogNumber != iCurrentDog)
    {
+      LCDController.bUpdateThisLCDField[iCurrentDog] = true;
       iPreviousDog = iCurrentDog;
       iCurrentDog = iNewDogNumber;
       log_d("Dog:%i|ENT:%lld|EXIT:%lld|TOT:%lld", iPreviousDog + 1, _llDogEnterTimes[iPreviousDog], _llLastDogExitTime, _llDogTimes[iPreviousDog][iDogRunCounters[iPreviousDog]]);
+      if (!_bNoValidCleanTime)
+         LCDController.bUpdateThisLCDField[LCDController.CleanTime] = true;
       if (RaceState == RUNNING)
       {
          log_i("Dog %i: %s | CR: %s", iPreviousDog + 1, GetDogTime(iPreviousDog, -2), GetCrossingTime(iPreviousDog, -2).c_str());
          log_d("Running dog: %i.", iCurrentDog + 1);
-         if (!_bNoValidCleanTime)
-            LCDController.bUpdateThisLCDField[LCDController.CleanTime] = true;
       }
    }
 }
@@ -751,6 +754,7 @@ void RaceHandlerClass::StopRace(long long llStopTime)
          _llRaceTime = _llRaceEndTime - llRaceStartTime;
       else
          _llRaceTime = 0;
+      LCDController.bUpdateThisLCDField[iCurrentDog] = true;
       LCDController.bUpdateThisLCDField[LCDController.TeamTime] = true;
       if (!_bNoValidCleanTime)
          LCDController.bUpdateThisLCDField[LCDController.CleanTime] = true;
@@ -871,8 +875,7 @@ void RaceHandlerClass::ResetRace()
       while (_sCurrentRaceId.length() < 3)
          _sCurrentRaceId = " " + _sCurrentRaceId;
       LCDController.UpdateField(LCDController.RaceID, _sCurrentRaceId);
-      LCDController.bUpdateThisLCDField[LCDController.CleanTime] = true;
-      LCDController.bUpdateThisLCDField[LCDController.TeamTime] = true;
+      LCDController.bUpdateTimerLCDdata = true;
       log_i("Reset Race: DONE");
 #ifdef WiFiON
       // Send updated racedata to any web clients
@@ -986,7 +989,10 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
       _bDogFaults[iDogNumber] = bFault;
       // If crossing fault detected of next dog dog then set fake time flag for current dog
       if (bFault && (iDogNumber > 0 || (iDogNumber == 0 && iCurrentDog > 0)))
+      {
          _bDogFakeTime[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+         LCDController.bUpdateThisLCDField[iCurrentDog] = true;
+      }  
    }
 
    if (bFault)

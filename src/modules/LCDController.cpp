@@ -195,34 +195,43 @@ void LCDControllerClass::_HandleLCDUpdates()
       bUpdateThisLCDField[TeamTime] = false;
       log_v("LCD Field TeamTime updated with string '%s'", RaceHandler.GetRaceTime().c_str());
    }
-
+      // Update dogs times
+   for (int i = 0; i < RaceHandler.iNumberOfRacingDogs; i++)
+   {
+      if (bUpdateThisLCDField[i] || bUpdateTimerLCDdata || RaceHandler.iDogRunCounters[i] > 0)
+      {
+         UpdateField(LCDFields(i), RaceHandler.GetDogTime(i));
+         bUpdateThisLCDField[i] = false;
+         log_d("LCD Field Dog %i time updated with string '%s'", i+1, RaceHandler.GetDogTime(i).c_str());
+      }
+   }
 
    if (RaceHandler.RaceState == RaceHandler.STARTING)
    {
-      UpdateField(D1Time, RaceHandler.GetDogTime(0));
+      //UpdateField(D1Time, RaceHandler.GetDogTime(0));
       UpdateField(D1CrossTime, RaceHandler.GetCrossingTime(0));
    }
    else if (RaceHandler.RaceState == RaceHandler.RUNNING || RaceHandler.RaceState == RaceHandler.STOPPED || bUpdateTimerLCDdata)
    {
       // Handle individual dog info
-      UpdateField(D1Time, RaceHandler.GetDogTime(0));
+      //UpdateField(D1Time, RaceHandler.GetDogTime(0));
       UpdateField(D1CrossTime, RaceHandler.GetCrossingTime(0));
       UpdateField(D1RerunInfo, RaceHandler.GetRerunInfo(0));
       if (RaceHandler.iNumberOfRacingDogs > 1)
       {
-         UpdateField(D2Time, RaceHandler.GetDogTime(1));
+         //UpdateField(D2Time, RaceHandler.GetDogTime(1));
          UpdateField(D2CrossTime, RaceHandler.GetCrossingTime(1));
          UpdateField(D2RerunInfo, RaceHandler.GetRerunInfo(1));
       }
       if (RaceHandler.iNumberOfRacingDogs > 2)
       {
-         UpdateField(D3Time, RaceHandler.GetDogTime(2));
+         //UpdateField(D3Time, RaceHandler.GetDogTime(2));
          UpdateField(D3CrossTime, RaceHandler.GetCrossingTime(2));
          UpdateField(D3RerunInfo, RaceHandler.GetRerunInfo(2));
       }
       if (RaceHandler.iNumberOfRacingDogs > 3)
       {
-         UpdateField(D4Time, RaceHandler.GetDogTime(3));
+         //UpdateField(D4Time, RaceHandler.GetDogTime(3));
          UpdateField(D4CrossTime, RaceHandler.GetCrossingTime(3));
          UpdateField(D4RerunInfo, RaceHandler.GetRerunInfo(3));
       }

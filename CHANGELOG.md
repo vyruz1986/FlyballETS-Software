@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 ### Changed
+- LCD and WebUI refresh optimization
 
 ## [1.11.9] - 2023-03-05
 
