@@ -71,16 +71,19 @@ void RaceHandlerClass::Main()
       // log_d("GREEN light is ON!");
    }
 
-   // Update racetime
+   // Update racetime while every 200ms
    if (RaceState == RUNNING)
    {
-      if (MICROS > llRaceStartTime)
-         llRaceTime = MICROS - llRaceStartTime;
+      if ((MICROS > llRaceStartTime) && (MICROS - llRaceStartTime > _llRaceTime + 200000))
+      {
+         _llRaceTime = MICROS - llRaceStartTime;
+         LCDController.bUpdateThisLCDField[LCDController.TeamTime] = true;
+      }
       // If race last for 10 minutes race will be stopped
-      if (llRaceTime > 600000000)
+      if (_llRaceTime > 600000000)
       {
          log_w("Race TIMEOUT!!!");
-         StopRace(llRaceTime);
+         StopRace(_llRaceTime);
       }
    }
 
@@ -610,7 +613,11 @@ void RaceHandlerClass::Main()
       {
          // At least one dog with fault has been found, set general fault value to true
          _bFault = true;
-         _bNoValidCleanTime = true;
+         if (!_bNoValidCleanTime)
+         {
+            _bNoValidCleanTime = true;
+            LCDController.bUpdateThisLCDField[LCDController.CleanTime] = true;
+         }
          break;
       }
    }
@@ -620,7 +627,11 @@ void RaceHandlerClass::Main()
       {
          // At least one dog with manual fault has been found, set general fault value to true
          _bFault = true;
-         _bNoValidCleanTime = true;
+         if (!_bNoValidCleanTime)
+         {
+            _bNoValidCleanTime = true;
+            LCDController.bUpdateThisLCDField[LCDController.CleanTime] = true;
+         }
          break;
       }
    }
@@ -693,6 +704,8 @@ void RaceHandlerClass::_ChangeDogNumber(uint8_t iNewDogNumber)
       {
          log_i("Dog %i: %s | CR: %s", iPreviousDog + 1, GetDogTime(iPreviousDog, -2), GetCrossingTime(iPreviousDog, -2).c_str());
          log_d("Running dog: %i.", iCurrentDog + 1);
+         if (!_bNoValidCleanTime)
+            LCDController.bUpdateThisLCDField[LCDController.CleanTime] = true;
       }
    }
 }
@@ -735,9 +748,12 @@ void RaceHandlerClass::StopRace(long long llStopTime)
       // Race is running, so we have to record the EndTime
       _llRaceEndTime = llStopTime;
       if (RaceState == RUNNING)
-         llRaceTime = _llRaceEndTime - llRaceStartTime;
+         _llRaceTime = _llRaceEndTime - llRaceStartTime;
       else
-         llRaceTime = 0;
+         _llRaceTime = 0;
+      LCDController.bUpdateThisLCDField[LCDController.TeamTime] = true;
+      if (!_bNoValidCleanTime)
+         LCDController.bUpdateThisLCDField[LCDController.CleanTime] = true;
       _ChangeRaceState(STOPPED);
 #ifdef WiFiON
       // Send updated racedata to any web clients
@@ -761,7 +777,7 @@ void RaceHandlerClass::ResetRace()
       iPreviousDog = 0;
       llRaceStartTime = MICROS;
       _llRaceEndTime = MICROS;
-      llRaceTime = 0;
+      _llRaceTime = 0;
       _llRaceElapsedTime = 0;
       _llLastDogExitTime = 0;
       _llS2CrossedSafeTime = 0;
@@ -855,6 +871,8 @@ void RaceHandlerClass::ResetRace()
       while (_sCurrentRaceId.length() < 3)
          _sCurrentRaceId = " " + _sCurrentRaceId;
       LCDController.UpdateField(LCDController.RaceID, _sCurrentRaceId);
+      LCDController.bUpdateThisLCDField[LCDController.CleanTime] = true;
+      LCDController.bUpdateThisLCDField[LCDController.TeamTime] = true;
       log_i("Reset Race: DONE");
 #ifdef WiFiON
       // Send updated racedata to any web clients
@@ -976,7 +994,11 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
       // If fault is true, set light to on and set general value fault variable to true
       LightsController.ToggleFaultLight(iDogNumber, LightsController.ON);
       _bFault = true;
-      _bNoValidCleanTime = true;
+      if (!_bNoValidCleanTime)
+      {
+         _bNoValidCleanTime = true;
+         LCDController.bUpdateThisLCDField[LCDController.CleanTime] = true;
+      }
       log_i("Dog %i fault ON", iDogNumber + 1);
    }
    else
@@ -1040,12 +1062,12 @@ String RaceHandlerClass::GetRaceTime()
    double dRaceTimeSeconds;
    if (!_bAccuracy3digits)
    {
-      dRaceTimeSeconds = ((long long)(llRaceTime + 5000) / 10000) / 100.0;
+      dRaceTimeSeconds = ((long long)(_llRaceTime + 5000) / 10000) / 100.0;
       dtostrf(dRaceTimeSeconds, 7, 2, cRaceTimeSeconds);
    }
    else
    {
-      dRaceTimeSeconds = ((long long)(llRaceTime + 500) / 1000) / 1000.0;
+      dRaceTimeSeconds = ((long long)(_llRaceTime + 500) / 1000) / 1000.0;
       dtostrf(dRaceTimeSeconds, 7, 3, cRaceTimeSeconds);
    }
    strRaceTimeSeconds = cRaceTimeSeconds;

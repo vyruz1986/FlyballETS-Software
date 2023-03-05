@@ -181,17 +181,29 @@ void LCDControllerClass::_UpdateLCD(int iLine, int iPosition, String strText, in
 
 void LCDControllerClass::_HandleLCDUpdates()
 {
-   if (RaceHandler.RaceState == RaceHandler.STARTING)
+   // Update team clean time
+   if (bUpdateThisLCDField[CleanTime] || bUpdateTimerLCDdata)
+   {
+      UpdateField(CleanTime, RaceHandler.GetCleanTime());
+      bUpdateThisLCDField[CleanTime] = false;
+      log_v("LCD Field CleanTime updated with string '%s'", RaceHandler.GetCleanTime().c_str());
+   }
+      // Update team time
+   if (bUpdateThisLCDField[TeamTime] || bUpdateTimerLCDdata)
    {
       UpdateField(TeamTime, RaceHandler.GetRaceTime());
+      bUpdateThisLCDField[TeamTime] = false;
+      log_v("LCD Field TeamTime updated with string '%s'", RaceHandler.GetRaceTime().c_str());
+   }
+
+
+   if (RaceHandler.RaceState == RaceHandler.STARTING)
+   {
+      UpdateField(D1Time, RaceHandler.GetDogTime(0));
       UpdateField(D1CrossTime, RaceHandler.GetCrossingTime(0));
    }
    else if (RaceHandler.RaceState == RaceHandler.RUNNING || RaceHandler.RaceState == RaceHandler.STOPPED || bUpdateTimerLCDdata)
    {
-      // Update team time
-      UpdateField(TeamTime, RaceHandler.GetRaceTime());
-      // Update team clean time
-      UpdateField(CleanTime, RaceHandler.GetCleanTime());
       // Handle individual dog info
       UpdateField(D1Time, RaceHandler.GetDogTime(0));
       UpdateField(D1CrossTime, RaceHandler.GetCrossingTime(0));
@@ -215,6 +227,7 @@ void LCDControllerClass::_HandleLCDUpdates()
          UpdateField(D4RerunInfo, RaceHandler.GetRerunInfo(3));
       }
    }
+   bUpdateTimerLCDdata = false;
 
    if (bUpdateNonTimerLCDdata)
    {

@@ -33,7 +33,6 @@ public:
    uint8_t iNumberOfRacingDogs = 4;
    uint8_t iDogRunCounters[4]; // Number of (re-)runs for each dog
    long long llRaceStartTime;
-   long long llRaceTime;
    uint16_t iCurrentRaceId = 0;
    char *cRaceStartTimestamp;
    bool bRerunsOff = false;
@@ -75,6 +74,7 @@ public:
    void SetNumberOfDogs(uint8_t _iNumberOfRacingDogs);
 
 private:
+   long long _llRaceTime;
    long long _llRaceEndTime;
    long long _llLastDogExitTime;
    long long _llS2CrossedSafeTime;
