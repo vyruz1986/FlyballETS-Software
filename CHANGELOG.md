@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+## [1.11.9] - 2023-03-05
+
+### Added
 - timeout support in testETS (1.0.1)
 - uptime command for testETS (1.1.0)
 - support for WebUI "up time" higher than 10h (stability tests)
@@ -180,7 +186,8 @@ All notable changes to this project will be documented in this file.
 
 
 
-[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.10.2...HEAD
+[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.11.9...HEAD
+[1.11.9]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.10.2...v1.11.9
 [1.10.2]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.9.0...v1.10.2
 [1.9.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.6.0...v1.9.0
 [1.6.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.5.3...v1.6.0
