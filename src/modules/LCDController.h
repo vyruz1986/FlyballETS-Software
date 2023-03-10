@@ -27,7 +27,7 @@ class LCDControllerClass
 {
 protected:
 public:
-   uint16_t iLCDUpdateInterval = 500; // 500ms is LCD update interval
+   uint16_t iLCDUpdateInterval = 451; // 451ms is LCD update interval
    bool bUpdateTimerLCDdata = false;
    bool bExecuteLCDUpdate;
    bool bUpdateNonTimerLCDdata = false;
