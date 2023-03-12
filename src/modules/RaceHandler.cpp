@@ -918,7 +918,7 @@ void RaceHandlerClass::_PrintRaceSummary()
    {
       // log_d("Dog %i -> %i run(s).", i + 1, iDogRunCounters[i] + 1);
       for (uint8_t i2 = 0; i2 < (iDogRunCounters[i] + 1); i2++)
-         log_i("Dog %i: %s | CR: %s | DF: %i", i + 1, GetStoredDogTimes(i, i2), TransformCrossingTime(i, i2), _bDogDetectedFaults[i][i2]);
+         log_i("Dog %i: %s | CR: %s", i + 1, GetStoredDogTimes(i, i2), TransformCrossingTime(i, i2));
    }
    log_i(" Team: %s", GetRaceTime());
    log_i("   CT: %s", GetCleanTime());
