@@ -129,7 +129,9 @@ void RaceHandlerClass::Main()
                _ChangeDogState(COMINGBACK);
                _bS1StillSafe = false;
                _llDogEnterTimes[iCurrentDog] = _llLastDogExitTime;
-               log_d("Seems next dog entered gate already as S2 state 'b' detected. S1 is not safe anymore.");
+               _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+               LCDController.bUpdateThisLCDField[iCurrentDog + 4] = true;
+               log_d("Seems dog %i entered gate already as S2 state 'b' detected. 'ok' crossing. S1 is not safe anymore.", iCurrentDog + 1);
             }
             // If dog state is GOINGIN we could have false detection of entering dog so we need to set S1StillSafe flag
             else
@@ -291,8 +293,6 @@ void RaceHandlerClass::Main()
          else if (_byDogState == COMINGBACK && !_bS1StillSafe && (STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) > 2000000 // Filter out S1 HIGH signals that are < 2 seconds after dog enter time
                   && (iCurrentDog != iNextDog))                                                                                           // Exclude scenario if next dog is equal current dog as this can't be comming back dog.
          {
-            // Set fault light for next dog.
-            SetDogFault(iNextDog, ON);
             // Change state to going in to resist from possible S1 sensor noise and hitting condition again. Setting to COMINGBACK will be done in Tstring section.
             _ChangeDogState(GOINGIN);
             // We assume no negative cross (if that would be the case it will be updated later) so current dog exit time is same as next dog enter time
@@ -311,7 +311,6 @@ void RaceHandlerClass::Main()
                _llDogExitTimes[iNextDog] = 0;
                // Increase run counter for this dog
                iDogRunCounters[iNextDog]++;
-               LCDController.bUpdateThisLCDField[iNextDog + 8] = true;
                log_d("Re-run for dog %i", iNextDog + 1);
             }
             // In case reruns are turned off and current dog is last racing dog
@@ -320,7 +319,13 @@ void RaceHandlerClass::Main()
                StopRace(STriggerRecord.llTriggerTime);
                log_i("Reruns off. No more dogs was expected. Race stopped.");
             }
-            LCDController.bUpdateThisLCDField[iCurrentDog + 4] = true;
+            if (iNextDog != 5)
+            {
+               // Set fault light for next dog.
+               SetDogFault(iNextDog, ON);
+               LCDController.bUpdateThisLCDField[iNextDog + 4] = true;
+               LCDController.bUpdateThisLCDField[iNextDog + 8] = true;
+            }
             _ChangeDogNumber(iNextDog);
          }
          // Special case after false detection of "ok crossing" --> S1 activated above 100ms after "ok crossing" detection or re-run with next dog = current dog
@@ -353,7 +358,6 @@ void RaceHandlerClass::Main()
             if (!_bDogFaults[iCurrentDog])
             {
                _llDogEnterTimes[iNextDog] = _llDogEnterTimes[iCurrentDog];
-               SetDogFault(iNextDog, ON);
                _llDogEnterTimes[iCurrentDog] = _llLastDogExitTime;
                _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = 0;
                if (_bDogManualFaults[iCurrentDog]) // If dog has manual fault we assume it's due to he missed gate while entering
@@ -363,9 +367,11 @@ void RaceHandlerClass::Main()
                if (_bRerunBusy)
                {
                   iDogRunCounters[iNextDog]++; // Increase run counter for next dog
+                  LCDController.bUpdateThisLCDField[iNextDog + 4] = true;
                   LCDController.bUpdateThisLCDField[iNextDog + 8] = true;
                }
                log_d("Invisible dog %i came back! Dog times updated. OK or Perfect crossing.", iNextDog + 1);
+               SetDogFault(iNextDog, ON);
                LCDController.bUpdateThisLCDField[iCurrentDog + 4] = true;
                _ChangeDogNumber(iNextDog);
             }
@@ -424,6 +430,7 @@ void RaceHandlerClass::Main()
                _llDogExitTimes[iNextDog] = 0;
                // Increase run counter for this dog
                iDogRunCounters[iNextDog]++;
+               LCDController.bUpdateThisLCDField[iNextDog + 4] = true;
                LCDController.bUpdateThisLCDField[iNextDog + 8] = true;
                log_d("Re-run for dog %i", iNextDog + 1);
             }
@@ -721,7 +728,7 @@ void RaceHandlerClass::_ChangeDogNumber(uint8_t iNewDogNumber)
          LCDController.bUpdateThisLCDField[LCDController.CleanTime] = true;
       if (RaceState == RUNNING)
       {
-         log_i("Dog %i: %s | CR: %s", iPreviousDog + 1, GetDogTime(iPreviousDog, -2), GetCrossingTime(iPreviousDog, -2).c_str());
+         log_i("Dog %i: %s | CR: %s", iPreviousDog + 1, GetDogTime(iPreviousDog, iDogRunCounters[iPreviousDog]), GetCrossingTime(iPreviousDog, iDogRunCounters[iPreviousDog]).c_str());
          log_d("Running dog: %i.", iCurrentDog + 1);
       }
    }
@@ -911,7 +918,7 @@ void RaceHandlerClass::_PrintRaceSummary()
    {
       // log_d("Dog %i -> %i run(s).", i + 1, iDogRunCounters[i] + 1);
       for (uint8_t i2 = 0; i2 < (iDogRunCounters[i] + 1); i2++)
-         log_i("Dog %i: %s | CR: %s", i + 1, GetStoredDogTimes(i, i2), TransformCrossingTime(i, i2));
+         log_i("Dog %i: %s | CR: %s | DF: %i", i + 1, GetStoredDogTimes(i, i2), TransformCrossingTime(i, i2), _bDogDetectedFaults[i][i2]);
    }
    log_i(" Team: %s", GetRaceTime());
    log_i("   CT: %s", GetCleanTime());
@@ -1002,6 +1009,7 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
       _bDogManualFaults[iDogNumber] = bFault;
       if (!bFault)
          _bDogDetectedFaults[iDogNumber][iDogRunCounters[iDogNumber]] = false;
+      LCDController.bUpdateThisLCDField[iDogNumber + 4] = true;
    }
    else
    {
@@ -1022,13 +1030,12 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
       LightsController.ToggleFaultLight(iDogNumber, LightsController.ON);
       _bFault = true;
       _bDogDetectedFaults[iDogNumber][iDogRunCounters[iDogNumber]] = true;
-      LCDController.bUpdateThisLCDField[iDogNumber + 4] = true;
       if (!_bNoValidCleanTime)
       {
          _bNoValidCleanTime = true;
          LCDController.bUpdateThisLCDField[LCDController.CleanTime] = true;
       }
-      log_i("Dog %i fault ON", iDogNumber + 1);
+      log_i("Dog %i fault ON. Current Dog: %i, Next Dog: %i, Dog Run Counter: %i", iDogNumber + 1, iCurrentDog + 1, iNextDog + 1, iDogRunCounters[iDogNumber]);
    }
    else
    {
@@ -1541,7 +1548,11 @@ void RaceHandlerClass::ToggleRerunsOffOn(uint8_t _iState)
          bRerunsOff = true;
       else if (_iState == 0)
          bRerunsOff = false;
-
+      LCDController.bUpdateThisLCDField[LCDController.D1RerunInfo] = true;
+      LCDController.bUpdateThisLCDField[LCDController.D2RerunInfo] = true;
+      LCDController.bUpdateThisLCDField[LCDController.D3RerunInfo] = true;
+      LCDController.bUpdateThisLCDField[LCDController.D4RerunInfo] = true;
+      LCDController.bExecuteLCDUpdate = true;
       if (bRerunsOff)
          log_i("Reruns turned off.");
       else
