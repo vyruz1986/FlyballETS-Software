@@ -3,7 +3,7 @@ import { Component, OnInit, OnDestroy } from "@angular/core";
 import { RaceData } from "../../interfaces/race";
 import { WebsocketAction } from "../../interfaces/websocketaction";
 import { EtsdataService } from "../../services/etsdata.service";
-import { RaceState } from "../../class/race-state";
+import { RaceControl } from "../../class/race-state";
 import { RaceCommandEnum } from "../../enums/race-state.enum";
 import { LightStates } from "../../interfaces/light-states";
 
@@ -15,9 +15,9 @@ import { LightStates } from "../../interfaces/light-states";
 export class RacedisplayComponent implements OnInit {
    currentRaces: RaceData[] = [];
 
-   raceStates: RaceState = { RaceStates: [], StartTimes: [], RacingDogs: [], RerunsOff: [] };
+   raceControl: RaceControl = { RaceStates: undefined, RacingDogs: undefined, RerunsOff: undefined };
 
-   lightStates: LightStates[] = [{ State: [0, 0, 0, 0, 0] }];
+   lightStates: LightStates = { State: [0, 0, 0, 0, 0] };
 
    constructor(public etsDataService: EtsdataService) {
       //TODO why does making etsDataService private cause build to fail?
@@ -27,7 +27,7 @@ export class RacedisplayComponent implements OnInit {
                // Temporary fix to deal with response from ETS which does not send multiple race data
                this.HandleCurrentRaceData([data.RaceData]);
             } else if (data.LightsData) {
-               this.lightStates[0].State = data.LightsData;
+               this.lightStates.State = data.LightsData;
             }
          },
          (err) => {
@@ -112,19 +112,40 @@ export class RacedisplayComponent implements OnInit {
    }
 
    HandleCurrentRaceData(raceData: RaceData[]) {
-      this.currentRaces = [];
-      raceData.forEach((element) => {
-         if (typeof element == "object") {
-            this.currentRaces.push(element);
+      if (this.currentRaces.length > 0){
+         this.MergeRaceData(raceData);
+      }
+      else {
+         this.currentRaces = [];
+         raceData.forEach((element) => {
+            if (typeof element == "object") {
+               this.currentRaces.push(element);
+            }
+         });
+      }
+      this.UpdateRaceControl();
+   }
+
+   MergeRaceData(raceData: RaceData[]){
+      let previousRaceData = this.currentRaces[0];
+      let newRaceData = raceData[0];
+      // ToDo read keys from interface
+      Object.keys(previousRaceData).forEach((name) => {
+         if (newRaceData[name] === undefined){
+            newRaceData[name] = previousRaceData[name];
          }
       });
-      this.raceStates = { RaceStates: [], StartTimes: [], RacingDogs: [], RerunsOff: [] };
-      this.currentRaces.forEach((element) => {
-         this.raceStates.RaceStates.push(element.raceState);
-         this.raceStates.StartTimes.push(element.startTime);
-         this.raceStates.RacingDogs.push(element.racingDogs);
-         this.raceStates.RerunsOff.push(element.rerunsOff);
-      });
+      this.currentRaces = [];
+      this.currentRaces.push(newRaceData);
+   }
+
+   UpdateRaceControl(): void {
+      this.raceControl = {
+         RaceStates: this.currentRaces[0].raceState,
+         RacingDogs: this.currentRaces[0].racingDogs,
+         RerunsOff: this.currentRaces[0].rerunsOff
+      };
+      //console.log("RaceStates in racedisplay is %o", this.raceControl.RaceStates);
    }
 
    reconnect() {

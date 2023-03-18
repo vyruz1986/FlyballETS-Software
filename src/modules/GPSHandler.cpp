@@ -77,7 +77,7 @@ void GPSHandlerClass::_FormatTime()
    tmElements_t tm;
    if (_Tgps.date.year() == 2000)
    {
-      tm.Year = (2021 - 1970);
+      tm.Year = (2023 - 1970);
       tm.Month = 1;
       tm.Day = 1;
       tm.Hour = 12;

@@ -53,6 +53,9 @@ void RaceHandlerClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
       log_i("Accuracy from settings: 2 digits");
    LCDController.bUpdateTimerLCDdata = true;
    LCDController.bExecuteLCDUpdate = true;
+#ifdef WiFiON
+      WebHandler.bSendRaceData = true;
+#endif
 }
 
 /// <summary>
@@ -78,6 +81,10 @@ void RaceHandlerClass::Main()
          _llRaceTime = MICROS - llRaceStartTime;
          LCDController.bUpdateThisLCDField[LCDController.TeamTime] = true;
          LCDController.bUpdateThisLCDField[iCurrentDog] = true;
+   #ifdef WiFiON
+         WebHandler.bUpdateThisRaceDataField[WebHandler.elapsedTime] = true;
+         WebHandler.bUpdateThisRaceDataField[iCurrentDog] = true;
+   #endif
       }
       // If race last for 10 minutes race will be stopped
       if (_llRaceTime > 600000000)
@@ -640,6 +647,9 @@ void RaceHandlerClass::Main()
          {
             _bNoValidCleanTime = true;
             LCDController.bUpdateThisLCDField[LCDController.CleanTime] = true;
+         #ifdef WiFiON
+            WebHandler.bUpdateThisRaceDataField[WebHandler.cleanTime] = true;
+         #endif
          }
          break;
       }
@@ -654,6 +664,9 @@ void RaceHandlerClass::Main()
          {
             _bNoValidCleanTime = true;
             LCDController.bUpdateThisLCDField[LCDController.CleanTime] = true;
+         #ifdef WiFiON
+            WebHandler.bUpdateThisRaceDataField[WebHandler.cleanTime] = true;
+         #endif
          }
          break;
       }
@@ -696,6 +709,10 @@ void RaceHandlerClass::_ChangeRaceState(RaceStates byNewRaceState)
    }
    log_i("RS: %s", strRaceState);
    LCDController.UpdateField(LCDController.RaceState, strRaceState);
+#ifdef WiFiON
+   WebHandler.bUpdateThisRaceDataField[WebHandler.raceState] = true;
+   WebHandler.bSendRaceData = true;
+#endif
 }
 
 /// <summary>
@@ -725,7 +742,12 @@ void RaceHandlerClass::_ChangeDogNumber(uint8_t iNewDogNumber)
       iCurrentDog = iNewDogNumber;
       log_d("Dog:%i|ENT:%lld|EXIT:%lld|TOT:%lld", iPreviousDog + 1, _llDogEnterTimes[iPreviousDog], _llLastDogExitTime, _llDogTimes[iPreviousDog][iDogRunCounters[iPreviousDog]]);
       if (!_bNoValidCleanTime)
+      {
          LCDController.bUpdateThisLCDField[LCDController.CleanTime] = true;
+      #ifdef WiFiON
+         WebHandler.bUpdateThisRaceDataField[WebHandler.cleanTime] = true;
+      #endif
+      }   
       if (RaceState == RUNNING)
       {
          log_i("Dog %i: %s | CR: %s", iPreviousDog + 1, GetDogTime(iPreviousDog, iDogRunCounters[iPreviousDog]), GetCrossingTime(iPreviousDog, iDogRunCounters[iPreviousDog]).c_str());
@@ -745,10 +767,10 @@ void RaceHandlerClass::StartRaceTimer()
    log_i("STARTING! Tag: %i, Race ID: %i.", SDcardController.iTagValue, iCurrentRaceId + 1);
    cRaceStartTimestamp = GPSHandler.GetLocalTimestamp();
    log_i("Timestamp: %s", cRaceStartTimestamp);
-#ifdef WiFiON
+/*#ifdef WiFiON
    // Send updated racedata to all web clients
    WebHandler.bSendRaceData = true;
-#endif
+#endif*/
 }
 
 /// <summary>
@@ -775,15 +797,21 @@ void RaceHandlerClass::StopRace(long long llStopTime)
          _llRaceTime = _llRaceEndTime - llRaceStartTime;
       else
          _llRaceTime = 0;
-      LCDController.bUpdateThisLCDField[iCurrentDog] = true;
       LCDController.bUpdateThisLCDField[LCDController.TeamTime] = true;
+      LCDController.bUpdateThisLCDField[iCurrentDog] = true;
+   #ifdef WiFiON
+      WebHandler.bUpdateThisRaceDataField[WebHandler.elapsedTime] = true;
+      WebHandler.bUpdateThisRaceDataField[iCurrentDog] = true;
+      WebHandler.bUpdateRaceData = true;
+   #endif
       if (!_bNoValidCleanTime)
+      {
          LCDController.bUpdateThisLCDField[LCDController.CleanTime] = true;
+      #ifdef WiFiON
+         WebHandler.bUpdateThisRaceDataField[WebHandler.cleanTime] = true;
+      #endif
+      }
       _ChangeRaceState(STOPPED);
-#ifdef WiFiON
-      // Send updated racedata to any web clients
-      WebHandler.bSendRaceData = true;
-#endif
    }
 }
 
@@ -905,6 +933,8 @@ void RaceHandlerClass::ResetRace()
       log_i("Reset Race: DONE");
 #ifdef WiFiON
       // Send updated racedata to any web clients
+      WebHandler.bUpdateThisRaceDataField[WebHandler.id] = true;
+      WebHandler.bUpdateTimerWebUIdata = true;
       WebHandler.bSendRaceData = true;
 #endif
    }
@@ -1034,6 +1064,9 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
       {
          _bNoValidCleanTime = true;
          LCDController.bUpdateThisLCDField[LCDController.CleanTime] = true;
+      #ifdef WiFiON
+         WebHandler.bUpdateThisRaceDataField[WebHandler.cleanTime] = true;
+      #endif
       }
       log_i("Dog %i fault ON. Current Dog: %i, Next Dog: %i, Dog Run Counter: %i", iDogNumber + 1, iCurrentDog + 1, iNextDog + 1, iDogRunCounters[iDogNumber]);
    }
@@ -1463,10 +1496,10 @@ String RaceHandlerClass::GetCleanTime()
 /// <returns>
 ///   The race data struct
 /// </returns>
-stRaceData RaceHandlerClass::GetRaceData()
+/*stRaceData RaceHandlerClass::GetRaceData()
 {
    stRaceData RequestedRaceData;
-   // We need to return data for the current dace
+   // We need to return data for the current race
    RequestedRaceData.Id = iCurrentRaceId + 1;
    RequestedRaceData.StartTime = llRaceStartTime / 1000;
    RequestedRaceData.EndTime = _llRaceEndTime / 1000;
@@ -1490,7 +1523,7 @@ stRaceData RaceHandlerClass::GetRaceData()
       RequestedRaceData.DogData[i].Running = (iCurrentDog == i);
    }
    return RequestedRaceData;
-}
+}*/
 
 /// <summary>
 ///   Toggles the direction the system expects dogs to run in
@@ -1512,6 +1545,9 @@ void RaceHandlerClass::ToggleRunDirection()
          log_i("Run direction changed to: normal");
       }
       LCDController.bExecuteLCDUpdate = true;
+   #ifdef WiFiON
+      WebHandler.bSendRaceData = true;
+   #endif
    }
    else
       return;
@@ -1557,8 +1593,8 @@ void RaceHandlerClass::ToggleRerunsOffOn(uint8_t _iState)
          log_i("Reruns turned off.");
       else
          log_i("Reruns turned on.");
-
 #ifdef WiFiON
+      WebHandler.bUpdateThisRaceDataField[WebHandler.rerunsOff] = true;
       WebHandler.bSendRaceData = true;
 #endif
    }
@@ -1574,6 +1610,7 @@ void RaceHandlerClass::SetNumberOfDogs(uint8_t _iNumberOfRacingDogs)
    iNumberOfRacingDogs = _iNumberOfRacingDogs;
    LCDController.UpdateNumberOfDogsOnLCD(iNumberOfRacingDogs);
 #ifdef WiFiON
+   WebHandler.bUpdateThisRaceDataField[WebHandler.racingDogs] = true;
    WebHandler.bSendRaceData = true;
 #endif
    log_i("Number of dogs set to: %i.", iNumberOfRacingDogs);

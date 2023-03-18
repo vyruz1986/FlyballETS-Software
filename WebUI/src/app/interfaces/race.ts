@@ -10,13 +10,10 @@ export interface DogData{
 }
 export interface RaceData {
    id: number,
-   startTime: number,
-   endTime: number,
    elapsedTime: String,
    cleanTime: String,
    raceState: RaceStateEnum,
    racingDogs: number,
-   raceStateFriendly: String,
    rerunsOff: boolean,
    dogData: Array<DogData>
 }

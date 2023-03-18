@@ -74,6 +74,30 @@ public:
    void disconnectWsClient(IPAddress ipDisconnectedIP);
    bool bUpdateLights = false;
    bool bSendRaceData = false;
+   bool bUpdateRaceData = false;
+   bool bUpdateTimerWebUIdata = false;
+   enum RaceDataFields
+   {
+      D1Time,      // 0
+      D2Time,      // 1
+      D3Time,      // 2
+      D4Time,      // 3
+      D1CrossTime, // 4
+      D2CrossTime, // 5
+      D3CrossTime, // 6
+      D4CrossTime, // 7
+      D1RerunInfo, // 8
+      D2RerunInfo, // 9
+      D3RerunInfo, // 10
+      D4RerunInfo, // 11
+      elapsedTime, // 12
+      cleanTime,   // 13
+      raceState,   // 14
+      id,          // 15
+      racingDogs,  // 16
+      rerunsOff,   // 17
+   };
+   bool bUpdateThisRaceDataField[18];
 };
 
 extern WebHandlerClass WebHandler;
