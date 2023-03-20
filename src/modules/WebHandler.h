@@ -86,18 +86,22 @@ public:
       D2CrossTime, // 5
       D3CrossTime, // 6
       D4CrossTime, // 7
-      D1RerunInfo, // 8
-      D2RerunInfo, // 9
-      D3RerunInfo, // 10
-      D4RerunInfo, // 11
-      elapsedTime, // 12
-      cleanTime,   // 13
-      raceState,   // 14
-      id,          // 15
-      racingDogs,  // 16
-      rerunsOff,   // 17
+      D1FaultInfo, // 8
+      D2FaultInfo, // 9
+      D3FaultInfo, // 10
+      D4FaultInfo, // 11
+      D1Running,   // 12
+      D2Running,   // 13
+      D3Running,   // 14
+      D4Running,   // 15
+      elapsedTime, // 16
+      cleanTime,   // 17
+      raceState,   // 18
+      id,          // 19
+      racingDogs,  // 20
+      rerunsOff    // 21
    };
-   bool bUpdateThisRaceDataField[18];
+   bool bUpdateThisRaceDataField[22];
 };
 
 extern WebHandlerClass WebHandler;

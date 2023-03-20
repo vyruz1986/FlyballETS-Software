@@ -347,7 +347,7 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
          // ReturnError = "No actionData found!";
          return false;
       }
-      uint8_t iDogNum = ActionObj["actionData"]["dogNumber"];
+      uint8_t iDogNum = ActionObj["actionData"]["dogNr"];
       // bool bFaultState = ActionObj["actionData"]["faultState"];
       // RaceHandler.SetDogFault(iDogNum, (bFaultState ? RaceHandler.ON : RaceHandler.OFF));
       RaceHandler.SetDogFault(iDogNum);
@@ -542,23 +542,51 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
       }
 
       JsonArray JsonDogDataArray = JsonRaceData.createNestedArray("dogData");
-      for (uint8_t i = 0; i < RaceHandler.iNumberOfRacingDogs; i++)
+      // Update dogs times, crossing/entry times and re-run info
+      for (int i = 0; i < RaceHandler.iNumberOfRacingDogs; i++)
       {
          JsonObject JsonDogData = JsonDogDataArray.createNestedObject();
-         JsonDogData["dogNumber"] = i;
-         JsonArray JsonDogDataTimingArray = JsonDogData.createNestedArray("timing");
-         char cForJson[9];
-         for (uint8_t i2 = 0; i2 <= RaceHandler.iDogRunCounters[i]; i2++)
+         JsonDogData["dogNr"] = i;
+         if (bUpdateThisRaceDataField[i + 8] || bUpdateTimerWebUIdata || bUpdateRaceData)
          {
-            JsonObject DogTiming = JsonDogDataTimingArray.createNestedObject();
-            RaceHandler.GetDogTime(i, i2).toCharArray(cForJson, 9);
-            DogTiming["time"] = cForJson;
-            RaceHandler.GetCrossingTime(i, i2).toCharArray(cForJson, 9);
-            DogTiming["crossingTime"] = cForJson;
+            JsonDogData["fault"] = (RaceHandler._bDogFaults[i] || RaceHandler._bDogManualFaults[i]);
+            bUpdateThisRaceDataField[i + 8] = false;
          }
-         JsonDogData["fault"] = (RaceHandler._bDogFaults[i] || RaceHandler._bDogManualFaults[i]);
-         JsonDogData["running"] = (RaceHandler.iCurrentDog == i);
+         if (bUpdateThisRaceDataField[i + 12] || bUpdateTimerWebUIdata || bUpdateRaceData)
+         {
+            if (i == RaceHandler.iCurrentDog)
+               JsonDogData["running"] = true;
+            else
+               JsonDogData["running"] = false;
+            bUpdateThisRaceDataField[i + 12] = false;
+         }
+         if (bUpdateThisRaceDataField[i] || bUpdateThisRaceDataField[i + 4] || bUpdateTimerWebUIdata || bUpdateRaceData)
+         {
+            JsonArray JsonDogDataTimingArray = JsonDogData.createNestedArray("timing");
+            char cForJson[9];
+            if (bUpdateThisRaceDataField[i] || bUpdateTimerWebUIdata || bUpdateRaceData)
+            {
+               for (uint8_t i2 = 0; i2 <= RaceHandler.iDogRunCounters[i]; i2++)
+               {
+                  JsonObject DogTiming = JsonDogDataTimingArray.createNestedObject();
+                  if (bUpdateThisRaceDataField[i] || bUpdateTimerWebUIdata || bUpdateRaceData)
+                  {
+                     RaceHandler.GetDogTime(i, i2).toCharArray(cForJson, 9);
+                     DogTiming["time"] = cForJson;
+                     bUpdateThisRaceDataField[i] = false;
+                  }
+                  if (bUpdateThisRaceDataField[i + 4] || bUpdateTimerWebUIdata || bUpdateRaceData)
+                  {                 
+                     RaceHandler.GetCrossingTime(i, i2).toCharArray(cForJson, 9);
+                     DogTiming["crossing"] = cForJson;
+                     bUpdateThisRaceDataField[i + 4] = false;
+                  }
+               }
+            }
+         }
       }
+      bUpdateTimerWebUIdata = false;
+      bUpdateRaceData = false;
 
       size_t len = measureJson(JsonRaceDataDoc);
       AsyncWebSocketMessageBuffer *wsBuffer = _ws->makeBuffer(len);
@@ -599,8 +627,6 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
             client->text(wsBuffer);
          }
          _lLastRaceDataBroadcast = _lLastBroadcast = millis();
-         bUpdateTimerWebUIdata = false;
-         bUpdateRaceData = false;
          bSendRaceData = false;
       }
    }

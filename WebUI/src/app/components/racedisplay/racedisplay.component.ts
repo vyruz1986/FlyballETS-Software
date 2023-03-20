@@ -4,6 +4,7 @@ import { RaceData } from "../../interfaces/race";
 import { WebsocketAction } from "../../interfaces/websocketaction";
 import { EtsdataService } from "../../services/etsdata.service";
 import { RaceControl } from "../../class/race-state";
+import { cRaceData } from "../../class/race-data";
 import { RaceCommandEnum } from "../../enums/race-state.enum";
 import { LightStates } from "../../interfaces/light-states";
 
@@ -45,6 +46,43 @@ export class RacedisplayComponent implements OnInit {
 
    ngOnDestroy() {
       this.etsDataService.dataStream.unsubscribe();
+   }
+
+   HandleCurrentRaceData(raceData: RaceData[]) {
+      if (this.currentRaces.length > 0){
+         this.MergeRaceData(raceData);
+      }
+      else {
+         this.currentRaces = [];
+         raceData.forEach((element) => {
+            if (typeof element == "object") {
+               this.currentRaces.push(element);
+            }
+         });
+      }
+      this.UpdateRaceControl();
+   }
+
+   MergeRaceData(raceData: RaceData[]){
+      let previousRaceData = this.currentRaces[0];
+      let newRaceData = raceData[0];
+      // ToDo read keys from interface
+      Object.keys(previousRaceData).forEach((name) => {
+         if (newRaceData[name] === undefined){
+            newRaceData[name] = previousRaceData[name];
+         }
+      });
+      this.currentRaces = [];
+      this.currentRaces.push(newRaceData);
+   }
+
+   UpdateRaceControl(): void {
+      this.raceControl = {
+         RaceStates: this.currentRaces[0].raceState,
+         RacingDogs: this.currentRaces[0].racingDogs,
+         RerunsOff: this.currentRaces[0].rerunsOff
+      };
+      //console.log("RaceStates in racedisplay is %o", this.raceControl.RaceStates);
    }
 
    onRaceCommand(raceCommand: RaceCommandEnum) {
@@ -95,7 +133,7 @@ export class RacedisplayComponent implements OnInit {
       let DogAction: WebsocketAction = {
          actionType: "SetDogFault",
          actionData: {
-            dogNumber: dogFault.dogNum,
+            dogNr: dogFault.dogNum,
             faultState: dogFault.fault,
          },
       };
@@ -109,43 +147,6 @@ export class RacedisplayComponent implements OnInit {
          actionData: { rerunsOff: rerunsOff, },
       };
       this.etsDataService.sendAction(Action);
-   }
-
-   HandleCurrentRaceData(raceData: RaceData[]) {
-      if (this.currentRaces.length > 0){
-         this.MergeRaceData(raceData);
-      }
-      else {
-         this.currentRaces = [];
-         raceData.forEach((element) => {
-            if (typeof element == "object") {
-               this.currentRaces.push(element);
-            }
-         });
-      }
-      this.UpdateRaceControl();
-   }
-
-   MergeRaceData(raceData: RaceData[]){
-      let previousRaceData = this.currentRaces[0];
-      let newRaceData = raceData[0];
-      // ToDo read keys from interface
-      Object.keys(previousRaceData).forEach((name) => {
-         if (newRaceData[name] === undefined){
-            newRaceData[name] = previousRaceData[name];
-         }
-      });
-      this.currentRaces = [];
-      this.currentRaces.push(newRaceData);
-   }
-
-   UpdateRaceControl(): void {
-      this.raceControl = {
-         RaceStates: this.currentRaces[0].raceState,
-         RacingDogs: this.currentRaces[0].racingDogs,
-         RerunsOff: this.currentRaces[0].rerunsOff
-      };
-      //console.log("RaceStates in racedisplay is %o", this.raceControl.RaceStates);
    }
 
    reconnect() {

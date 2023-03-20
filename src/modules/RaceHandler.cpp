@@ -138,6 +138,9 @@ void RaceHandlerClass::Main()
                _llDogEnterTimes[iCurrentDog] = _llLastDogExitTime;
                _bDogSmallok[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
                LCDController.bUpdateThisLCDField[iCurrentDog + 4] = true;
+            #ifdef WiFiON
+               WebHandler.bUpdateThisRaceDataField[iCurrentDog + 4] = true;
+            #endif
                log_d("Seems dog %i entered gate already as S2 state 'b' detected. 'ok' crossing. S1 is not safe anymore.", iCurrentDog + 1);
             }
             // If dog state is GOINGIN we could have false detection of entering dog so we need to set S1StillSafe flag
@@ -255,6 +258,9 @@ void RaceHandlerClass::Main()
                log_i("Dog 1 FALSE START!");
             }
             LCDController.bUpdateThisLCDField[iCurrentDog + 4] = true;
+         #ifdef WiFiON
+            WebHandler.bUpdateThisRaceDataField[iCurrentDog + 4] = true;
+         #endif
          }
          // Normal race handling (positive cross)
          else if (_byDogState == GOINGIN && (iCurrentDog != 0 || (iCurrentDog == 0 && _bRerunBusy)) && _bS1StillSafe)
@@ -279,6 +285,9 @@ void RaceHandlerClass::Main()
                else // This is true invisible dog case so treated as big OK cross
                   _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
                LCDController.bUpdateThisLCDField[iCurrentDog + 4] = true;
+            #ifdef WiFiON
+               WebHandler.bUpdateThisRaceDataField[iCurrentDog + 4] = true;
+            #endif
                _ChangeDogNumber(iNextDog);
                log_d("S1 crossed after 3.5-5.5s and last Tstring was BAba. Invisible dog %i is running and next dog enters with fault.", iPreviousDog + 1);
             }
@@ -292,7 +301,12 @@ void RaceHandlerClass::Main()
             _llDogEnterTimes[iCurrentDog] = STriggerRecord.llTriggerTime;
             _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = _llDogEnterTimes[iCurrentDog] - _llLastDogExitTime;
             if (_llCrossingTimes[iCurrentDog] != 0)
+            {
                LCDController.bUpdateThisLCDField[iCurrentDog + 4] = true;
+            #ifdef WiFiON
+               WebHandler.bUpdateThisRaceDataField[iCurrentDog + 4] = true;
+            #endif
+            }
             _bS1StillSafe = false;
             //_ChangeDogState(COMINGBACK); //Moved to Tstring section
          }
@@ -332,6 +346,9 @@ void RaceHandlerClass::Main()
                SetDogFault(iNextDog, ON);
                LCDController.bUpdateThisLCDField[iNextDog + 4] = true;
                LCDController.bUpdateThisLCDField[iNextDog + 8] = true;
+            #ifdef WiFiON
+               WebHandler.bUpdateThisRaceDataField[iNextDog + 4] = true;
+            #endif
             }
             _ChangeDogNumber(iNextDog);
          }
@@ -344,6 +361,9 @@ void RaceHandlerClass::Main()
             _llDogEnterTimes[iCurrentDog] = STriggerRecord.llTriggerTime;
             _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = _llDogEnterTimes[iCurrentDog] - _llLastDogExitTime;
             LCDController.bUpdateThisLCDField[iCurrentDog + 4] = true;
+         #ifdef WiFiON
+            WebHandler.bUpdateThisRaceDataField[iCurrentDog + 4] = true;
+         #endif
             log_d("False 'ok crossing' detected. Recalculate dog %i times.", iCurrentDog + 1);
          }
          // else
@@ -376,10 +396,16 @@ void RaceHandlerClass::Main()
                   iDogRunCounters[iNextDog]++; // Increase run counter for next dog
                   LCDController.bUpdateThisLCDField[iNextDog + 4] = true;
                   LCDController.bUpdateThisLCDField[iNextDog + 8] = true;
+               #ifdef WiFiON
+                  WebHandler.bUpdateThisRaceDataField[iNextDog + 4] = true;
+               #endif
                }
                log_d("Invisible dog %i came back! Dog times updated. OK or Perfect crossing.", iNextDog + 1);
                SetDogFault(iNextDog, ON);
                LCDController.bUpdateThisLCDField[iCurrentDog + 4] = true;
+            #ifdef WiFiON
+               WebHandler.bUpdateThisRaceDataField[iCurrentDog + 4] = true;
+            #endif
                _ChangeDogNumber(iNextDog);
             }
             // And previous dog time (who just crossed S1)
@@ -392,9 +418,15 @@ void RaceHandlerClass::Main()
             {
                _bDogFakeTime[iPreviousDog][iDogRunCounters[iPreviousDog]] = false;
                LCDController.bUpdateThisLCDField[iPreviousDog] = true;
+            #ifdef WiFiON
+               WebHandler.bUpdateThisRaceDataField[iCurrentDog + 4] = true;
+            #endif
                log_d("Fake time flag for dog %i cleared.", iPreviousDog + 1);
             }
             LCDController.bUpdateThisLCDField[iCurrentDog + 4] = true;
+         #ifdef WiFiON
+            WebHandler.bUpdateThisRaceDataField[iCurrentDog + 4] = true;
+         #endif
             _llRaceElapsedTime = STriggerRecord.llTriggerTime - llRaceStartTime;
             //_bNegativeCrossDetected = false; // moved to Tstring section and used as "if" condition in BAba scenario
             //
@@ -439,6 +471,9 @@ void RaceHandlerClass::Main()
                iDogRunCounters[iNextDog]++;
                LCDController.bUpdateThisLCDField[iNextDog + 4] = true;
                LCDController.bUpdateThisLCDField[iNextDog + 8] = true;
+            #ifdef WiFiON
+               WebHandler.bUpdateThisRaceDataField[iNextDog + 4] = true;
+            #endif
                log_d("Re-run for dog %i", iNextDog + 1);
             }
             _ChangeDogNumber(iNextDog);
@@ -469,6 +504,9 @@ void RaceHandlerClass::Main()
             _llS2CrossedSafeTime = STriggerRecord.llTriggerTime;
             _ChangeDogState(COMINGBACK);
             LCDController.bUpdateThisLCDField[iCurrentDog + 4] = true;
+         #ifdef WiFiON
+            WebHandler.bUpdateThisRaceDataField[iCurrentDog + 4] = true;
+         #endif
             log_d("Invisible dog %i came back!. Update enter time. OK or Perfect crossing.", iCurrentDog + 1);
          }
          else if (_byDogState == COMINGBACK)
@@ -610,6 +648,9 @@ void RaceHandlerClass::Main()
                         log_d("Unmeasurable 'ok' crossing for dog %i.", iCurrentDog + 1);
                      }
                      LCDController.bUpdateThisLCDField[iCurrentDog + 4] = true;
+                  #ifdef WiFiON
+                     WebHandler.bUpdateThisRaceDataField[iCurrentDog + 4] = true;
+                  #endif
                   }
                }
                else if (_byDogState == COMINGBACK && strFirstTransitionChar == "A")
@@ -738,6 +779,9 @@ void RaceHandlerClass::_ChangeDogNumber(uint8_t iNewDogNumber)
    if (iNewDogNumber != iCurrentDog)
    {
       LCDController.bUpdateThisLCDField[iCurrentDog] = true;
+   #ifdef WiFiON
+      WebHandler.bUpdateThisRaceDataField[iCurrentDog] = true;
+   #endif
       iPreviousDog = iCurrentDog;
       iCurrentDog = iNewDogNumber;
       log_d("Dog:%i|ENT:%lld|EXIT:%lld|TOT:%lld", iPreviousDog + 1, _llDogEnterTimes[iPreviousDog], _llLastDogExitTime, _llDogTimes[iPreviousDog][iDogRunCounters[iPreviousDog]]);
@@ -750,6 +794,10 @@ void RaceHandlerClass::_ChangeDogNumber(uint8_t iNewDogNumber)
       }   
       if (RaceState == RUNNING)
       {
+      #ifdef WiFiON
+         WebHandler.bUpdateThisRaceDataField[iPreviousDog + 12] = true;
+         WebHandler.bUpdateThisRaceDataField[iCurrentDog + 12] = true;
+      #endif
          log_i("Dog %i: %s | CR: %s", iPreviousDog + 1, GetDogTime(iPreviousDog, iDogRunCounters[iPreviousDog]), GetCrossingTime(iPreviousDog, iDogRunCounters[iPreviousDog]).c_str());
          log_d("Running dog: %i.", iCurrentDog + 1);
       }
@@ -802,7 +850,7 @@ void RaceHandlerClass::StopRace(long long llStopTime)
    #ifdef WiFiON
       WebHandler.bUpdateThisRaceDataField[WebHandler.elapsedTime] = true;
       WebHandler.bUpdateThisRaceDataField[iCurrentDog] = true;
-      WebHandler.bUpdateRaceData = true;
+      //WebHandler.bUpdateRaceData = true;
    #endif
       if (!_bNoValidCleanTime)
       {
@@ -1040,6 +1088,9 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
       if (!bFault)
          _bDogDetectedFaults[iDogNumber][iDogRunCounters[iDogNumber]] = false;
       LCDController.bUpdateThisLCDField[iDogNumber + 4] = true;
+      #ifdef WiFiON
+         WebHandler.bUpdateThisRaceDataField[iDogNumber + 4] = true;
+      #endif
    }
    else
    {
@@ -1051,6 +1102,9 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
       {
          _bDogFakeTime[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
          LCDController.bUpdateThisLCDField[iCurrentDog] = true;
+      #ifdef WiFiON
+         WebHandler.bUpdateThisRaceDataField[iCurrentDog] = true;
+      #endif
       }  
    }
 
@@ -1077,6 +1131,9 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
       LightsController.ToggleFaultLight(iDogNumber, LightsController.OFF);
       log_i("Dog %i fault OFF", iDogNumber + 1);
    }
+#ifdef WiFiON
+   WebHandler.bUpdateThisRaceDataField[iDogNumber + 8] = true;
+#endif
 }
 
 /// <summary>
@@ -1488,42 +1545,6 @@ String RaceHandlerClass::GetCleanTime()
       strCleanTime = "    n/a";
    return strCleanTime;
 }
-
-/// <summary>
-///   Gets race data for the current race
-/// </summary>
-///
-/// <returns>
-///   The race data struct
-/// </returns>
-/*stRaceData RaceHandlerClass::GetRaceData()
-{
-   stRaceData RequestedRaceData;
-   // We need to return data for the current race
-   RequestedRaceData.Id = iCurrentRaceId + 1;
-   RequestedRaceData.StartTime = llRaceStartTime / 1000;
-   RequestedRaceData.EndTime = _llRaceEndTime / 1000;
-   RequestedRaceData.ElapsedTime = GetRaceTime();
-   RequestedRaceData.CleanTime = GetCleanTime();
-   RequestedRaceData.raceState = RaceState;
-   RequestedRaceData.RacingDogs = iNumberOfRacingDogs;
-   RequestedRaceData.RerunsOff = bRerunsOff;
-
-   // Get Dog info
-   for (uint8_t i = 0; i < iNumberOfRacingDogs; i++)
-   {
-      RequestedRaceData.DogData[i].DogNumber = i;
-
-      for (uint8_t i2 = 0; i2 <= iDogRunCounters[i]; i2++)
-      {
-         RequestedRaceData.DogData[i].Timing[i2].Time = GetDogTime(i, i2);
-         RequestedRaceData.DogData[i].Timing[i2].CrossingTime = GetCrossingTime(i, i2);
-      }
-      RequestedRaceData.DogData[i].Fault = (_bDogFaults[i] || _bDogManualFaults[i]);
-      RequestedRaceData.DogData[i].Running = (iCurrentDog == i);
-   }
-   return RequestedRaceData;
-}*/
 
 /// <summary>
 ///   Toggles the direction the system expects dogs to run in

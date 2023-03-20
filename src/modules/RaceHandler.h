@@ -67,7 +67,6 @@ public:
    String GetRerunInfo(uint8_t iDogNumber, int8_t iRunNumber = -1);
    String GetCleanTime();
 
-   stRaceData GetRaceData();
    void ToggleRunDirection();
    void ToggleAccuracy();
    void ToggleRerunsOffOn(uint8_t _iState);
