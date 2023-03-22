@@ -33,7 +33,6 @@ public:
    uint8_t iNumberOfRacingDogs = 4;
    uint8_t iDogRunCounters[4]; // Number of (re-)runs for each dog
    long long llRaceStartTime;
-   long long llRaceTime;
    uint16_t iCurrentRaceId = 0;
    char *cRaceStartTimestamp;
    bool bRerunsOff = false;
@@ -65,16 +64,16 @@ public:
    int8_t SelectRunNumber(uint8_t iDogNumber, int8_t iRunNumber = -1);
    String GetCrossingTime(uint8_t iDogNumber, int8_t iRunNumber = -1);
    String TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNumber, bool bToFile = false);
-   String GetRerunInfo(uint8_t iDogNumber);
+   String GetRerunInfo(uint8_t iDogNumber, int8_t iRunNumber = -1);
    String GetCleanTime();
 
-   stRaceData GetRaceData();
    void ToggleRunDirection();
    void ToggleAccuracy();
    void ToggleRerunsOffOn(uint8_t _iState);
    void SetNumberOfDogs(uint8_t _iNumberOfRacingDogs);
 
 private:
+   long long _llRaceTime;
    long long _llRaceEndTime;
    long long _llLastDogExitTime;
    long long _llS2CrossedSafeTime;
@@ -110,6 +109,7 @@ private:
    bool _bFault;
    bool _bDogFaults[5];
    bool _bDogManualFaults[4];
+   bool _bDogDetectedFaults[5][4];
    bool _bDogPerfectCross[5][4];
    bool _bDogBigOK[5][4];
    bool _bDogSmallok[5][4];

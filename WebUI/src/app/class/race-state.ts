@@ -1,11 +1,10 @@
 import { RaceStateEnum } from '../enums/race-state.enum';
 
-export class RaceState {
+export class RaceControl {
    
    constructor(
-      public RaceStates: Array<RaceStateEnum>,
-      public StartTimes: Array<number>,
-      public RacingDogs: Array<number>,
-      public RerunsOff: Array<boolean>
+      public RaceStates: RaceStateEnum,
+      public RacingDogs: number,
+      public RerunsOff: boolean
    ) { }
 }

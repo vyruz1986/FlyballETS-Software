@@ -68,12 +68,16 @@ void WebHandlerClass::init(int webPort)
 void WebHandlerClass::loop()
 {
    unsigned long lCurrentUpTime = millis();
+   if ((lCurrentUpTime - _lLastRaceDataBroadcast > _iRaceDataBroadcastInterval) && !bSendRaceData
+      && (RaceHandler.RaceState == RaceHandler.STARTING || RaceHandler.RaceState == RaceHandler.RUNNING))
+      bSendRaceData = true;
    // log_d("bSendRaceData: %i, bUpdateLights: %i, since LastBroadcast: %ul, since WS received: %ul", bSendRaceData, bUpdateLights, (lCurrentUpTime - _lLastBroadcast), (lCurrentUpTime - _lWebSocketReceivedTime));
    if ((lCurrentUpTime - _lLastBroadcast > 100) && (lCurrentUpTime - _lWebSocketReceivedTime > 50))
    {
       if (bUpdateLights)
          _SendLightsData();
-      else if (bSendRaceData || ((RaceHandler.RaceState == RaceHandler.RUNNING || (RaceHandler.RaceState == RaceHandler.STOPPED && !RaceHandler.bIgnoreSensors)) && (lCurrentUpTime - _lLastRaceDataBroadcast > _iRaceDataBroadcastInterval)))
+      //else if (bSendRaceData || ((RaceHandler.RaceState == RaceHandler.RUNNING || (RaceHandler.RaceState == RaceHandler.STOPPED && !RaceHandler.bIgnoreSensors)) && (lCurrentUpTime - _lLastRaceDataBroadcast > _iRaceDataBroadcastInterval)))
+      else if (bSendRaceData)
          _SendRaceData(RaceHandler.iCurrentRaceId, -1);
       else if (RaceHandler.RaceState == RaceHandler.RESET || (RaceHandler.RaceState == RaceHandler.STOPPED && !RaceHandler.bIgnoreSensors))
       {
@@ -276,6 +280,7 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
    {
       if (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)
       {
+         bUpdateRaceData = true;
          bSendRaceData = true;
          bUpdateLights = true;
          return true;
@@ -306,6 +311,7 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
       if (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)
       {
          // ReturnError = "Race was already stopped!";
+         bUpdateTimerWebUIdata = true;
          bSendRaceData = true;
          bUpdateLights = true;
          return false;
@@ -322,6 +328,7 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
       if (RaceHandler.RaceState != RaceHandler.STOPPED)
       {
          // ReturnError = "Race was not stopped, or already in RESET state.";
+         bUpdateTimerWebUIdata = true;
          bSendRaceData = true;
          bUpdateLights = true;
          return false;
@@ -340,7 +347,7 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
          // ReturnError = "No actionData found!";
          return false;
       }
-      uint8_t iDogNum = ActionObj["actionData"]["dogNumber"];
+      uint8_t iDogNum = ActionObj["actionData"]["dogNr"];
       // bool bFaultState = ActionObj["actionData"]["faultState"];
       // RaceHandler.SetDogFault(iDogNum, (bFaultState ? RaceHandler.ON : RaceHandler.OFF));
       RaceHandler.SetDogFault(iDogNum);
@@ -354,6 +361,7 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
          _iNumOfConsumers++;
       }
       _bIsConsumerArray[Client->id()] = true;
+      bUpdateRaceData = true;
       bSendRaceData = true;
       bUpdateLights = true;
       return true;
@@ -441,6 +449,7 @@ void WebHandlerClass::_SendLightsData(int8_t iClientId)
 {
    bUpdateLights = false;
    stLightsState LightStates = LightsController.GetLightsState();
+   log_d("Getting Lights state");
    StaticJsonDocument<96> jsonLightsDoc;
    JsonObject JsonRoot = jsonLightsDoc.to<JsonObject>();
 
@@ -500,35 +509,84 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
       StaticJsonDocument<bsRaceData> JsonRaceDataDoc;
       JsonObject JsonRoot = JsonRaceDataDoc.to<JsonObject>();
       JsonObject JsonRaceData = JsonRoot.createNestedObject("RaceData");
-
-      stRaceData RequestedRaceData = RaceHandler.GetRaceData();
-      JsonRaceData["id"] = RequestedRaceData.Id;
-      JsonRaceData["startTime"] = RequestedRaceData.StartTime;
-      JsonRaceData["endTime"] = RequestedRaceData.EndTime;
-      JsonRaceData["elapsedTime"] = RequestedRaceData.ElapsedTime;
-      JsonRaceData["cleanTime"] = RequestedRaceData.CleanTime;
-      JsonRaceData["raceState"] = RequestedRaceData.raceState;
-      JsonRaceData["racingDogs"] = RequestedRaceData.RacingDogs;
-      JsonRaceData["rerunsOff"] = RequestedRaceData.RerunsOff;
+      
+      if (bUpdateThisRaceDataField[id] || bUpdateRaceData)
+      {
+         JsonRaceData["id"] = RaceHandler.iCurrentRaceId + 1;
+         bUpdateThisRaceDataField[id] = false;
+      }
+      if (bUpdateThisRaceDataField[elapsedTime] || bUpdateTimerWebUIdata || bUpdateRaceData)
+      {
+         JsonRaceData["elapsedTime"] = RaceHandler.GetRaceTime();
+         bUpdateThisRaceDataField[elapsedTime] = false;
+      }
+      if (bUpdateThisRaceDataField[cleanTime] || bUpdateTimerWebUIdata || bUpdateRaceData)
+      {
+         JsonRaceData["cleanTime"] = RaceHandler.GetCleanTime();
+         bUpdateThisRaceDataField[cleanTime] = false;
+      }
+      if (bUpdateThisRaceDataField[raceState] || bUpdateRaceData)
+      {
+         JsonRaceData["raceState"] = RaceHandler.RaceState;
+         bUpdateThisRaceDataField[raceState] = false;
+      }
+      if (bUpdateThisRaceDataField[racingDogs] || bUpdateRaceData)
+      {
+         JsonRaceData["racingDogs"] = RaceHandler.iNumberOfRacingDogs;
+         bUpdateThisRaceDataField[racingDogs] = false;
+      }
+      if (bUpdateThisRaceDataField[rerunsOff] || bUpdateRaceData)
+      {
+         JsonRaceData["rerunsOff"] = RaceHandler.bRerunsOff;
+         bUpdateThisRaceDataField[rerunsOff] = false;
+      }
 
       JsonArray JsonDogDataArray = JsonRaceData.createNestedArray("dogData");
-      for (uint8_t i = 0; i < RaceHandler.iNumberOfRacingDogs; i++)
+      // Update dogs times, crossing/entry times and re-run info
+      for (int i = 0; i < RaceHandler.iNumberOfRacingDogs; i++)
       {
          JsonObject JsonDogData = JsonDogDataArray.createNestedObject();
-         JsonDogData["dogNumber"] = RequestedRaceData.DogData[i].DogNumber;
-         JsonArray JsonDogDataTimingArray = JsonDogData.createNestedArray("timing");
-         char cForJson[9];
-         for (uint8_t i2 = 0; i2 <= RaceHandler.iDogRunCounters[i]; i2++)
+         JsonDogData["dogNr"] = i;
+         if (bUpdateThisRaceDataField[i + 8] || bUpdateTimerWebUIdata || bUpdateRaceData)
          {
-            JsonObject DogTiming = JsonDogDataTimingArray.createNestedObject();
-            RequestedRaceData.DogData[i].Timing[i2].Time.toCharArray(cForJson, 9);
-            DogTiming["time"] = cForJson;
-            RequestedRaceData.DogData[i].Timing[i2].CrossingTime.toCharArray(cForJson, 9);
-            DogTiming["crossingTime"] = cForJson;
+            JsonDogData["fault"] = (RaceHandler._bDogFaults[i] || RaceHandler._bDogManualFaults[i]);
+            bUpdateThisRaceDataField[i + 8] = false;
          }
-         JsonDogData["fault"] = RequestedRaceData.DogData[i].Fault;
-         JsonDogData["running"] = RequestedRaceData.DogData[i].Running;
+         if (bUpdateThisRaceDataField[i + 12] || bUpdateTimerWebUIdata || bUpdateRaceData)
+         {
+            if (i == RaceHandler.iCurrentDog)
+               JsonDogData["running"] = true;
+            else
+               JsonDogData["running"] = false;
+            bUpdateThisRaceDataField[i + 12] = false;
+         }
+         if (bUpdateThisRaceDataField[i] || bUpdateThisRaceDataField[i + 4] || bUpdateTimerWebUIdata || bUpdateRaceData)
+         {
+            JsonArray JsonDogDataTimingArray = JsonDogData.createNestedArray("timing");
+            char cForJson[9];
+            if (bUpdateThisRaceDataField[i] || bUpdateTimerWebUIdata || bUpdateRaceData)
+            {
+               for (uint8_t i2 = 0; i2 <= RaceHandler.iDogRunCounters[i]; i2++)
+               {
+                  JsonObject DogTiming = JsonDogDataTimingArray.createNestedObject();
+                  if (bUpdateThisRaceDataField[i] || bUpdateTimerWebUIdata || bUpdateRaceData)
+                  {
+                     RaceHandler.GetDogTime(i, i2).toCharArray(cForJson, 9);
+                     DogTiming["time"] = cForJson;
+                     bUpdateThisRaceDataField[i] = false;
+                  }
+                  if (bUpdateThisRaceDataField[i + 4] || bUpdateTimerWebUIdata || bUpdateRaceData)
+                  {                 
+                     RaceHandler.GetCrossingTime(i, i2).toCharArray(cForJson, 9);
+                     DogTiming["crossing"] = cForJson;
+                     bUpdateThisRaceDataField[i + 4] = false;
+                  }
+               }
+            }
+         }
       }
+      bUpdateTimerWebUIdata = false;
+      bUpdateRaceData = false;
 
       size_t len = measureJson(JsonRaceDataDoc);
       AsyncWebSocketMessageBuffer *wsBuffer = _ws->makeBuffer(len);

@@ -10,15 +10,14 @@ import { WebsocketAction } from '../../../interfaces/websocketaction';
 export class DogDetailsComponent implements OnInit {
    @Input() dogData:Array<DogData> = [];
    @Input() raceIndex:number;
-   @Output() setDogFault = new EventEmitter<{dogNum, fault}>();
+   @Output() setDogFault = new EventEmitter<{dogNum: number, fault: boolean}>();
    constructor() { }
 
    ngOnInit() {
    }
 
-   EmitDogFault(dogNumber: number, faultState: boolean) {
-      let dogFault = {raceIndex: this.raceIndex, dogNum: dogNumber, fault: faultState};
+   EmitDogFault(dogNr: number, faultState: boolean) {
+      let dogFault = {raceIndex: this.raceIndex, dogNum: dogNr, fault: faultState};
       this.setDogFault.emit(dogFault);
    }
-
 }
