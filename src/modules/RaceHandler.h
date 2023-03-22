@@ -80,6 +80,7 @@ private:
    long long _llS2CrossedUnsafeTriggerTime;
    long long _llS2CrossedUnsafeGetMicrosTime;
    long long _llLastTransitionStringUpdate;
+   long long _llGatesClearedTime;
    long long _llRaceElapsedTime;
 
    uint8_t _iS1Pin;

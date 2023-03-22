@@ -5,33 +5,33 @@ ETS oznacza Electronic Training System (Elektroniczny System Treningowy) i jest 
 
 ## Przygotowanie ETS do pracy
 
-Zalecane jest rozstawienie części aktywnej i pasywnej na odległość ok. 1.4 - 1.5m. Większa odległość może powodować "szum sensorów", podczas przebiegania psa.
+Zalecane jest rozstawienie części aktywnej i pasywnej na odległość ok. 1.4 - 1.5m. Większa odległość może powodować "szum sensorów" podczas przebiegania psa.
 Max. rozstawienie nie powinno przekraczać 1.7m.
 - Po wstępnym rozstawieniu stóp nałożyć część aktywną i wstępnie dokręcić zachowując poziom przy użyciu "poziomicy / oczka"
 - Skorygować ustawienie stopy tak, aby linia startu/mety pokrywała się z linią czujników od strony handlerów. Docisnąć stopę
 - Skorygować ustawienie poziomu części aktywnej oraz jej kąt względem toru, tak aby wiązka była prostopadła do toru
 - Zamocować wstępnie część pasywną do stopy
 - Włączyć diody laserowe służące do pozycjonowania i skorygować ustawienie części pasywnej, tak aby diody celowały w stosowne punkty na części pasywnej
-- Wskazania poziomicy na części pasywnej powinny być podobne do tych na części aktywne, ale nie muszą być IDEALNIE w poziomie. Co więcej w przypadku nierównego terenu, gdy część aktywna jest wyżej niż pasywna, to aktywną należy pochylić lekko w kierunku pasywne, a pasywną odchylić lekko do tyłu. Analogicznie, jeśli część aktywna jest niżej niż część pasywna, to część aktywną należy pochylić lekko w tym, a część pasywną w przód (w kierunku części aktywnej). Dzięki temu pomimo nierównego terenu górne/dolne wiązki nie będą celowały nad lub pod "lusterka" części pasywnej.
+- Wskazania poziomicy na części pasywnej powinny być podobne do tych na części aktywne, ale nie muszą być IDEALNIE w poziomie. Co więcej w przypadku nierównego terenu, gdy część aktywna jest wyżej niż pasywna, to aktywną należy pochylić lekko w kierunku pasywnej, a pasywną odchylić lekko do tyłu. Analogicznie, jeśli część aktywna jest niżej niż część pasywna, to część aktywną należy pochylić lekko w tył, a część pasywną w przód (w kierunku części aktywnej). Dzięki temu pomimo nierównego terenu górne/dolne wiązki nie będą celowały nad lub pod "lusterka" części pasywnej.
 
-Jeśli w stanie gotowości (READY, po resecie) pojawiają górne białe światło błędu świeci się lub mruga to znaczy, że system czujniki nie trafiają w lusterka części pasywnej i należy skorygować ustawienie.
-Podobna sytuacja może mieć w trakcie deszczu / mżawki, wówczas należy przetrzeć lusterka oraz same czujniki miękką chłonną szmatką.
-Czujniki mogą też być zakłócone w przypadku bezpośredniego jasnego oświetlenia (słońce), dlatego należy ustawiać część aktywną tyłem do słońca (szczególnie rano oraz wieczorem, gdy słońce jest nisko na horyzoncie). Oczywiście należy także stosownie ustawić kierunek biegu ("side switch").
-Im lepsza dokładność ustawienia czujników, tym bardziej niezawodne jest działanie systemu. Doświadczenie pokazało, że jeśli w trakcie treningu często pojawiają się "dziwne/nienaturalne" wyniki, to w większości przypadków jest to spowodowane problemami z pozycjonowaniem systemu.
+Jeśli w stanie gotowości (READY, po resecie) górne białe światło błędu świeci się lub mruga to znaczy, że czujniki nie trafiają w lusterka części pasywnej i należy skorygować ustawienie.
+Podobna sytuacja może mieć miejsce w trakcie deszczu / mżawki / mgły, wówczas należy przetrzeć lusterka oraz same czujniki miękką chłonną szmatką.
+Czujniki mogą też zostać zakłócone w przypadku bezpośredniego jasnego oświetlenia (słońce), dlatego należy ustawiać część aktywną tyłem do słońca (szczególnie rano oraz wieczorem, gdy słońce jest nisko na horyzoncie). Oczywiście należy także stosownie ustawić kierunek biegu ("side switch").
+Im lepsza dokładność ustawienia czujników, tym bardziej niezawodne jest działanie systemu. Doświadczenie pokazało, że jeśli w trakcie treningu często pojawiają się "dziwne/nienaturalne" wyniki, to niemal zawsze jest to spowodowane problemem z wypozycjonowaniem systemu.
 [Film z opisem pozycjonowania](https://youtu.be/arwH5YqZwjc)
 
 ## Aktualizacja Firmware'u ETS
 
 #### Sprawdzenie, pobranie nowej wersji firmware ETS
 
-1. Uruchomić ETSa i odczytać wyświetlaną w trakcie uruchamiania wersję firmware (np. "ver. 1.2.1"). Od wersji 1.9.0 informacja o bieżącym
-   firmware widoczna jest także w stopce "system data" przez interfejs WiFi.
-2. Otworzyć stronę z aktualizacjami firmware, dostępną pod adresem [Releases](https://github.com/simonttp78/FlyballETS-Software/releases)
+1. Uruchomić ETSa i odczytać wyświetlaną w trakcie uruchamiania wersję firmware (np. "ver. 1.2.1"). Od wersji 1.9.0 informacja o wersji
+   firmware widoczna jest także w stopce interfejsu www/WiFi.
+2. Otworzyć stronę z aktualizacjami firmware'u, dostępną pod adresem [Releases](https://github.com/simonttp78/FlyballETS-Software/releases)
 3. Sprawdzić najnowszą dostępną wersję oprogramowania. Jeśli jest nowsza od zainstalowanej, to zalecania jest aktualizacja
 4. Pobrać plik z rozszerzeniem ".bin", który ma w nazwie wersję oprogramowania. Jeśli plik jest niewidoczny kliknąć najpierw w nagłówek "Assets"
 
 #### Wykonanie aktualizacji firmware
-Wspierana/testowana wersja przedlądarki do wykonania aktualizacji to Chrome. Aktualizacja może nie dziłać prawidłowo z Safari.
+Wspierana/testowana wersja przedlądarki do wykonania aktualizacji to Chrome. Safari też działa, za wyjątkiem paska postępu (trzeba cierpliwie czekać).
 1. Uruchomić ETSa
 2. Połączyć komputer z siecią WiFi nadawaną przez ETSa (domyślna nazwa sieci zaczyna się od "FlyballETS", domyślne hasło "FlybaETS.1234")
 3. Otworzyć w Chrome stronę główną systemu ETS przez wpisanie w przeglądarkę [flyballets.local] lub [192.168.20.1]
