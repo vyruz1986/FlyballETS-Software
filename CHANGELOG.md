@@ -8,6 +8,17 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+## [1.11.10] - 2023-03-22
+
+### Added
+- new Test Cases: 47 and 48
+- fix for TC 47 (S2 noise after dog coming back)
+- fix for TC 48 (S1 noise after dog coming back after early cross)
+
+### Changed
+- fix for fault light on (purple) in WebUI after reset
+
+
 ## [1.11.9] - 2023-03-05
 
 ### Added
@@ -186,7 +197,8 @@ All notable changes to this project will be documented in this file.
 
 
 
-[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.11.9...HEAD
+[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.11.10...HEAD
+[1.11.10]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.11.9...v1.11.10
 [1.11.9]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.10.2...v1.11.9
 [1.10.2]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.9.0...v1.10.2
 [1.9.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.6.0...v1.9.0

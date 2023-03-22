@@ -439,6 +439,7 @@ bool WebHandlerClass::_DoAction(JsonObject ActionObj, String *ReturnError, Async
 
 void WebHandlerClass::_SendLightsData(int8_t iClientId)
 {
+   bUpdateLights = false;
    stLightsState LightStates = LightsController.GetLightsState();
    StaticJsonDocument<96> jsonLightsDoc;
    JsonObject JsonRoot = jsonLightsDoc.to<JsonObject>();
@@ -485,7 +486,6 @@ void WebHandlerClass::_SendLightsData(int8_t iClientId)
          client->text(wsBuffer);
       }
       _lLastBroadcast = millis();
-      bUpdateLights = false;
    }
 }
 
