@@ -1,10 +1,9 @@
 import { Component, OnInit, OnDestroy } from "@angular/core";
 
-import { RaceData } from "../../interfaces/race";
+import { DogData, RaceData as RaceData } from "../../interfaces/race";
 import { WebsocketAction } from "../../interfaces/websocketaction";
 import { EtsdataService } from "../../services/etsdata.service";
 import { RaceControl } from "../../class/race-state";
-import { cRaceData } from "../../class/race-data";
 import { RaceCommandEnum } from "../../enums/race-state.enum";
 import { LightStates } from "../../interfaces/light-states";
 
@@ -66,14 +65,29 @@ export class RacedisplayComponent implements OnInit {
    MergeRaceData(raceData: RaceData[]){
       let previousRaceData = this.currentRaces[0];
       let newRaceData = raceData[0];
-      // ToDo read keys from interface
-      Object.keys(previousRaceData).forEach((name) => {
+      Object.keys(previousRaceData).forEach((name) => { 
          if (newRaceData[name] === undefined){
             newRaceData[name] = previousRaceData[name];
+         }
+         //console.log("Key: %o, is %o ", name, Array.isArray(newRaceData[name]));
+         if (Array.isArray(newRaceData[name])){
+            newRaceData[name].forEach((newDogData: DogData, index: number) => { 
+               let updatedDogData: DogData = this.MergeDogData(newDogData, previousRaceData[name][index]);
+               newRaceData[name][index] = updatedDogData;
+            })
          }
       });
       this.currentRaces = [];
       this.currentRaces.push(newRaceData);
+   }
+
+   MergeDogData(newDogData: DogData, previousDogData: DogData):DogData{
+      Object.keys(previousDogData).forEach((name) => { 
+         if (newDogData[name] === undefined){
+            newDogData[name] = previousDogData[name];
+         }
+      })
+      return newDogData;
    }
 
    UpdateRaceControl(): void {
@@ -82,7 +96,6 @@ export class RacedisplayComponent implements OnInit {
          RacingDogs: this.currentRaces[0].racingDogs,
          RerunsOff: this.currentRaces[0].rerunsOff
       };
-      //console.log("RaceStates in racedisplay is %o", this.raceControl.RaceStates);
    }
 
    onRaceCommand(raceCommand: RaceCommandEnum) {

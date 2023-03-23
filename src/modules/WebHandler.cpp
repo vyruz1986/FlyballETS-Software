@@ -1,6 +1,3 @@
-//
-//
-//
 #include "WebHandler.h"
 #include <AsyncElegantOTA.h>
 
@@ -55,7 +52,7 @@ void WebHandlerClass::init(int webPort)
    _lLastPingBroadcast = 0;
    _lLastBroadcast = 0;
 
-   _SystemData.PwrOnTag = SDcardController.iTagValue;
+   _iPwrOnTag = SDcardController.iTagValue;
 
    for (bool &bIsConsumer : _bIsConsumerArray)
    {
@@ -68,15 +65,14 @@ void WebHandlerClass::init(int webPort)
 void WebHandlerClass::loop()
 {
    unsigned long lCurrentUpTime = millis();
-   if ((lCurrentUpTime - _lLastRaceDataBroadcast > _iRaceDataBroadcastInterval) && !bSendRaceData
-      && (RaceHandler.RaceState == RaceHandler.STARTING || RaceHandler.RaceState == RaceHandler.RUNNING))
+   if ((lCurrentUpTime - _lLastRaceDataBroadcast > _iRaceDataBroadcastInterval) && !bSendRaceData && (RaceHandler.RaceState == RaceHandler.STARTING || RaceHandler.RaceState == RaceHandler.RUNNING))
       bSendRaceData = true;
    // log_d("bSendRaceData: %i, bUpdateLights: %i, since LastBroadcast: %ul, since WS received: %ul", bSendRaceData, bUpdateLights, (lCurrentUpTime - _lLastBroadcast), (lCurrentUpTime - _lWebSocketReceivedTime));
    if ((lCurrentUpTime - _lLastBroadcast > 100) && (lCurrentUpTime - _lWebSocketReceivedTime > 50))
    {
       if (bUpdateLights)
          _SendLightsData();
-      //else if (bSendRaceData || ((RaceHandler.RaceState == RaceHandler.RUNNING || (RaceHandler.RaceState == RaceHandler.STOPPED && !RaceHandler.bIgnoreSensors)) && (lCurrentUpTime - _lLastRaceDataBroadcast > _iRaceDataBroadcastInterval)))
+      // else if (bSendRaceData || ((RaceHandler.RaceState == RaceHandler.RUNNING || (RaceHandler.RaceState == RaceHandler.STOPPED && !RaceHandler.bIgnoreSensors)) && (lCurrentUpTime - _lLastRaceDataBroadcast > _iRaceDataBroadcastInterval)))
       else if (bSendRaceData)
          _SendRaceData(RaceHandler.iCurrentRaceId, -1);
       else if (RaceHandler.RaceState == RaceHandler.RESET || (RaceHandler.RaceState == RaceHandler.STOPPED && !RaceHandler.bIgnoreSensors))
@@ -509,7 +505,7 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
       StaticJsonDocument<bsRaceData> JsonRaceDataDoc;
       JsonObject JsonRoot = JsonRaceDataDoc.to<JsonObject>();
       JsonObject JsonRaceData = JsonRoot.createNestedObject("RaceData");
-      
+
       if (bUpdateThisRaceDataField[id] || bUpdateRaceData)
       {
          JsonRaceData["id"] = RaceHandler.iCurrentRaceId + 1;
@@ -547,42 +543,32 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
       {
          JsonObject JsonDogData = JsonDogDataArray.createNestedObject();
          JsonDogData["dogNr"] = i;
-         if (bUpdateThisRaceDataField[i + 8] || bUpdateTimerWebUIdata || bUpdateRaceData)
+         if (bUpdateThisRaceDataField[i + 4] || bUpdateTimerWebUIdata || bUpdateRaceData)
          {
             JsonDogData["fault"] = (RaceHandler._bDogFaults[i] || RaceHandler._bDogManualFaults[i]);
-            bUpdateThisRaceDataField[i + 8] = false;
+            bUpdateThisRaceDataField[i + 4] = false;
          }
-         if (bUpdateThisRaceDataField[i + 12] || bUpdateTimerWebUIdata || bUpdateRaceData)
+         if (bUpdateThisRaceDataField[i + 8] || bUpdateTimerWebUIdata || bUpdateRaceData)
          {
             if (i == RaceHandler.iCurrentDog)
                JsonDogData["running"] = true;
             else
                JsonDogData["running"] = false;
-            bUpdateThisRaceDataField[i + 12] = false;
+            bUpdateThisRaceDataField[i + 8] = false;
          }
-         if (bUpdateThisRaceDataField[i] || bUpdateThisRaceDataField[i + 4] || bUpdateTimerWebUIdata || bUpdateRaceData)
+         if (bUpdateThisRaceDataField[i] || bUpdateTimerWebUIdata || bUpdateRaceData)
          {
             JsonArray JsonDogDataTimingArray = JsonDogData.createNestedArray("timing");
             char cForJson[9];
-            if (bUpdateThisRaceDataField[i] || bUpdateTimerWebUIdata || bUpdateRaceData)
+            for (uint8_t i2 = 0; i2 <= RaceHandler.iDogRunCounters[i]; i2++)
             {
-               for (uint8_t i2 = 0; i2 <= RaceHandler.iDogRunCounters[i]; i2++)
-               {
-                  JsonObject DogTiming = JsonDogDataTimingArray.createNestedObject();
-                  if (bUpdateThisRaceDataField[i] || bUpdateTimerWebUIdata || bUpdateRaceData)
-                  {
-                     RaceHandler.GetDogTime(i, i2).toCharArray(cForJson, 9);
-                     DogTiming["time"] = cForJson;
-                     bUpdateThisRaceDataField[i] = false;
-                  }
-                  if (bUpdateThisRaceDataField[i + 4] || bUpdateTimerWebUIdata || bUpdateRaceData)
-                  {                 
-                     RaceHandler.GetCrossingTime(i, i2).toCharArray(cForJson, 9);
-                     DogTiming["crossing"] = cForJson;
-                     bUpdateThisRaceDataField[i + 4] = false;
-                  }
-               }
+               JsonObject DogTiming = JsonDogDataTimingArray.createNestedObject();
+               RaceHandler.GetDogTime(i, i2).toCharArray(cForJson, 9);
+               DogTiming["time"] = cForJson;
+               RaceHandler.GetCrossingTime(i, i2).toCharArray(cForJson, 9);
+               DogTiming["crossing"] = cForJson;
             }
+            bUpdateThisRaceDataField[i] = false;
          }
       }
       bUpdateTimerWebUIdata = false;
@@ -711,29 +697,23 @@ void WebHandlerClass::_SendSystemData(int8_t iClientId)
    }
    else
    {
-      _SystemData.FwVer = (char *)FW_VER;
-      _SystemData.RaceID = RaceHandler.iCurrentRaceId + 1;
-      _SystemData.Uptime = MICROS / 1000000;
-      _SystemData.NumClients = _ws->count();
-      _SystemData.LocalSystemTime = (char *)GPSHandler.GetUtcDateAndTime();
-      _SystemData.BatteryPercentage = BatterySensor.GetBatteryPercentage();
       if (!RaceHandler.bRunDirectionInverted)
-         _SystemData.RunDirection = (char *)"->";
+         _strRunDirection = (char *)"->";
       else
-         _SystemData.RunDirection = (char *)"<-";
+         _strRunDirection = (char *)"<-";
 
       StaticJsonDocument<192> JsonSystemDataDoc;
       JsonObject JsonRoot = JsonSystemDataDoc.to<JsonObject>();
 
       JsonObject JsonSystemData = JsonRoot.createNestedObject("SystemData");
-      JsonSystemData["uptime"] = _SystemData.Uptime;
-      JsonSystemData["FwVer"] = _SystemData.FwVer;
-      JsonSystemData["PwrOnTag"] = _SystemData.PwrOnTag;
-      JsonSystemData["RaceID"] = _SystemData.RaceID;
-      JsonSystemData["numClients"] = _SystemData.NumClients;
-      JsonSystemData["systemTimestamp"] = _SystemData.LocalSystemTime;
-      JsonSystemData["batteryPercentage"] = _SystemData.BatteryPercentage;
-      JsonSystemData["runDirection"] = _SystemData.RunDirection;
+      JsonSystemData["ut"] = MICROS / 1000000;
+      JsonSystemData["FW"] = (char *)FW_VER;
+      JsonSystemData["Tag"] = _iPwrOnTag;
+      JsonSystemData["RID"] = RaceHandler.iCurrentRaceId + 1;
+      JsonSystemData["clients"] = _ws->count();
+      JsonSystemData["sTime"] = (char *)GPSHandler.GetUtcDateAndTime();
+      JsonSystemData["bat"] = BatterySensor.GetBatteryPercentage();
+      JsonSystemData["dir"] = _strRunDirection;
 
       size_t len = measureJson(JsonSystemDataDoc);
       AsyncWebSocketMessageBuffer *wsBuffer = _ws->makeBuffer(len);

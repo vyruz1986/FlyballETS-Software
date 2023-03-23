@@ -1,10 +1,10 @@
 export interface SystemData {
-  uptime: number;
-  FwVer: String;
-  PwrOnTag: number;
-  RaceID: number;
-  numClients: number;
-  systemTimestamp: Date;
-  batteryPercentage: Number;
-  runDirection: String;
+  ut: number;
+  FW: String;
+  Tag: number;
+  RID: number;
+  clients: number;
+  sTime: Date;
+  bat: Number;
+  dir: String;
 }

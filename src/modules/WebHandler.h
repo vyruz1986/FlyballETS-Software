@@ -55,7 +55,6 @@ protected:
    const uint16_t _iPingBroadcastInterval = 30000;
    unsigned long _lWebSocketReceivedTime;
    unsigned long _lLastBroadcast;
-   stSystemData _SystemData;
    char _last_modified[50];
 
    typedef struct
@@ -78,30 +77,30 @@ public:
    bool bUpdateTimerWebUIdata = false;
    enum RaceDataFields
    {
-      D1Time,      // 0
-      D2Time,      // 1
-      D3Time,      // 2
-      D4Time,      // 3
-      D1CrossTime, // 4
-      D2CrossTime, // 5
-      D3CrossTime, // 6
-      D4CrossTime, // 7
-      D1FaultInfo, // 8
-      D2FaultInfo, // 9
-      D3FaultInfo, // 10
-      D4FaultInfo, // 11
-      D1Running,   // 12
-      D2Running,   // 13
-      D3Running,   // 14
-      D4Running,   // 15
-      elapsedTime, // 16
-      cleanTime,   // 17
-      raceState,   // 18
-      id,          // 19
-      racingDogs,  // 20
-      rerunsOff    // 21
+      D1Times,     // 0
+      D2Times,     // 1
+      D3Times,     // 2
+      D4Times,     // 3
+      D1FaultInfo, // 4
+      D2FaultInfo, // 5
+      D3FaultInfo, // 6
+      D4FaultInfo, // 7
+      D1Running,   // 8
+      D2Running,   // 9
+      D3Running,   // 10
+      D4Running,   // 11
+      elapsedTime, // 12
+      cleanTime,   // 13
+      raceState,   // 14
+      id,          // 15
+      racingDogs,  // 16
+      rerunsOff    // 17
    };
-   bool bUpdateThisRaceDataField[22];
+   bool bUpdateThisRaceDataField[18];
+
+private:
+   uint16_t _iPwrOnTag;
+   String _strRunDirection;
 };
 
 extern WebHandlerClass WebHandler;
