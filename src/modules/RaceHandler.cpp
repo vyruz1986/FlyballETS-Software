@@ -763,8 +763,11 @@ void RaceHandlerClass::_ChangeRaceState(RaceStates byNewRaceState)
    log_i("RS: %s", strRaceState);
    LCDController.UpdateField(LCDController.RaceState, strRaceState);
 #ifdef WiFiON
-   WebHandler.bUpdateThisRaceDataField[WebHandler.raceState] = true;
-   WebHandler.bSendRaceData = true;
+   if (RaceState != 0)
+   {
+      WebHandler.bUpdateThisRaceDataField[WebHandler.raceState] = true;
+      WebHandler.bSendRaceData = true;
+   }
 #endif
 }
 
@@ -994,8 +997,7 @@ void RaceHandlerClass::ResetRace()
       log_i("Reset Race: DONE");
 #ifdef WiFiON
       // Send updated racedata to any web clients
-      WebHandler.bUpdateThisRaceDataField[WebHandler.id] = true;
-      WebHandler.bUpdateTimerWebUIdata = true;
+      WebHandler.bUpdateRaceData = true;
       WebHandler.bSendRaceData = true;
 #endif
    }
@@ -1644,7 +1646,7 @@ void RaceHandlerClass::SetNumberOfDogs(uint8_t _iNumberOfRacingDogs)
    iNumberOfRacingDogs = _iNumberOfRacingDogs;
    LCDController.UpdateNumberOfDogsOnLCD(iNumberOfRacingDogs);
 #ifdef WiFiON
-   WebHandler.bUpdateThisRaceDataField[WebHandler.racingDogs] = true;
+   WebHandler.bUpdateRaceData = true;
    WebHandler.bSendRaceData = true;
 #endif
    log_i("Number of dogs set to: %i.", iNumberOfRacingDogs);

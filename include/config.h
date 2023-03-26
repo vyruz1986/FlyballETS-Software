@@ -23,7 +23,7 @@
 #define CONFIG_ESP_COREDUMP_ENABLE_TO_UART 1
 
 
-#define FW_VER "1.12.8"          // Flyball ETS firmware version
+#define FW_VER "1.12.9"          // Flyball ETS firmware version
 
 #define Simulate true            // Set to true to enable race simulation (see Simulator.h/.cpp)
 #define NumSimulatedRaces 50     // Number of prepeared simulated races. Sererial interface command to change interface: e.g. "race 1"

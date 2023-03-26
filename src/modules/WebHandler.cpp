@@ -67,15 +67,14 @@ void WebHandlerClass::loop()
    unsigned long lCurrentUpTime = millis();
    if ((lCurrentUpTime - _lLastRaceDataBroadcast > _iRaceDataBroadcastInterval) && !bSendRaceData && (RaceHandler.RaceState == RaceHandler.STARTING || RaceHandler.RaceState == RaceHandler.RUNNING))
       bSendRaceData = true;
-   // log_d("bSendRaceData: %i, bUpdateLights: %i, since LastBroadcast: %ul, since WS received: %ul", bSendRaceData, bUpdateLights, (lCurrentUpTime - _lLastBroadcast), (lCurrentUpTime - _lWebSocketReceivedTime));
+   //log_d("bSendRaceData: %i, bUpdateLights: %i, since LastBroadcast: %ul, since WS received: %ul", bSendRaceData, bUpdateLights, (lCurrentUpTime - _lLastBroadcast), (lCurrentUpTime - _lWebSocketReceivedTime));
    if ((lCurrentUpTime - _lLastBroadcast > 100) && (lCurrentUpTime - _lWebSocketReceivedTime > 50))
    {
       if (bUpdateLights)
          _SendLightsData();
-      // else if (bSendRaceData || ((RaceHandler.RaceState == RaceHandler.RUNNING || (RaceHandler.RaceState == RaceHandler.STOPPED && !RaceHandler.bIgnoreSensors)) && (lCurrentUpTime - _lLastRaceDataBroadcast > _iRaceDataBroadcastInterval)))
       else if (bSendRaceData)
          _SendRaceData(RaceHandler.iCurrentRaceId, -1);
-      else if (RaceHandler.RaceState == RaceHandler.RESET || (RaceHandler.RaceState == RaceHandler.STOPPED && !RaceHandler.bIgnoreSensors))
+      else if (RaceHandler.RaceState == RaceHandler.RESET || (RaceHandler.RaceState == RaceHandler.STOPPED && RaceHandler.bIgnoreSensors))
       {
          if (lCurrentUpTime - _lLastSystemDataBroadcast > _iSystemDataBroadcastInterval)
             _SendSystemData();
@@ -445,7 +444,7 @@ void WebHandlerClass::_SendLightsData(int8_t iClientId)
 {
    bUpdateLights = false;
    stLightsState LightStates = LightsController.GetLightsState();
-   log_d("Getting Lights state");
+   //log_d("Getting Lights state");
    StaticJsonDocument<96> jsonLightsDoc;
    JsonObject JsonRoot = jsonLightsDoc.to<JsonObject>();
 

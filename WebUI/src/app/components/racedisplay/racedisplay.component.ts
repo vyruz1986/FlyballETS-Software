@@ -72,8 +72,12 @@ export class RacedisplayComponent implements OnInit {
          //console.log("Key: %o, is %o ", name, Array.isArray(newRaceData[name]));
          if (Array.isArray(newRaceData[name])){
             newRaceData[name].forEach((newDogData: DogData, index: number) => { 
-               let updatedDogData: DogData = this.MergeDogData(newDogData, previousRaceData[name][index]);
-               newRaceData[name][index] = updatedDogData;
+               //console.log("Key name: %o, value: %o, index: %o ", name, previousRaceData[name][index], index);
+               if (previousRaceData[name][index])
+               {
+                  let updatedDogData: DogData = this.MergeDogData(newDogData, previousRaceData[name][index]);
+                  newRaceData[name][index] = updatedDogData;
+               }
             })
          }
       });

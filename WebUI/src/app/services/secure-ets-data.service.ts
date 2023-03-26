@@ -6,8 +6,8 @@ import { WebsocketDataRequest } from '../interfaces/websocket-data-request';
 
 @Injectable()
 export class SecureEtsDataService {
-   //ETS_URL: string = "ws://" + window.location.host + "/wsa";
-   ETS_URL:string = "ws://192.168.20.1/wsa";
+   ETS_URL: string = "ws://" + window.location.host + "/wsa";
+   //ETS_URL:string = "ws://192.168.20.1/wsa";
    wsObservable: Observable<any>;
    wsObserver: Observer<any>;
    private ws;
