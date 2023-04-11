@@ -505,10 +505,10 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
       JsonObject JsonRoot = JsonRaceDataDoc.to<JsonObject>();
       JsonObject JsonRaceData = JsonRoot.createNestedObject("RaceData");
 
-      if (bUpdateThisRaceDataField[id] || bUpdateRaceData)
+      if (bUpdateRaceData)
       {
          JsonRaceData["id"] = RaceHandler.iCurrentRaceId + 1;
-         bUpdateThisRaceDataField[id] = false;
+         JsonRaceData["racingDogs"] = RaceHandler.iNumberOfRacingDogs;
       }
       if (bUpdateThisRaceDataField[elapsedTime] || bUpdateTimerWebUIdata || bUpdateRaceData)
       {
@@ -524,11 +524,6 @@ void WebHandlerClass::_SendRaceData(int iRaceId, int8_t iClientId)
       {
          JsonRaceData["raceState"] = RaceHandler.RaceState;
          bUpdateThisRaceDataField[raceState] = false;
-      }
-      if (bUpdateThisRaceDataField[racingDogs] || bUpdateRaceData)
-      {
-         JsonRaceData["racingDogs"] = RaceHandler.iNumberOfRacingDogs;
-         bUpdateThisRaceDataField[racingDogs] = false;
       }
       if (bUpdateThisRaceDataField[rerunsOff] || bUpdateRaceData)
       {

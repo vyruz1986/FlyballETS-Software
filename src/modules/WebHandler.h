@@ -92,11 +92,9 @@ public:
       elapsedTime, // 12
       cleanTime,   // 13
       raceState,   // 14
-      id,          // 15
-      racingDogs,  // 16
-      rerunsOff    // 17
+      rerunsOff    // 15
    };
-   bool bUpdateThisRaceDataField[18];
+   bool bUpdateThisRaceDataField[16];
 
 private:
    uint16_t _iPwrOnTag;
