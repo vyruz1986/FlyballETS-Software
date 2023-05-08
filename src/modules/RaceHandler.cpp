@@ -522,9 +522,9 @@ void RaceHandlerClass::Main()
          }
          else if (_byDogState == COMINGBACK)
          {
-            // S2 is triggered less than 1.5s after current dog's enter time what means we have potential early (negative) cross
+            // S2 is triggered less than 3.1s after current dog's enter time what means we have potential early (negative) cross
             // unless this is first dog
-            if ((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) < 1500000)
+            if ((STriggerRecord.llTriggerTime - _llDogEnterTimes[iCurrentDog]) < 3100000)
             {
                if (iCurrentDog != 0 || (iCurrentDog == 0 && _bRerunBusy))
                {
