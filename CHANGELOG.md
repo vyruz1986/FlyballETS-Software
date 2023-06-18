@@ -8,6 +8,9 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - LCD and WebUI refresh optimization
+- Fix for wrong presentation of FW version on LCD
+- Fix for huge early cross
+- SDK update
 
 ## [1.11.10] - 2023-03-22
 
