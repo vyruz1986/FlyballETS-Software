@@ -94,7 +94,7 @@ public:
       raceState,   // 14
       rerunsOff    // 15
    };
-   bool bUpdateThisRaceDataField[16];
+   volatile bool bUpdateThisRaceDataField[16];
 
 private:
    uint16_t _iPwrOnTag;

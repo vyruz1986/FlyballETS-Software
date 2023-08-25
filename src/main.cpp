@@ -35,6 +35,9 @@ IPAddress IPGateway(192, 168, 20, 1);
 IPAddress IPNetwork(192, 168, 20, 0);
 IPAddress IPSubnet(255, 255, 255, 0);
 
+// Statically allocate and initialize the spinlock
+static portMUX_TYPE spinlock = portMUX_INITIALIZER_UNLOCKED;
+
 void setup()
 {
    EEPROM.begin(EEPROM_SIZE);
@@ -259,7 +262,7 @@ void serialEvent()
 /// </summary>
 void IRAM_ATTR Sensor1Wrapper()
 {
-   RaceHandler.TriggerSensor1();
+   RaceHandler.TriggerSensor1(&spinlock);
 }
 
 /// <summary>
@@ -267,7 +270,7 @@ void IRAM_ATTR Sensor1Wrapper()
 /// </summary>
 void IRAM_ATTR Sensor2Wrapper()
 {
-   RaceHandler.TriggerSensor2();
+   RaceHandler.TriggerSensor2(&spinlock);
 }
 
 /// <summary>
@@ -663,6 +666,7 @@ void Core1Race(void *parameter)
       Simulator.Main();
    #endif
       RaceHandler.Main();
+      vTaskDelay(1 / portTICK_PERIOD_MS);
    }
 }
 
@@ -672,6 +676,7 @@ void Core1Lights(void *parameter)
    for (;;)
    {
       LightsController.Main();
+      vTaskDelay(1 / portTICK_PERIOD_MS);
    }
 }
 
@@ -681,5 +686,6 @@ void Core1Lights(void *parameter)
    for (;;)
    {
       LCDController.Main();
+      vTaskDelay(1 / portTICK_PERIOD_MS);
    }
 }*/

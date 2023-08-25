@@ -5,11 +5,16 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- Detection of wrongly configured Run Direction (TC 50)
+- Added detection of starting dog that missed gate while entering (TC 49)
 
 ### Changed
 - LCD and WebUI refresh optimization
 - Fix for wrong presentation of FW version on LCD
-- Fix for huge early cross
+- Fix for huge early cross scenario
+- Improved interrupts processing (spinlock)
+- Improved simulation function
+- 
 - SDK update
 
 ## [1.11.10] - 2023-03-22

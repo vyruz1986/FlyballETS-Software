@@ -92,7 +92,7 @@ void LCDControllerClass::Main()
       uint8_t iLoopCounter = 0;
       for (const SLCDField &lcdField : _SlcdfieldFields)
       {
-         log_v("lcdField: %i, UpdateFlag: %i", iLoopCounter, lcdField.bUpdateFlag);
+         //log_v("lcdField: %i, UpdateFlag: %i", iLoopCounter, lcdField.bUpdateFlag);
          // Trigger update only for fields with UpdateFlag set
          if (lcdField.bUpdateFlag)
          {

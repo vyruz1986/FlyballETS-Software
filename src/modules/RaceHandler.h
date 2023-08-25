@@ -47,8 +47,8 @@ public:
    void StopRace();
    void StopRace(long long llStopTime);
    void ResetRace();
-   void TriggerSensor1();
-   void TriggerSensor2();
+   void IRAM_ATTR TriggerSensor1(portMUX_TYPE *spinlock);
+   void IRAM_ATTR TriggerSensor2(portMUX_TYPE *spinlock);
 
    enum DogFaults
    {
@@ -122,6 +122,7 @@ private:
    bool _bNegativeCrossDetected;
    bool _bPotentialNegativeCrossDetected;
    bool _bRaceSummaryPrinted = false; // race summary printed indicator
+   bool _bWrongRunDirectionDetected = false;
    long long _llLastDogTimeReturnTimeStamp[4];
    int8_t _iLastReturnedRunNumber[4];
    long long _llDogEnterTimes[5];

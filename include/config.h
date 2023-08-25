@@ -23,10 +23,10 @@
 #define CONFIG_ESP_COREDUMP_ENABLE_TO_UART 1
 
 
-#define FW_VER "1.12.13 "        // Flyball ETS firmware version
+#define FW_VER "1.12.14 "        // Flyball ETS firmware version
 
 #define Simulate true            // Set to true to enable race simulation (see Simulator.h/.cpp)
-#define NumSimulatedRaces 50     // Number of prepeared simulated races. Sererial interface command to change interface: e.g. "race 1"
+#define NumSimulatedRaces 52     // Number of prepeared simulated races. Sererial interface command to change interface: e.g. "race 1"
 #define TRIGGER_QUEUE_LENGTH 60  // Number of triggers in the queue
 
 #define WiFiON                   // If defined all WiFi features are on: OTA, Web server. Please be carefull. Keep remote receiver board (antenna) away from ESP32 to avoid interferences.

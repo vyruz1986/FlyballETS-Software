@@ -73,7 +73,7 @@ void RaceHandlerClass::Main()
       // log_d("GREEN light is ON!");
    }
 
-   // Update racetime while every 227300ns
+   // Update racetime (while running) every 227300ns
    if (RaceState == RUNNING)
    {
       if ((MICROS > llRaceStartTime) && (MICROS - llRaceStartTime > _llRaceTime + 227300))
@@ -496,20 +496,50 @@ void RaceHandlerClass::Main()
       // Handle sensor 2 (box side)
       if (STriggerRecord.iSensorNumber == 2 && STriggerRecord.iSensorState == 1 && _bGatesClear && iCurrentDog < 5) // Only if gates are clear S2 sensor is HIGH (B)
       {
-         if (_byDogState == GOINGIN && (STriggerRecord.llTriggerTime - _llLastDogExitTime) > 3000000)
+         // If this is first dog and S2 was cross within 4.5s from initiating starting sequence
+         // it's assumed we have wrong Run Direction set
+         if (_byDogState == GOINGIN && iCurrentDog == 0 && !_bRerunBusy && !_bDogManualFaults[iCurrentDog]
+              && ((STriggerRecord.llTriggerTime - (_llLastDogExitTime - 3000000)) < 4500000))
          {
-            /* Gates were clear, we weren't expecting a dog back, but one came back.
-            This means we missed the dog going in,
-            most likely due to perfect crossing were next dog was faster than previous dog (Tstring --> BAba),
-            and thus passed through sensors unseen */
-            // Set enter time for this dog to exit time of previous dog
-            _llDogEnterTimes[iCurrentDog] = _llLastDogExitTime;
-            // Set crossing time to zero (ok)
-            _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = 0;
-            if (_bDogManualFaults[iCurrentDog]) // If dog has manual fault we assume it's due to he missed gate while entering
+            LightsController.DeleteSchedules();
+            _llDogEnterTimes[iCurrentDog] = llRaceStartTime;
+            _bWrongRunDirectionDetected = true;
+            for (uint8_t i = 0; i < 4; i++)
+               LightsController.ToggleFaultLight(i, LightsController.ON);
+            LCDController.bUpdateThisLCDField[iCurrentDog + 4] = true;
+         #ifdef WiFiON
+            WebHandler.bUpdateThisRaceDataField[iCurrentDog] = true;
+         #endif
+            log_d("Starting dog crossed S2 before S1. Wrong Run Direction detected!");
+            StopRace(llRaceStartTime);
+         }
+         else if (_byDogState == GOINGIN && (STriggerRecord.llTriggerTime - _llLastDogExitTime) > 3000000)
+         {
+            // If this is first dog then it had to miss the gate while entering
+            if(iCurrentDog == 0 && !_bRerunBusy)
+            {
+               _llDogEnterTimes[iCurrentDog] = llRaceStartTime;
                _bDogMissedGateGoingin[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
-            else // This is true invisible dog case so treated as big OK cross
-               _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+               if(!_bDogManualFaults[iCurrentDog])
+                  SetDogFault(iCurrentDog, ON);
+               log_d("Invisible starting dog came back! Set fault and 'run in' as dog time.");
+            }
+            else
+            {
+               /* Gates were clear, we weren't expecting a dog back, but one came back.
+               This means we missed the dog going in,
+               most likely due to perfect crossing were next dog was faster than previous dog (Tstring --> BAba),
+               and thus passed through sensors unseen */
+               // Set enter time for this dog to exit time of previous dog
+               _llDogEnterTimes[iCurrentDog] = _llLastDogExitTime;
+               // Set crossing time to zero (ok)
+               _llCrossingTimes[iCurrentDog][iDogRunCounters[iCurrentDog]] = 0;
+               if (_bDogManualFaults[iCurrentDog]) // If dog has manual fault we assume it's due to he missed gate while entering
+                  _bDogMissedGateGoingin[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+               else // This is true invisible dog case so treated as big OK cross
+                  _bDogBigOK[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
+               log_d("Invisible dog %i came back!. Update enter time. OK or Perfect crossing.", iCurrentDog + 1);
+            }
             _bS1isSafe = true;
             _bS1StillSafe = true;
             _llS2CrossedSafeTime = STriggerRecord.llTriggerTime;
@@ -518,7 +548,6 @@ void RaceHandlerClass::Main()
          #ifdef WiFiON
             WebHandler.bUpdateThisRaceDataField[iCurrentDog] = true;
          #endif
-            log_d("Invisible dog %i came back!. Update enter time. OK or Perfect crossing.", iCurrentDog + 1);
          }
          else if (_byDogState == COMINGBACK)
          {
@@ -825,7 +854,7 @@ void RaceHandlerClass::_ChangeDogNumber(uint8_t iNewDogNumber)
 /// </summary>
 void RaceHandlerClass::StartRaceTimer()
 {
-   llRaceStartTime = MICROS + 3000000;
+   llRaceStartTime = _llLastDogExitTime = MICROS + 3000000;
    _ChangeRaceState(STARTING);
    log_i("STARTING! Tag: %i, Race ID: %i.", SDcardController.iTagValue, iCurrentRaceId + 1);
    cRaceStartTimestamp = GPSHandler.GetLocalTimestamp();
@@ -896,10 +925,10 @@ void RaceHandlerClass::ResetRace()
       _llGatesClearedTime = MICROS;
       _llRaceTime = 0;
       _llRaceElapsedTime = 0;
-      _llLastDogExitTime = 0;
-      _llS2CrossedSafeTime = 0;
-      _llS2CrossedUnsafeTriggerTime = 0;
-      _llS2CrossedUnsafeGetMicrosTime = 0;
+      _llLastDogExitTime = MICROS;
+      _llS2CrossedSafeTime = MICROS;
+      _llS2CrossedUnsafeTriggerTime = MICROS;
+      _llS2CrossedUnsafeGetMicrosTime = MICROS;
       _byDogState = GOINGIN;
       _ChangeDogNumber(0);
 #if Simulate
@@ -922,6 +951,7 @@ void RaceHandlerClass::ResetRace()
       _bSensorNoise = false;
       _bLastStringBAba = false;
       _bNoValidCleanTime = false;
+      _bWrongRunDirectionDetected = false;
       for (auto &bFault : _bDogFaults)
          bFault = false;
       for (auto &bManualFault : _bDogManualFaults)
@@ -1112,7 +1142,7 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
       bFault = State;
       // Set fault to specified value for relevant dog (automatic faults)
       _bDogFaults[iDogNumber] = bFault;
-      // If crossing fault detected of next dog dog then set fake time flag for current dog
+      // If crossing fault detected of next dog then set fake time flag for current dog
       if (bFault && (iDogNumber > 0 || (iDogNumber == 0 && iCurrentDog > 0)))
       {
          _bDogFakeTime[iCurrentDog][iDogRunCounters[iCurrentDog]] = true;
@@ -1155,7 +1185,7 @@ void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
 ///   ISR function for sensor 1, this function will record the sensor number, microseconds and
 ///   state (HIGH/LOW) of the sensor in the interrupt queue.
 /// </summary>
-void RaceHandlerClass::TriggerSensor1()
+void IRAM_ATTR RaceHandlerClass::TriggerSensor1(portMUX_TYPE *spinlock)
 {
    if (bIgnoreSensors)
       return;
@@ -1167,14 +1197,18 @@ void RaceHandlerClass::TriggerSensor1()
          LightsController.bExecuteRaceReadyFaultOFF = true;
    }
    else
+   {
+      taskENTER_CRITICAL_ISR(spinlock);
       _QueuePush({bRunDirectionInverted ? 2 : 1, MICROS, digitalRead(_iS1Pin)});
+      taskEXIT_CRITICAL_ISR(spinlock);
+   }
 }
 
 /// <summary>
 ///   ISR function for sensor 2, this function will record the sensor number, microseconds and
 ///   state (HIGH/LOW) of the sensor in the interrupt queue.
 /// </summary>
-void RaceHandlerClass::TriggerSensor2()
+void IRAM_ATTR RaceHandlerClass::TriggerSensor2(portMUX_TYPE *spinlock)
 {
    if (bIgnoreSensors)
       return;
@@ -1186,7 +1220,11 @@ void RaceHandlerClass::TriggerSensor2()
          LightsController.bExecuteRaceReadyFaultOFF = true;
    }
    else
+   {
+      taskENTER_CRITICAL_ISR(spinlock);
       _QueuePush({bRunDirectionInverted ? 1 : 2, MICROS, digitalRead(_iS2Pin)});
+      taskEXIT_CRITICAL_ISR(spinlock);
+   }
 }
 
 /// <summary>
@@ -1307,7 +1345,9 @@ String RaceHandlerClass::GetDogTime(uint8_t iDogNumber, int8_t iRunNumber)
       dtostrf(dDogTime, 7, 3, cDogTime);
    }
 
-   if (_bDogMissedGateGoingin[iDogNumber][iRunNumber])
+   if (_bWrongRunDirectionDetected && iDogNumber == 0)
+      strDogTime = " <-  ->";
+   else if (_bDogMissedGateGoingin[iDogNumber][iRunNumber])
       strDogTime = " run in";
    else if (_bDogMissedGateComingback[iDogNumber][iRunNumber])
       strDogTime = "outside";
@@ -1345,7 +1385,9 @@ String RaceHandlerClass::GetStoredDogTimes(uint8_t iDogNumber, int8_t iRunNumber
       dDogTime = ((long long)(_llDogTimes[iDogNumber][iRunNumber] + 500) / 1000) / 1000.0;
       dtostrf(dDogTime, 7, 3, cDogTime);
    }
-   if (_bDogMissedGateGoingin[iDogNumber][iRunNumber])
+   if (_bWrongRunDirectionDetected && iDogNumber == 0)
+      strDogTime = " <-  ->";
+   else if (_bDogMissedGateGoingin[iDogNumber][iRunNumber])
       strDogTime = " run in";
    else if (_bDogMissedGateComingback[iDogNumber][iRunNumber])
       strDogTime = "outside";
@@ -1460,8 +1502,15 @@ String RaceHandlerClass::TransformCrossingTime(uint8_t iDogNumber, int8_t iRunNu
          strCrossingTime += cCrossingTime;
       }
    }
-   else if (_bDogMissedGateGoingin[iDogNumber][iRunNumber])
-      strCrossingTime = " ";
+   /*else if (_bDogMissedGateGoingin[iDogNumber][iRunNumber])
+      strCrossingTime = " ";*/
+   else if (_bWrongRunDirectionDetected && iDogNumber == 0)
+   {
+      if (_bAccuracy3digits)
+         strCrossingTime = "   ERROR";
+      else
+         strCrossingTime = "  ERROR";
+   }
    else if (_bDogPerfectCross[iDogNumber][iRunNumber])
    {
       if (_bAccuracy3digits)

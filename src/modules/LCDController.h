@@ -63,7 +63,7 @@ public:
       SDcardState, // 19
       BoxDirection // 20
    };
-   bool bUpdateThisLCDField[21];
+   volatile bool bUpdateThisLCDField[21];
 
    void UpdateField(LCDFields lcdfieldField, String strNewValue);
 
