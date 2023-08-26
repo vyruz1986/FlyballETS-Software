@@ -11,12 +11,12 @@ export class SystemDataComponent implements OnInit {
 
   hmsTime: string;
 
-  systemData: SystemData = { batteryPercentage: 0, PwrOnTag: 0, RaceID: 0, uptime: 0, systemTimestamp: null, numClients: 0, FwVer: null, runDirection: null };
+  systemData: SystemData = { bat: 0, Tag: 0, RID: 0, ut: 0, sTime: null, clients: 0, FW: null, dir: null };
   constructor(private etsDataService: EtsdataService) {
     this.etsDataService.dataStream.subscribe((data) => {
       if (data.SystemData) {
         this.systemData = <SystemData>data.SystemData;
-        this.formatHMSTime(data.SystemData.uptime);
+        this.formatHMSTime(data.SystemData.ut);
       }
     });
   }

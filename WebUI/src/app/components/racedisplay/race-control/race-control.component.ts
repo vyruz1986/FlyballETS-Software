@@ -1,5 +1,5 @@
 import { Component, OnInit, Input, OnChanges, SimpleChanges, SimpleChange, Output, EventEmitter } from '@angular/core';
-import { RaceState } from '../../../class/race-state';
+import { RaceControl } from '../../../class/race-state';
 import { RaceCommandEnum } from '../../../enums/race-state.enum';
 
 @Component({
@@ -8,7 +8,7 @@ import { RaceCommandEnum } from '../../../enums/race-state.enum';
    styleUrls: ['./race-control.component.scss']
 })
 export class RaceControlComponent implements OnChanges, OnInit {
-   @Input() raceStates: RaceState;
+   @Input() raceControl: RaceControl;
    @Output() raceCommand = new EventEmitter<RaceCommandEnum>();
    @Output() dogsCommand = new EventEmitter<number>();
    @Output() setRerunsOff = new EventEmitter<boolean>();
@@ -43,16 +43,16 @@ export class RaceControlComponent implements OnChanges, OnInit {
    }
 
    ngOnInit() {
-      if (this.raceStates === undefined) {
+      if (this.raceControl.RaceStates === undefined) {
          return;
       }
       this.UpdateDisabled();
    }
 
    ngOnChanges(changes: SimpleChanges) {
-      const changedRaceStates: SimpleChange = changes.raceStates;
-      this.raceStates = changedRaceStates.currentValue;
-      //console.log("RerunsOff value is %o", this.raceStates.RerunsOff);
+      const changedRaceControl: SimpleChange = changes.raceControl;
+      this.raceControl = changedRaceControl.currentValue;
+      //console.log("RaceStates is %o", this.raceControl.RaceStates);
       this.UpdateDisabled();
    }
 
@@ -65,7 +65,7 @@ export class RaceControlComponent implements OnChanges, OnInit {
    }
 
    UpdateDisabled() {
-      this.overallMaxState = Math.max(...this.raceStates.RaceStates);
+      this.overallMaxState = this.raceControl.RaceStates;
       this.startDisabled = !(this.overallMaxState == 0);
       this.stopDisabled = !(this.overallMaxState == 1 || this.overallMaxState == 2);
       this.resetDisabled = !(this.overallMaxState == 3);

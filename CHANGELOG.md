@@ -8,6 +8,23 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+
+## [1.13.0] - 2023-08-26
+
+### Added
+- Detection of wrongly configured Run Direction (TC 50)
+- Added detection of starting dog that missed gate while entering (TC 49)
+
+### Changed
+- Essential stability fix (ESPAsyncWebServer library)
+- LCD and WebUI refresh optimization
+- Fix for wrong presentation of FW version on LCD
+- Fix for huge early cross scenario
+- Improved interrupts processing (spinlock)
+- Improved simulation function
+- Fix for 4 digits RaceID (LCD problem)
+- SDK update
+
 ## [1.11.10] - 2023-03-22
 
 ### Added
@@ -197,7 +214,8 @@ All notable changes to this project will be documented in this file.
 
 
 
-[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.11.10...HEAD
+[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.13.0...HEAD
+[1.13.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.11.10...v1.13.0
 [1.11.10]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.11.9...v1.11.10
 [1.11.9]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.10.2...v1.11.9
 [1.10.2]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.9.0...v1.10.2

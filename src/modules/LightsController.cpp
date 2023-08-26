@@ -89,7 +89,10 @@ void LightsControllerClass::Main()
          _lLightsOutSchedule[i] = 0; // Delete schedule
 #ifdef WiFiON
          if (i < 2)
-            WebHandler.bUpdateLights = true;
+            {
+               WebHandler.bUpdateLights = true;
+               //log_d("UpdateLights i<2");
+            }
 #endif
       }
    }
@@ -107,6 +110,7 @@ void LightsControllerClass::Main()
 #ifdef WiFiON
       // Send data to websocket clients
       WebHandler.bUpdateLights = true;
+      //log_d("UpdateLights");
 #endif
    }
 }
@@ -254,9 +258,8 @@ void LightsControllerClass::ToggleLightState(Lights byLight, LightStates byLight
          RaceHandler.bExecuteStartRaceTimer = true;
          byOverallState = STARTING;
       }
-
       // If start sequence is in progress and we're going to trun on GREEN light we need to change race state to RUNNING
-      if (byOverallState == STARTING && LightConfig.iPixelNumber == 4)
+      else if (byOverallState == STARTING && LightConfig.iPixelNumber == 4)
          byOverallState = STARTED;
    }
 

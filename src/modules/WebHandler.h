@@ -55,7 +55,6 @@ protected:
    const uint16_t _iPingBroadcastInterval = 30000;
    unsigned long _lWebSocketReceivedTime;
    unsigned long _lLastBroadcast;
-   stSystemData _SystemData;
    char _last_modified[50];
 
    typedef struct
@@ -74,6 +73,32 @@ public:
    void disconnectWsClient(IPAddress ipDisconnectedIP);
    bool bUpdateLights = false;
    bool bSendRaceData = false;
+   bool bUpdateRaceData = false;
+   bool bUpdateTimerWebUIdata = false;
+   enum RaceDataFields
+   {
+      D1Times,     // 0
+      D2Times,     // 1
+      D3Times,     // 2
+      D4Times,     // 3
+      D1FaultInfo, // 4
+      D2FaultInfo, // 5
+      D3FaultInfo, // 6
+      D4FaultInfo, // 7
+      D1Running,   // 8
+      D2Running,   // 9
+      D3Running,   // 10
+      D4Running,   // 11
+      elapsedTime, // 12
+      cleanTime,   // 13
+      raceState,   // 14
+      rerunsOff    // 15
+   };
+   volatile bool bUpdateThisRaceDataField[16];
+
+private:
+   uint16_t _iPwrOnTag;
+   String _strRunDirection;
 };
 
 extern WebHandlerClass WebHandler;

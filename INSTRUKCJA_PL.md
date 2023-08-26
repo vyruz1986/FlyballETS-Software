@@ -36,7 +36,7 @@ Wspierana/testowana wersja przedlądarki do wykonania aktualizacji to Chrome. Sa
 2. Połączyć komputer z siecią WiFi nadawaną przez ETSa (domyślna nazwa sieci zaczyna się od "FlyballETS", domyślne hasło "FlybaETS.1234")
 3. Otworzyć w Chrome stronę główną systemu ETS przez wpisanie w przeglądarkę [flyballets.local] lub [192.168.20.1]
 4. Kliknąć w zakładkę "Firmware update"
-5. Zalogować się używając loginu "Admin" oraz hasła (domyślne to "FlyballETS.1234)
+5. Zalogować się używając loginu "Admin" oraz hasła (domyślne to "FlyballETS.1234). Jeśli okno logowania się nie pojawi, zalogować się najpierw w zakładce "Configuration" i wrócić do zakładki "Firmware update".
 6. Po zalogowaniu domyślnie będzie zaznaczona opcja "Firmware", tak zostawić. Kliknąć "Wybierz plik" i wskazać pobrany plik firmware z rozszerzeniem ".bin"
 7. Aktualizacja rozpocznie się automatycznie. Poprawnie wykonana zakończy się napisem "OTA Success". ETS zrestartuje się automatycznie.
 
@@ -52,7 +52,8 @@ Wspierana/testowana wersja przedlądarki do wykonania aktualizacji to Chrome. Sa
 - Jeśli pies miał błąd, który został poprawiony, czyli pies będzie miał więcej niż jeden czas w danym biegu, wówczas na wyświetlaczu czasy te będą się wyświetlały naprzemiennie z oznaczeniem na końcu, który czas jest wyświetlany (*1 - pierwszy dostępny czas, *2 - drugi czas z poprawiania błędu)
 - Jeżeli funkcja "Bez powtórek / Re-runs OFF" jest aktywna, to na wyświetlaczu pojawiają się sufixy "*X"
 - W prawej dolnej części dostępne są znaczniki informujące o detekcji sygnału GPS ("G"), aktywnym WiFi ("W") oraz włożeniu karty SD ("sd")
-- przełączanie trybu pracy (mode: FCI lub NAFA) powoduje chwilowe wyświetlenie na ekranie, który tryb został wybrany. Tryb pracy jest zapisywany w pamięci.
+- Przełączanie trybu pracy (mode: FCI lub NAFA) powoduje chwilowe wyświetlenie na ekranie informacji, który tryb został wybrany. Tryb pracy jest zapisywany w pamięci.
+- Pojawienie się w miejscu wyników pierwszego psa wartości "<- -> ERROR" przy jednoczesnym zapaleniu 4 świateł błędów oznacza, że system wykrył nieprawidłowy odczyt czujników spowodowany najprawdopodobniej złym ustawieniem kierunku biegu (zmina przyciskiem side switch lub w menu Configuration interfejsu www).
 
 
 ## Pilot
@@ -64,7 +65,7 @@ Funkcje przycisków pilota:
 - 3, 4, 5, 6 w trybie gotowości (READY, po resecie) -> wybór, ile psów będzie brało udział w danym biegu
 - długie naciśnięcie (puścić przycisk po ok. 2s) 3 w trybie gotowości (READY) -> włączenie/wyłączenie funkcji "Bez powtórek / Re-runs OFF"
 - długie naciśnięcie (puścić przycisk po ok. 2s) 4 w trybie gotowości (READY) -> przełączenie między sekwencją startową NAFA i FCI (funkcja przycisku "Tryb / Mode" na obudowie przed wersją oprogramowania v1.6.0)
-UWAGA! Sygnał pilota dociera do systemu z opóźnieniem. To znaczy, że krótkie naciśnięcie przycisków nie będzie dawało reakcji (syngał nie dotrze to procesora).
+UWAGA! Sygnał pilota dociera do systemu z opóźnieniem. To znaczy, że bardzo krótkie naciśnięcie przycisków nie będzie dawało reakcji (syngał nie dotrze to procesora).
 Dla prawidłowego działania trzeba przytrzymać przycisk pilota przez ok. 0,5s. Można odnieść mylne wrażenie, że mocne przyciskanie "pomaga". To nie jest prawdą. Nie liczy się siła nacisku, a czas jego trwania.
 
 
@@ -114,6 +115,7 @@ Krótkie mrugnięcie górnego białego światła może oznaczać:
 - reset biegu przyciskiem RESET
 - w stanie GOTOWOŚCI / READY problem w wypozycjonowaniu ETSa lub wilgość / krople na czujnikach lub lusterkach.
 Przy źle wypozycjonowanym ETSie w stanie GOTOWOŚĆ / READY górne biało światło może cały czas być zapalone, co sygnalizuje potrzebę korekty ustawienia.
+- W przypadku detekcji nieprawidło ustawionego kierunku biegu zaświecą się 4 światła błędów jednocześnie, a na wyświetlaczu pojawi się "<- -> ERROR" w miejscu wyników pierwszego psa (zmina przyciskiem side switch lub w menu Configuration interfejsu www).
 
 
 ## Interfejs www (WiFi)

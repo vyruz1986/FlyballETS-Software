@@ -39,8 +39,8 @@ void LCDControllerClass::init(LiquidCrystal *Clcd1, LiquidCrystal *Clcd2)
    //                                  1         2         3
    // LCD layout:            0123456789012345678901234567890123456789
    _UpdateLCD(2, 0, String("   Flyball Electronic Training System   "), 40);
-   _UpdateLCD(3, 0, String("            ver.        rev.S           "), 40);
-   _UpdateLCD(3, 17, String(FW_VER), 6);
+   _UpdateLCD(3, 0, String("            ver.          rev.S         "), 40);
+   _UpdateLCD(3, 17, String(FW_VER), 8);
    vTaskDelay(1500);
    _UpdateLCD(1, 0, String("1:   0.000  +  0.000    |   WELCOME  000"), 40);
    _UpdateLCD(2, 0, String("2:   0.000  +  0.000    | Team:    0.000"), 40);
@@ -92,7 +92,7 @@ void LCDControllerClass::Main()
       uint8_t iLoopCounter = 0;
       for (const SLCDField &lcdField : _SlcdfieldFields)
       {
-         log_v("lcdField: %i, UpdateFlag: %i", iLoopCounter, lcdField.bUpdateFlag);
+         //log_v("lcdField: %i, UpdateFlag: %i", iLoopCounter, lcdField.bUpdateFlag);
          // Trigger update only for fields with UpdateFlag set
          if (lcdField.bUpdateFlag)
          {
@@ -181,40 +181,54 @@ void LCDControllerClass::_UpdateLCD(int iLine, int iPosition, String strText, in
 
 void LCDControllerClass::_HandleLCDUpdates()
 {
-   if (RaceHandler.RaceState == RaceHandler.STARTING)
+   // Update team clean time
+   if (bUpdateThisLCDField[CleanTime] || bUpdateTimerLCDdata)
    {
-      UpdateField(TeamTime, RaceHandler.GetRaceTime());
-      UpdateField(D1CrossTime, RaceHandler.GetCrossingTime(0));
+      String sReadCleanTime = RaceHandler.GetCleanTime();
+      UpdateField(CleanTime, sReadCleanTime);
+      bUpdateThisLCDField[CleanTime] = false;
+      log_v("LCD CleanTime updated with string '%s'", sReadCleanTime.c_str());
    }
-   else if (RaceHandler.RaceState == RaceHandler.RUNNING || RaceHandler.RaceState == RaceHandler.STOPPED || bUpdateTimerLCDdata)
+   // Update team time
+   if (bUpdateThisLCDField[TeamTime] || bUpdateTimerLCDdata)
    {
-      // Update team time
-      UpdateField(TeamTime, RaceHandler.GetRaceTime());
-      // Update team clean time
-      UpdateField(CleanTime, RaceHandler.GetCleanTime());
-      // Handle individual dog info
-      UpdateField(D1Time, RaceHandler.GetDogTime(0));
-      UpdateField(D1CrossTime, RaceHandler.GetCrossingTime(0));
-      UpdateField(D1RerunInfo, RaceHandler.GetRerunInfo(0));
-      if (RaceHandler.iNumberOfRacingDogs > 1)
+      String sReadRaceTime = RaceHandler.GetRaceTime();
+      UpdateField(TeamTime, sReadRaceTime);
+      bUpdateThisLCDField[TeamTime] = false;
+      log_v("LCD TeamTime updated with string '%s'", sReadRaceTime.c_str());
+   }
+  // Update dogs times, crossing/entry times and re-run info
+   for (int i = 0; i < RaceHandler.iNumberOfRacingDogs; i++)
+   {
+      int iRunNumber;
+      if (RaceHandler.iDogRunCounters[i] > 0 && !RaceHandler.bRerunsOff)
+         iRunNumber = RaceHandler.SelectRunNumber(i);
+      else
+         iRunNumber = 0;
+      
+      if (bUpdateThisLCDField[i] || bUpdateTimerLCDdata || (RaceHandler.iDogRunCounters[i] > 0 && !RaceHandler.bRerunsOff))
       {
-         UpdateField(D2Time, RaceHandler.GetDogTime(1));
-         UpdateField(D2CrossTime, RaceHandler.GetCrossingTime(1));
-         UpdateField(D2RerunInfo, RaceHandler.GetRerunInfo(1));
+         String sReadDogTime = RaceHandler.GetDogTime(i, iRunNumber);
+         UpdateField(LCDFields(i), sReadDogTime);
+         bUpdateThisLCDField[i] = false;
+         log_v("LCD Dog %i time updated with string '%s'. Run number: %i. Dog counters: %i", i + 1, sReadDogTime.c_str(), iRunNumber, RaceHandler.iDogRunCounters[i]);
       }
-      if (RaceHandler.iNumberOfRacingDogs > 2)
+      if (bUpdateThisLCDField[i + 4] || bUpdateTimerLCDdata || (RaceHandler.iDogRunCounters[i] > 0 && !RaceHandler.bRerunsOff))
       {
-         UpdateField(D3Time, RaceHandler.GetDogTime(2));
-         UpdateField(D3CrossTime, RaceHandler.GetCrossingTime(2));
-         UpdateField(D3RerunInfo, RaceHandler.GetRerunInfo(2));
+         String sReadCrossingTime = RaceHandler.GetCrossingTime(i, iRunNumber);
+         UpdateField(LCDFields(i + 4), sReadCrossingTime);
+         bUpdateThisLCDField[i + 4] = false;
+         log_v("LCD Dog %i Crossing time updated with string '%s'. Run number: %i. Dog counters: %i", i + 1, sReadCrossingTime.c_str(), iRunNumber, RaceHandler.iDogRunCounters[i]);
       }
-      if (RaceHandler.iNumberOfRacingDogs > 3)
+      if (bUpdateThisLCDField[i + 8] || bUpdateTimerLCDdata || (RaceHandler.iDogRunCounters[i] > 0 && !RaceHandler.bRerunsOff))
       {
-         UpdateField(D4Time, RaceHandler.GetDogTime(3));
-         UpdateField(D4CrossTime, RaceHandler.GetCrossingTime(3));
-         UpdateField(D4RerunInfo, RaceHandler.GetRerunInfo(3));
+         String sReadRerunInfo = RaceHandler.GetRerunInfo(i, iRunNumber);
+         UpdateField(LCDFields(i + 8), sReadRerunInfo);
+         bUpdateThisLCDField[i + 8] = false;
+         log_v("LCD Dog %i Re-run Info updated with string '%s'. Run number: %i. Dog counters: %i", i + 1, sReadRerunInfo.c_str(), iRunNumber, RaceHandler.iDogRunCounters[i]);
       }
    }
+   bUpdateTimerLCDdata = false;
 
    if (bUpdateNonTimerLCDdata)
    {
@@ -274,11 +288,12 @@ void LCDControllerClass::reInit()
    _UpdateLCD(3, 0, String("3:                      |   CT:         "), 40);
    _UpdateLCD(4, 0, String("4:                      |     %         "), 40);
    bUpdateNonTimerLCDdata = true;
+   bUpdateTimerLCDdata = true;
+   bExecuteLCDUpdate = true;
 }
 
 void LCDControllerClass::UpdateNumberOfDogsOnLCD(uint8_t iNumberOfDogs)
 {
-   bUpdateNonTimerLCDdata = true;
    if (iNumberOfDogs == 3)
    {
       _UpdateLCD(1, 0, String("1:                      |               "), 40);
@@ -319,6 +334,9 @@ void LCDControllerClass::UpdateNumberOfDogsOnLCD(uint8_t iNumberOfDogs)
       _UpdateLCD(3, 0, String("3:                      |   CT:         "), 40);
       _UpdateLCD(4, 0, String("4:                      |     %         "), 40);
    }
+   bUpdateNonTimerLCDdata = true;
+   bUpdateTimerLCDdata = true;
+   bExecuteLCDUpdate = true;
 }
 
 void LCDControllerClass::FirmwareUpdateInit()

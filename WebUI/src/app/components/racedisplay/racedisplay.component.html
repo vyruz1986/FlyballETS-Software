@@ -20,7 +20,7 @@
       <div class="row">
          <div class="col-12 col-md-12 text-center">
             <app-race-control
-               [raceStates]="raceStates"
+               [raceControl]="raceControl"
                (raceCommand)="onRaceCommand($event)"
                (dogsCommand)="dogsChange($event)"
                (setRerunsOff)="onSetRerunsOff($event)"
@@ -39,8 +39,7 @@
          </div>
          <div class="col-12 col-md-12">
             <app-lights
-               *ngIf="lightStates?.length > raceIndex"
-               [lightsState]="lightStates[raceIndex]"
+               [lightStates]="lightStates"
             ></app-lights>
          </div>
          <div class="col-12 col-md-12">

@@ -35,6 +35,9 @@ IPAddress IPGateway(192, 168, 20, 1);
 IPAddress IPNetwork(192, 168, 20, 0);
 IPAddress IPSubnet(255, 255, 255, 0);
 
+// Statically allocate and initialize the spinlock
+static portMUX_TYPE spinlock = portMUX_INITIALIZER_UNLOCKED;
+
 void setup()
 {
    EEPROM.begin(EEPROM_SIZE);
@@ -87,7 +90,6 @@ void setup()
    BatterySensor.init(iBatterySensorPin);
 
    // Initialize LightsController class
-   // LightsController.init(&LightsStrip);
    xTaskCreatePinnedToCore(
       Core1Lights,
       "Lights",
@@ -120,7 +122,6 @@ void setup()
       Serial.println("SD Card not inserted!");
 
    // Initialize RaceHandler class with S1 and S2 pins
-   // RaceHandler.init(iS1Pin, iS2Pin);
    xTaskCreatePinnedToCore(
       Core1Race,
       "Race",
@@ -129,11 +130,6 @@ void setup()
       1,
       &taskRace,
       1);
-
-   // Initialize simulatorclass pins if applicable
-   /*#if Simulate
-      Simulator.init();
-   #endif*/
 
 #ifdef WiFiON
    // Setup AP
@@ -233,19 +229,6 @@ void loop()
    // Handle remote control and buttons states
    HandleRemoteAndButtons();
 
-   /*
-   // Handle lights main processing
-   LightsController.Main();
-
-   #if Simulate
-      // Run simulator
-      Simulator.Main();
-   #endif
-
-   // Handle Race main processing
-   RaceHandler.Main();
-   */
-
    // Handle LCD processing
    LCDController.Main();
 
@@ -279,7 +262,7 @@ void serialEvent()
 /// </summary>
 void IRAM_ATTR Sensor1Wrapper()
 {
-   RaceHandler.TriggerSensor1();
+   RaceHandler.TriggerSensor1(&spinlock);
 }
 
 /// <summary>
@@ -287,7 +270,7 @@ void IRAM_ATTR Sensor1Wrapper()
 /// </summary>
 void IRAM_ATTR Sensor2Wrapper()
 {
-   RaceHandler.TriggerSensor2();
+   RaceHandler.TriggerSensor2(&spinlock);
 }
 
 /// <summary>
@@ -683,6 +666,7 @@ void Core1Race(void *parameter)
       Simulator.Main();
    #endif
       RaceHandler.Main();
+      vTaskDelay(1 / portTICK_PERIOD_MS);
    }
 }
 
@@ -692,6 +676,7 @@ void Core1Lights(void *parameter)
    for (;;)
    {
       LightsController.Main();
+      vTaskDelay(1 / portTICK_PERIOD_MS);
    }
 }
 
@@ -701,7 +686,6 @@ void Core1Lights(void *parameter)
    for (;;)
    {
       LCDController.Main();
-      vTaskDelay(5);
-      HandleLCDUpdates();
+      vTaskDelay(1 / portTICK_PERIOD_MS);
    }
 }*/

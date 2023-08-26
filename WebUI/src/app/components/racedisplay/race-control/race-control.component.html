@@ -7,7 +7,7 @@
          name="NumberOfRacingDogs"
          id="NumberOfRacingDogs"
          (change)="dogsChange($event.target.value)"
-         [(ngModel)]="raceStates.RacingDogs"
+         [(ngModel)]="raceControl.RacingDogs"
          [ngStyle]="{ 'font-size': '23px' }"
          [disabled]="dogsChangeDisabled"
       >
@@ -15,7 +15,7 @@
       </select>
    </div>
    <div class="column" style="width: 40%">
-      <div class="raceState">
+      <div class="raceControl">
          <div>
             <h5><span [ngClass]="setTagClass(overallMaxState)">
                {{ overallMaxState | friendlyRaceState }}
@@ -58,25 +58,25 @@
    <div class="column" style="width: 32%">
       <button
       type="button"
-      *ngIf="!raceStates.RerunsOff[0] && !startDisabled"
+      *ngIf="!raceControl.RerunsOff && !startDisabled"
       [ngClass]="{ btn: true, 'btn-outline-dark': true, 'btn-block': true, 'btn-sm': true  }"
-      (click)="EmitRerunsOff(!raceStates.RerunsOff[0])"
+      (click)="EmitRerunsOff(!raceControl.RerunsOff)"
       [disabled]="rerunsOffDisabled"
       >
          Re-runs ON
       </button>
       <button
          type="button"
-         *ngIf="raceStates.RerunsOff[0] && !startDisabled"
+         *ngIf="raceControl.RerunsOff && !startDisabled"
          [ngClass]="{ btn: true, 'btn-info': true, 'btn-block': true, 'btn-sm': true }"
-         (click)="EmitRerunsOff(!raceStates.RerunsOff[0])"
+         (click)="EmitRerunsOff(!raceControl.RerunsOff)"
          [disabled]="rerunsOffDisabled"
       >
          Re-runs OFF
       </button>
       <!--<div class="form-check checkbox-slider--c-weight checkbox-slider-danger checkbox-slider-md d-inline">
          <label>
-            <input type="checkbox" [disabled]="rerunsOffDisabled" [(ngModel)]="raceStates.RerunsOff[0]" (click)="EmitRerunsOff(!raceStates.RerunsOff[0])" />
+            <input type="checkbox" [disabled]="rerunsOffDisabled" [(ngModel)]="raceControl.RerunsOff" (click)="EmitRerunsOff(!raceControl.RerunsOff)" />
             <span style="font-size: x-small">Reruns OFF</span>
          </label>
       </div>-->

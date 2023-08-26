@@ -7,8 +7,8 @@ import { LightStates } from '../../../interfaces/light-states';
    styleUrls: ['./lights.component.scss']
 })
 export class LightsComponent implements OnInit {
-   @Input() lightsState:LightStates = {State:[0, 0, 0, 0, 0]};
-   
+   @Input() lightStates: LightStates;
+
    constructor() {
    }
 

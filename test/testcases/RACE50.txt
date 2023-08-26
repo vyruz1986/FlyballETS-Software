@@ -1,0 +1,4 @@
+$init;setdogs 1;reruns off;
+Dog 1:  <-  -> | CR:    ERROR
+ Team:   0.000
+   CT:   0.000
