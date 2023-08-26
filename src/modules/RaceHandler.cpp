@@ -1015,8 +1015,11 @@ void RaceHandlerClass::ResetRace()
       bIgnoreSensors = false;
       _bRaceSummaryPrinted = false;
 
-      if (iCurrentRaceId == 999)
+      if (iCurrentRaceId == 998)
+      {
          iCurrentRaceId = 0;
+         SDcardController.iTagValue = SDcardController.iTagValue + 1;
+      }   
       else
          iCurrentRaceId++;
       String _sCurrentRaceId = String(iCurrentRaceId + 1);
