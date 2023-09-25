@@ -5,9 +5,10 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- SW update info while doing Firmware update via WebUI
 
 ### Changed
-
+- AsyncElegantOTA lib migrated to ElegantOTA
 
 ## [1.13.0] - 2023-08-26
 

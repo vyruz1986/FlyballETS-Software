@@ -21,9 +21,10 @@
 #undef CONFIG_ESP_COREDUMP_ENABLE_TO_FLASH
 #undef CONFIG_ESP_COREDUMP_CHECK_BOOT
 #define CONFIG_ESP_COREDUMP_ENABLE_TO_UART 1
+//  Please set value 1 in ElegantOTA.h: #define ELEGANTOTA_USE_ASYNC_WEBSERVER 1
 
 
-#define FW_VER "1.13.0  "        // Flyball ETS firmware version
+#define FW_VER "1.13.1  "        // Flyball ETS firmware version
 
 #define Simulate true            // Set to true to enable race simulation (see Simulator.h/.cpp)
 #define NumSimulatedRaces 52     // Number of prepeared simulated races. Sererial interface command to change interface: e.g. "race 1"
