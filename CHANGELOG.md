@@ -9,6 +9,8 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - AsyncElegantOTA lib migrated to ElegantOTA
+- Fix for updating WebUI after accuracy change
+- Fix for false time indicator "#" replacing first digit when dog time was 100s or higher and accuracy set to 3 digits
 
 ## [1.13.0] - 2023-08-26
 

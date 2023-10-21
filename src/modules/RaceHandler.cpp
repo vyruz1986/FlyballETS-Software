@@ -54,6 +54,7 @@ void RaceHandlerClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
    LCDController.bUpdateTimerLCDdata = true;
    LCDController.bExecuteLCDUpdate = true;
 #ifdef WiFiON
+      WebHandler.bUpdateRaceData = true;
       WebHandler.bSendRaceData = true;
 #endif
 }
@@ -1357,7 +1358,7 @@ String RaceHandlerClass::GetDogTime(uint8_t iDogNumber, int8_t iRunNumber)
    else
    {
       strDogTime = cDogTime;
-      if (_bDogFakeTime[iDogNumber][iRunNumber])
+      if (_bDogFakeTime[iDogNumber][iRunNumber] && (!_bAccuracy3digits || (_bAccuracy3digits && dDogTime < 100)))
          strDogTime[0] = '#';
    }
    return strDogTime;
@@ -1655,6 +1656,7 @@ void RaceHandlerClass::ToggleAccuracy()
    else
       log_i("Accuracy switched to 2 digits");
 #ifdef WiFiON
+   WebHandler.bUpdateRaceData = true;
    WebHandler.bSendRaceData = true;
 #endif
 }

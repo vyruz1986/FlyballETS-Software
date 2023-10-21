@@ -223,6 +223,7 @@ void SDcardControllerClass::ToggleDecimalSeparator()
    else
       log_i("Decimal separator set to: period '.'");
 #ifdef WiFiON
+   WebHandler.bUpdateRaceData = true;
    WebHandler.bSendRaceData = true;
 #endif
 }
