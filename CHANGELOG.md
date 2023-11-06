@@ -6,11 +6,13 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - SW update info while doing Firmware update via WebUI
+- additional entry/crossing time information in case of manually marked dog's fault (used to be only 'fault')
 
 ### Changed
 - AsyncElegantOTA lib migrated to ElegantOTA
 - Fix for updating WebUI after accuracy change
 - Fix for false time indicator "#" replacing first digit when dog time was 100s or higher and accuracy set to 3 digits
+- testETS.py v1.1.1 - improved mid command trigger time accuracy (TC20)
 
 ## [1.13.0] - 2023-08-26
 

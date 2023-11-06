@@ -106,10 +106,11 @@ private:
    bool _bSensorNoise = false;
    bool _bLastStringBAba = false;
    bool _bNoValidCleanTime = false;
-   bool _bFault;
+   bool _bRerunNeeded;
    bool _bDogFaults[5];
    bool _bDogManualFaults[4];
    bool _bDogDetectedFaults[5][4];
+   bool _bDogDetectedManualFaults[4][4];
    bool _bDogPerfectCross[5][4];
    bool _bDogBigOK[5][4];
    bool _bDogSmallok[5][4];

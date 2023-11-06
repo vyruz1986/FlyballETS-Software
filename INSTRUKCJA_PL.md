@@ -45,7 +45,8 @@ Wspierana/testowana wersja przedlądarki do wykonania aktualizacji to Chrome. Sa
 - W trakcie uruchamiania na ekranie LCD wyświetlana jest wersja firmware'u
 - Dokładność wyświetlanych czasów może być z dokładnością do 3 lub 2 miejsc po przecinku. Zmiana przy pomocy przycisku "mode / tryb"
 - Clean Time "CT" (Czysty Czas) ma sens wyłącznie dla bezbłędnych biegów. W innym prazypadku pojawi się "n/a".
-- Jeśli pies zrobił niemierzalny błąd zmiany ("fault"), to czas wcześniejszego psa jest nieważny i poprzedzony tagiem "#"
+- Jeśli pies zrobił niemierzalny błąd zmiany ("fault"), to czas wcześniejszego psa jest nieważny i poprzedzony znakiem "#"
+- Jeśli błąd psa został zaznaczony ręcznie (np. pies nie doniósł piłki) czas dobiegu/krosa będzie poprzedzony literką "F" oznaczającą błąd (Fault), 
 - W prawym górnym rogu wyświetlany jest nr biegu. Ten numer zapisany jest też na karcie SD. Służy do identyfikacji biegu
 - Wartość numeryczna ze znakiem "%" to przybliżony stan naładowania baterii
 - Symbol ">" lub "<" w prawym dolnym rogu oznacza kierunek nabiegania psa. Zalecane jest ustawianie aktywnej części ETSa po prawej stronie patrząc w kierunku boksu.
@@ -53,7 +54,7 @@ Wspierana/testowana wersja przedlądarki do wykonania aktualizacji to Chrome. Sa
 - Jeżeli funkcja "Bez powtórek / Re-runs OFF" jest aktywna, to na wyświetlaczu pojawiają się sufixy "*X"
 - W prawej dolnej części dostępne są znaczniki informujące o detekcji sygnału GPS ("G"), aktywnym WiFi ("W") oraz włożeniu karty SD ("sd")
 - Przełączanie trybu pracy (mode: FCI lub NAFA) powoduje chwilowe wyświetlenie na ekranie informacji, który tryb został wybrany. Tryb pracy jest zapisywany w pamięci.
-- Pojawienie się w miejscu wyników pierwszego psa wartości "<- -> ERROR" przy jednoczesnym zapaleniu 4 świateł błędów oznacza, że system wykrył nieprawidłowy odczyt czujników spowodowany najprawdopodobniej złym ustawieniem kierunku biegu (zmina przyciskiem side switch lub w menu Configuration interfejsu www).
+- Pojawienie się w miejscu wyników pierwszego psa wartości "<- -> ERROR" przy jednoczesnym zapaleniu 4 świateł błędów oznacza, że system wykrył nieprawidłowy odczyt czujników spowodowany najprawdopodobniej złym ustawieniem kierunku biegu (zmina przyciskiem 'side switch' lub w menu Configuration interfejsu www)
 
 
 ## Pilot
