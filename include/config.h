@@ -24,7 +24,7 @@
 //  Please set value 1 in ElegantOTA.h: #define ELEGANTOTA_USE_ASYNC_WEBSERVER 1
 
 
-#define FW_VER "1.13.3  "        // Flyball ETS firmware version
+#define FW_VER "1.13.4  "        // Flyball ETS firmware version
 
 #define Simulate true            // Set to true to enable race simulation (see Simulator.h/.cpp)
 #define NumSimulatedRaces 52     // Number of prepeared simulated races. Sererial interface command to change interface: e.g. "race 1"
