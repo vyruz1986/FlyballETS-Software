@@ -30,8 +30,8 @@ Testcases:
 At the beginning of every testcase file there are "$init" parameters (divided by ";") determining system setup for testcase.
 
 If testcase requires you to send command while the test is running, in next line after "$init" there should be
-a line with "$commend" parameters where first parameter determines time in seconds after which the command is sent 
-and second parameter being the command you want to send.  (eg. "$command;8.5;d2f;")
+a line with "$commend" parameters where first parameter determines time in seconds (from 'start' command execution) after which the command is sent and second parameter being the command you want to send.
+eg. "$command;8.5;d2f;" --> send command 'd2f' 8.5s after 'start' command execution
 
 Results are stored in two forms in "results" folder consisting subfolders for each
 script execution with timestamps in the name. There is one "!summary.txt" file

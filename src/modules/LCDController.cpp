@@ -241,7 +241,7 @@ void LCDControllerClass::_HandleLCDUpdates()
    if ((millis() < 2000 || ((millis() - llLastBatteryLCDupdate) > 30000)) //
       && (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET))
    {
-      uint16_t iBatteryVoltage = BatterySensor.GetBatteryVoltage();
+      // uint16_t iBatteryVoltage = BatterySensor.GetBatteryVoltage();
       uint16_t iBatteryPercentage = BatterySensor.GetBatteryPercentage();
       String sBatteryPercentage;
       if (iBatteryPercentage == 9999)

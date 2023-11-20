@@ -54,6 +54,7 @@ void RaceHandlerClass::init(uint8_t iS1Pin, uint8_t iS2Pin)
    LCDController.bUpdateTimerLCDdata = true;
    LCDController.bExecuteLCDUpdate = true;
 #ifdef WiFiON
+      WebHandler.bUpdateRaceData = true;
       WebHandler.bSendRaceData = true;
 #endif
 }
