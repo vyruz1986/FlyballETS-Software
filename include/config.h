@@ -34,7 +34,7 @@
 #define BatteryCalibration false // after setting to true LCD will display analog read value from battery pin (range 0-4095). This is handfull for battery volate curve definition (dPinVoltage)
 
 #define LIGHTSCHAINS 1           // Numer of WS281x lights chains. 1 - one chain of 5 pixels/lights, 2 - two chains --> 10 pixels/lights, etc.
-#define WS_METHOD NeoEsp32Rmt0800KbpsMethod
+#define WS_METHOD NeoWs2812xMethod
 
 #define EEPROM_SIZE 4096         // EEPROM size in bytes
 #define SPI_FLASH_SEC_SIZE 4096  // Flash Sector Size declaration for ESP32 as it seems to become removed from embedded libraries
