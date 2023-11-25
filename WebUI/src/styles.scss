@@ -70,5 +70,5 @@
   border-left: 5px solid #a94442; /* red */
 }
 
-@import '~bootstrap/scss/bootstrap.scss';
-@import "~titatoggle/scss/_titatoggle.scss";
+@import 'node_modules/bootstrap/scss/bootstrap.scss';
+@import 'node_modules/titatoggle/scss/_titatoggle.scss';
