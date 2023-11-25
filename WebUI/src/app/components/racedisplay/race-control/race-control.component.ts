@@ -32,13 +32,13 @@ export class RaceControlComponent implements OnChanges, OnInit {
    setTagClass(overallMaxState) {
       switch (overallMaxState) {
       case 0: 
-         return 'badge badge-pill badge-success';
+         return 'badge rounded-pill bg-success';
       case 1: 
-         return 'badge badge-pill badge-warning';
+         return 'badge rounded-pill bg-warning text-dark';
       case 2: 
-         return 'badge badge-pill badge-danger';
+         return 'badge rounded-pill bg-danger';
       case 3: 
-         return 'badge badge-pill badge-secondary';
+         return 'badge rounded-pill bg-secondary';
       }
    }
 

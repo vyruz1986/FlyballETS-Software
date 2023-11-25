@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 - Fix for updating WebUI after accuracy change
 - Fix for false time indicator "#" replacing first digit when dog time was 100s or higher and accuracy set to 3 digits
 - testETS.py v1.1.1 - improved mid command trigger time accuracy (TC20)
+- Migration to Angular 16 and WebUI update to 1.1.0
 
 ## [1.13.0] - 2023-08-26
 

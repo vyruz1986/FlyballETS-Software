@@ -15,9 +15,16 @@ div.raceState {
 
 select {
     width: auto;
-    margin: auto;
+    margin:0px auto;
+    padding-left: 15px;
+    padding-right: 15px;
 }
+
 select:focus {
     max-width: 100px;
     width: auto;
+}
+
+button {
+    width: 100px
 }

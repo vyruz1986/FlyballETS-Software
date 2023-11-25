@@ -7,22 +7,24 @@
          </div>
          <div class="column2"></div>
          <div class="column3">
-            <button
-            type="button"
-            *ngIf="!dog.fault"
-            [ngClass]="{ btn: true, 'btn-secondary': true, 'btn-block': true, 'btn-sm': true  }"
-            (click)="EmitDogFault(dog.dogNr, !dog.fault)"
-            >
-               Fault
-            </button>
-            <button
+            <div class="d-grid gap-2">
+               <button
                type="button"
-               *ngIf="dog.fault"
-               [ngClass]="{ btn: true, 'btn-danger': true, 'btn-block': true, 'btn-sm': true }"
+               *ngIf="!dog.fault"
+               [ngClass]="['btn', 'btn-secondary', 'btn-block', 'btn-sm']"
                (click)="EmitDogFault(dog.dogNr, !dog.fault)"
-            >
-               Fault ON
-            </button>
+               >
+                  Fault
+               </button>
+               <button
+                  type="button"
+                  *ngIf="dog.fault"
+                  [ngClass]="['btn', 'btn-danger', 'btn-block', 'btn-sm']"
+                  (click)="EmitDogFault(dog.dogNr, !dog.fault)"
+               >
+                  Fault ON
+               </button>
+            </div>
          </div>
          <!-- <div class="form-check checkbox-slider--c-weight checkbox-slider-danger checkbox-slider-md d-inline offset-4">
             <label>
