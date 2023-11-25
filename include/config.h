@@ -21,7 +21,6 @@
 #undef CONFIG_ESP_COREDUMP_ENABLE_TO_FLASH
 #undef CONFIG_ESP_COREDUMP_CHECK_BOOT
 #define CONFIG_ESP_COREDUMP_ENABLE_TO_UART 1
-//  Please set value 1 in ElegantOTA.h: #define ELEGANTOTA_USE_ASYNC_WEBSERVER 1
 
 
 #define FW_VER "1.14.0  "        // Flyball ETS firmware version
@@ -35,7 +34,7 @@
 #define BatteryCalibration false // after setting to true LCD will display analog read value from battery pin (range 0-4095). This is handfull for battery volate curve definition (dPinVoltage)
 
 #define LIGHTSCHAINS 1           // Numer of WS281x lights chains. 1 - one chain of 5 pixels/lights, 2 - two chains --> 10 pixels/lights, etc.
-#define WS_METHOD NeoEsp32Rmt0800KbpsMethod
+#define WS_METHOD NeoWs2812xMethod
 
 #define EEPROM_SIZE 4096         // EEPROM size in bytes
 #define SPI_FLASH_SEC_SIZE 4096  // Flash Sector Size declaration for ESP32 as it seems to become removed from embedded libraries
