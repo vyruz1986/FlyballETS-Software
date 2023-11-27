@@ -1,20 +1,18 @@
 <div class="row">
    <div class="column" style="width: 5%"></div>
    <div class="column" style="width: 22%">
-      <mat-form-field>
-         <select matNativeControl
-            *ngIf="!startDisabled"
-            class="form-control form-control-sm"
-            name="NumberOfRacingDogs"
-            id="NumberOfRacingDogs"
-            (change)="dogsChange($event.target.value)"
-            [(ngModel)]="raceControl.RacingDogs"
-            [ngStyle]="{ 'font-size': '23px' }"
-            [disabled]="dogsChangeDisabled"
-         >
-            <option class="" *ngFor="let dog of numberOfDogs" [value]="dog.id">{{ dog.label }}</option>
-         </select>
-      </mat-form-field>
+      <select
+         *ngIf="!startDisabled"
+         class="form-control form-control-sm"
+         name="NumberOfRacingDogs"
+         id="NumberOfRacingDogs"
+         (change)="dogsChange($event.target.value)"
+         [(ngModel)]="raceControl.RacingDogs"
+         [ngStyle]="{ 'font-size': '23px' }"
+         [disabled]="dogsChangeDisabled"
+      >
+         <option class="" *ngFor="let dog of numberOfDogs" [value]="dog.id">{{ dog.label }}</option>
+      </select>
    </div>
    <div class="column" style="width: 40%">
       <div class="raceControl">
@@ -37,7 +35,7 @@
             Start
          </button>
          <button
-            type="button1"
+            type="button"
             *ngIf="!stopDisabled"
             [ngClass]="['btn', 'btn-danger', 'btn-block', 'btn-lg']"
             (click)="EmitCommand(1)"
@@ -46,7 +44,8 @@
             Stop
          </button>
          <button
-            type="button1"
+            type="button"
+            style="color:white"
             *ngIf="!resetDisabled"
             [ngClass]="['btn', 'btn-info', 'btn-block', 'btn-lg']"
             (click)="EmitCommand(2)"
@@ -61,16 +60,18 @@
 <div class="row">
    <div class="column" style="width: 32%">
       <button
-      type="button2"
+      type="button"
+      style="border: 1px solid gray"
+      class="button1"
       *ngIf="!raceControl.RerunsOff && !startDisabled"
-      [ngClass]="['btn', 'btn-outline-dark', 'btn-block', 'btn-sm']"
+      [ngClass]="['btn', 'btn-light', 'btn-block', 'btn-sm']"
       (click)="EmitRerunsOff(!raceControl.RerunsOff)"
       [disabled]="rerunsOffDisabled"
       >
          Re-runs ON
       </button>
       <button
-         type="button2"
+         type="button"
          *ngIf="raceControl.RerunsOff && !startDisabled"
          [ngClass]="['btn', 'btn-info', 'btn-block', 'btn-sm']"
          (click)="EmitRerunsOff(!raceControl.RerunsOff)"
