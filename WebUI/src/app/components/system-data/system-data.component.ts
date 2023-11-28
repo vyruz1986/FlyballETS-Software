@@ -11,7 +11,7 @@ export class SystemDataComponent implements OnInit {
 
   hmsTime: string;
 
-  systemData: SystemData = { bat: 0, Tag: 0, RID: 0, ut: 0, sTime: null, clients: 0, FW: null, dir: null };
+  systemData: SystemData = { bat: null, Tag: 0, RID: 0, ut: 0, sTime: null, clients: 0, FW: null, dir: null };
   constructor(private etsDataService: EtsdataService) {
     this.etsDataService.dataStream.subscribe((data) => {
       if (data.SystemData) {

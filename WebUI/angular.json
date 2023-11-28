@@ -99,8 +99,7 @@
             }
          }
       }
-   },
-   "defaultProject": "flyballets-webui",
+  },
    "schematics": {
       "@schematics/angular:component": {
          "prefix": "app",

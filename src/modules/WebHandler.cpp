@@ -1,5 +1,5 @@
 #include "WebHandler.h"
-#include <AsyncElegantOTA.h>
+#include <ElegantOTA.h>
 
 void WebHandlerClass::init(int webPort)
 {
@@ -40,10 +40,34 @@ void WebHandlerClass::init(int webPort)
    // Favicon handler
    _server->on("/favicon.ico", HTTP_GET, std::bind(&WebHandlerClass::_onFavicon, this, std::placeholders::_1));
 
+   // ElegantOTA
    String password = SettingsManager.getSetting("AdminPass");
    char httpPassword[password.length() + 1];
    password.toCharArray(httpPassword, password.length() + 1);
-   AsyncElegantOTA.begin(_server, "Admin", httpPassword); // Start ElegantOTA
+   ElegantOTA.begin(_server, "Admin", httpPassword);
+   ElegantOTA.onStart([]() {
+      Serial.println("\n""Firmware update via WebUI initiated.");
+      LCDController.FirmwareUpdateInit(); });
+   ElegantOTA.onProgress([](size_t current, size_t final) {
+      uint16_t iProgressPercentage = (current * 100) / final;
+      if (WebHandler.uiLastProgress != iProgressPercentage)
+      {
+         Serial.printf("Progress: %u%%\r", iProgressPercentage);
+         String sProgressPercentage = String(iProgressPercentage);
+         while (sProgressPercentage.length() < 3)
+            sProgressPercentage = " " + sProgressPercentage;
+         LCDController.FirmwareUpdateProgress(sProgressPercentage);
+         WebHandler.uiLastProgress = iProgressPercentage;
+      } });
+   ElegantOTA.onEnd([](bool success) {
+      if (success)
+      {
+         Serial.println("\nUpdate via WebUI completed.\r\n");
+         LCDController.FirmwareUpdateSuccess();
+      }
+      else
+         Serial.println("Update via WebUI failed.");
+      });
 
    _server->begin();
 
@@ -88,6 +112,8 @@ void WebHandlerClass::loop()
          }
       }
    }
+   if (RaceHandler.RaceState == RaceHandler.STOPPED || RaceHandler.RaceState == RaceHandler.RESET)
+      ElegantOTA.loop();
 }
 
 void WebHandlerClass::_WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)

@@ -4,15 +4,20 @@ ul.list-group {
 }
 .row {
     margin:0 auto;
+    padding-top: 4px;
+    padding-bottom: 4px;
 }
 .column1 {
     width: 30%;
+    padding-left: 0px;
 }
 .column2 {
     width: 40%;
 }
 .column3 {
     width: 30%;
+    padding-left: 0px;
+    padding-right: 0px;
 }
 div.dogsTimes {
     font-family: monospace;

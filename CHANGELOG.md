@@ -1,13 +1,28 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
-
 ## [Unreleased]
 
 ### Added
 
+
 ### Changed
 
+
+## [1.14.0]
+
+### Added
+- SW update info while doing Firmware update via WebUI
+- additional entry/crossing time information in case of manually marked dog's fault (used to be only 'fault')
+
+### Changed
+- AsyncElegantOTA lib migrated to ElegantOTA
+- Fix for updating WebUI after accuracy change
+- Fix for false time indicator "#" replacing first digit when dog time was 100s or higher and accuracy set to 3 digits
+- testETS.py v1.1.1 - improved mid command trigger time accuracy (TC20)
+- Migration to Angular 16 and WebUI update to 1.1.0
+- Battery status in WebUI improved with options "USB" and "LOW" similar to LCD Display
+- Battery status "USB" properly displayed while powering standalone ESP32 via USB only
 
 ## [1.13.0] - 2023-08-26
 
@@ -214,7 +229,8 @@ All notable changes to this project will be documented in this file.
 
 
 
-[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.13.0...HEAD
+[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.14.0...HEAD
+[1.14.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.13.0...v1.14.0
 [1.13.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.11.10...v1.13.0
 [1.11.10]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.11.9...v1.11.10
 [1.11.9]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.10.2...v1.11.9

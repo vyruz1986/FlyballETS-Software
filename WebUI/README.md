@@ -1,6 +1,6 @@
 # FlyballETS-WebUI
 
-This project was generated with node.js version 16.18.0 and [Angular CLI](https://github.com/angular/angular-cli) version 13.3.11.
+This project was generated with node.js version 16.18.0 and [Angular CLI](https://github.com/angular/angular-cli) version 16.2.12.
 
 ## Development server
 

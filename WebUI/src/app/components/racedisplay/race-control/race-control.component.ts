@@ -17,7 +17,6 @@ export class RaceControlComponent implements OnChanges, OnInit {
    resetDisabled: boolean = true;
    dogsChangeDisabled: boolean = true;
    rerunsOffDisabled: boolean = true;
-
    overallMaxState: number;
 
    constructor() { }
@@ -32,13 +31,13 @@ export class RaceControlComponent implements OnChanges, OnInit {
    setTagClass(overallMaxState) {
       switch (overallMaxState) {
       case 0: 
-         return 'badge badge-pill badge-success';
+         return 'badge1';
       case 1: 
-         return 'badge badge-pill badge-warning';
+         return 'badge2';
       case 2: 
-         return 'badge badge-pill badge-danger';
+         return 'badge3';
       case 3: 
-         return 'badge badge-pill badge-secondary';
+         return 'badge4';
       }
    }
 

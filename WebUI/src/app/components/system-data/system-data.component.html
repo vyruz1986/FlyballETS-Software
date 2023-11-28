@@ -1,7 +1,8 @@
-  <div class="container">
-    <p style="text-align:center">
-      <span class="badge badge-light text-center">
-        Battery: {{systemData.bat}}%
+<div class="container">
+  <div class="row">
+    <div class="col-12 col-md-12 text-center">
+      <span class="badge">
+        Battery: {{systemData.bat | batteryState}}
         &nbsp;&nbsp;&nbsp; Race Id: {{systemData.Tag}} - {{systemData.RID}}
         &nbsp;&nbsp;&nbsp; Clients: {{systemData.clients}}
         &nbsp;&nbsp;&nbsp; Dir: {{systemData.dir}}<br />
@@ -9,5 +10,6 @@
         {{systemData.sTime | date:'yyyy-MM-dd &nbsp;HH:mm'}} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Up: {{hmsTime}} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FW: {{systemData.FW}} 
         <!--| Mem: {{systemData.freeHeap}}-->
       </span>
-    </p>
+    </div>
   </div>
+</div>

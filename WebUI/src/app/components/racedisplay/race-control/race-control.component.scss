@@ -8,16 +8,66 @@ div.raceState {
     margin:0px auto;
 }
 
-/* Create four equal columns that floats next to each other */
 .column {
     padding: 2px;
 }
 
 select {
     width: auto;
-    margin: auto;
+    margin:0px auto;
+    padding-left: 15px;
+    padding-right: 15px;
 }
+
 select:focus {
     max-width: 100px;
     width: auto;
 }
+
+button {
+    width: 100px;
+}
+
+.button1:hover {
+    background-color: rgb(248, 248, 248);
+}
+
+.badge1 {
+    padding: 4px;
+    padding-inline-start: 10px;
+    padding-inline-end: 10px;
+    font-size: medium;
+    border-radius: 15px;
+    background: rgba(66, 134, 87, 0.941);
+    color:white;
+ }
+
+ .badge2 {
+    padding: 4px;
+    padding-inline-start: 10px;
+    padding-inline-end: 10px;
+    font-size: medium;
+    border-radius: 15px;
+    background: rgb(245, 191, 90);
+    color:black;
+ }
+
+ .badge3 {
+    padding: 4px;
+    padding-inline-start: 10px;
+    padding-inline-end: 10px;
+    font-size: medium;
+    border-radius: 15px;
+    background: rgb(212, 22, 22);
+    color:white;
+ }
+
+ .badge4 {
+    padding: 4px;
+    padding-inline-start: 10px;
+    padding-inline-end: 10px;
+    font-size: medium;
+    border-radius: 15px;
+    background: gray;
+    color:white;
+ }

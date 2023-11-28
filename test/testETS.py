@@ -1,5 +1,5 @@
 # test ESP32
-# v1.1.0
+# v1.1.1
 from genericpath import isfile
 import os
 import serial
@@ -81,6 +81,8 @@ while b"Simulation mode" not in readlineSkip:
 racenumber = 0
 debugmode = False
 invalidInput = False
+lunchInRaceCommandTimer = False
+inRaceCommandTimer = None
 
 # selectedrace = input("Select race: ") # 0/1/2/20 or end
 flatten_listOfRaces = []
@@ -150,24 +152,22 @@ for stabilityLoopIndex in range(numberOfStabilityLoops):
             additionalArgs = testcaseInputFile.readline()
             while additionalArgs.startswith("$"):
                 splitAdditionalArgs = additionalArgs.split(";")
-                # print(splitadditionalargs)
+                # print(splitAdditionalArgs)
                 splitargs_len = len(splitAdditionalArgs)
                 additionalCommandsIndex = 1
                 while additionalCommandsIndex < splitargs_len and splitAdditionalArgs[additionalCommandsIndex] != "\n":
                     if splitAdditionalArgs[0] == "$init":
                         initCommands = splitAdditionalArgs[additionalCommandsIndex]
-                        # print(decodedLine)
+                        # print(splitAdditionalArgs)
                         command_send_midprogramm(initCommands)
                         additionalCommandsIndex += 1
                         time.sleep(1)
                     elif splitAdditionalArgs[0] == "$commands":
-                        command_sendtime = float(
-                            splitAdditionalArgs[additionalCommandsIndex])
-                        command_name = (
-                            splitAdditionalArgs[additionalCommandsIndex+1],)
+                        command_sendtime = float(splitAdditionalArgs[additionalCommandsIndex])
+                        command_name = (splitAdditionalArgs[additionalCommandsIndex+1],)
                         additionalCommandsIndex += 2
                         inRaceCommandTimer = Timer(command_sendtime, command_send_midprogramm, args=command_name)
-                        inRaceCommandTimer.start()
+                        lunchInRaceCommandTimer = True
                         linestoskip += 1
                 additionalArgs = testcaseInputFile.readline()
             testcaseInputFile.seek(0)
@@ -181,6 +181,9 @@ for stabilityLoopIndex in range(numberOfStabilityLoops):
                 #ser.flushInput()
                 ser.write(b"start" + b"\n")
                 raceStartTime = int(time.time())
+                if lunchInRaceCommandTimer is True:
+                    inRaceCommandTimer.start()
+                    lunchInRaceCommandTimer = False
                 time.sleep(0.1)
                 stopline = ""
                 consoleProgressPrint = "Running race " + raceToRun + "."

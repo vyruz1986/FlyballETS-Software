@@ -1,5 +1,4 @@
 import { Component, OnInit, OnDestroy } from "@angular/core";
-
 import { DogData, RaceData as RaceData } from "../../interfaces/race";
 import { WebsocketAction } from "../../interfaces/websocketaction";
 import { EtsdataService } from "../../services/etsdata.service";
