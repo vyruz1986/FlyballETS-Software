@@ -1,8 +1,15 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
-
 ## [Unreleased]
+
+### Added
+
+
+### Changed
+
+
+## [1.14.0]
 
 ### Added
 - SW update info while doing Firmware update via WebUI
@@ -222,7 +229,8 @@ All notable changes to this project will be documented in this file.
 
 
 
-[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.13.0...HEAD
+[unreleased]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.14.0...HEAD
+[1.14.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.13.0...v1.14.0
 [1.13.0]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.11.10...v1.13.0
 [1.11.10]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.11.9...v1.11.10
 [1.11.9]: https://github.com/simonttp78/FlyballETS-Software/compare/v1.10.2...v1.11.9
