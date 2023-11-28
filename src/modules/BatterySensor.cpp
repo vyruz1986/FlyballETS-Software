@@ -86,6 +86,7 @@ void BatterySensorClass::CheckBatteryVoltage()
       int iPinVoltage = dPinVoltage;
       _iBatteryVoltage = iPinVoltage * 4.3172;
       _iNumberOfBatteryReadings = 0;
+      //log_d("_iBatteryVoltage: %i", _iBatteryVoltage);
    }
 }
 
@@ -110,7 +111,8 @@ uint16_t BatterySensorClass::GetBatteryVoltage()
 /// <returns>
 ///   The battery percentage or analog pin read or special tags.
 ///   Tag 0    - when voltage is below 10.5V and above 10V "LOW" will be displayed
-///   Tag 9911 - when voltage is below 5V it would be assumed that USB is connected to ESP32
+///   Tag 9911 - when voltage is below 5V or above 60V (ESP32 standalone) it would be assumed
+///              that ESP32 is powered by USB
 ///   Tag 9999 - when voltage is below 10V (and above 5V) we are close to danger li-ion 9V so
 ///               "!!!" will be displayed and ESP32 turn into deep sleep mode 
 /// </returns>
@@ -119,11 +121,11 @@ uint16_t BatterySensorClass::GetBatteryPercentage()
 #if BatteryCalibration
    return _iAverageBatteryReading;
 #else
-   if (_iBatteryVoltage < 5000)
+   if (_iBatteryVoltage < 5000 || _iBatteryVoltage >= 60000)
    {
       return 9911;
    }
-   if (_iBatteryVoltage >= 5000 && _iBatteryVoltage < 10000)
+   else if (_iBatteryVoltage >= 5000 && _iBatteryVoltage < 10000)
    {
       return 9999;
    }
@@ -131,7 +133,7 @@ uint16_t BatterySensorClass::GetBatteryPercentage()
    {
       return 0;
    }
-   else if (_iBatteryVoltage > 12300)
+   else if (_iBatteryVoltage > 12300 || _iBatteryVoltage < 60000)
    {
       return 100;
    }

@@ -5,6 +5,6 @@ export interface SystemData {
   RID: number;
   clients: number;
   sTime: Date;
-  bat: Number;
+  bat: number;
   dir: String;
 }

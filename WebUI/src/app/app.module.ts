@@ -18,6 +18,7 @@ import { LoginComponent } from './components/login/login.component';
 import { HttpClientModule } from '@angular/common/http';
 import { DatePipe } from '@angular/common';
 import { FriendlyRaceStatePipe } from './pipes/friendly-race-state.pipe';
+import { BatteryStatePipe } from './pipes/battery-state.pipe';
 import { RaceControlComponent } from './components/racedisplay/race-control/race-control.component';
 import { TimeDisplayComponent } from './components/racedisplay/time-display/time-display.component';
 import { DogDetailsComponent } from './components/racedisplay/dog-details/dog-details.component';
@@ -40,6 +41,7 @@ const appRoutes: Routes = [
     LightsComponent,
     LoginComponent,
     FriendlyRaceStatePipe,
+    BatteryStatePipe,
     RaceControlComponent,
     TimeDisplayComponent,
     DogDetailsComponent
