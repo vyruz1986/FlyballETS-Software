@@ -73,9 +73,7 @@ const uint8_t iLCDData7Pin = 27; // Data7
 const uint8_t iLCDRSPin = 25;    // RS pin
 
 // GPS module pins
-const uint8_t iGPStxPin = 22;  // RXD pin of GPS module (ESP32 TX)
-const uint8_t iGPSrxPin = 39;  // TXD pin of GPS module (ESP32 RX)
-const uint8_t iGPSppsPin = 36; // PPS pin of GPS module
+const uint8_t iGPSrxPin = 39; // TXD pin of GPS module (ESP32 RX)
 
 // control pins for SD card (require HW 5.0.0 rev.S or higher)
 const uint8_t iSDdata0Pin = 2;  // Data0

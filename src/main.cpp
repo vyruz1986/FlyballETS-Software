@@ -113,7 +113,7 @@ void setup()
    strSerialData[0] = 0;
 
    // Initialize GPS
-   GPSHandler.init(iGPSrxPin, iGPStxPin);
+   GPSHandler.init(iGPSrxPin);
 
    // SD card init
    if (digitalRead(iSDdetectPin) == LOW)

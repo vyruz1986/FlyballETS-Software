@@ -18,9 +18,9 @@ void GPSHandlerClass::_HandleSerialPort()
    }
 }
 
-void GPSHandlerClass::init(uint8_t _iGPSrxPin, uint8_t _iGPStxPin)
+void GPSHandlerClass::init(uint8_t _iGPSrxPin)
 {
-   GPSSerial.begin(9600, SERIAL_8N1, _iGPSrxPin, _iGPStxPin);
+   GPSSerial.begin(9600, SERIAL_8N1, _iGPSrxPin, -1);
    // vTaskDelay(200);
    _HandleSerialPort();
    _FormatTime();

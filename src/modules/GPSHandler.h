@@ -25,7 +25,7 @@ protected:
    unsigned long long llLastGPSRead = 0;
 
 public:
-   void init(uint8_t _iGPSrxPin, uint8_t _iGPStxPin);
+   void init(uint8_t _iGPSrxPin);
    void loop();
    char *GetUtcDateAndTime();
    char *GetLocalTimestamp();
